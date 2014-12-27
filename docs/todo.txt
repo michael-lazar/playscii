@@ -1,0 +1,14 @@
+TODO
+
+first stage "get app on its feet":
+- a single art object (grid of quads)
+- random char/fg/bg combinations
+- colors cycle per-frame/second
+
+classes:
+
+renderable: geo, character set (get uvs for each quad), palette (feed into shader)
+character set: texture, character mapping
+palette: source texture, lookup texture
+
+art: (preferred?) charset/palette, size, char/fg/bg data, camera loc/zoom (later: layers, frames)

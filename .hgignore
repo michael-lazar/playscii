@@ -1,0 +1,4 @@
+./*.orig
+dist/*.*
+__pycache__/*.*
+
