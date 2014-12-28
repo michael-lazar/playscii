@@ -117,7 +117,11 @@ class Renderable:
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.charset.texture.gltex)
         #GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.palette.texture.gltex)
         GL.glBindVertexArray(self.vao)
+        GL.glEnable(GL.GL_BLEND)
+        # TODO: re-enable once characters show up correctly
+        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glDrawElements(GL.GL_TRIANGLES, self.vert_count,
                           GL.GL_UNSIGNED_INT, self.vert_elem_array)
+        GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)

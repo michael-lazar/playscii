@@ -35,6 +35,8 @@ class CharacterSet:
         # load and process image
         img = Image.open(image_filename)
         img = img.convert('RGBA')
+        # flip for openGL
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
         self.image_width, self.image_height = img.size
         # any pixel that is "transparent color" will be made fully transparent
         # any pixel that isn't will be opaque + tinted FG color
@@ -47,9 +49,19 @@ class CharacterSet:
         self.texture = Texture(img.tostring(), self.image_width, self.image_height)
         self.u_width = self.map_width / self.image_width
         self.v_height = self.map_height / self.image_height
+        # report
+        print('new charmap from "%s":' % image_filename)
+        #print('  %s characters' % len(self.chars))
+        char_width = self.image_width / self.map_width
+        char_height = self.image_height / self.map_height
+        print('  char width/height: %s/%s' % (char_width, char_height))
+        print('  map columns/rows: %s/%s' % (self.map_width, self.map_height))
+        #print('  alphabet starts at index %s' % self.a)
+        #print('  blank character at index %s' % self.blank)
+        # TODO: account for / prevent non-square images!
     
     def get_uvs(self, char_value):
         "returns u,v coordinates for our texture from given char value"
         u = char_value % self.map_width
         v = self.map_height - ((char_value - u) / self.map_height)
-        return u * self.texture.width, v * self.texture.height
+        return u * self.u_width, v * self.v_height
