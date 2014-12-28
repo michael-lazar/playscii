@@ -56,10 +56,9 @@ class Application:
         self.palette = Palette(self.starting_palette)
         self.renderables = []
         # TODO: load from disk
-        self.art = Art(16, 16)
+        self.art = Art(self.charset, 8, 8)
         test_renderable = Renderable(self)
         # add renderables to list in reverse draw order (only world for now)
-        # TODO: create a test renderable
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         # TODO: UI

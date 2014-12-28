@@ -57,7 +57,7 @@ class Renderable:
                 i += 4
                 # vertex UVs
                 # get this tile's value from world data
-                char_value = self.art.get_char_at(tile_x, tile_y)
+                char_value = self.art.get_char_index_at(tile_x, tile_y)
                 # get tile value's UVs from sprite data
                 u0,v0 = self.app.charset.get_uvs(char_value)
                 u1,v1 = u0 + self.app.charset.u_width, v0
@@ -118,7 +118,6 @@ class Renderable:
         #GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.palette.texture.gltex)
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
-        # TODO: re-enable once characters show up correctly
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glDrawElements(GL.GL_TRIANGLES, self.vert_count,
                           GL.GL_UNSIGNED_INT, self.vert_elem_array)

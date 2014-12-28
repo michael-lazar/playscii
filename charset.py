@@ -14,9 +14,13 @@ class CharacterSet:
         if not os.path.exists(char_data_filename):
             print("Couldn't find character set data file " + char_data_filename)
             return
-        char_data = open(char_data_filename).readlines()
-        # TODO: allow comments: discard any line in char data starting with //
+        char_data_src = open(char_data_filename).readlines()
+        # allow comments: discard any line in char data starting with //
         # (make sure this doesn't muck up legit mapping data)
+        char_data = []
+        for line in char_data_src:
+            if not line.startswith('//'):
+                char_data.append(line)
         # first line = image file
         image_filename = char_data.pop(0).strip()
         # if not provided, guess a PNG
@@ -47,18 +51,29 @@ class CharacterSet:
                     # TODO: does keeping non-alpha color improve sampling?
                     img.putpixel((x, y), (color[0], color[1], color[2], 0))
         self.texture = Texture(img.tostring(), self.image_width, self.image_height)
-        self.u_width = self.map_width / self.image_width
-        self.v_height = self.map_height / self.image_height
+        # TODO: why is /2 necessary here?!?
+        self.u_width = (self.map_width / self.image_width) / 2
+        self.v_height = (self.map_height / self.image_height) / 2
         # report
-        print('new charmap from "%s":' % image_filename)
+        print('new charmap from %s:' % char_data_filename)
+        print('  image %s is %s x %s' % (image_filename, self.image_width, self.image_height))
         #print('  %s characters' % len(self.chars))
-        char_width = self.image_width / self.map_width
-        char_height = self.image_height / self.map_height
-        print('  char width/height: %s/%s' % (char_width, char_height))
+        char_width = int(self.image_width / self.map_width)
+        char_height = int(self.image_height / self.map_height)
+        print('  char pixel width / height: %s x %s' % (char_width, char_height))
         print('  map columns/rows: %s/%s' % (self.map_width, self.map_height))
         #print('  alphabet starts at index %s' % self.a)
         #print('  blank character at index %s' % self.blank)
         # TODO: account for / prevent non-square images!
+    
+    def get_char_index(self, char):
+        i = 0
+        for line in self.char_mapping:
+            for other_char in line:
+                if char == other_char:
+                    return i
+                i += 1
+        return 0
     
     def get_uvs(self, char_value):
         "returns u,v coordinates for our texture from given char value"

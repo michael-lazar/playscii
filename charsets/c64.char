@@ -1,4 +1,6 @@
-
+// first line: source image (base filename + .png assumed)
+c64.png
+// second line: map dimensions
 16, 16
  !"#$%&'()*+,-./
 0123456789:;<=>?
@@ -16,4 +18,4 @@ PQRSTUVWXYZ
                 
                 
                 
-
+// end
