@@ -1,6 +1,5 @@
 import numpy
 from OpenGL import GL
-from PIL import Image
 
 class Texture:
     
@@ -34,20 +33,3 @@ class Texture:
             GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltex)
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, new_wrap)
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, new_wrap)
-
-
-class TextureFromFile(Texture):
-    
-    def __init__(self, filename, transparent_color=(0, 0, 0)):
-        img = Image.open(filename)
-        img = img.convert('RGBA')
-        width, height = img.size
-        # any pixel that is "transparent color" will be made fully transparent
-        # any pixel that isn't will be opaque + tinted FG color
-        for y in range(height):
-            for x in range(width):
-                color = img.getpixel((x, y))
-                if color[:3] == transparent_color[:3]:
-                    # TODO: does keeping non-alpha color improve sampling?
-                    img.putpixel((x, y), (color[0], color[1], color[2], 0))
-        Texture.__init__(self, img.tostring(), width, height)

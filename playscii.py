@@ -51,10 +51,10 @@ class Application:
         self.sl = ShaderLord(self)
         self.camera = Camera(self.window_width, self.window_height)
         # TODO: cursor
-        self.current_charset = CharacterSet(self.starting_charset)
-        self.current_palette = Palette(self.starting_palette)
+        self.charset = CharacterSet(self.starting_charset)
+        self.palette = Palette(self.starting_palette)
         self.renderables = []
-        test_renderable = Renderable()
+        test_renderable = Renderable(self.sl, self.camera, self.charset, self.palette)
         # add renderables to list in reverse draw order (only world for now)
         # TODO: create a test renderable
         #self.renderables.append()
