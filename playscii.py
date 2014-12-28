@@ -17,6 +17,7 @@ from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet
 from palette import Palette
+from art import Art
 from renderable import Renderable
 from framebuffer import Framebuffer
 
@@ -54,10 +55,12 @@ class Application:
         self.charset = CharacterSet(self.starting_charset)
         self.palette = Palette(self.starting_palette)
         self.renderables = []
-        test_renderable = Renderable(self.sl, self.camera, self.charset, self.palette)
+        # TODO: load from disk
+        self.art = Art(16, 16)
+        test_renderable = Renderable(self)
         # add renderables to list in reverse draw order (only world for now)
         # TODO: create a test renderable
-        #self.renderables.append()
+        self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         # TODO: UI
     
@@ -191,6 +194,8 @@ class Application:
         for r in self.renderables:
             r.destroy()
         self.fb.destroy()
+        self.charset.texture.destroy()
+        self.palette.texture.destroy()
         self.sl.destroy()
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)

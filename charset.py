@@ -45,6 +45,8 @@ class CharacterSet:
                     # TODO: does keeping non-alpha color improve sampling?
                     img.putpixel((x, y), (color[0], color[1], color[2], 0))
         self.texture = Texture(img.tostring(), self.image_width, self.image_height)
+        self.u_width = self.map_width / self.image_width
+        self.v_height = self.map_height / self.image_height
     
     def get_uvs(self, char_value):
         "returns u,v coordinates for our texture from given char value"

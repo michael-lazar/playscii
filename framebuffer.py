@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 from OpenGL import GL
 
 class Framebuffer:
@@ -13,7 +13,7 @@ class Framebuffer:
         GL.glBindVertexArray(self.vao)
         self.vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-        fb_verts = numpy.array([-1, -1, 1, -1, -1, 1, 1, 1], dtype=numpy.float32)
+        fb_verts = np.array([-1, -1, 1, -1, -1, 1, 1, 1], dtype=np.float32)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, fb_verts.nbytes, fb_verts,
                         GL.GL_STATIC_DRAW)
         # texture, depth buffer, framebuffer

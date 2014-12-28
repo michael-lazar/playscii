@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 from OpenGL import GL
 
 class Texture:
@@ -12,7 +12,7 @@ class Texture:
     
     def __init__(self, string_data, width, height):
         self.width, self.height = width, height
-        img_data = numpy.fromstring(string_data, numpy.uint8)
+        img_data = np.fromstring(string_data, np.uint8)
         self.gltex = GL.glGenTextures(1)
         GL.glPixelStorei(self.packing, 1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltex)
@@ -33,3 +33,6 @@ class Texture:
             GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltex)
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, new_wrap)
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, new_wrap)
+    
+    def destroy(self):
+        GL.glDeleteTextures([self.gltex])
