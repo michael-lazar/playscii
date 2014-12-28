@@ -15,6 +15,9 @@ from OpenGL import GL
 # submodules - set here so cfg file can modify them all easily
 from shader import ShaderLord
 from camera import Camera
+from charset import CharacterSet
+from palette import Palette
+from renderable import Renderable
 from framebuffer import Framebuffer
 
 CONFIG_FILENAME = 'playscii.cfg'
@@ -48,7 +51,10 @@ class Application:
         self.sl = ShaderLord(self)
         self.camera = Camera(self.window_width, self.window_height)
         # TODO: cursor
+        self.current_charset = CharacterSet(self.starting_charset)
+        self.current_palette = Palette(self.starting_palette)
         self.renderables = []
+        test_renderable = Renderable()
         # add renderables to list in reverse draw order (only world for now)
         # TODO: create a test renderable
         #self.renderables.append()
