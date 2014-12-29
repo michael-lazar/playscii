@@ -34,6 +34,8 @@ class Renderable:
         vert_pos_list = []
         vert_elem_list = []
         vert_uv_list = []
+        fg_color_list = []
+        bg_color_list = []
         i = 0
         for tile_y in range(self.art.height):
             for tile_x in range(self.art.width):
@@ -64,9 +66,18 @@ class Renderable:
                 u2,v2 = u0, v0 - self.app.charset.v_height
                 u3,v3 = u1, v2
                 vert_uv_list += [u0, v0, u1, v1, u2, v2, u3, v3]
+                # get fg and bg colors
+                fg_color = self.art.get_fg_color_at(tile_x, tile_y)
+                # add color for each vertex
+                # TODO: determine if this is too wasteful / bad for perf
+                fg_color_list += [fg_color, fg_color, fg_color, fg_color]
+                bg_color = self.art.get_bg_color_at(tile_x, tile_y)
+                bg_color_list += [bg_color, bg_color, bg_color, bg_color]
         self.vert_pos_array = np.array(vert_pos_list, dtype=np.float32)
         self.vert_elem_array = np.array(vert_elem_list, dtype=np.uint32)
         self.vert_uv_array = np.array(vert_uv_list, dtype=np.float32)
+        self.fg_color_array = np.array(fg_color_list, dtype=np.float32)
+        self.bg_color_array = np.array(bg_color_list, dtype=np.float32)
         #
         # create GL objects
         #
@@ -94,11 +105,32 @@ class Renderable:
         # vertex UVs
         self.uv_buffer = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.uv_buffer)
+        # GL_DYNAMIC_DRAW because UVs change every time char is changed
         GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vert_uv_array.nbytes,
-                        self.vert_uv_array, GL.GL_STATIC_DRAW)
+                        self.vert_uv_array, GL.GL_DYNAMIC_DRAW)
         self.coord_attrib = self.shader.get_attrib_location('texCoords')
         GL.glEnableVertexAttribArray(self.coord_attrib)
         GL.glVertexAttribPointer(self.coord_attrib, 2,
+                                 GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        # foreground colors
+        self.fg_color_buffer = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.fg_color_buffer)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.fg_color_array.nbytes,
+                        self.fg_color_array, GL.GL_DYNAMIC_DRAW)
+        self.fg_color_attrib = self.shader.get_attrib_location('fgColor')
+        GL.glEnableVertexAttribArray(self.fg_color_attrib)
+        GL.glVertexAttribPointer(self.fg_color_attrib, 4,
+                                 GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+        # background colors
+        self.bg_color_buffer = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.bg_color_buffer)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.bg_color_array.nbytes,
+                        self.bg_color_array, GL.GL_DYNAMIC_DRAW)
+        self.bg_color_attrib = self.shader.get_attrib_location('bgColor')
+        GL.glEnableVertexAttribArray(self.bg_color_attrib)
+        GL.glVertexAttribPointer(self.bg_color_attrib, 4,
                                  GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         # finish
@@ -106,7 +138,7 @@ class Renderable:
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
-        GL.glDeleteBuffers(3, [self.vert_buffer, self.elem_buffer, self.uv_buffer])
+        GL.glDeleteBuffers(5, [self.vert_buffer, self.elem_buffer, self.uv_buffer, self.fg_color_buffer, self.bg_color_buffer])
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)

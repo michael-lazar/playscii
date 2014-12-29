@@ -28,7 +28,7 @@ class Application:
     window_width, window_height = 800, 600
     fullscreen = False
     framerate = 60
-    title = b'<3 Playscii'
+    title = b'<3 <3 Playscii <3 <3'
     starting_charset = 'c64'
     starting_palette = 'c64'
     
@@ -56,7 +56,7 @@ class Application:
         self.palette = Palette(self.starting_palette)
         self.renderables = []
         # TODO: load from disk
-        self.art = Art(self.charset, 8, 8)
+        self.art = Art(self.charset, self.palette, 8, 8)
         test_renderable = Renderable(self)
         # add renderables to list in reverse draw order (only world for now)
         self.renderables.append(test_renderable)

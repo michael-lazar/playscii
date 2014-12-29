@@ -7,6 +7,7 @@ CHARSET_DIR = 'charsets/'
 
 class CharacterSet:
     
+    logg = False
     transparent_color = (0, 0, 0)
     
     def __init__(self, src_filename):
@@ -55,15 +56,16 @@ class CharacterSet:
         self.u_width = (self.map_width / self.image_width) / 2
         self.v_height = (self.map_height / self.image_height) / 2
         # report
-        print('new charmap from %s:' % char_data_filename)
-        print('  image %s is %s x %s' % (image_filename, self.image_width, self.image_height))
-        #print('  %s characters' % len(self.chars))
-        char_width = int(self.image_width / self.map_width)
-        char_height = int(self.image_height / self.map_height)
-        print('  char pixel width / height: %s x %s' % (char_width, char_height))
-        print('  map columns/rows: %s/%s' % (self.map_width, self.map_height))
-        #print('  alphabet starts at index %s' % self.a)
-        #print('  blank character at index %s' % self.blank)
+        if self.logg:
+            print('new charmap from %s:' % char_data_filename)
+            print('  image %s is %s x %s' % (image_filename, self.image_width, self.image_height))
+            #print('  %s characters' % len(self.chars))
+            char_width = int(self.image_width / self.map_width)
+            char_height = int(self.image_height / self.map_height)
+            print('  char pixel width / height: %s x %s' % (char_width, char_height))
+            print('  map columns/rows: %s/%s' % (self.map_width, self.map_height))
+            #print('  alphabet starts at index %s' % self.a)
+            #print('  blank character at index %s' % self.blank)
         # TODO: account for / prevent non-square images!
     
     def get_char_index(self, char):
