@@ -1,5 +1,7 @@
 import sys, os.path
 
+from random import random
+
 # obnoxious PyOpenGL workaround for py2exe
 import platform
 if platform.system() == 'Windows':
@@ -96,6 +98,8 @@ class Application:
         while running:
             running = self.input()
             self.camera.update()
+            if random() < 0.5:
+                self.art.mutate()
             #self.cursor.update(self.elapsed_time)
             #self.ui.update()
             self.render()
