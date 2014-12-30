@@ -108,8 +108,25 @@ class Art:
         self.uv_array[uv_index:uv_index+8] = [u0, v0, u1, v1, u2, v2, u3, v3]
         for renderable in self.renderables:
             renderable.update_buffer(renderable.uv_buffer, self.uv_array,
-                                     GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW,
-                                     None, None)
+                                     GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, None, None)
+    
+    def set_color_at(self, x, y, color, fg=True):
+        update_list = self.fg_colors
+        array = self.fg_color_array
+        if not fg:
+            update_list = self.bg_colors
+            array = self.bg_color_array
+        update_list[y][x] = color
+        color = (color[0]/255, color[1]/255, color[2]/255, color[3]/255)
+        index = (y * self.width) + x
+        index *= 4
+        array[index:index+4] = [color, color, color, color]
+        for renderable in self.renderables:
+            update_buffer = renderable.fg_color_buffer
+            if not fg:
+                update_buffer = renderable.bg_color_buffer
+            renderable.update_buffer(update_buffer, array, GL.GL_ARRAY_BUFFER,
+                                     GL.GL_DYNAMIC_DRAW, None, None)
     
     # get methods
     def get_char_index_at(self, x, y):
@@ -131,5 +148,8 @@ class Art:
         x = randint(0, self.width-1)
         y = randint(0, self.height-1)
         char = randint(1, 128)
-        #color = self.palette(
+        color = choice(self.palette.colors)
         self.set_char_index_at(x, y, char)
+        self.set_color_at(x, y, color)
+        color = choice(self.palette.colors)
+        self.set_color_at(x, y, color, False)

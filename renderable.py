@@ -46,12 +46,12 @@ class Renderable:
                            GL.GL_DYNAMIC_DRAW, 'texCoords', 2)
         # foreground colors
         self.fg_color_buffer = GL.glGenBuffers(1)
-        self.update_buffer(self.fg_color_buffer, self.art.fg_color_array, GL.GL_ARRAY_BUFFER,
-                           GL.GL_DYNAMIC_DRAW, 'fgColor', 4)
+        self.update_buffer(self.fg_color_buffer, self.art.fg_color_array,
+                           GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, 'fgColor', 4)
         # background colors
         self.bg_color_buffer = GL.glGenBuffers(1)
-        self.update_buffer(self.bg_color_buffer, self.art.bg_color_array, GL.GL_ARRAY_BUFFER,
-                           GL.GL_DYNAMIC_DRAW, 'bgColor', 4)
+        self.update_buffer(self.bg_color_buffer, self.art.bg_color_array,
+                           GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, 'bgColor', 4)
         # finish
         GL.glBindVertexArray(0)
     
