@@ -194,11 +194,11 @@ class Application:
         sdl2.SDL_GL_SwapWindow(self.window)
     
     def quit(self):
+        self.art.save_to_file()
         for r in self.renderables:
             r.destroy()
         self.fb.destroy()
         self.charset.texture.destroy()
-        self.palette.texture.destroy()
         self.sl.destroy()
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)

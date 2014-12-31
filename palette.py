@@ -21,16 +21,14 @@ class Palette:
         # scan image L->R T->B for unique colors
         # color 0 is always fully transparent
         self.colors = [(0, 0, 0, 0)]
+        # keep list of tuples for quick comparisons while finding unique colors
+        color_tuples = []
         for y in range(height):
             for x in range(width):
                 color = src_img.getpixel((x, y))
-                if not color in self.colors:
+                if not color in color_tuples:
+                    color_tuples.append(color)
+                    # convert to OpenGL-friendly color format
+                    color = (color[0]/255, color[1]/255, color[2]/255, color[3]/255)
                     self.colors.append(color)
         #print('%s unique colors in source palette: %s' % (len(self.colors)-1, self.colors))
-        # create new 1D image with unique colors
-        img = Image.new('RGBA', (MAX_COLORS, 1), (0, 0, 0, 0))
-        x = 0
-        for color in self.colors:
-            img.putpixel((x, 0), color)
-            x += 1
-        self.texture = Texture(img.tostring(), width, height)

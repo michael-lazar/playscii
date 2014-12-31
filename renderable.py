@@ -3,8 +3,6 @@ from OpenGL import GL
 
 class Renderable:
     
-    # TODO: move geo generation out of init so renderables can be resized on the fly
-    
     # vertex shader: includes view projection matrix, XYZ camera uniforms
     vert_shader_source = 'renderable_v.glsl'
     # pixel shader: handles FG/BG colors
@@ -78,7 +76,6 @@ class Renderable:
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.camera.projection_matrix)
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.camera.view_matrix)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.charset.texture.gltex)
-        #GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.palette.texture.gltex)
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

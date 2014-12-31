@@ -1,16 +1,13 @@
 TODO
 
-- support setting FG/BG colors dynamically, include in mutate()
+- layers and frames!  8x8 grid of 3 layers w/ 4 frames, all random
+- create a test file manually and try to load it!
+json.load(file)
 
-art only changes when user edits
-renderable updates from art when user edits or animation frame changes
+- art: drop intermediary lists, generate empty arrays w/ np.empty(shape=(128,1)) and populate them
+- palette: store colors in openGL ready format
 
-palette: store colors in openGL ready format
-is a texture lookup for the palette (1D or otherwise) even necessary?  table of colors in the renderable's color buffers might be sufficient
+- investigate whether storing color (vec4) per vertex is better than color index (U of 1D color texture?)
 
-is iterating through every tile in an art (layer) to update a renderable going to be bad for perf when lots of renderables are doing it every few frames?
-PROBABLY, YES
-
-so: arts generate the openGL arrays (verts, elements, UVs, colors) and keep them around, update them piecemeal and only when edits are made; renderables grab these arrays from their art and resubmit the buffer data as needed
-
-art: (preferred?) charset/palette, size, char/fg/bg data, (later: layers, frames, camera loc/zoom)
+tool research:
+http://fontstruct.com/gallery

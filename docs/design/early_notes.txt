@@ -1,3 +1,18 @@
+
+design notes circa xmas 2014
+
+art only changes when user edits
+renderable updates from art when user edits or animation frame changes
+
+is a texture lookup for the palette (1D or otherwise) even necessary?  table of colors in the renderable's color buffers might be sufficient
+
+is iterating through every tile in an art (layer) to update a renderable going to be bad for perf when lots of renderables are doing it every few frames?
+PROBABLY, YES
+
+so: arts generate the openGL arrays (verts, elements, UVs, colors) and keep them around, update them piecemeal and only when edits are made; renderables grab these arrays from their art and resubmit the buffer data as needed
+
+---
+
 ascii engine - playscii?
 early notes circa september/october 2014
 
