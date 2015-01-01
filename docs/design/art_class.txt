@@ -1,0 +1,62 @@
+
+example: an art with 4 frames and 3 layers
+
+Art
+|width, height, charset, palette: stuff that's written to / read from disk
+|renderables: list of renderables using us
+|vert_array, elem_array: geo array for all layers (changes on: resize, layer add/del)
+|update lists: tiles of specific frame+layers whose array data we should update
+|frames
+   |0
+      |delay: time before display next frame
+      |uv_array, fg_color_array, bg_color array: arrays for all layers of this frame
+	  |                            (changes on: tile edit, art resize, layer add/del)
+      |layers
+         |0
+            |z: z depth for this layer
+            |chars, fg_colors, bg_colors: data (lists of rows) for this layer
+         |1
+            |z
+            |chars, fg_colors, bg_colors
+         |2
+            |z
+            |chars, fg_colors, bg_colors
+   |1
+      |delay
+      |uv_array, fg_color_array, bg_color array
+      |layers
+         |0
+            |z
+            |chars, fg_colors, bg_colors
+         |1
+            |z
+            |chars, fg_colors, bg_colors
+         |2
+            |z
+            |chars, fg_colors, bg_colors
+   |2
+      |delay
+      |uv_array, fg_color_array, bg_color array
+      |layers
+         |0
+            |z
+            |chars, fg_colors, bg_colors
+         |1
+            |z
+            |chars, fg_colors, bg_colors
+         |2
+            |z
+            |chars, fg_colors, bg_colors
+   |3
+      |delay
+	  |uv_array, fg_color_array, bg_color array
+      |layers
+         |0
+            |z
+            |chars, fg_colors, bg_colors
+         |1
+            |z
+            |chars, fg_colors, bg_colors
+         |2
+            |z
+            |chars, fg_colors, bg_colors

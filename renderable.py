@@ -7,7 +7,6 @@ class Renderable:
     vert_shader_source = 'renderable_v.glsl'
     # pixel shader: handles FG/BG colors
     frag_shader_source = 'renderable_f.glsl'
-    vert_length = 3
     
     def __init__(self, app):
         self.app = app
@@ -32,7 +31,7 @@ class Renderable:
         # vertex positions
         self.vert_buffer = GL.glGenBuffers(1)
         self.update_buffer(self.vert_buffer, self.art.vert_array, GL.GL_ARRAY_BUFFER,
-                           GL.GL_STATIC_DRAW, 'vertPosition', self.vert_length)
+                           GL.GL_STATIC_DRAW, 'vertPosition', self.art.vert_length)
         # elements
         self.elem_buffer = GL.glGenBuffers(1)
         self.update_buffer(self.elem_buffer, self.art.elem_array,

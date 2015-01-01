@@ -1,11 +1,36 @@
 TODO
 
-- layers and frames!  8x8 grid of 3 layers w/ 4 frames, all random
-- create a test file manually and try to load it!
-json.load(file)
+- layers and frames!  8x8 grid of 3 layers w/ 4 frames
+-- blank w/ "hello!" in different spots on each layer, frames color cycle
+- write this to a file with json.dump(string(?))
+- read this from a file with json.load(file)
 
-- art: drop intermediary lists, generate empty arrays w/ np.empty(shape=(128,1)) and populate them
-- palette: store colors in openGL ready format
+---
+
+geo + uvs + color data for all layers on a frame are precomputed for each frame.  when renderables animate they just bind different arrays
+
+art.vert_array, art.elem_array: geo is same across all frames
+ArtFrame.uv/fg/bg_array: uv/fg/bg color arrays for all layers
+
+Art.init(): initialize lists for 1 frame with 1 blank layer of specified size, update all tiles' char/fg/bg
+
+ArtFromDisk.init(): populate lists from saved data, update all tiles' char/fg/bg
+
+art.build_geo(): create vert and elem arrays for given size and update all tiles' char/colors - okay if it's slower because this only happens on init/resize
+
+ArtLayer.build_arrays(): creates uv/fgcolor/bgcolor arrays
+
+art.set_char_index/color_at(): only called by user or sim edits, update internal lists only, add each changed tile to "to update" lists: "characters to update", "fg/bg colors to update"
+
+art.update(): called from app.update(): process "to update" lists, calling art.update_char_array etc as needed (theoretrically this could be parallelized if lots of chars + colors are changing?)
+
+art.update_char_array: computes index into uv array for given tile, sets uvs
+
+art.update_color_array(fg=True): computers index into color array for given tile, sets color data
+
+art.do_test(): add layers and frames, set chars and colors manually
+
+renderable.update(): called from app.update(): has our art updated, or is it time to swap in a new animation frame?  update buffers from art's arrays accordingly
 
 - investigate whether storing color (vec4) per vertex is better than color index (U of 1D color texture?)
 
