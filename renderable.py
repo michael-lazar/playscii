@@ -64,7 +64,7 @@ class Renderable:
         # finish
         GL.glBindVertexArray(0)
     
-    def update_dynamic_array_buffer(self, buffer_index, array):
+    def quick_update_dynamic_buffer(self, buffer_index, array):
         self.update_buffer(buffer_index, array, 'array', 'dynamic', None, None)
     
     def update_buffer(self, buffer_index, array, target, buffer_type,

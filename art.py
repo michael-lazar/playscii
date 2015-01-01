@@ -61,10 +61,13 @@ class Art:
         "builds the vertex and element arrays used by all layers"
         tiles = self.layers * self.width * self.height
         all_verts_size = tiles * VERT_STRIDE
-        self.vert_array = np.empty(shape=all_verts_size)
+        self.vert_array = np.empty(shape=all_verts_size, dtype=np.float32)
         all_elems_size = tiles * ELEM_STRIDE
-        self.elem_array = np.empty(shape=all_elems_size)
+        self.elem_array = np.empty(shape=all_elems_size, dtype=np.uint32)
         # generate geo according to art size
+        loc_index = 0
+        # vert index corresponds to # of verts, loc_index to position in
+        # array given that each vert has 3 components
         vert_index = 0
         elem_index = 0
         for layer in self.frames[0].layers:
@@ -83,13 +86,15 @@ class Art:
                     verts += [x1, y1, layer.z]
                     verts += [x2, y2, layer.z]
                     verts += [x3, y3, layer.z]
-                    self.vert_array[vert_index:vert_index+VERT_STRIDE] = verts
-                    vert_index += VERT_STRIDE
+                    self.vert_array[loc_index:loc_index+VERT_STRIDE] = verts
+                    loc_index += VERT_STRIDE
                     # vertex elements
-                    elements = [elem_index, elem_index+1, elem_index+2]
-                    elements += [elem_index+1, elem_index+2, elem_index+3]
+                    elements = [vert_index, vert_index+1, vert_index+2]
+                    elements += [vert_index+1, vert_index+2, vert_index+3]
                     self.elem_array[elem_index:elem_index+ELEM_STRIDE] = elements
                     elem_index += ELEM_STRIDE
+                    # 4 verts in a quad
+                    vert_index += 4
     
     # set methods
     # these set tiles in the internal list format, then mark those tiles
@@ -136,13 +141,17 @@ class Art:
         # camera loc/zoom
     
     def update(self):
+        """
+        commit updates from char/color data lists into their respective arrays
+        and update renderable buffers accordingly
+        """
         for char_update in self.tile_char_updates:
             self.update_char_array(char_update)
         # if any char updates, update renderables' uv buffers
         if len(self.tile_char_updates) > 0:
             for r in self.renderables:
                 array = self.frames[r.frame].uv_array
-                r.update_dynamic_array_buffer(r.uv_buffer, array)
+                r.quick_update_dynamic_buffer(r.uv_buffer, array)
             # clear update list
             self.tile_char_updates = []
         # same with fg/bg color buffers
@@ -151,14 +160,14 @@ class Art:
         if len(self.tile_fg_updates) > 0:
             for r in self.renderables:
                 array = self.frames[r.frame].fg_color_array
-                r.update_dynamic_array_buffer(r.fg_color_buffer, array)
+                r.quick_update_dynamic_buffer(r.fg_color_buffer, array)
             self.tile_fg_updates = []
         for bg_color_update in self.tile_bg_updates:
             self.update_color_array(bg_color_update, False)
         if len(self.tile_bg_updates) > 0:
             for r in self.renderables:
                 array = self.frames[r.frame].bg_color_array
-                r.update_dynamic_array_buffer(r.bg_color_buffer, array)
+                r.quick_update_dynamic_buffer(r.bg_color_buffer, array)
             self.tile_bg_updates = []
     
     def update_char_array(self, update):
@@ -174,10 +183,7 @@ class Art:
         uv_index += update.layer.index * (self.width * self.height)
         uv_index *= UV_STRIDE
         uvs = [u0, v0, u1, v1, u2, v2, u3, v3]
-        #print(update.frame.uv_array)
         update.frame.uv_array[uv_index:uv_index+UV_STRIDE] = uvs
-        for renderable in self.renderables:
-            renderable.update_buffer(renderable.uv_buffer, update.frame.uv_array, 'array', 'dynamic', None, None)
     
     def update_color_array(self, update, fg):
         #print('processing %s %s' % (['bg','fg'][fg], update))
@@ -185,8 +191,8 @@ class Art:
         if not fg:
             array = update.frame.bg_color_array
         r,g,b,a = update.value[0], update.value[1], update.value[2], update.value[3]
+        # index: account for tile position, layer #, and stride
         index = (update.y * self.width) + update.x
-        # account for layer #
         index += update.layer.index * (self.width * self.height)
         index *= COLOR_STRIDE
         array[index:index+COLOR_STRIDE] = [r,g,b,a, r,g,b,a, r,g,b,a, r,g,b,a]
@@ -195,13 +201,13 @@ class Art:
         "change a random character"
         x = randint(0, self.width-1)
         y = randint(0, self.height-1)
-        char = randint(1, 128)
+        char = randint(0, 128)
         color = choice(self.palette.colors)
         self.set_char_index_at(0, 0, x, y, char)
         self.set_color_at(0, 0, x, y, color)
         color = choice(self.palette.colors)
         self.set_color_at(0, 0, x, y, color, False)
-        #self.print_test()
+        self.print_test()
     
     def print_test(self):
         self.set_char_index_at(0, 0, 1, 1, self.charset.get_char_index('H'))
@@ -215,7 +221,6 @@ class Art:
 class ArtFrame:
     
     "a single animation frame from an Art, containing multiple ArtLayers"
-    layer_offset = 0.1
     
     def __init__(self, art, delay=0.1):
         self.art = art
@@ -238,10 +243,10 @@ class ArtFrame:
         "creates (but does not populate) char/color arrays for this frame"
         tiles = len(self.layers) * self.art.width * self.art.height
         all_uvs_size = tiles * UV_STRIDE
-        self.uv_array = np.empty(shape=all_uvs_size)
+        self.uv_array = np.empty(shape=all_uvs_size, dtype=np.float32)
         all_colors_size = tiles * COLOR_STRIDE
-        self.fg_color_array = np.empty(shape=all_colors_size)
-        self.bg_color_array = np.empty(shape=all_colors_size)
+        self.fg_color_array = np.empty(shape=all_colors_size, dtype=np.float32)
+        self.bg_color_array = np.empty(shape=all_colors_size, dtype=np.float32)
     
     def serialize(self):
         "returns our data in a form that can be easily written to json"
@@ -252,17 +257,19 @@ class ArtLayer:
     
     "a single layer from an ArtFrame, containing char + fg/bg color data"
     
-    def __init__(self, frame, z, init_random=False):
+    init_random = True
+    
+    def __init__(self, frame, z):
         self.frame = frame
         self.art = self.frame.art
         self.z = z
-        self.build_lists(init_random)
+        self.build_lists()
         # index: position in our frame's list of layers, important for arrays
         self.index = None
         # TODO: if data loaded from disk is passed from frame, do that instead
     
-    def build_lists(self, init_random):
-        # TODO: ensure assumption that len(frames) = this frame is sound
+    def build_lists(self):
+        "creates and populates lists-of-rows for layer's char and color data"
         self.chars, self.fg_colors, self.bg_colors = [], [], []
         for y in range(self.art.height):
             char_line, fg_line, bg_line = [], [], []
@@ -270,7 +277,8 @@ class ArtLayer:
                 new_char_index = 0
                 new_fg_color = (1, 1, 1, 1)
                 new_bg_color = (0, 0, 0, 1)
-                if init_random:
+                # for test purposes, option to randomize everything
+                if self.init_random:
                     new_char_index = randint(0, 255)
                     new_fg_color = choice(self.art.palette.colors)
                     new_bg_color = choice(self.art.palette.colors)
