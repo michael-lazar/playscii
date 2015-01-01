@@ -59,6 +59,8 @@ class Application:
         self.renderables = []
         # TODO: load from disk
         self.art = Art(self.charset, self.palette, 8, 8)
+        # keep a list of all art assets loaded (start of MDI support)
+        self.art_loaded = [self.art]
         test_renderable = Renderable(self)
         # add renderables to list in reverse draw order (only world for now)
         self.renderables.append(test_renderable)
@@ -97,11 +99,7 @@ class Application:
         running = True
         while running:
             running = self.input()
-            self.camera.update()
-            if random() < 0.5:
-                self.art.mutate()
-            #self.cursor.update(self.elapsed_time)
-            #self.ui.update()
+            self.update()
             self.render()
             sdl2.SDL_Delay(int(1000/self.framerate))
             self.elapsed_time = sdl2.timer.SDL_GetTicks()
@@ -179,6 +177,15 @@ class Application:
         sdl2.SDL_PumpEvents()
         return True
     
+    def update(self):
+        for art in self.art_loaded:
+            art.update()
+        self.camera.update()
+        if random() < 0.5:
+            self.art.mutate()
+        #self.cursor.update(self.elapsed_time)
+        #self.ui.update()
+    
     def render(self):
         # draw main scene to framebuffer
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
@@ -194,7 +201,7 @@ class Application:
         sdl2.SDL_GL_SwapWindow(self.window)
     
     def quit(self):
-        self.art.save_to_file()
+        #self.art.save_to_file()
         for r in self.renderables:
             r.destroy()
         self.fb.destroy()

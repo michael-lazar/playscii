@@ -18,7 +18,7 @@ ArtFromDisk.init(): populate lists from saved data, update all tiles' char/fg/bg
 
 art.build_geo(): create vert and elem arrays for given size and update all tiles' char/colors - okay if it's slower because this only happens on init/resize
 
-ArtLayer.build_arrays(): creates uv/fgcolor/bgcolor arrays
+ArtFrame.build_arrays(): creates uv/fgcolor/bgcolor arrays
 
 art.set_char_index/color_at(): only called by user or sim edits, update internal lists only, add each changed tile to "to update" lists: "characters to update", "fg/bg colors to update"
 

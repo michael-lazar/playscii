@@ -1,5 +1,14 @@
 import ctypes
 from OpenGL import GL
+from art import VERT_LENGTH
+
+# allows Art to pass strings instead of GL constants
+gl_terms = {
+    'static': GL.GL_STATIC_DRAW,
+    'dynamic': GL.GL_DYNAMIC_DRAW,
+    'array': GL.GL_ARRAY_BUFFER,
+    'element': GL.GL_ELEMENT_ARRAY_BUFFER
+}
 
 class Renderable:
     
@@ -12,6 +21,8 @@ class Renderable:
         self.app = app
         self.art = self.app.art
         self.art.renderables.append(self)
+        # frame of our art's animation we're on
+        self.frame = 0
         # world space position
         # TODO: translation/rotation/scale matrices
         self.x, self.y, self.z = 0, 0, 0
@@ -30,30 +41,36 @@ class Renderable:
         self.vert_count = int(len(self.art.elem_array))
         # vertex positions
         self.vert_buffer = GL.glGenBuffers(1)
-        self.update_buffer(self.vert_buffer, self.art.vert_array, GL.GL_ARRAY_BUFFER,
-                           GL.GL_STATIC_DRAW, 'vertPosition', self.art.vert_length)
+        self.update_buffer(self.vert_buffer, self.art.vert_array, 'array',
+                           'static', 'vertPosition', VERT_LENGTH)
         # elements
         self.elem_buffer = GL.glGenBuffers(1)
         self.update_buffer(self.elem_buffer, self.art.elem_array,
-                           GL.GL_ELEMENT_ARRAY_BUFFER, GL.GL_STATIC_DRAW, None, None)
+                           'element', 'static', None, None)
         # vertex UVs
+        current_frame = self.art.frames[self.frame]
         self.uv_buffer = GL.glGenBuffers(1)
         # GL_DYNAMIC_DRAW because UVs change every time a char is changed
-        self.update_buffer(self.uv_buffer, self.art.uv_array, GL.GL_ARRAY_BUFFER,
-                           GL.GL_DYNAMIC_DRAW, 'texCoords', 2)
+        self.update_buffer(self.uv_buffer, current_frame.uv_array, 'array',
+                           'dynamic', 'texCoords', 2)
         # foreground colors
         self.fg_color_buffer = GL.glGenBuffers(1)
-        self.update_buffer(self.fg_color_buffer, self.art.fg_color_array,
-                           GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, 'fgColor', 4)
+        self.update_buffer(self.fg_color_buffer, current_frame.fg_color_array,
+                           'array', 'dynamic', 'fgColor', 4)
         # background colors
         self.bg_color_buffer = GL.glGenBuffers(1)
-        self.update_buffer(self.bg_color_buffer, self.art.bg_color_array,
-                           GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, 'bgColor', 4)
+        self.update_buffer(self.bg_color_buffer, current_frame.bg_color_array,
+                           'array', 'dynamic', 'bgColor', 4)
         # finish
         GL.glBindVertexArray(0)
     
+    def update_dynamic_array_buffer(self, buffer_index, array):
+        self.update_buffer(buffer_index, array, 'array', 'dynamic', None, None)
+    
     def update_buffer(self, buffer_index, array, target, buffer_type,
                       attrib_name, attrib_size):
+        target = gl_terms[target]
+        buffer_type = gl_terms[buffer_type]
         GL.glBindBuffer(target, buffer_index)
         GL.glBufferData(target, array.nbytes, array, buffer_type)
         if attrib_name:
