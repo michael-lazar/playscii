@@ -52,6 +52,12 @@ class Art:
         # creating new layer will mark all tiles as needing uv/color array updates
         #self.update()
     
+    def add_layer(self, z):
+        self.layers += 1
+        for frame in self.frames:
+            frame.add_layer(z)
+        self.build_geo()
+    
     def add_frame(self):
         new_frame = ArtFrame(self)
         self.frames.append(new_frame)
@@ -201,15 +207,16 @@ class Art:
         "change a random character"
         x = randint(0, self.width-1)
         y = randint(0, self.height-1)
+        layer = randint(0, self.layers-1)
         char = randint(0, 128)
         color = choice(self.palette.colors)
-        self.set_char_index_at(0, 0, x, y, char)
-        self.set_color_at(0, 0, x, y, color)
+        self.set_char_index_at(0, layer, x, y, char)
+        self.set_color_at(0, layer, x, y, color)
         color = choice(self.palette.colors)
-        self.set_color_at(0, 0, x, y, color, False)
-        self.print_test()
+        self.set_color_at(0, layer, x, y, color, False)
+        self.write_test()
     
-    def print_test(self):
+    def write_test(self):
         self.set_char_index_at(0, 0, 1, 1, self.charset.get_char_index('H'))
         self.set_char_index_at(0, 0, 2, 1, self.charset.get_char_index('e'))
         self.set_char_index_at(0, 0, 3, 1, self.charset.get_char_index('l'))
@@ -230,14 +237,20 @@ class ArtFrame:
         self.delay = delay
         self.layers = []
         # initialize with one blank layer
+        if len(self.art.frames) == 0:
+            self.add_layer(0)
+        else:
+            # if adding a 2nd-Nth layer, use same z values
+            for layer in self.art.frames[0].layers:
+                self.add_layer(layer.z)
         # TODO: if data supplied from ArtFromDisk, pass into layer constructor
-        self.add_layer(0)
         self.build_arrays()
     
     def add_layer(self, z):
         new_layer = ArtLayer(self, z)
         self.layers.append(new_layer)
         new_layer.index = len(self.layers) - 1
+        self.build_arrays()
     
     def build_arrays(self):
         "creates (but does not populate) char/color arrays for this frame"
@@ -257,7 +270,7 @@ class ArtLayer:
     
     "a single layer from an ArtFrame, containing char + fg/bg color data"
     
-    init_random = True
+    init_random = False
     
     def __init__(self, frame, z):
         self.frame = frame
@@ -276,7 +289,11 @@ class ArtLayer:
             for x in range(self.art.width):
                 new_char_index = 0
                 new_fg_color = (1, 1, 1, 1)
-                new_bg_color = (0, 0, 0, 1)
+                bg_alpha = 1
+                # transparent layer if not the first
+                if len(self.frame.layers) > 0:
+                    bg_alpha = 0
+                new_bg_color = (0, 0, 0, bg_alpha)
                 # for test purposes, option to randomize everything
                 if self.init_random:
                     new_char_index = randint(0, 255)

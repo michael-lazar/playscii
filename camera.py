@@ -14,6 +14,7 @@ class Camera:
     # good starting values
     start_x,start_y = 0,0
     start_zoom = 2.5
+    y_tilt = 0
     # pan/zoom speed tuning
     pan_accel = 0.01
     max_pan_speed = 0.2
@@ -61,7 +62,7 @@ class Camera:
         eye = vector.Vec3(self.x, self.y, self.z)
         target = eye.copy()
         target.z = 0
-        #target.y += 0.5 # camera pitch mode7 radness
+        target.y += self.y_tilt # camera pitch mode7 radness
         up = vector.Vec3(0, 1, 0)
         #self.view_matrix = matrix.look_at(loc, target, up)
         # http://stackoverflow.com/questions/21830340/understanding-glmlookat

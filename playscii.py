@@ -58,7 +58,9 @@ class Application:
         self.palette = Palette(self.starting_palette)
         self.renderables = []
         # TODO: load from disk
-        self.art = Art(self.charset, self.palette, 8, 8)
+        self.art = Art(self.charset, self.palette, 64, 64)
+        self.art.add_layer(0.25)
+        self.art.add_layer(0.5)
         # keep a list of all art assets loaded (start of MDI support)
         self.art_loaded = [self.art]
         test_renderable = Renderable(self)
