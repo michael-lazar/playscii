@@ -33,6 +33,8 @@ class Art:
     """
     
     quad_width,quad_height = 1, 1
+    log_array_builds = False
+    log_tile_updates = False
     
     # TODO: argument that provides data loaded from disk? better as a subclass?
     def __init__(self, charset, palette, width, height):
@@ -49,19 +51,25 @@ class Art:
         self.renderables = []
         # build vert and element arrays
         self.build_geo()
-        # creating new layer will mark all tiles as needing uv/color array updates
-        #self.update()
     
     def add_layer(self, z):
         self.layers += 1
         for frame in self.frames:
             frame.add_layer(z)
         self.build_geo()
+        print('%s now has %s frames %s layers' % (self, len(self.frames), self.layers))
     
     def add_frame(self):
         new_frame = ArtFrame(self)
         self.frames.append(new_frame)
         new_frame.index = len(self.frames) - 1
+        print('%s now has %s frames %s layers' % (self, len(self.frames), self.layers))
+    
+    def duplicate_frame(self, frame_index):
+        src = self.frames[frame_index]
+        dest = src.copy()
+        self.frames.append(dest)
+        dest.index = len(self.frames) - 1
     
     def build_geo(self):
         "builds the vertex and element arrays used by all layers"
@@ -101,6 +109,8 @@ class Art:
                     elem_index += ELEM_STRIDE
                     # 4 verts in a quad
                     vert_index += 4
+        if self.log_array_builds:
+            print('built geo: %s verts, %s elements' % (len(self.vert_array), len(self.elem_array)))
     
     # set methods
     # these set tiles in the internal list format, then mark those tiles
@@ -113,8 +123,10 @@ class Art:
         # mark tile for char (UV) array update
         tu = TileUpdate(frame, layer, x, y, char_index)
         self.tile_char_updates.append(tu)
+        if self.log_tile_updates:
+            print('setting tile %s:%s:%s,%s to %s' % (frame_index, layer_index, x, y, char_index))
     
-    def set_color_at(self, frame_index, layer_index, x, y, color, fg=True):
+    def set_color_at(self, frame_index, layer_index, x, y, color_index, fg=True):
         frame = self.frames[frame_index]
         layer = frame.layers[layer_index]
         # no functional differences between fg and bg color update,
@@ -122,29 +134,43 @@ class Art:
         update_list = layer.fg_colors
         if not fg:
             update_list = layer.bg_colors
-        update_list[y][x] = color
+        # % to resolve any negative indices
+        update_list[y][x] = color_index % len(self.palette.colors)
         # mark tile for color array update
-        tu = TileUpdate(frame, layer, x, y, color)
+        tu = TileUpdate(frame, layer, x, y, color_index)
         if fg:
             self.tile_fg_updates.append(tu)
         else:
             self.tile_bg_updates.append(tu)
+        if self.log_tile_updates:
+            print('setting tile %s:%s:%s,%s to %s' % (frame_index, layer_index, x, y, color_index))
     
     # get methods
     def get_char_index_at(self, x, y):
         return self.chars[y][x]
     
-    def get_fg_color_at(self, x, y):
+    def get_fg_color_index_at(self, x, y):
         return self.fg_colors[y][x]
     
-    def get_bg_color_at(self, x, y):
+    def get_bg_color_index_at(self, x, y):
         return self.bg_colors[y][x]
     
+    def load_from_file(self, filename):
+        data = json.load(open(filename))
+        # TODO: turn data into object
+    
     def save_to_file(self):
-        savefile = open('dump.json', 'w')
-        json.dump(self, savefile)
-        # TODO: save char/fg/bg lists (frames w/ layers), charset/palette, size,
-        # camera loc/zoom
+        # TODO: save camera loc/zoom
+        frame_list = []
+        for frame in self.frames:
+            frame_list.append(frame.get_save_dict())
+        d = { 'charset': self.charset.name,
+              'palette': self.palette.name,
+              'width': self.width,
+              'height': self.height,
+              'frames': frame_list
+        }
+        json.dump(d, open('dump.json', 'w'), sort_keys=False, indent=1)
     
     def update(self):
         """
@@ -155,6 +181,8 @@ class Art:
             self.update_char_array(char_update)
         # if any char updates, update renderables' uv buffers
         if len(self.tile_char_updates) > 0:
+            if self.log_tile_updates:
+                print('%s char updates processed' % len(self.tile_char_updates))
             for r in self.renderables:
                 array = self.frames[r.frame].uv_array
                 r.quick_update_dynamic_buffer(r.uv_buffer, array)
@@ -164,6 +192,8 @@ class Art:
         for fg_color_update in self.tile_fg_updates:
             self.update_color_array(fg_color_update, True)
         if len(self.tile_fg_updates) > 0:
+            if self.log_tile_updates:
+                print('%s fg color updates processed' % len(self.tile_fg_updates))
             for r in self.renderables:
                 array = self.frames[r.frame].fg_color_array
                 r.quick_update_dynamic_buffer(r.fg_color_buffer, array)
@@ -171,13 +201,16 @@ class Art:
         for bg_color_update in self.tile_bg_updates:
             self.update_color_array(bg_color_update, False)
         if len(self.tile_bg_updates) > 0:
+            if self.log_tile_updates:
+                print('%s bg color updates processed' % len(self.tile_bg_updates))
             for r in self.renderables:
                 array = self.frames[r.frame].bg_color_array
                 r.quick_update_dynamic_buffer(r.bg_color_buffer, array)
             self.tile_bg_updates = []
     
     def update_char_array(self, update):
-        #print('processing char %s' % update)
+        if self.log_tile_updates:
+            print('processing char %s' % update)
         # get tile value's UVs from sprite data
         u0,v0 = self.charset.get_uvs(update.value)
         u1,v1 = u0 + self.charset.u_width, v0
@@ -192,11 +225,13 @@ class Art:
         update.frame.uv_array[uv_index:uv_index+UV_STRIDE] = uvs
     
     def update_color_array(self, update, fg):
-        #print('processing %s %s' % (['bg','fg'][fg], update))
+        if self.log_tile_updates:
+            print('processing %s %s' % (['bg','fg'][fg], update))
         array = update.frame.fg_color_array
         if not fg:
             array = update.frame.bg_color_array
-        r,g,b,a = update.value[0], update.value[1], update.value[2], update.value[3]
+        color = self.palette.colors[update.value]
+        r,g,b,a = color[0], color[1], color[2], color[3]
         # index: account for tile position, layer #, and stride
         index = (update.y * self.width) + update.x
         index += update.layer.index * (self.width * self.height)
@@ -204,32 +239,44 @@ class Art:
         array[index:index+COLOR_STRIDE] = [r,g,b,a, r,g,b,a, r,g,b,a, r,g,b,a]
     
     def mutate(self):
-        "change a random character"
+        "change a random tile"
         x = randint(0, self.width-1)
         y = randint(0, self.height-1)
         layer = randint(0, self.layers-1)
         char = randint(0, 128)
-        color = choice(self.palette.colors)
+        color_index = self.palette.get_random_color_index()
         self.set_char_index_at(0, layer, x, y, char)
-        self.set_color_at(0, layer, x, y, color)
-        color = choice(self.palette.colors)
-        self.set_color_at(0, layer, x, y, color, False)
-        self.write_test()
+        self.set_color_at(0, layer, x, y, color_index)
+        color_index = self.palette.get_random_color_index()
+        self.set_color_at(0, layer, x, y, color_index, False)
     
-    def write_test(self):
-        self.set_char_index_at(0, 0, 1, 1, self.charset.get_char_index('H'))
-        self.set_char_index_at(0, 0, 2, 1, self.charset.get_char_index('e'))
-        self.set_char_index_at(0, 0, 3, 1, self.charset.get_char_index('l'))
-        self.set_char_index_at(0, 0, 4, 1, self.charset.get_char_index('l'))
-        self.set_char_index_at(0, 0, 5, 1, self.charset.get_char_index('o'))
-        self.set_char_index_at(0, 0, 6, 1, self.charset.get_char_index('!'))
+    def do_test_text(self):
+        "sets some test data. assumes: 8x8, 3 layers"
+        self.write_string(0, 0, 1, 1, 'hello.')
+        self.write_string(0, 1, 1, 3, 'Hello?')
+        self.write_string(0, 2, 1, 5, 'HELLO!')
+    
+    def do_test_animation(self):
+        "sets more test data. assumes: 8x8, 3 layers, 4 frames"
+        self.set_color_at(0, 0, 1, 1, 3, True)
+        self.set_color_at(1, 0, 1, 1, 4, True)
+        self.set_color_at(2, 0, 1, 1, 5, True)
+        self.set_color_at(3, 0, 1, 1, 6, True)
+    
+    def write_string(self, frame, layer, x, y, text):
+        "writes out each char of a string to specified tiles"
+        x_offset = 0
+        for char in text:
+            idx = self.charset.get_char_index(char)
+            self.set_char_index_at(frame, layer, x+x_offset, y, idx)
+            x_offset += 1
 
 
 class ArtFrame:
     
     "a single animation frame from an Art, containing multiple ArtLayers"
     
-    def __init__(self, art, delay=0.1):
+    def __init__(self, art, delay=0.1, create_layers=True):
         self.art = art
         # index: position in our art's list of frames, important for arrays
         self.index = None
@@ -237,14 +284,36 @@ class ArtFrame:
         self.delay = delay
         self.layers = []
         # initialize with one blank layer
-        if len(self.art.frames) == 0:
-            self.add_layer(0)
-        else:
-            # if adding a 2nd-Nth layer, use same z values
-            for layer in self.art.frames[0].layers:
-                self.add_layer(layer.z)
-        # TODO: if data supplied from ArtFromDisk, pass into layer constructor
+        if create_layers:
+            if len(self.art.frames) == 0:
+                self.add_layer(0)
+            else:
+                # if we're not the first frame add # of layers other frames have
+                for layer in self.art.frames[0].layers:
+                    self.add_layer(layer.z)
         self.build_arrays()
+        # TODO: if data supplied from ArtFromDisk, pass into layer constructor
+        print('%s created with %s layers' % (self, len(self.layers)))
+    
+    def get_save_dict(self):
+        layer_list = []
+        for layer in self.layers:
+            layer_list.append(layer.get_save_dict())
+        d = { 'delay': self.delay,
+              'layers': layer_list
+        }
+        return d
+    
+    def copy(self):
+        # don't create layers for the new frame, we're about to copy em
+        new_frame = ArtFrame(self.art, self.delay, False)
+        # for deep copy of layers, copy each layer
+        for i,layer in enumerate(self.layers):
+            new_layer = layer.copy()
+            new_layer.index = layer.index
+            new_frame.layers.append(new_layer)
+        new_frame.build_arrays()
+        return new_frame
     
     def add_layer(self, z):
         new_layer = ArtLayer(self, z)
@@ -260,6 +329,8 @@ class ArtFrame:
         all_colors_size = tiles * COLOR_STRIDE
         self.fg_color_array = np.empty(shape=all_colors_size, dtype=np.float32)
         self.bg_color_array = np.empty(shape=all_colors_size, dtype=np.float32)
+        if self.art.log_array_builds:
+            print('built arrays: %s uvs, %s fg/bg colors' % (len(self.uv_array), len(self.fg_color_array)))
     
     def serialize(self):
         "returns our data in a form that can be easily written to json"
@@ -272,14 +343,50 @@ class ArtLayer:
     
     init_random = False
     
-    def __init__(self, frame, z):
+    def __init__(self, frame, z, build_lists=True):
         self.frame = frame
         self.art = self.frame.art
         self.z = z
-        self.build_lists()
+        if build_lists:
+            self.build_lists()
         # index: position in our frame's list of layers, important for arrays
         self.index = None
         # TODO: if data loaded from disk is passed from frame, do that instead
+        print('%s created at z %s' % (self, self.z))
+    
+    def copy(self):
+        new_layer = ArtLayer(self.frame, self.z, False) # skip building lists
+        new_layer.chars = self.chars[:]
+        new_layer.fg_colors = self.fg_colors[:]
+        new_layer.bg_colors = self.bg_colors[:]
+        new_layer.mark_all_tiles_for_update()
+        return new_layer
+    
+    def mark_all_tiles_for_update(self):
+        for y in range(self.art.height):
+            for x in range(self.art.width):
+                # add this new tile to char, fg and bg color update lists
+                tu = TileUpdate(self.frame, self, x, y, self.chars[y][x])
+                self.art.tile_char_updates.append(tu)
+                tu = TileUpdate(self.frame, self, x, y, self.fg_colors[y][x])
+                self.art.tile_fg_updates.append(tu)
+                tu = TileUpdate(self.frame, self, x, y, self.bg_colors[y][x])
+                self.art.tile_bg_updates.append(tu)
+    
+    def get_save_dict(self):
+        d = { 'z': self.z }
+        tiles_list = []
+        for y in range(self.art.height):
+            new_line = []
+            for x in range(self.art.width):
+                char = self.chars[y][x]
+                fg_color = self.fg_colors[y][x]
+                bg_color = self.bg_colors[y][x]
+                tile = {'ch': char, 'fg': fg_color, 'bg': bg_color}
+                new_line.append(tile)
+            tiles_list.append(new_line)
+        d['tiles'] = tiles_list
+        return d
     
     def build_lists(self):
         "creates and populates lists-of-rows for layer's char and color data"
@@ -288,28 +395,25 @@ class ArtLayer:
             char_line, fg_line, bg_line = [], [], []
             for x in range(self.art.width):
                 new_char_index = 0
-                new_fg_color = (1, 1, 1, 1)
-                bg_alpha = 1
+                new_fg_color = -1 % len(self.art.palette.colors)
+                new_bg_color = 1
                 # transparent layer if not the first
                 if len(self.frame.layers) > 0:
-                    bg_alpha = 0
-                new_bg_color = (0, 0, 0, bg_alpha)
+                    new_bg_color = 0
                 # for test purposes, option to randomize everything
                 if self.init_random:
                     new_char_index = randint(0, 255)
-                    new_fg_color = choice(self.art.palette.colors)
-                    new_bg_color = choice(self.art.palette.colors)
+                    new_fg_color = self.art.palette.get_random_color_index()
+                    new_bg_color = self.art.palette.get_random_color_index()
                 char_line.append(new_char_index)
                 fg_line.append(new_fg_color)
                 bg_line.append(new_bg_color)
-                # add this tile to char, fg and bg color update lists
+                # add this new tile to char, fg and bg color update lists
                 tu = TileUpdate(self.frame, self, x, y, new_char_index)
                 self.art.tile_char_updates.append(tu)
-                tu = tu.copy()
-                tu.value = new_fg_color
+                tu = TileUpdate(self.frame, self, x, y, new_fg_color)
                 self.art.tile_fg_updates.append(tu)
-                tu = tu.copy()
-                tu.value = new_bg_color
+                tu = TileUpdate(self.frame, self, x, y, new_bg_color)
                 self.art.tile_bg_updates.append(tu)
             self.chars.append(char_line)
             self.fg_colors.append(fg_line)

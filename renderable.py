@@ -16,6 +16,7 @@ class Renderable:
     vert_shader_source = 'renderable_v.glsl'
     # pixel shader: handles FG/BG colors
     frag_shader_source = 'renderable_f.glsl'
+    log_animation = False
     
     def __init__(self, app):
         self.app = app
@@ -34,11 +35,13 @@ class Renderable:
         self.tex_unit_uniform = self.shader.get_uniform_location('texUnit')
         self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
         self.view_matrix_uniform = self.shader.get_uniform_location('view')
-        #
-        # create GL objects
-        #
-        # determine vertex count for render
+        # vertex count needed for render
         self.vert_count = int(len(self.art.elem_array))
+        self.create_buffers()
+        # finish
+        GL.glBindVertexArray(0)
+    
+    def create_buffers(self):
         # vertex positions
         self.vert_buffer = GL.glGenBuffers(1)
         self.update_buffer(self.vert_buffer, self.art.vert_array, 'array',
@@ -61,8 +64,17 @@ class Renderable:
         self.bg_color_buffer = GL.glGenBuffers(1)
         self.update_buffer(self.bg_color_buffer, current_frame.bg_color_array,
                            'array', 'dynamic', 'bgColor', 4)
-        # finish
-        GL.glBindVertexArray(0)
+    
+    def quick_update_geo_buffers(self):
+        self.update_buffer(self.vert_buffer, self.art.vert_array, 'array', 'static', None, None)
+        self.update_buffer(self.elem_buffer, self.art.elem_array, 'element', 'static', None, None)
+    
+    def quick_update_tile_buffers(self):
+        "update all tile data relevant buffers, eg after an anim frame change"
+        current_frame = self.art.frames[self.frame]
+        self.quick_update_dynamic_buffer(self.uv_buffer, current_frame.uv_array)
+        self.quick_update_dynamic_buffer(self.fg_color_buffer, current_frame.fg_color_array)
+        self.quick_update_dynamic_buffer(self.bg_color_buffer, current_frame.bg_color_array)
     
     def quick_update_dynamic_buffer(self, buffer_index, array):
         self.update_buffer(buffer_index, array, 'array', 'dynamic', None, None)
@@ -80,6 +92,19 @@ class Renderable:
                                      GL.GL_FALSE, 0, ctypes.c_void_p(0))
         # unbind each buffer before binding next
         GL.glBindBuffer(target, 0)
+    
+    def advance_frame(self):
+        self.set_frame(self.frame + 1)
+    
+    def rewind_frame(self):
+        self.set_frame(self.frame - 1)
+    
+    def set_frame(self, new_frame_index):
+        old_frame = self.frame
+        self.frame = new_frame_index % len(self.art.frames)
+        self.quick_update_tile_buffers()
+        if self.log_animation:
+            print('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])

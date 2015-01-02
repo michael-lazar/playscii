@@ -11,6 +11,8 @@ class CharacterSet:
     transparent_color = (0, 0, 0)
     
     def __init__(self, src_filename):
+        self.name = os.path.basename(src_filename)
+        self.name = os.path.splitext(self.name)[0]
         char_data_filename = CHARSET_DIR + src_filename + '.char'
         if not os.path.exists(char_data_filename):
             print("Couldn't find character set data file " + char_data_filename)

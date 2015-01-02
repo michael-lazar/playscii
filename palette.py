@@ -1,4 +1,5 @@
 import os.path
+from random import randint
 from PIL import Image
 
 from texture import Texture
@@ -9,6 +10,8 @@ MAX_COLORS = 255
 class Palette:
     
     def __init__(self, src_filename):
+        self.name = os.path.basename(src_filename)
+        self.name = os.path.splitext(self.name)[0]
         pal_filename = PALETTE_DIR + src_filename
         # auto-guess filename, but assume PNG
         if not os.path.exists(pal_filename):
@@ -32,3 +35,7 @@ class Palette:
                     color = (color[0]/255, color[1]/255, color[2]/255, color[3]/255)
                     self.colors.append(color)
         #print('%s unique colors in source palette: %s' % (len(self.colors)-1, self.colors))
+    
+    def get_random_color_index(self):
+        # exclude transparent first index
+        return randint(1, len(self.colors))

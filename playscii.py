@@ -58,15 +58,23 @@ class Application:
         self.palette = Palette(self.starting_palette)
         self.renderables = []
         # TODO: load from disk
-        self.art = Art(self.charset, self.palette, 64, 64)
+        self.art = Art(self.charset, self.palette, 8, 8)
+        # load some test data in
         self.art.add_layer(0.25)
         self.art.add_layer(0.5)
-        # keep a list of all art assets loaded (start of MDI support)
+        self.art.do_test_text()
+        self.art.duplicate_frame(0)
+        self.art.duplicate_frame(0)
+        self.art.duplicate_frame(0)
+        self.art.do_test_animation()
+        self.art.save_to_file()
+        # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [self.art]
         test_renderable = Renderable(self)
         # add renderables to list in reverse draw order (only world for now)
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
+        print('init done.')
         # TODO: UI
     
     def blank_screen(self):
@@ -165,6 +173,11 @@ class Application:
                     self.camera.set_zoom(2)
                 elif event.key.keysym.sym == sdl2.SDLK_c:
                     self.fb.toggle_crt()
+                # TEST: < > / , . rewind / advance anim frame
+                elif event.key.keysym.sym == sdl2.SDLK_COMMA:
+                    self.renderables[0].rewind_frame()
+                elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
+                    self.renderables[0].advance_frame()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -183,7 +196,7 @@ class Application:
         for art in self.art_loaded:
             art.update()
         self.camera.update()
-        if random() < 0.5:
+        if random() < 0.5 and False:
             self.art.mutate()
         #self.cursor.update(self.elapsed_time)
         #self.ui.update()
