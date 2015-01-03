@@ -30,7 +30,7 @@ class Application:
     window_width, window_height = 800, 600
     fullscreen = False
     framerate = 60
-    title = b'<3 <3 Playscii <3 <3'
+    base_title = 'Playscii'
     starting_charset = 'c64'
     starting_palette = 'c64'
     
@@ -40,7 +40,7 @@ class Application:
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
-        self.window = sdl2.SDL_CreateWindow(self.title, sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
+        self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
         # force GL2.1 'core' before creating context
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, 2)
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, 1)
@@ -50,6 +50,7 @@ class Application:
         # draw black screen while doing other init
         self.sdl_renderer = sdl2.SDL_CreateRenderer(self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
         self.blank_screen()
+        # TODO: SDL_SetWindowIcon(self.window, SDL_Surface* icon)
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         self.camera = Camera(self.window_width, self.window_height)
@@ -59,23 +60,20 @@ class Application:
         self.renderables = []
         # TODO: load from disk
         self.art = Art(self.charset, self.palette, 8, 8)
-        # load some test data in
-        self.art.add_layer(0.25)
-        self.art.add_layer(0.5)
-        self.art.do_test_text()
-        self.art.duplicate_frame(0)
-        self.art.duplicate_frame(0)
-        self.art.duplicate_frame(0)
-        self.art.do_test_animation()
-        self.art.save_to_file()
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [self.art]
         test_renderable = Renderable(self)
+        self.set_window_title('frame %s' % test_renderable.frame)
         # add renderables to list in reverse draw order (only world for now)
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         print('init done.')
         # TODO: UI
+        self.test_done = False
+    
+    def set_window_title(self, text):
+        new_title = bytes('%s - %s' % (self.base_title, text), 'utf-8')
+        sdl2.SDL_SetWindowTitle(self.window, new_title)
     
     def blank_screen(self):
         r = sdl2.SDL_Rect()
@@ -176,8 +174,10 @@ class Application:
                 # TEST: < > / , . rewind / advance anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     self.renderables[0].rewind_frame()
+                    self.set_window_title('frame %s' % self.renderables[0].frame)
                 elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
                     self.renderables[0].advance_frame()
+                    self.set_window_title('frame %s' % self.renderables[0].frame)
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -198,6 +198,25 @@ class Application:
         self.camera.update()
         if random() < 0.5 and False:
             self.art.mutate()
+        
+        if not self.test_done:
+            self.test_done = True
+            # load some test data in
+            self.art.add_layer(0.25)
+            self.art.add_layer(0.5)
+            self.art.do_test_text()
+            self.art.duplicate_frame(0)
+            self.art.duplicate_frame(0)
+            self.art.duplicate_frame(0)
+            #self.art.add_frame()
+            #self.art.add_frame()
+            #self.art.add_frame()
+            self.art.do_test_animation()
+            #self.art.save_to_file()
+            #print('--------')
+            #print(self.art.frames[0].fg_color_array[:32])
+            #print(self.art.frames[3].fg_color_array[:32])
+        
         #self.cursor.update(self.elapsed_time)
         #self.ui.update()
     

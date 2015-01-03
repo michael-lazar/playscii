@@ -221,6 +221,7 @@ class Art:
         # account for layer #
         uv_index += update.layer.index * (self.width * self.height)
         uv_index *= UV_STRIDE
+        # TODO: charset.get_uvs should just precompute and return this!
         uvs = [u0, v0, u1, v1, u2, v2, u3, v3]
         update.frame.uv_array[uv_index:uv_index+UV_STRIDE] = uvs
     
@@ -258,6 +259,10 @@ class Art:
     
     def do_test_animation(self):
         "sets more test data. assumes: 8x8, 3 layers, 4 frames"
+        #self.write_string(1, 0, 1, 1, 'hello.')
+        #self.write_string(2, 1, 1, 3, 'Hello?')
+        #self.write_string(3, 2, 1, 5, 'HELLO!')
+        
         self.set_color_at(0, 0, 1, 1, 3, True)
         self.set_color_at(1, 0, 1, 1, 4, True)
         self.set_color_at(2, 0, 1, 1, 5, True)
@@ -291,7 +296,7 @@ class ArtFrame:
                 # if we're not the first frame add # of layers other frames have
                 for layer in self.art.frames[0].layers:
                     self.add_layer(layer.z)
-        self.build_arrays()
+            self.build_arrays()
         # TODO: if data supplied from ArtFromDisk, pass into layer constructor
         print('%s created with %s layers' % (self, len(self.layers)))
     
@@ -305,17 +310,26 @@ class ArtFrame:
         return d
     
     def copy(self):
+        "returns a copy of this frame object"
+        print('copying frame %s...' % self)
         # don't create layers for the new frame, we're about to copy em
+        # !FIXME!: 3rd "create layers" arg is the problem!
         new_frame = ArtFrame(self.art, self.delay, False)
+        # simply copy the uv and color arrays
+        new_frame.uv_array = self.uv_array.copy()
+        new_frame.fg_color_array = self.fg_color_array.copy()
+        new_frame.bg_color_array = self.bg_color_array.copy()
         # for deep copy of layers, copy each layer
-        for i,layer in enumerate(self.layers):
+        for layer in self.layers:
             new_layer = layer.copy()
             new_layer.index = layer.index
+            # layer.copy() adds all its tiles to the update lists
             new_frame.layers.append(new_layer)
-        new_frame.build_arrays()
+        print('new copied frame has %s layers' % len(new_frame.layers))
         return new_frame
     
     def add_layer(self, z):
+        "adds a new blank layer"
         new_layer = ArtLayer(self, z)
         self.layers.append(new_layer)
         new_layer.index = len(self.layers) - 1
@@ -323,7 +337,7 @@ class ArtFrame:
     
     def build_arrays(self):
         "creates (but does not populate) char/color arrays for this frame"
-        tiles = len(self.layers) * self.art.width * self.art.height
+        tiles = self.art.layers * self.art.width * self.art.height
         all_uvs_size = tiles * UV_STRIDE
         self.uv_array = np.empty(shape=all_uvs_size, dtype=np.float32)
         all_colors_size = tiles * COLOR_STRIDE
@@ -331,10 +345,6 @@ class ArtFrame:
         self.bg_color_array = np.empty(shape=all_colors_size, dtype=np.float32)
         if self.art.log_array_builds:
             print('built arrays: %s uvs, %s fg/bg colors' % (len(self.uv_array), len(self.fg_color_array)))
-    
-    def serialize(self):
-        "returns our data in a form that can be easily written to json"
-        pass
 
 
 class ArtLayer:
@@ -355,11 +365,22 @@ class ArtLayer:
         print('%s created at z %s' % (self, self.z))
     
     def copy(self):
+        print('copying layer %s...' % self)
         new_layer = ArtLayer(self.frame, self.z, False) # skip building lists
-        new_layer.chars = self.chars[:]
-        new_layer.fg_colors = self.fg_colors[:]
-        new_layer.bg_colors = self.bg_colors[:]
-        new_layer.mark_all_tiles_for_update()
+        # copy each row of each list
+        new_layer.chars = []
+        for row in self.chars:
+            new_layer.chars.append(row[:])
+        new_layer.fg_colors = []
+        for row in self.fg_colors:
+            new_layer.fg_colors.append(row[:])
+        new_layer.bg_colors = []
+        for row in self.bg_colors:
+            new_layer.bg_colors.append(row[:])
+        # populate char/color arrays
+        #new_layer.mark_all_tiles_for_update()
+        tiles = len(new_layer.chars) * len(new_layer.chars[0])
+        print('new copied layer has %s tiles' % tiles)
         return new_layer
     
     def mark_all_tiles_for_update(self):
@@ -408,16 +429,11 @@ class ArtLayer:
                 char_line.append(new_char_index)
                 fg_line.append(new_fg_color)
                 bg_line.append(new_bg_color)
-                # add this new tile to char, fg and bg color update lists
-                tu = TileUpdate(self.frame, self, x, y, new_char_index)
-                self.art.tile_char_updates.append(tu)
-                tu = TileUpdate(self.frame, self, x, y, new_fg_color)
-                self.art.tile_fg_updates.append(tu)
-                tu = TileUpdate(self.frame, self, x, y, new_bg_color)
-                self.art.tile_bg_updates.append(tu)
             self.chars.append(char_line)
             self.fg_colors.append(fg_line)
             self.bg_colors.append(bg_line)
+        # everything's new, update arrays
+        self.mark_all_tiles_for_update()
 
 
 class TileUpdate():
