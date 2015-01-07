@@ -1,0 +1,31 @@
+possibly-helpful links
+
+
+OpenGL resources:
+
+http://docs.gl
+
+https://open.gl/introduction
+
+https://www.opengl.org/wiki/Core_Language_%28GLSL%29
+
+http://duriansoftware.com/joe/An-intro-to-modern-OpenGL.-Table-of-Contents.html
+
+
+Tool reference:
+
+http://ragzouken.itch.io/kooltool - 8)
+
+http://www.aseprite.org - sprite editor with non-OS native retro-feelin' UI
+
+http://www.warmplace.ru/soft/sunvox - unusual DAW
+
+https://bitbucket.org/runhello/geodesic/wiki/Home - Andi's Icosa
+
+https://github.com/andyherbert/ansiedit - cool web-based editor
+
+http://fontstruct.com/gallery - tile-based font builder
+
+https://github.com/abagames/mgl - kenta cho's framework
+
+https://pypi.python.org/pypi/Compositor/ - "Morphologically Optimal ASCII Art"

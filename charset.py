@@ -26,12 +26,14 @@ class CharacterSet:
                 char_data.append(line)
         # first line = image file
         image_filename = char_data.pop(0).strip()
-        # if not provided, guess a PNG
+        image_filename = os.path.splitext(image_filename)[0]
         if not os.path.exists(image_filename):
-            image_filename = CHARSET_DIR + src_filename + '.png'
+            image_filename = CHARSET_DIR + image_filename
             if not os.path.exists(image_filename):
-                print("Couldn't find character set image file " + image_filename)
-                return
+                image_filename += '.png'
+                if not os.path.exists(image_filename):
+                    print("Couldn't find character set image file " + image_filename)
+                    return
         # second line = character set dimensions
         second_line = char_data.pop(0).strip().split(',')
         self.map_width, self.map_height = int(second_line[0]), int(second_line[1])
@@ -54,17 +56,17 @@ class CharacterSet:
                     # TODO: does keeping non-alpha color improve sampling?
                     img.putpixel((x, y), (color[0], color[1], color[2], 0))
         self.texture = Texture(img.tostring(), self.image_width, self.image_height)
-        # TODO: why is /2 necessary here?!?
-        self.u_width = (self.map_width / self.image_width) / 2
-        self.v_height = (self.map_height / self.image_height) / 2
+        # store character dimensions and UV size
+        self.char_width = int(self.image_width / self.map_width)
+        self.char_height = int(self.image_height / self.map_height)
+        self.u_width = self.char_width / self.image_width
+        self.v_height = self.char_height / self.image_height
         # report
         if self.logg:
             print('new charmap from %s:' % char_data_filename)
             print('  image %s is %s x %s' % (image_filename, self.image_width, self.image_height))
             #print('  %s characters' % len(self.chars))
-            char_width = int(self.image_width / self.map_width)
-            char_height = int(self.image_height / self.map_height)
-            print('  char pixel width / height: %s x %s' % (char_width, char_height))
+            print('  char pixel width / height: %s x %s' % (self.char_width, self.char_height))
             print('  map columns/rows: %s/%s' % (self.map_width, self.map_height))
             #print('  alphabet starts at index %s' % self.a)
             #print('  blank character at index %s' % self.blank)
@@ -78,9 +80,3 @@ class CharacterSet:
                     return i
                 i += 1
         return 0
-    
-    def get_uvs(self, char_value):
-        "returns u,v coordinates for our texture from given char value"
-        u = char_value % self.map_width
-        v = self.map_height - ((char_value - u) / self.map_height)
-        return u * self.u_width, v * self.v_height

@@ -92,3 +92,12 @@ class Shader:
     
     def destroy(self):
         GL.glDeleteProgram(self.program)
+
+
+class ShaderUniform:
+    # TODO: class for remembering uniform name, type, index.
+    # a Shader keeps a list of these, Renderables tell their Shader to set
+    # them.  set methods use correct type and "try" to avoid crashes on
+    # hot-reload when a uniform is commented out of live GLSL.
+    # (try same for attributes?  more data)
+    pass

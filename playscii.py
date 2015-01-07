@@ -196,7 +196,7 @@ class Application:
         for art in self.art_loaded:
             art.update()
         self.camera.update()
-        if random() < 0.5 and False:
+        if random() < 0.5:
             self.art.mutate()
         
         if not self.test_done:
@@ -208,14 +208,16 @@ class Application:
             self.art.duplicate_frame(0)
             self.art.duplicate_frame(0)
             self.art.duplicate_frame(0)
-            #self.art.add_frame()
-            #self.art.add_frame()
-            #self.art.add_frame()
             self.art.do_test_animation()
+            #self.renderables[0].update_tile_buffers(False, True, False, False)
             #self.art.save_to_file()
             #print('--------')
             #print(self.art.frames[0].fg_color_array[:32])
             #print(self.art.frames[3].fg_color_array[:32])
+        # test garbage: update buffers every frame
+        #r = self.renderables[0]
+        #r.update_geo_buffers()
+        #r.update_tile_buffers(True, True, True, True)
         
         #self.cursor.update(self.elapsed_time)
         #self.ui.update()

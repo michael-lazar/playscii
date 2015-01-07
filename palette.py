@@ -35,6 +35,13 @@ class Palette:
                     color = (color[0]/255, color[1]/255, color[2]/255, color[3]/255)
                     self.colors.append(color)
         #print('%s unique colors in source palette: %s' % (len(self.colors)-1, self.colors))
+        # create new 1D image with unique colors
+        img = Image.new('RGBA', (MAX_COLORS, 1), (0, 0, 0, 0))
+        x = 0
+        for color in color_tuples:
+            img.putpixel((x, 0), color)
+            x += 1
+        self.texture = Texture(img.tostring(), MAX_COLORS, 1)
     
     def get_random_color_index(self):
         # exclude transparent first index
