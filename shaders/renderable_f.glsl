@@ -16,7 +16,7 @@ void main()
 	outColor = texture2D(charset, texCoords);
 	//outColor.r = texCoords.x;
 	//outColor.g = texCoords.y;
-	outColor.a = 0.5;
+	outColor.a = 0.25;
 	
 	/*
 	// this is apparently what passes for debugging in GLSL :]

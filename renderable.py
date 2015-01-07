@@ -34,14 +34,14 @@ class Renderable:
         self.char_uv_height_uniform = self.shader.get_uniform_location('charUVHeight')
         self.charset_unit_uniform = self.shader.get_uniform_location('charset')
         #self.palette_unit_uniform = self.shader.get_uniform_location('palette')
-        # vertex count needed for render
-        self.vert_count = int(len(self.art.elem_array))
         self.create_buffers()
         # finish
         GL.glBindVertexArray(0)
     
     def create_buffers(self):
         # vertex positions and elements
+        # determine vertex count needed for render
+        self.vert_count = int(len(self.art.elem_array))
         self.vert_buffer, self.elem_buffer = GL.glGenBuffers(2)
         self.update_buffer(self.vert_buffer, self.art.vert_array,
                            GL.GL_ARRAY_BUFFER, GL.GL_STATIC_DRAW, GL.GL_FLOAT, 'vertPosition', VERT_LENGTH)
@@ -68,6 +68,8 @@ class Renderable:
     def update_geo_buffers(self):
         self.update_buffer(self.vert_buffer, self.art.vert_array, GL.GL_ARRAY_BUFFER, GL.GL_STATIC_DRAW, GL.GL_FLOAT, None, None)
         self.update_buffer(self.elem_buffer, self.art.elem_array, GL.GL_ELEMENT_ARRAY_BUFFER, GL.GL_STATIC_DRAW, GL.GL_UNSIGNED_INT, None, None)
+        # total vertex count probably changed
+        self.vert_count = int(len(self.art.elem_array))
     
     def update_tile_buffers(self, update_chars, update_uvs, update_fg, update_bg):
         updates = {}
@@ -81,10 +83,10 @@ class Renderable:
         if update_bg:
             updates[self.bg_buffer] = self.art.bg_colors
         """
-        for k in updates:
-            value_type = [GL.GL_FLOAT, GL.GL_FLOAT][k == self.uv_buffer]
-            self.update_buffer(k, updates[k][self.frame], GL.GL_ARRAY_BUFFER,
-                               GL.GL_DYNAMIC_DRAW, value_type, None, None)
+        for update in updates:
+            self.update_buffer(update, updates[update][self.frame],
+                               GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW,
+                               GL.GL_FLOAT, None, None)
     
     def update_buffer(self, buffer_index, array, target, buffer_type, data_type,
                       attrib_name, attrib_size):

@@ -64,15 +64,16 @@ class CharacterSet:
         # report
         if self.logg:
             print('new charmap from %s:' % char_data_filename)
-            print('  image %s is %s x %s' % (image_filename, self.image_width, self.image_height))
+            print('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
             #print('  %s characters' % len(self.chars))
-            print('  char pixel width / height: %s x %s' % (self.char_width, self.char_height))
-            print('  map columns/rows: %s/%s' % (self.map_width, self.map_height))
+            print('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
+            print('  char map width/height is %s x %s' % (self.map_width, self.map_height))
             #print('  alphabet starts at index %s' % self.a)
             #print('  blank character at index %s' % self.blank)
         # TODO: account for / prevent non-square images!
     
     def get_char_index(self, char):
+        # TODO: self.char_mapping should obviously be a dict!
         i = 0
         for line in self.char_mapping:
             for other_char in line:

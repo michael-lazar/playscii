@@ -55,12 +55,13 @@ class Art:
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
-        # tell renderables to rebind vert and element buffers next update
-        self.geo_changed = False
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
-        # build vert and element arrays
-        self.build_geo()
+        # tell renderables to rebind vert and element buffers next update
+        self.geo_changed = True
+        # run update once before renderables initialize so they have
+        # something to bind
+        self.update()
     
     def add_frame(self, delay=DEFAULT_FRAME_DELAY):
         "adds a blank frame to end of frame sequence"
@@ -75,19 +76,6 @@ class Art:
         self.uv_mods.append(self.new_uv_layers(self.layers))
         if self.log_size_changes:
             print('frame %s added with %s layers' % (self.frames-1, self.layers))
-    
-    def new_uv_layers(self, layers):
-        "returns given # of layer's worth of regular UVs"
-        # TODO: support for char rotation/flipping will alter these!
-        size = layers * self.width * self.height * UV_STRIDE
-        array = np.zeros(shape=size, dtype=np.float32)
-        uvs = [0, 0, 1, 0, 0, 1, 1, 1]
-        # UV offsets
-        index = 0
-        while index < size:
-            array[index:index+UV_STRIDE] = uvs
-            index += UV_STRIDE
-        return array
     
     def duplicate_frame(self, frame_index):
         "adds a duplicate of specified frame to end of frame sequence"
@@ -108,6 +96,8 @@ class Art:
         index = self.layers * layer_size
         self.layers += 1
         self.layers_z.append(z)
+        # char/color data for all layers in one array, so resize instead
+        # of reinitializing
         new_size = index + layer_size
         def expand_array(array, new_size, layer_size, index):
             array.resize(new_size, refcheck=False)
@@ -117,15 +107,17 @@ class Art:
         for component_list in [self.chars, self.fg_colors, self.bg_colors]:
             for array in component_list:
                 expand_array(array, new_size, layer_size, index)
-        # UV data: different size and special initialization
+        # UV data: different size, special initialization (2 floats per vert)
         index *= 2
         new_size *= 2
         for array in self.uv_mods:
             array.resize(new_size, refcheck=False)
             new_array = self.new_uv_layers(1)
             array[index:new_size] = new_array
+        # adding a layer changes all frames' UV data
+        self.uv_changed_frames = range(self.frames)
         if self.log_size_changes:
-            print('added layer %s' % (self.layers + 1))
+            print('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
         self.geo_changed = True
     
@@ -141,10 +133,10 @@ class Art:
         all_elems_size = tiles * ELEM_STRIDE
         self.elem_array = np.empty(shape=all_elems_size, dtype=np.uint32)
         # generate geo according to art size
-        loc_index = 0
-        # vert index corresponds to # of verts, loc_index to position in
-        # array given that each vert has 3 components
+        # vert_index corresponds to # of verts, loc_index to position in array
+        # (given that each vert has 3 components)
         vert_index = 0
+        loc_index = 0
         elem_index = 0
         for layer in range(self.layers):
             for tile_y in range(self.height):
@@ -172,9 +164,22 @@ class Art:
                     elem_index += ELEM_STRIDE
                     # 4 verts in a quad
                     vert_index += 4
-        self.geo_changed = True
+    
+    def new_uv_layers(self, layers):
+        "returns given # of layer's worth of vanilla UV array data"
+        # TODO: support for char rotation/flipping will alter these!
+        size = layers * self.width * self.height * UV_STRIDE
+        array = np.zeros(shape=size, dtype=np.float32)
+        uvs = [0, 0, 1, 0, 0, 1, 1, 1]
+        # UV offsets
+        index = 0
+        while index < size:
+            array[index:index+UV_STRIDE] = uvs
+            index += UV_STRIDE
+        return array
     
     def get_array_index(self, layer, x, y):
+        "returns the index into tile array data for a given layer + x + y"
         # multiply by 4 because we store each value for each vert in quad
         return ((layer * self.width * self.height) + (y * self.width) + x) * 4
     
@@ -216,6 +221,8 @@ class Art:
     
     def update(self):
         # update our renderables if they're on a frame whose char/colors changed
+        if self.geo_changed:
+            self.build_geo()
         for r in self.renderables:
             if self.geo_changed:
                 r.update_geo_buffers()
