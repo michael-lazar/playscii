@@ -1,11 +1,6 @@
 TODO
 
-- layers and frames!  8x8 grid of 3 layers
--- blank w/ "hello!" in different spots on each layer
-- make this animate w/ 4 frames
--- frames color cycle
--- bind < and > to back/forward frame
-- write this to a file with json.dump(string(?))
+- write this to a file with json.dump(dict)
 - read this from a file with json.load(file)
 
 ---

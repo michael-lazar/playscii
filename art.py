@@ -235,6 +235,15 @@ class Art:
         elif not fg and not frame in self.bg_changed_frames:
             self.bg_changed_frames.append(frame)
     
+    def set_tile_at(self, frame, layer, x, y, char_index=None, fg=None, bg=None):
+        "convenience function for setting (up to) all 3 tile indices at once"
+        if char_index:
+            self.set_char_index_at(frame, layer, x, y, char_index)
+        if fg:
+            self.set_color_at(frame, layer, x, y, fg, True)
+        if bg:
+            self.set_color_at(frame, layer, x, y, bg, False)
+    
     def update(self):
         # update our renderables if they're on a frame whose char/colors changed
         if self.geo_changed:
@@ -290,16 +299,175 @@ class Art:
         self.clear_frame_layer(0, 2)
         # write white text onto 3 layers
         color = self.palette.lightest_index
-        self.write_string(0, 0, 1, 1, 'hello.', color)
-        self.write_string(0, 1, 1, 3, 'Hello?', color)
-        self.write_string(0, 2, 1, 5, 'HELLO!', color)
+        self.write_string(0, 0, 1, 1, 'Hello.', color)
+        # draw snaky ring thingy
+        # color ramp: 4, 10, 9, 15, 5, 16, 6, back to 4
+        # top
+        self.set_tile_at(0, 1, 1, 3, 119, 4)
+        self.set_tile_at(0, 1, 2, 3, 102, 10)
+        self.set_tile_at(0, 1, 3, 3, 102, 9)
+        self.set_tile_at(0, 1, 4, 3, 102, 15)
+        self.set_tile_at(0, 1, 5, 3, 120, 5)
+        # sides
+        self.set_tile_at(0, 1, 1, 4, 145, 6)
+        self.set_tile_at(0, 1, 5, 4, 145, 16)
+        self.set_tile_at(0, 1, 1, 5, 145, 16)
+        self.set_tile_at(0, 1, 5, 5, 145, 6)
+        # bottom
+        self.set_tile_at(0, 1, 1, 6, 121, 5)
+        self.set_tile_at(0, 1, 2, 6, 102, 15)
+        self.set_tile_at(0, 1, 3, 6, 102, 9)
+        self.set_tile_at(0, 1, 4, 6, 102, 10)
+        self.set_tile_at(0, 1, 5, 6, 122, 4)
+        # :]
+        char = self.charset.get_char_index(':')
+        self.set_tile_at(0, 2, 3, 4, char, color)
+        char = self.charset.get_char_index(']')
+        self.set_tile_at(0, 2, 4, 4, char, color)
     
     def do_test_animation(self):
-        "sets more test data. assumes: 8x8, 3 layers, 4 frames"
-        self.set_color_at(0, 0, 1, 1, 3, True)
-        self.set_color_at(1, 0, 1, 1, 4, True)
-        self.set_color_at(2, 0, 1, 1, 5, True)
-        self.set_color_at(3, 0, 1, 1, 6, True)
+        "sets more test data. assumes: 8x8, 3 layers, 6 frames"
+        # cycle capitals through "hello" text
+        h = self.charset.get_char_index('h')
+        char = self.charset.get_char_index('E')
+        self.set_char_index_at(1, 0, 2, 1, char)
+        self.set_char_index_at(1, 0, 1, 1, h)
+        char = self.charset.get_char_index('L')
+        self.set_char_index_at(2, 0, 3, 1, char)
+        self.set_char_index_at(2, 0, 1, 1, h)
+        self.set_char_index_at(3, 0, 4, 1, char)
+        self.set_char_index_at(3, 0, 1, 1, h)
+        char = self.charset.get_char_index('O')
+        self.set_char_index_at(4, 0, 5, 1, char)
+        self.set_char_index_at(4, 0, 1, 1, h)
+        char = self.charset.get_char_index('!')
+        self.set_char_index_at(5, 0, 6, 1, char)
+        self.set_char_index_at(5, 0, 1, 1, h)
+        self.set_char_index_at(6, 0, 1, 1, h)
+        # make smiley go from ;] to :D
+        char = self.charset.get_char_index(';')
+        self.set_char_index_at(3, 2, 3, 4, char)
+        self.set_char_index_at(4, 2, 3, 4, char)
+        self.set_char_index_at(5, 2, 3, 4, char)
+        char = self.charset.get_char_index('D')
+        self.set_char_index_at(3, 2, 4, 4, char)
+        self.set_char_index_at(4, 2, 4, 4, char)
+        self.set_char_index_at(5, 2, 4, 4, char)
+        # cycle colors for snaky thing
+        #
+        # frame 1 top
+        #
+        self.set_color_at(1, 1, 1, 3, 10)
+        self.set_color_at(1, 1, 2, 3, 9)
+        self.set_color_at(1, 1, 3, 3, 15)
+        self.set_color_at(1, 1, 4, 3, 5)
+        self.set_color_at(1, 1, 5, 3, 16)
+        # frame 1 sides
+        self.set_color_at(1, 1, 1, 4, 4)
+        self.set_color_at(1, 1, 5, 4, 6)
+        self.set_color_at(1, 1, 1, 5, 6)
+        self.set_color_at(1, 1, 5, 5, 4)
+        # frame 1 bottom
+        self.set_color_at(1, 1, 1, 6, 16)
+        self.set_color_at(1, 1, 2, 6, 5)
+        self.set_color_at(1, 1, 3, 6, 15)
+        self.set_color_at(1, 1, 4, 6, 9)
+        self.set_color_at(1, 1, 5, 6, 10)
+        #
+        # frame 2 top
+        #
+        self.set_color_at(2, 1, 1, 3, 9)
+        self.set_color_at(2, 1, 2, 3, 15)
+        self.set_color_at(2, 1, 3, 3, 5)
+        self.set_color_at(2, 1, 4, 3, 16)
+        self.set_color_at(2, 1, 5, 3, 6)
+        # frame 2 sides
+        self.set_color_at(2, 1, 1, 4, 10)
+        self.set_color_at(2, 1, 5, 4, 4)
+        self.set_color_at(2, 1, 1, 5, 4)
+        self.set_color_at(2, 1, 5, 5, 10)
+        # frame 2 bottom
+        self.set_color_at(2, 1, 1, 6, 6)
+        self.set_color_at(2, 1, 2, 6, 16)
+        self.set_color_at(2, 1, 3, 6, 5)
+        self.set_color_at(2, 1, 4, 6, 15)
+        self.set_color_at(2, 1, 5, 6, 9)
+        #
+        # frame 3 top
+        #
+        self.set_color_at(3, 1, 1, 3, 15)
+        self.set_color_at(3, 1, 2, 3, 5)
+        self.set_color_at(3, 1, 3, 3, 16)
+        self.set_color_at(3, 1, 4, 3, 6)
+        self.set_color_at(3, 1, 5, 3, 4)
+        # frame 3 sides
+        self.set_color_at(3, 1, 1, 4, 9)
+        self.set_color_at(3, 1, 5, 4, 10)
+        self.set_color_at(3, 1, 1, 5, 10)
+        self.set_color_at(3, 1, 5, 5, 9)
+        # frame 3 bottom
+        self.set_color_at(3, 1, 1, 6, 4)
+        self.set_color_at(3, 1, 2, 6, 6)
+        self.set_color_at(3, 1, 3, 6, 16)
+        self.set_color_at(3, 1, 4, 6, 5)
+        self.set_color_at(3, 1, 5, 6, 15)
+        #
+        # frame 4 top
+        #
+        self.set_color_at(4, 1, 1, 3, 5)
+        self.set_color_at(4, 1, 2, 3, 16)
+        self.set_color_at(4, 1, 3, 3, 6)
+        self.set_color_at(4, 1, 4, 3, 4)
+        self.set_color_at(4, 1, 5, 3, 10)
+        # frame 4 sides
+        self.set_color_at(4, 1, 1, 4, 15)
+        self.set_color_at(4, 1, 5, 4, 9)
+        self.set_color_at(4, 1, 1, 5, 9)
+        self.set_color_at(4, 1, 5, 5, 15)
+        # frame 4 bottom
+        self.set_color_at(4, 1, 1, 6, 10)
+        self.set_color_at(4, 1, 2, 6, 4)
+        self.set_color_at(4, 1, 3, 6, 6)
+        self.set_color_at(4, 1, 4, 6, 16)
+        self.set_color_at(4, 1, 5, 6, 5)
+        #
+        # frame 5 top
+        #
+        self.set_color_at(5, 1, 1, 3, 16)
+        self.set_color_at(5, 1, 2, 3, 6)
+        self.set_color_at(5, 1, 3, 3, 4)
+        self.set_color_at(5, 1, 4, 3, 10)
+        self.set_color_at(5, 1, 5, 3, 9)
+        # frame 5 sides
+        self.set_color_at(5, 1, 1, 4, 5)
+        self.set_color_at(5, 1, 5, 4, 15)
+        self.set_color_at(5, 1, 1, 5, 15)
+        self.set_color_at(5, 1, 5, 5, 5)
+        # frame 5 bottom
+        self.set_color_at(5, 1, 1, 6, 9)
+        self.set_color_at(5, 1, 2, 6, 10)
+        self.set_color_at(5, 1, 3, 6, 4)
+        self.set_color_at(5, 1, 4, 6, 6)
+        self.set_color_at(5, 1, 5, 6, 16)
+        #
+        # frame 6 top
+        #
+        self.set_color_at(6, 1, 1, 3, 6)
+        self.set_color_at(6, 1, 2, 3, 4)
+        self.set_color_at(6, 1, 3, 3, 10)
+        self.set_color_at(6, 1, 4, 3, 9)
+        self.set_color_at(6, 1, 5, 3, 15)
+        # frame 6 sides
+        self.set_color_at(6, 1, 1, 4, 16)
+        self.set_color_at(6, 1, 5, 4, 5)
+        self.set_color_at(6, 1, 1, 5, 5)
+        self.set_color_at(6, 1, 5, 5, 16)
+        # frame 6 bottom
+        self.set_color_at(6, 1, 1, 6, 15)
+        self.set_color_at(6, 1, 2, 6, 9)
+        self.set_color_at(6, 1, 3, 6, 10)
+        self.set_color_at(6, 1, 4, 6, 4)
+        self.set_color_at(6, 1, 5, 6, 6)
     
     def write_string(self, frame, layer, x, y, text, color_index=None):
         "writes out each char of a string to specified tiles"

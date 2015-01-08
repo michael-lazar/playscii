@@ -33,7 +33,9 @@ class Application:
     base_title = 'Playscii'
     starting_charset = 'c64'
     starting_palette = 'c64'
+    # debug test stuff
     test_mutate_each_frame = False
+    test_art = False
     
     def __init__(self):
         self.elapsed_time = 0
@@ -70,7 +72,6 @@ class Application:
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         print('init done.')
         # TODO: UI
-        self.test_done = False
     
     def set_window_title(self, text):
         new_title = bytes('%s - %s' % (self.base_title, text), 'utf-8')
@@ -111,7 +112,9 @@ class Application:
             self.update()
             self.render()
             sdl2.SDL_Delay(int(1000/self.framerate))
-            self.elapsed_time = sdl2.timer.SDL_GetTicks()
+            elapsed_time = sdl2.timer.SDL_GetTicks()
+            self.delta_time = elapsed_time - self.elapsed_time
+            self.elapsed_time = elapsed_time
             self.sl.check_hot_reload()
         return 1
     
@@ -179,6 +182,9 @@ class Application:
                 elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
                     self.renderables[0].advance_frame()
                     self.set_window_title('frame %s' % self.renderables[0].frame)
+                # TEST: p starts/pauses animation playback
+                elif event.key.keysym.sym == sdl2.SDLK_p:
+                    self.renderables[0].animating = not self.renderables[0].animating
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -196,30 +202,27 @@ class Application:
     def update(self):
         for art in self.art_loaded:
             art.update()
+        for renderable in self.renderables:
+            renderable.update()
         self.camera.update()
-        if random() < 0.5 and self.test_mutate_each_frame:
+        if self.test_mutate_each_frame and random() < 0.5:
             self.art.mutate()
-        
-        if not self.test_done:
-            self.test_done = True
-            # load some test data in
+        if self.test_art:
+            self.test_art = False
+            # load some test data - simulates some user edits:
+            # add layers, write text, duplicate that frame, do some animation
             self.art.add_layer(0.25)
             self.art.add_layer(0.5)
             self.art.do_test_text()
             self.art.duplicate_frame(0)
             self.art.duplicate_frame(0)
             self.art.duplicate_frame(0)
+            self.art.duplicate_frame(0)
+            self.art.duplicate_frame(0)
+            self.art.duplicate_frame(0)
             self.art.do_test_animation()
-            #self.renderables[0].update_tile_buffers(False, True, False, False)
             #self.art.save_to_file()
-            #print('--------')
-            #print(self.art.frames[0].fg_color_array[:32])
-            #print(self.art.frames[3].fg_color_array[:32])
-        # test garbage: update buffers every frame
-        #r = self.renderables[0]
-        #r.update_geo_buffers()
-        #r.update_tile_buffers(True, True, True, True)
-        
+        # TODO: cursor and UI
         #self.cursor.update(self.elapsed_time)
         #self.ui.update()
     

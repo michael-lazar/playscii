@@ -18,6 +18,8 @@ class Renderable:
         self.art.renderables.append(self)
         # frame of our art's animation we're on
         self.frame = 0
+        self.animating = False
+        self.anim_timer = 0
         # world space position
         # TODO: object translation/rotation/scale matrices
         self.x, self.y, self.z = 0, 0, 0
@@ -111,6 +113,19 @@ class Renderable:
         self.update_tile_buffers(True, True, True, True)
         if self.log_animation:
             print('%s animating from frames %s to %s' % (self, old_frame, self.frame))
+    
+    def update(self):
+        if not self.animating:
+            return
+        self.anim_timer += self.app.delta_time / 1000
+        this_frame_delay = self.art.frame_delays[self.frame]
+        while self.anim_timer > this_frame_delay:
+            # TODO: advance_frame calls set_frame which updates all tile buffers
+            # each time; only call set_frame once we've determined the correct
+            # frame!
+            self.advance_frame()
+            self.anim_timer -= this_frame_delay
+            this_frame_delay = self.art.frame_delays[self.frame]
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
