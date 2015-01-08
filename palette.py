@@ -9,6 +9,8 @@ MAX_COLORS = 255
 
 class Palette:
     
+    logg = False
+    
     def __init__(self, src_filename):
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
@@ -21,27 +23,43 @@ class Palette:
         src_img = Image.open(pal_filename)
         src_img = src_img.convert('RGBA')
         width, height = src_img.size
-        # scan image L->R T->B for unique colors
+        # scan image L->R T->B for unique colors, store em as tuples
         # color 0 is always fully transparent
         self.colors = [(0, 0, 0, 0)]
-        # keep list of tuples for quick comparisons while finding unique colors
-        color_tuples = []
+        # determine lightest and darkest colors in palette for defaults
+        lightest = 0
+        darkest = 255 * 3 + 1
+        self.lightest_index = 0
+        self.darkest_index = 257
         for y in range(height):
             for x in range(width):
                 color = src_img.getpixel((x, y))
-                if not color in color_tuples:
-                    color_tuples.append(color)
-                    # convert to OpenGL-friendly color format
-                    color = (color[0]/255, color[1]/255, color[2]/255, color[3]/255)
+                if not color in self.colors:
                     self.colors.append(color)
-        #print('%s unique colors in source palette: %s' % (len(self.colors)-1, self.colors))
+                    # is this lightest/darkest unique color so far? save index
+                    value_sum = color[0] + color[1] + color[2]
+                    if value_sum > lightest:
+                        lightest = value_sum
+                        # index -1 because transparent slot,
+                        # use length before we add this to the list
+                        self.lightest_index = len(self.colors)
+                    elif value_sum < darkest:
+                        darkest = value_sum
+                        self.darkest_index = len(self.colors)
         # create new 1D image with unique colors
         img = Image.new('RGBA', (MAX_COLORS, 1), (0, 0, 0, 0))
         x = 0
-        for color in color_tuples:
+        for color in self.colors:
             img.putpixel((x, 0), color)
             x += 1
+        # debug: save out generated palette texture
+        #img.save('palette.png')
         self.texture = Texture(img.tostring(), MAX_COLORS, 1)
+        if self.logg:
+            print('new palette from %s:' % pal_filename)
+            print('  unique colors found: %s' % int(len(self.colors)-1))
+            print('  darkest color index: %s' % self.darkest_index)
+            print('  lightest color index: %s' % self.lightest_index)
     
     def get_random_color_index(self):
         # exclude transparent first index

@@ -33,6 +33,7 @@ class Application:
     base_title = 'Playscii'
     starting_charset = 'c64'
     starting_palette = 'c64'
+    test_mutate_each_frame = False
     
     def __init__(self):
         self.elapsed_time = 0
@@ -196,7 +197,7 @@ class Application:
         for art in self.art_loaded:
             art.update()
         self.camera.update()
-        if random() < 0.5:
+        if random() < 0.5 and self.test_mutate_each_frame:
             self.art.mutate()
         
         if not self.test_done:

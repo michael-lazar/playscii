@@ -1,7 +1,7 @@
 import ctypes
 from OpenGL import GL
 from art import VERT_LENGTH
-
+from palette import MAX_COLORS
 
 class Renderable:
     
@@ -32,8 +32,9 @@ class Renderable:
         self.charset_height_uniform = self.shader.get_uniform_location('charMapHeight')
         self.char_uv_width_uniform = self.shader.get_uniform_location('charUVWidth')
         self.char_uv_height_uniform = self.shader.get_uniform_location('charUVHeight')
-        self.charset_unit_uniform = self.shader.get_uniform_location('charset')
-        #self.palette_unit_uniform = self.shader.get_uniform_location('palette')
+        self.charset_tex_uniform = self.shader.get_uniform_location('charset')
+        self.palette_tex_uniform = self.shader.get_uniform_location('palette')
+        self.palette_width_uniform = self.shader.get_uniform_location('palTextureWidth')
         self.create_buffers()
         # finish
         GL.glBindVertexArray(0)
@@ -56,14 +57,12 @@ class Renderable:
         # UV "mods" - modify UV derived from character index
         self.update_buffer(self.uv_buffer, self.art.uv_mods[self.frame],
                            GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, GL.GL_FLOAT, 'uvMod', 2)
-        #self.fg_buffer, self.bg_buffer = GL.glGenBuffers(2)
-        """
+        self.fg_buffer, self.bg_buffer = GL.glGenBuffers(2)
         # foreground/background color indices (which become rgba colors)
         self.update_buffer(self.fg_buffer, self.art.fg_colors[self.frame],
                            GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, GL.GL_FLOAT, 'fgColorIndex', 1)
         self.update_buffer(self.bg_buffer, self.art.bg_colors[self.frame],
                            GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW, GL.GL_FLOAT, 'bgColorIndex', 1)
-        """
     
     def update_geo_buffers(self):
         self.update_buffer(self.vert_buffer, self.art.vert_array, GL.GL_ARRAY_BUFFER, GL.GL_STATIC_DRAW, GL.GL_FLOAT, None, None)
@@ -77,12 +76,10 @@ class Renderable:
             updates[self.char_buffer] = self.art.chars
         if update_uvs:
             updates[self.uv_buffer] = self.art.uv_mods
-        """
         if update_fg:
             updates[self.fg_buffer] = self.art.fg_colors
         if update_bg:
             updates[self.bg_buffer] = self.art.bg_colors
-        """
         for update in updates:
             self.update_buffer(update, updates[update][self.frame],
                                GL.GL_ARRAY_BUFFER, GL.GL_DYNAMIC_DRAW,
@@ -117,21 +114,27 @@ class Renderable:
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
-        GL.glDeleteBuffers(3, [self.vert_buffer, self.elem_buffer, self.char_buffer])#, self.fg_buffer, self.bg_buffer])
+        GL.glDeleteBuffers(5, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.fg_buffer, self.bg_buffer])
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
-        GL.glUniform1i(self.charset_unit_uniform, 0)
-        #GL.glUniform1i(self.palette_unit_uniform, 1)
+        # bind textures
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glUniform1i(self.charset_tex_uniform, 0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.charset.texture.gltex)
+        GL.glActiveTexture(GL.GL_TEXTURE1)
+        GL.glUniform1i(self.palette_tex_uniform, 1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.palette.texture.gltex)
+        # set active texture unit back after binding second texture
+        GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glUniform1i(self.charset_width_uniform, self.art.charset.map_width)
         GL.glUniform1i(self.charset_height_uniform, self.art.charset.map_height)
         GL.glUniform1f(self.char_uv_width_uniform, self.art.charset.u_width)
         GL.glUniform1f(self.char_uv_height_uniform, self.art.charset.v_height)
+        GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
         # camera uniforms
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.camera.projection_matrix)
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.camera.view_matrix)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.charset.texture.gltex)
-        #GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.palette.texture.gltex)
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

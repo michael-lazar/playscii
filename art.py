@@ -121,6 +121,22 @@ class Art:
         # rebuild geo with added verts for new layer
         self.geo_changed = True
     
+    def clear_frame_layer(self, frame, layer, bg_color=0):
+        "clears given layer of given frame to transparent BG + no characters"
+        layer_size = self.width * self.height * 4
+        index = layer * layer_size
+        self.chars[frame][index:index+layer_size] = 0
+        # TODO: clear UVs as well once something can modify them, eg rotate/flip
+        self.fg_colors[frame][index:index+layer_size] = 0
+        self.bg_colors[frame][index:index+layer_size] = bg_color
+        # tell this frame to update
+        if frame not in self.char_changed_frames:
+            self.char_changed_frames.append(frame)
+        if frame not in self.fg_changed_frames:
+            self.fg_changed_frames.append(frame)
+        if frame not in self.bg_changed_frames:
+            self.bg_changed_frames.append(frame)
+    
     def duplicate_layer(self, layer_index):
         # TODO: duplicate by copying data from specified layer
         pass
@@ -268,9 +284,15 @@ class Art:
     
     def do_test_text(self):
         "sets some test data. assumes: 8x8, 3 layers"
-        self.write_string(0, 0, 1, 1, 'hello.')
-        self.write_string(0, 1, 1, 3, 'Hello?')
-        self.write_string(0, 2, 1, 5, 'HELLO!')
+        # clear 1st layer to black, 2nd and 3rd to transparent
+        self.clear_frame_layer(0, 0, self.palette.darkest_index)
+        self.clear_frame_layer(0, 1)
+        self.clear_frame_layer(0, 2)
+        # write white text onto 3 layers
+        color = self.palette.lightest_index
+        self.write_string(0, 0, 1, 1, 'hello.', color)
+        self.write_string(0, 1, 1, 3, 'Hello?', color)
+        self.write_string(0, 2, 1, 5, 'HELLO!', color)
     
     def do_test_animation(self):
         "sets more test data. assumes: 8x8, 3 layers, 4 frames"
@@ -279,10 +301,12 @@ class Art:
         self.set_color_at(2, 0, 1, 1, 5, True)
         self.set_color_at(3, 0, 1, 1, 6, True)
     
-    def write_string(self, frame, layer, x, y, text):
+    def write_string(self, frame, layer, x, y, text, color_index=None):
         "writes out each char of a string to specified tiles"
         x_offset = 0
         for char in text:
             idx = self.charset.get_char_index(char)
             self.set_char_index_at(frame, layer, x+x_offset, y, idx)
+            if color_index:
+                self.set_color_at(frame, layer, x+x_offset, y, color_index, True)
             x_offset += 1
