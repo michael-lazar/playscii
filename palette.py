@@ -29,23 +29,20 @@ class Palette:
         # determine lightest and darkest colors in palette for defaults
         lightest = 0
         darkest = 255 * 3 + 1
-        self.lightest_index = 0
-        self.darkest_index = 257
+        self.lightest_index, self.darkest_index = 0, 0
         for y in range(height):
             for x in range(width):
                 color = src_img.getpixel((x, y))
                 if not color in self.colors:
                     self.colors.append(color)
                     # is this lightest/darkest unique color so far? save index
-                    value_sum = color[0] + color[1] + color[2]
-                    if value_sum > lightest:
-                        lightest = value_sum
-                        # index -1 because transparent slot,
-                        # use length before we add this to the list
-                        self.lightest_index = len(self.colors)
-                    elif value_sum < darkest:
-                        darkest = value_sum
+                    luminosity = color[0]*0.21 + color[1]*0.72 + color[2]*0.07
+                    if luminosity < darkest:
+                        darkest = luminosity
                         self.darkest_index = len(self.colors)
+                    elif luminosity > lightest:
+                        lightest = luminosity
+                        self.lightest_index = len(self.colors)
         # create new 1D image with unique colors
         img = Image.new('RGBA', (MAX_COLORS, 1), (0, 0, 0, 0))
         x = 0
