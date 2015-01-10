@@ -23,14 +23,13 @@ class Art:
     
     """
     Art asset:
-    Contains the data that is modified by user edits, gets saved and loaded
-    from disk. Also contains the arrays that Renderables use to populate
-    their buffers.
+    Contains the data that is modified by user edits and gets saved to disk.
+    Data stored as arrays that Renderables use to populate their buffers.
     
     assumptions:
     - an Art contains 1 or more frames
-    - each ArtFrame contains 1 or more layers
-    - each ArtLayer contains WxH tiles
+    - each frame contains 1 or more layers
+    - each layer contains WxH tiles
     - each tile has a character, foreground color, and background color
     - all layers in an Art are the same dimensions
     """
@@ -38,14 +37,13 @@ class Art:
     quad_width,quad_height = 1, 1
     log_size_changes = False
     
-    # TODO: argument that provides data loaded from disk? better as a subclass?
     def __init__(self, filename, charset, palette, width, height):
+        "creates a new, blank document"
         if not filename.endswith('.%s' % ART_FILE_EXTENSION):
             filename += '.%s' % ART_FILE_EXTENSION
         self.filename = filename
         self.charset, self.palette = charset, palette
         self.width, self.height = width, height
-        # TODO: read frame from disk data if it's given
         self.frames = 0
         # list of frame delays
         self.frame_delays = []
@@ -53,11 +51,8 @@ class Art:
         # list of layer Z values
         self.layers_z = [DEFAULT_LAYER_Z]
         # list of char/fg/bg arrays, one for each frame
-        self.chars = []
-        self.uv_mods = []
-        self.fg_colors = []
-        self.bg_colors = []
-        # add one frame to start (if we're not loading from disk)
+        self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
+        # add one frame to start
         self.add_frame()
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
@@ -271,9 +266,14 @@ class Art:
     def save_to_file(self, app):
         "build a dict representing all this art's data and write it to disk"
         d = {}
-        d['camera'] = app.camera.x, app.camera.y, app.camera.z
+        d['width'] = self.width
+        d['height'] = self.height
+        # preferred character set and palette, default used if not found
         d['charset'] = self.charset.name
         d['palette'] = self.palette.name
+        # remember camera location
+        d['camera'] = app.camera.x, app.camera.y, app.camera.z
+        # frames and layers are dicts w/ lists of their data + a few properties
         frames = []
         for frame_index in range(self.frames):
             frame = { 'delay': self.frame_delays[frame_index] }
@@ -296,6 +296,8 @@ class Art:
             frame['layers'] = layers
             frames.append(frame)
         d['frames'] = frames
+        # TODO: below gives not-so-pretty-printing, find out way to control
+        # formatting for better output
         json.dump(d, open(ART_DIR + self.filename, 'w'), sort_keys=False, indent=1)
     
     def mutate(self):
@@ -499,9 +501,54 @@ class Art:
             x_offset += 1
 
 
-class ArtFromDisk:
+class ArtFromDisk(Art):
+    
+    "subclass of Art that loads from a file"
     
     def __init__(self, filename, app):
         d = json.load(open(filename))
+        self.width = d['width']
+        self.height = d['height']
         self.charset = app.load_charset(d['charset'])
         self.palette = app.load_palette(d['palette'])
+        cam = d['camera']
+        app.camera.x, app.camera.y, app.camera.z = cam[0], cam[1], cam[2]
+        frames = d['frames']
+        self.frames = len(frames)
+        self.frame_delays = []
+        # number of layers should be same for all frames
+        self.layers = len(frames[0]['layers'])
+        # get layer z depths from first frame's data
+        self.layers_z = []
+        for layer in frames[0]['layers']:
+            self.layers_z.append(layer['z'])
+        self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
+        tiles = self.layers * self.width * self.height
+        # build tile data arrays from frame+layer lists
+        for frame in frames:
+            self.frame_delays.append(frame['delay'])
+            chars = np.zeros(shape=tiles * 4, dtype=np.float32)
+            uvs = self.new_uv_layers(self.layers)
+            fg_colors = chars.copy()
+            bg_colors = chars.copy()
+            array_index = 0
+            for layer in frame['layers']:
+                for tile in layer['tiles']:
+                    chars[array_index:array_index+4] = tile['char']
+                    fg_colors[array_index:array_index+4] = tile['fg']
+                    bg_colors[array_index:array_index+4] = tile['bg']
+                    array_index += 4
+            self.chars.append(chars)
+            self.fg_colors.append(fg_colors)
+            self.bg_colors.append(bg_colors)
+            self.uv_mods.append(uvs)
+        # TODO: for hot-reload, app should pass in old renderables list
+        self.renderables = []
+        self.geo_changed = True
+        self.update()
+        print('loaded %s from disk:' % filename)
+        print('  character set: %s' % self.charset.name)
+        print('  palette: %s' % self.palette.name)
+        print('  width/height: %s x %s' % (self.width, self.height))
+        print('  frames: %s' % self.frames)
+        print('  layers: %s' % self.layers)

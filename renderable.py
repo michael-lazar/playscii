@@ -12,9 +12,9 @@ class Renderable:
     log_animation = False
     log_buffer_updates = False
     
-    def __init__(self, app):
+    def __init__(self, app, art):
         self.app = app
-        self.art = self.app.art
+        self.art = art
         self.art.renderables.append(self)
         # frame of our art's animation we're on
         self.frame = 0

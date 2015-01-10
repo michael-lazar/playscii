@@ -20,6 +20,7 @@ from camera import Camera
 from charset import CharacterSet
 from palette import Palette
 from art import Art
+from art import ArtFromDisk
 from renderable import Renderable
 from framebuffer import Framebuffer
 
@@ -58,20 +59,47 @@ class Application:
         self.sl = ShaderLord(self)
         self.camera = Camera(self.window_width, self.window_height)
         # TODO: cursor
-        self.charset = CharacterSet(self.starting_charset)
-        self.palette = Palette(self.starting_palette)
         self.renderables = []
-        # TODO: load from disk
-        self.art = Art('hello1', self.charset, self.palette, 8, 8)
+        # lists of currently loaded character sets and palettes
+        self.charsets, self.palettes = [], []
+        # TODO: if valid file given as an arg load it, if not start a new file
+        loading_from_file = True
+        art = None
+        if loading_from_file:
+            # TODO: get args
+            art = ArtFromDisk('art/hello1.psci', self)
+        else:
+            charset = self.load_charset(self.starting_charset)
+            palette = Palette(self.starting_palette)
+            # TODO: default new document size
+            art = Art('hello1', charset, palette, 8, 8)
         # keep a list of all art assets loaded (stub for MDI support)
-        self.art_loaded = [self.art]
-        test_renderable = Renderable(self)
+        self.art_loaded = [art]
+        test_renderable = Renderable(self, art)
         self.set_window_title('frame %s' % test_renderable.frame)
         # add renderables to list in reverse draw order (only world for now)
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         print('init done.')
         # TODO: UI
+    
+    def load_charset(self, charset_to_load):
+        # already loaded?
+        for charset in self.charsets:
+            if charset_to_load == charset.name:
+                return
+        new_charset = CharacterSet(charset_to_load)
+        self.charsets.append(new_charset)
+        # return newly loaded charset to whatever's requesting it
+        return new_charset
+    
+    def load_palette(self, palette_to_load):
+        for palette in self.palettes:
+            if palette.name == palette_to_load:
+                return
+        new_palette = Palette(palette_to_load)
+        self.palettes.append(new_palette)
+        return new_palette
     
     def set_window_title(self, text):
         new_title = bytes('%s - %s' % (self.base_title, text), 'utf-8')
@@ -206,23 +234,24 @@ class Application:
             renderable.update()
         self.camera.update()
         if self.test_mutate_each_frame and random() < 0.5:
-            self.art.mutate()
+            self.art_loaded[0].mutate()
         if self.test_art:
+            art = self.art_loaded[0]
             self.test_art = False
             # load some test data - simulates some user edits:
             # add layers, write text, duplicate that frame, do some animation
-            self.art.add_layer(0.25)
-            self.art.add_layer(0.5)
-            self.art.do_test_text()
-            self.art.duplicate_frame(0)
-            self.art.duplicate_frame(0)
-            self.art.duplicate_frame(0)
-            self.art.duplicate_frame(0)
-            self.art.duplicate_frame(0)
-            self.art.duplicate_frame(0)
-            self.art.do_test_animation()
+            art.add_layer(0.25)
+            art.add_layer(0.5)
+            art.do_test_text()
+            art.duplicate_frame(0)
+            art.duplicate_frame(0)
+            art.duplicate_frame(0)
+            art.duplicate_frame(0)
+            art.duplicate_frame(0)
+            art.duplicate_frame(0)
+            art.do_test_animation()
             # pass in self to save function so it can save camera etc
-            self.art.save_to_file(self)
+            #art.save_to_file(self)
         # TODO: cursor and UI
         #self.cursor.update(self.elapsed_time)
         #self.ui.update()
@@ -242,11 +271,14 @@ class Application:
         sdl2.SDL_GL_SwapWindow(self.window)
     
     def quit(self):
-        #self.art.save_to_file()
+        # TODO: save to temp file quit?
         for r in self.renderables:
             r.destroy()
         self.fb.destroy()
-        self.charset.texture.destroy()
+        for charset in self.charsets:
+            charset.texture.destroy()
+        for palette in self.palettes:
+            palette.texture.destroy()
         self.sl.destroy()
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
