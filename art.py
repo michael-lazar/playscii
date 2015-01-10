@@ -15,6 +15,10 @@ UV_STRIDE = 2 * 4
 DEFAULT_FRAME_DELAY = 0.1
 DEFAULT_LAYER_Z = 0
 
+ART_DIR = 'art/'
+ART_FILE_EXTENSION = 'psci'
+
+
 class Art:
     
     """
@@ -35,7 +39,10 @@ class Art:
     log_size_changes = False
     
     # TODO: argument that provides data loaded from disk? better as a subclass?
-    def __init__(self, charset, palette, width, height):
+    def __init__(self, filename, charset, palette, width, height):
+        if not filename.endswith('.%s' % ART_FILE_EXTENSION):
+            filename += '.%s' % ART_FILE_EXTENSION
+        self.filename = filename
         self.charset, self.palette = charset, palette
         self.width, self.height = width, height
         # TODO: read frame from disk data if it's given
@@ -261,23 +268,35 @@ class Art:
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
     
-    def load_from_file(self, filename):
-        data = json.load(open(filename))
-        # TODO: turn data into object
-    
-    def save_to_file(self):
-        # TODO: save camera loc/zoom
-        # TODO: redo this since overhaul
-        frame_list = []
-        for frame in self.frames:
-            frame_list.append(frame.get_save_dict())
-        d = { 'charset': self.charset.name,
-              'palette': self.palette.name,
-              'width': self.width,
-              'height': self.height,
-              'frames': frame_list
-        }
-        json.dump(d, open('dump.json', 'w'), sort_keys=False, indent=1)
+    def save_to_file(self, app):
+        "build a dict representing all this art's data and write it to disk"
+        d = {}
+        d['camera'] = app.camera.x, app.camera.y, app.camera.z
+        d['charset'] = self.charset.name
+        d['palette'] = self.palette.name
+        frames = []
+        for frame_index in range(self.frames):
+            frame = { 'delay': self.frame_delays[frame_index] }
+            layers = []
+            frame_chars = self.chars[frame_index]
+            frame_fg_colors = self.fg_colors[frame_index]
+            frame_bg_colors = self.bg_colors[frame_index]
+            for layer_index in range(self.layers):
+                layer = { 'z': self.layers_z[layer_index] }
+                tiles = []
+                for y in range(self.height):
+                    for x in range(self.width):
+                        array_index = self.get_array_index(layer_index, x, y)
+                        char = int(frame_chars[array_index])
+                        fg = int(frame_fg_colors[array_index])
+                        bg = int(frame_bg_colors[array_index])
+                        tiles.append({'char': char, 'fg': fg, 'bg': bg})
+                layer['tiles'] = tiles
+                layers.append(layer)
+            frame['layers'] = layers
+            frames.append(frame)
+        d['frames'] = frames
+        json.dump(d, open(ART_DIR + self.filename, 'w'), sort_keys=False, indent=1)
     
     def mutate(self):
         "change a random tile"
@@ -478,3 +497,11 @@ class Art:
             if color_index:
                 self.set_color_at(frame, layer, x+x_offset, y, color_index, True)
             x_offset += 1
+
+
+class ArtFromDisk:
+    
+    def __init__(self, filename, app):
+        d = json.load(open(filename))
+        self.charset = app.load_charset(d['charset'])
+        self.palette = app.load_palette(d['palette'])

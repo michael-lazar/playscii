@@ -62,7 +62,7 @@ class Application:
         self.palette = Palette(self.starting_palette)
         self.renderables = []
         # TODO: load from disk
-        self.art = Art(self.charset, self.palette, 8, 8)
+        self.art = Art('hello1', self.charset, self.palette, 8, 8)
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [self.art]
         test_renderable = Renderable(self)
@@ -221,7 +221,8 @@ class Application:
             self.art.duplicate_frame(0)
             self.art.duplicate_frame(0)
             self.art.do_test_animation()
-            #self.art.save_to_file()
+            # pass in self to save function so it can save camera etc
+            self.art.save_to_file(self)
         # TODO: cursor and UI
         #self.cursor.update(self.elapsed_time)
         #self.ui.update()

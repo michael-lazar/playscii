@@ -23,6 +23,8 @@ out float theBgColorIndex;
 void main()
 {
 	gl_Position = projection * view * vec4(vertPosition, 1);
+	// translate 1D character index into tile UV coordinates
+	// thanks Ian MacLarty, Sean Barrett and goldbuick for help with this!
     float tileX = mod(charIndex, charMapWidth);
     float tileY = charMapHeight - floor(charIndex / charMapWidth);
     vec2 uv0 = vec2(tileX * charUVWidth, tileY * charUVHeight);

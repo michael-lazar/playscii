@@ -24,6 +24,9 @@ void main()
 	// any totally transparent pixels get the BG color
 	colorUV.x = theBgColorIndex / palTextureWidth;
 	vec4 bgColor = texture(palette, colorUV);
+	// TODO: Mark Wonnacott suggests: instead of a branch, maybe:
+	// colour = bg * alpha + fg * (1 - alpha)
+	// ie colour = mix(bg, fg, alpha)
 	if ( outColor.a == 0.0 ) {
 		outColor = bgColor;
 	}
