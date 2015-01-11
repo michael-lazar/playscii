@@ -57,6 +57,8 @@ class Art:
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
+        # clear our single layer to a sensible BG color
+        self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
         # tell renderables to rebind vert and element buffers next update
@@ -64,6 +66,12 @@ class Art:
         # run update once before renderables initialize so they have
         # something to bind
         self.update()
+        print('created new document:')
+        print('  character set: %s' % self.charset.name)
+        print('  palette: %s' % self.palette.name)
+        print('  width/height: %s x %s' % (self.width, self.height))
+        print('  frames: %s' % self.frames)
+        print('  layers: %s' % self.layers)
     
     def add_frame(self, delay=DEFAULT_FRAME_DELAY):
         "adds a blank frame to end of frame sequence"
@@ -322,24 +330,24 @@ class Art:
         color = self.palette.lightest_index
         self.write_string(0, 0, 1, 1, 'Hello.', color)
         # draw snaky ring thingy
-        # color ramp: 4, 10, 9, 15, 5, 16, 6, back to 4
+        # color ramp: 2, 10, 6, 13, 14, 12, 3, back to 2
         # top
-        self.set_tile_at(0, 1, 1, 3, 119, 4)
+        self.set_tile_at(0, 1, 1, 3, 119, 2)
         self.set_tile_at(0, 1, 2, 3, 102, 10)
-        self.set_tile_at(0, 1, 3, 3, 102, 9)
-        self.set_tile_at(0, 1, 4, 3, 102, 15)
-        self.set_tile_at(0, 1, 5, 3, 120, 5)
+        self.set_tile_at(0, 1, 3, 3, 102, 6)
+        self.set_tile_at(0, 1, 4, 3, 102, 13)
+        self.set_tile_at(0, 1, 5, 3, 120, 14)
         # sides
-        self.set_tile_at(0, 1, 1, 4, 145, 6)
-        self.set_tile_at(0, 1, 5, 4, 145, 16)
-        self.set_tile_at(0, 1, 1, 5, 145, 16)
-        self.set_tile_at(0, 1, 5, 5, 145, 6)
+        self.set_tile_at(0, 1, 1, 4, 145, 3)
+        self.set_tile_at(0, 1, 5, 4, 145, 12)
+        self.set_tile_at(0, 1, 1, 5, 145, 12)
+        self.set_tile_at(0, 1, 5, 5, 145, 3)
         # bottom
-        self.set_tile_at(0, 1, 1, 6, 121, 5)
-        self.set_tile_at(0, 1, 2, 6, 102, 15)
-        self.set_tile_at(0, 1, 3, 6, 102, 9)
+        self.set_tile_at(0, 1, 1, 6, 121, 14)
+        self.set_tile_at(0, 1, 2, 6, 102, 13)
+        self.set_tile_at(0, 1, 3, 6, 102, 6)
         self.set_tile_at(0, 1, 4, 6, 102, 10)
-        self.set_tile_at(0, 1, 5, 6, 122, 4)
+        self.set_tile_at(0, 1, 5, 6, 122, 2)
         # :]
         char = self.charset.get_char_index(':')
         self.set_tile_at(0, 2, 3, 4, char, color)
@@ -379,116 +387,116 @@ class Art:
         # frame 1 top
         #
         self.set_color_at(1, 1, 1, 3, 10)
-        self.set_color_at(1, 1, 2, 3, 9)
-        self.set_color_at(1, 1, 3, 3, 15)
-        self.set_color_at(1, 1, 4, 3, 5)
-        self.set_color_at(1, 1, 5, 3, 16)
+        self.set_color_at(1, 1, 2, 3, 6)
+        self.set_color_at(1, 1, 3, 3, 13)
+        self.set_color_at(1, 1, 4, 3, 14)
+        self.set_color_at(1, 1, 5, 3, 12)
         # frame 1 sides
-        self.set_color_at(1, 1, 1, 4, 4)
-        self.set_color_at(1, 1, 5, 4, 6)
-        self.set_color_at(1, 1, 1, 5, 6)
-        self.set_color_at(1, 1, 5, 5, 4)
+        self.set_color_at(1, 1, 1, 4, 2)
+        self.set_color_at(1, 1, 5, 4, 3)
+        self.set_color_at(1, 1, 1, 5, 3)
+        self.set_color_at(1, 1, 5, 5, 2)
         # frame 1 bottom
-        self.set_color_at(1, 1, 1, 6, 16)
-        self.set_color_at(1, 1, 2, 6, 5)
-        self.set_color_at(1, 1, 3, 6, 15)
-        self.set_color_at(1, 1, 4, 6, 9)
+        self.set_color_at(1, 1, 1, 6, 12)
+        self.set_color_at(1, 1, 2, 6, 14)
+        self.set_color_at(1, 1, 3, 6, 13)
+        self.set_color_at(1, 1, 4, 6, 6)
         self.set_color_at(1, 1, 5, 6, 10)
         #
         # frame 2 top
         #
-        self.set_color_at(2, 1, 1, 3, 9)
-        self.set_color_at(2, 1, 2, 3, 15)
-        self.set_color_at(2, 1, 3, 3, 5)
-        self.set_color_at(2, 1, 4, 3, 16)
-        self.set_color_at(2, 1, 5, 3, 6)
+        self.set_color_at(2, 1, 1, 3, 6)
+        self.set_color_at(2, 1, 2, 3, 13)
+        self.set_color_at(2, 1, 3, 3, 14)
+        self.set_color_at(2, 1, 4, 3, 12)
+        self.set_color_at(2, 1, 5, 3, 3)
         # frame 2 sides
         self.set_color_at(2, 1, 1, 4, 10)
-        self.set_color_at(2, 1, 5, 4, 4)
-        self.set_color_at(2, 1, 1, 5, 4)
+        self.set_color_at(2, 1, 5, 4, 2)
+        self.set_color_at(2, 1, 1, 5, 2)
         self.set_color_at(2, 1, 5, 5, 10)
         # frame 2 bottom
-        self.set_color_at(2, 1, 1, 6, 6)
-        self.set_color_at(2, 1, 2, 6, 16)
-        self.set_color_at(2, 1, 3, 6, 5)
-        self.set_color_at(2, 1, 4, 6, 15)
-        self.set_color_at(2, 1, 5, 6, 9)
+        self.set_color_at(2, 1, 1, 6, 3)
+        self.set_color_at(2, 1, 2, 6, 12)
+        self.set_color_at(2, 1, 3, 6, 14)
+        self.set_color_at(2, 1, 4, 6, 13)
+        self.set_color_at(2, 1, 5, 6, 6)
         #
         # frame 3 top
         #
-        self.set_color_at(3, 1, 1, 3, 15)
-        self.set_color_at(3, 1, 2, 3, 5)
-        self.set_color_at(3, 1, 3, 3, 16)
-        self.set_color_at(3, 1, 4, 3, 6)
-        self.set_color_at(3, 1, 5, 3, 4)
+        self.set_color_at(3, 1, 1, 3, 13)
+        self.set_color_at(3, 1, 2, 3, 14)
+        self.set_color_at(3, 1, 3, 3, 12)
+        self.set_color_at(3, 1, 4, 3, 3)
+        self.set_color_at(3, 1, 5, 3, 2)
         # frame 3 sides
-        self.set_color_at(3, 1, 1, 4, 9)
+        self.set_color_at(3, 1, 1, 4, 6)
         self.set_color_at(3, 1, 5, 4, 10)
         self.set_color_at(3, 1, 1, 5, 10)
-        self.set_color_at(3, 1, 5, 5, 9)
+        self.set_color_at(3, 1, 5, 5, 6)
         # frame 3 bottom
-        self.set_color_at(3, 1, 1, 6, 4)
-        self.set_color_at(3, 1, 2, 6, 6)
-        self.set_color_at(3, 1, 3, 6, 16)
-        self.set_color_at(3, 1, 4, 6, 5)
-        self.set_color_at(3, 1, 5, 6, 15)
+        self.set_color_at(3, 1, 1, 6, 2)
+        self.set_color_at(3, 1, 2, 6, 3)
+        self.set_color_at(3, 1, 3, 6, 12)
+        self.set_color_at(3, 1, 4, 6, 14)
+        self.set_color_at(3, 1, 5, 6, 13)
         #
         # frame 4 top
         #
-        self.set_color_at(4, 1, 1, 3, 5)
-        self.set_color_at(4, 1, 2, 3, 16)
-        self.set_color_at(4, 1, 3, 3, 6)
-        self.set_color_at(4, 1, 4, 3, 4)
+        self.set_color_at(4, 1, 1, 3, 14)
+        self.set_color_at(4, 1, 2, 3, 12)
+        self.set_color_at(4, 1, 3, 3, 3)
+        self.set_color_at(4, 1, 4, 3, 2)
         self.set_color_at(4, 1, 5, 3, 10)
         # frame 4 sides
-        self.set_color_at(4, 1, 1, 4, 15)
-        self.set_color_at(4, 1, 5, 4, 9)
-        self.set_color_at(4, 1, 1, 5, 9)
-        self.set_color_at(4, 1, 5, 5, 15)
+        self.set_color_at(4, 1, 1, 4, 13)
+        self.set_color_at(4, 1, 5, 4, 6)
+        self.set_color_at(4, 1, 1, 5, 6)
+        self.set_color_at(4, 1, 5, 5, 13)
         # frame 4 bottom
         self.set_color_at(4, 1, 1, 6, 10)
-        self.set_color_at(4, 1, 2, 6, 4)
-        self.set_color_at(4, 1, 3, 6, 6)
-        self.set_color_at(4, 1, 4, 6, 16)
-        self.set_color_at(4, 1, 5, 6, 5)
+        self.set_color_at(4, 1, 2, 6, 2)
+        self.set_color_at(4, 1, 3, 6, 3)
+        self.set_color_at(4, 1, 4, 6, 12)
+        self.set_color_at(4, 1, 5, 6, 14)
         #
         # frame 5 top
         #
-        self.set_color_at(5, 1, 1, 3, 16)
-        self.set_color_at(5, 1, 2, 3, 6)
-        self.set_color_at(5, 1, 3, 3, 4)
+        self.set_color_at(5, 1, 1, 3, 12)
+        self.set_color_at(5, 1, 2, 3, 3)
+        self.set_color_at(5, 1, 3, 3, 2)
         self.set_color_at(5, 1, 4, 3, 10)
-        self.set_color_at(5, 1, 5, 3, 9)
+        self.set_color_at(5, 1, 5, 3, 6)
         # frame 5 sides
-        self.set_color_at(5, 1, 1, 4, 5)
-        self.set_color_at(5, 1, 5, 4, 15)
-        self.set_color_at(5, 1, 1, 5, 15)
-        self.set_color_at(5, 1, 5, 5, 5)
+        self.set_color_at(5, 1, 1, 4, 14)
+        self.set_color_at(5, 1, 5, 4, 13)
+        self.set_color_at(5, 1, 1, 5, 13)
+        self.set_color_at(5, 1, 5, 5, 14)
         # frame 5 bottom
-        self.set_color_at(5, 1, 1, 6, 9)
+        self.set_color_at(5, 1, 1, 6, 6)
         self.set_color_at(5, 1, 2, 6, 10)
-        self.set_color_at(5, 1, 3, 6, 4)
-        self.set_color_at(5, 1, 4, 6, 6)
-        self.set_color_at(5, 1, 5, 6, 16)
+        self.set_color_at(5, 1, 3, 6, 2)
+        self.set_color_at(5, 1, 4, 6, 3)
+        self.set_color_at(5, 1, 5, 6, 12)
         #
         # frame 6 top
         #
-        self.set_color_at(6, 1, 1, 3, 6)
-        self.set_color_at(6, 1, 2, 3, 4)
+        self.set_color_at(6, 1, 1, 3, 3)
+        self.set_color_at(6, 1, 2, 3, 2)
         self.set_color_at(6, 1, 3, 3, 10)
-        self.set_color_at(6, 1, 4, 3, 9)
-        self.set_color_at(6, 1, 5, 3, 15)
+        self.set_color_at(6, 1, 4, 3, 6)
+        self.set_color_at(6, 1, 5, 3, 13)
         # frame 6 sides
-        self.set_color_at(6, 1, 1, 4, 16)
-        self.set_color_at(6, 1, 5, 4, 5)
-        self.set_color_at(6, 1, 1, 5, 5)
-        self.set_color_at(6, 1, 5, 5, 16)
+        self.set_color_at(6, 1, 1, 4, 12)
+        self.set_color_at(6, 1, 5, 4, 14)
+        self.set_color_at(6, 1, 1, 5, 14)
+        self.set_color_at(6, 1, 5, 5, 12)
         # frame 6 bottom
-        self.set_color_at(6, 1, 1, 6, 15)
-        self.set_color_at(6, 1, 2, 6, 9)
+        self.set_color_at(6, 1, 1, 6, 13)
+        self.set_color_at(6, 1, 2, 6, 6)
         self.set_color_at(6, 1, 3, 6, 10)
-        self.set_color_at(6, 1, 4, 6, 4)
-        self.set_color_at(6, 1, 5, 6, 6)
+        self.set_color_at(6, 1, 4, 6, 2)
+        self.set_color_at(6, 1, 5, 6, 3)
     
     def write_string(self, frame, layer, x, y, text, color_index=None):
         "writes out each char of a string to specified tiles"
@@ -506,7 +514,11 @@ class ArtFromDisk(Art):
     "subclass of Art that loads from a file"
     
     def __init__(self, filename, app):
-        d = json.load(open(filename))
+        self.valid = False
+        try:
+            d = json.load(open(filename))
+        except UnicodeDecodeError:
+            return
         self.width = d['width']
         self.height = d['height']
         self.charset = app.load_charset(d['charset'])
@@ -523,6 +535,9 @@ class ArtFromDisk(Art):
         for layer in frames[0]['layers']:
             self.layers_z.append(layer['z'])
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
+        # lists of changed frames
+        self.char_changed_frames, self.uv_changed_frames = [], []
+        self.fg_changed_frames, self.bg_changed_frames = [], []
         tiles = self.layers * self.width * self.height
         # build tile data arrays from frame+layer lists
         for frame in frames:
@@ -552,3 +567,67 @@ class ArtFromDisk(Art):
         print('  width/height: %s x %s' % (self.width, self.height))
         print('  frames: %s' % self.frames)
         print('  layers: %s' % self.layers)
+        # signify to app that this file loaded successfully
+        self.valid = True
+
+
+class ArtFromEDSCII(Art):
+    
+    """
+    file loader for legacy EDSCII format.
+    assumes single frames, single layer, default charset and palette.
+    """
+    
+    def __init__(self, filename, app):
+        # once load process is complete set this true to signify valid data
+        self.valid = False
+        # document width = find longest stretch before a \n
+        data = open(filename, 'rb').read()
+        longest_line = 0
+        for line in data.splitlines():
+            if len(line) > longest_line:
+                longest_line = len(line)
+        self.width = int(longest_line / 3)
+        # TODO: is this the correct way to derive height?
+        self.height = int(len(data) / self.width / 3)
+        # defaults
+        self.charset = app.load_charset(app.starting_charset)
+        self.palette = app.load_palette(app.starting_palette)
+        self.frames = 1
+        self.frame_delays = [DEFAULT_FRAME_DELAY]
+        self.layers = 1
+        self.layers_z = [DEFAULT_LAYER_Z]
+        tiles = self.width * self.height
+        chars = np.zeros(shape=tiles * 4, dtype=np.float32)
+        fg_colors = chars.copy()
+        bg_colors = chars.copy()
+        # populate char/color arrays by scanning file's width/height
+        array_index, src_index = 0, 0
+        while src_index < len(data):
+            try:
+                char = data[src_index]
+                # +1 to colors to account for transparent color now at 0
+                fg = data[src_index+1] + 1
+                bg = data[src_index+2] + 1
+            except IndexError:
+                print('IndexError')
+                break
+            chars[array_index:array_index+4] = char
+            fg_colors[array_index:array_index+4] = fg
+            bg_colors[array_index:array_index+4] = bg
+            array_index += 4
+            src_index += 3
+            # TODO: account for line breaks!
+            if int(src_index / 3) % self.width == 0:
+                src_index += 3
+        self.chars = [chars]
+        self.uv_mods = [self.new_uv_layers(self.layers)]
+        self.fg_colors, self.bg_colors = [fg_colors], [bg_colors]
+        self.char_changed_frames, self.uv_changed_frames = [], []
+        self.fg_changed_frames, self.bg_changed_frames = [], []
+        self.renderables = []
+        self.geo_changed = True
+        self.update()
+        print('EDSCII file %s loaded from disk:' % filename)
+        print('  width/height: %s x %s' % (self.width, self.height))
+        self.valid = True

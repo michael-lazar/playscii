@@ -19,10 +19,10 @@ from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet
 from palette import Palette
-from art import Art
-from art import ArtFromDisk
+from art import Art, ArtFromDisk, ArtFromEDSCII
 from renderable import Renderable
 from framebuffer import Framebuffer
+from art import ART_DIR, ART_FILE_EXTENSION
 
 CONFIG_FILENAME = 'playscii.cfg'
 
@@ -32,13 +32,15 @@ class Application:
     fullscreen = False
     framerate = 60
     base_title = 'Playscii'
+    # starting document defaults
     starting_charset = 'c64'
     starting_palette = 'c64'
+    starting_width, starting_height = 8, 8
     # debug test stuff
     test_mutate_each_frame = False
     test_art = False
     
-    def __init__(self):
+    def __init__(self, art_filename):
         self.elapsed_time = 0
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
@@ -62,17 +64,15 @@ class Application:
         self.renderables = []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
-        # TODO: if valid file given as an arg load it, if not start a new file
-        loading_from_file = True
         art = None
-        if loading_from_file:
-            # TODO: get args
-            art = ArtFromDisk('art/hello1.psci', self)
+        if art_filename:
+            art = ArtFromDisk(art_filename, self)
+            if not art or not art.valid:
+                art = ArtFromEDSCII(art_filename, self)
+            if not art or not art.valid:
+                art = self.new_art(art_filename)
         else:
-            charset = self.load_charset(self.starting_charset)
-            palette = Palette(self.starting_palette)
-            # TODO: default new document size
-            art = Art('hello1', charset, palette, 8, 8)
+            art = self.new_art(art_filename)
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [art]
         test_renderable = Renderable(self, art)
@@ -83,7 +83,13 @@ class Application:
         print('init done.')
         # TODO: UI
     
+    def new_art(self, filename):
+        charset = self.load_charset(self.starting_charset)
+        palette = self.load_palette(self.starting_palette)
+        return Art('new', charset, palette, self.starting_width, self.starting_height)
+    
     def load_charset(self, charset_to_load):
+        "creates and returns a character set with the given name"
         # already loaded?
         for charset in self.charsets:
             if charset_to_load == charset.name:
@@ -291,7 +297,20 @@ if os.path.exists(CONFIG_FILENAME):
     exec(open(CONFIG_FILENAME).read())
 
 if __name__ == "__main__":
-    app = Application()
+    file_to_load = None
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        # if file not found, try adding art subdir
+        if not os.path.exists(arg):
+            arg = '%s%s' % (ART_DIR, arg)
+        # if file still not found, try adding extension
+        if not os.path.exists(arg):
+            arg += '.%s' % ART_FILE_EXTENSION
+        if os.path.exists(arg):
+            file_to_load = arg
+        else:
+            print("couldn't find file %s, creating a new document." % sys.argv[1])
+    app = Application(file_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)

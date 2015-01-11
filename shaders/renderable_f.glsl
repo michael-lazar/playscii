@@ -16,13 +16,14 @@ void main()
 	outColor = texture2D(charset, texCoords);
 	// look up fg/bg colors from palette texture
 	vec2 colorUV = vec2(0.0, 0.0);
-	colorUV.x = theFgColorIndex / palTextureWidth;
+	// offset U coord slightly so we're not sampling from pixel boundary
+	colorUV.x = (theFgColorIndex + 0.01) / palTextureWidth;
 	vec4 fgColor = texture2D(palette, colorUV);
 	// multiple charset pixel value by FG color
 	// tinting >1 color charsets isn't officially supported but hey
 	outColor.rgb *= fgColor.rgb;
 	// any totally transparent pixels get the BG color
-	colorUV.x = theBgColorIndex / palTextureWidth;
+	colorUV.x = (theBgColorIndex + 0.01) / palTextureWidth;
 	vec4 bgColor = texture(palette, colorUV);
 	// TODO: Mark Wonnacott suggests: instead of a branch, maybe:
 	// colour = bg * alpha + fg * (1 - alpha)

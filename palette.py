@@ -39,10 +39,10 @@ class Palette:
                     luminosity = color[0]*0.21 + color[1]*0.72 + color[2]*0.07
                     if luminosity < darkest:
                         darkest = luminosity
-                        self.darkest_index = len(self.colors)
+                        self.darkest_index = len(self.colors) - 1
                     elif luminosity > lightest:
                         lightest = luminosity
-                        self.lightest_index = len(self.colors)
+                        self.lightest_index = len(self.colors) - 1
         # create new 1D image with unique colors
         img = Image.new('RGBA', (MAX_COLORS, 1), (0, 0, 0, 0))
         x = 0

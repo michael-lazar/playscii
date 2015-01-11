@@ -1,7 +1,5 @@
 TODO
 
-- read this from a file with json.load(file)
-- move app's main loop to being about loading files from disk, rather than always creating test geo from scratch on init
 - display name of currently open art in titlebar
 
 - start roughing in UI:
