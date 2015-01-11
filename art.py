@@ -20,7 +20,6 @@ ART_FILE_EXTENSION = 'psci'
 
 
 class Art:
-    
     """
     Art asset:
     Contains the data that is modified by user edits and gets saved to disk.
@@ -33,7 +32,6 @@ class Art:
     - each tile has a character, foreground color, and background color
     - all layers in an Art are the same dimensions
     """
-    
     quad_width,quad_height = 1, 1
     log_size_changes = False
     
@@ -59,6 +57,10 @@ class Art:
         self.fg_changed_frames, self.bg_changed_frames = [], []
         # clear our single layer to a sensible BG color
         self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
+        
+        # TODO: support non-square characters:
+        # derive quad_width/height from charset aspect; width always 1.0
+        
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
         # tell renderables to rebind vert and element buffers next update
@@ -515,6 +517,7 @@ class ArtFromDisk(Art):
     
     def __init__(self, filename, app):
         self.valid = False
+        self.filename = filename
         try:
             d = json.load(open(filename))
         except UnicodeDecodeError:
@@ -572,15 +575,14 @@ class ArtFromDisk(Art):
 
 
 class ArtFromEDSCII(Art):
-    
     """
     file loader for legacy EDSCII format.
     assumes single frames, single layer, default charset and palette.
     """
-    
     def __init__(self, filename, app):
         # once load process is complete set this true to signify valid data
         self.valid = False
+        self.filename = filename
         # document width = find longest stretch before a \n
         data = open(filename, 'rb').read()
         longest_line = 0
@@ -601,25 +603,22 @@ class ArtFromEDSCII(Art):
         chars = np.zeros(shape=tiles * 4, dtype=np.float32)
         fg_colors = chars.copy()
         bg_colors = chars.copy()
-        # populate char/color arrays by scanning file's width/height
-        array_index, src_index = 0, 0
-        while src_index < len(data):
-            try:
-                char = data[src_index]
-                # +1 to colors to account for transparent color now at 0
-                fg = data[src_index+1] + 1
-                bg = data[src_index+2] + 1
-            except IndexError:
-                print('IndexError')
-                break
-            chars[array_index:array_index+4] = char
-            fg_colors[array_index:array_index+4] = fg
-            bg_colors[array_index:array_index+4] = bg
-            array_index += 4
-            src_index += 3
-            # TODO: account for line breaks!
-            if int(src_index / 3) % self.width == 0:
-                src_index += 3
+        # populate char/color arrays by scanning width-long chunks of file
+        def chunks(l, n):
+            for i in range(0, len(l), n):
+                yield l[i:i+n]
+        # 3 bytes per tile, +1 for line ending
+        lines = chunks(data, (self.width * 3) + 1)
+        array_index = 0
+        for line in lines:
+            index = 0
+            while index < len(line) - 1:
+                chars[array_index:array_index+4] = line[index]
+                # +1 to color indices: playscii color index 0 = transparent
+                fg_colors[array_index:array_index+4] = line[index+1] + 1
+                bg_colors[array_index:array_index+4] = line[index+2] + 1
+                index += 3
+                array_index += 4
         self.chars = [chars]
         self.uv_mods = [self.new_uv_layers(self.layers)]
         self.fg_colors, self.bg_colors = [fg_colors], [bg_colors]

@@ -76,17 +76,17 @@ class Application:
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [art]
         test_renderable = Renderable(self, art)
-        self.set_window_title('frame %s' % test_renderable.frame)
         # add renderables to list in reverse draw order (only world for now)
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
+        self.update_window_title()
         print('init done.')
         # TODO: UI
     
     def new_art(self, filename):
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
-        return Art('new', charset, palette, self.starting_width, self.starting_height)
+        return Art(filename, charset, palette, self.starting_width, self.starting_height)
     
     def load_charset(self, charset_to_load):
         "creates and returns a character set with the given name"
@@ -110,6 +110,14 @@ class Application:
     def set_window_title(self, text):
         new_title = bytes('%s - %s' % (self.base_title, text), 'utf-8')
         sdl2.SDL_SetWindowTitle(self.window, new_title)
+    
+    def update_window_title(self):
+        # TODO: once playscii can open multiple documents, get current active
+        # document's name
+        full_filename = os.path.abspath(self.art_loaded[0].filename)
+        current_frame = self.renderables[0].frame
+        title = '%s (frame %s)' % (full_filename, current_frame)
+        self.set_window_title(title)
     
     def blank_screen(self):
         r = sdl2.SDL_Rect()
@@ -212,10 +220,10 @@ class Application:
                 # TEST: < > / , . rewind / advance anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     self.renderables[0].rewind_frame()
-                    self.set_window_title('frame %s' % self.renderables[0].frame)
+                    self.update_window_title()
                 elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
                     self.renderables[0].advance_frame()
-                    self.set_window_title('frame %s' % self.renderables[0].frame)
+                    self.update_window_title()
                 # TEST: p starts/pauses animation playback
                 elif event.key.keysym.sym == sdl2.SDLK_p:
                     self.renderables[0].animating = not self.renderables[0].animating

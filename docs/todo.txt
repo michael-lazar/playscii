@@ -1,27 +1,15 @@
 TODO
 
-- display name of currently open art in titlebar
-
 - start roughing in UI:
 -- toggle UI drawing
 -- display current anim frame
 
 ---
 
-second design approach
+FIX:
 
-art stores no intermediate lists, just arrays of ints for char, fg & bg colors
-shader does the rest!
-compute char UV in the vert shader
-get fg and bg colors from index by sampling from a 1D palette texture
-pass in texture dimensions as uniforms (2 bits of data that don't change per object)
-art's get and set methods compute index into array and return/set directly
-no layer or frame objects!  an Art keeps lists of em, and a few lists for data that used to live in each instance eg frame delay and layer Z.
-
----
+- EDSCII files with extra \n (which crash opening in EDSCII) open but are corrupted, figure out how to fix this.  examples: cloud.ed, headbrain2.ed
 
 problem discovered during 2015-01-04~06:
-
 GLSL really can't handle int/uint attributes!  charIndex looks fine in numpy int32 array data but comes into GLSL totally screwy.  works fine when the array and attribute are floats instead.  bug for PyOpenGL devs?
-
 possible test program: two quads side by side, each doing some trivial shader that involves an arbitrary number, only difference being one is driven by an int attribute and the other by a float.

@@ -1,4 +1,18 @@
 
+
+second design approach circa first week of january 2015
+
+art stores no intermediate lists, just arrays of ints for char, fg & bg colors
+shader does the rest!
+compute char UV in the vert shader
+get fg and bg colors from index by sampling from a 1D palette texture
+pass in texture dimensions as uniforms (2 bits of data that don't change per object)
+art's get and set methods compute index into array and return/set directly
+no layer or frame objects!  an Art keeps lists of em, and a few lists for data that used to live in each instance eg frame delay and layer Z.
+
+
+---
+
 design notes circa xmas 2014
 
 art only changes when user edits
