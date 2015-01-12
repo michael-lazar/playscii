@@ -520,7 +520,10 @@ class ArtFromDisk(Art):
         self.filename = filename
         try:
             d = json.load(open(filename))
+        # oddly, different exceptions in windows vs linux
         except UnicodeDecodeError:
+            return
+        except ValueError:
             return
         self.width = d['width']
         self.height = d['height']
