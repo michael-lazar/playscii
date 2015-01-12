@@ -1,0 +1,71 @@
+UI design notes
+
+mark wonnacott likes EDSCII's spacebar-invoked charset/palette popup, and in kooltool it's effectively multi-tab also offering a tools pane... what if playscii's popup had tabs and that replaced a more conventional left-hand toolbar?
+
+how to show range of open documents? (save for later, when MDI is needed for game editing)
+
+---
+
+possible features
+
+tools:
+paint
+erase
+pick/grab
+select
+cut/copy/paste
+shift contents of current layer
+flip (top/bottom or left/right) or rotate (0/90/180/270) char
+draw line
+draw square
+draw circle
+fill
+text
+
+tool settings:
+paint: brush size, filter affect char/fg/bg
+erase: filter affect char/fg/bg
+pick: filter affect char/fg/bg
+cut/copy/paste: affect all layers, filter affect char/fg/bg
+draw line: line thickness
+draw square: filled/hollow, square/nonsquare aspect
+draw ellipse: filled/hollow, circle/ellipse aspect
+fill: filter affect char/fg/bg
+
+navigation:
+pan view
+zoom view
+shift active layer
+shift active frame
+
+toggle grid
+toggle onion skin
+onion skin settings: # of previous frames, # of next frames, max/min opacity
+
+char/fg/bg settings:
+swap selected fg/bg
+previous/next char
+previous/next fg color
+previous/next bg color
+
+file/meta/misc:
+undo/redo
+load
+save [with current name | with name Z]
+new document [of size X by Y] [with name Z]
+convert raster image (to current document size/charset/palette)
+export current frame to PNG
+export all frames to GIF
+load charset
+load palette
+convert to charset (find matches from current to target charset, convert chars)
+convert to palette (same as above but for colors)
+crop document (to size X by Y) (to current selection)
+add frame at index X
+duplicate frame at index X
+add layer with depth Z
+duplicate layer X
+
+invoke command line
+open help/about screen
+execute python expression

@@ -4,6 +4,7 @@ from PIL import Image
 from texture import Texture
 
 CHARSET_DIR = 'charsets/'
+CHARSET_FILE_EXTENSION = 'char'
 
 class CharacterSet:
     
@@ -13,7 +14,7 @@ class CharacterSet:
     def __init__(self, src_filename):
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
-        char_data_filename = CHARSET_DIR + src_filename + '.char'
+        char_data_filename = CHARSET_DIR + src_filename + '.%s' % CHARSET_FILE_EXTENSION
         if not os.path.exists(char_data_filename):
             print("Couldn't find character set data file " + char_data_filename)
             return
@@ -31,6 +32,9 @@ class CharacterSet:
             image_filename = CHARSET_DIR + image_filename
             if not os.path.exists(image_filename):
                 image_filename += '.png'
+                if not os.path.exists(image_filename):
+                    # if no image found, try name of data file w/ png extension
+                    image_filename = char_data_filename.replace('.%s' % CHARSET_FILE_EXTENSION, '.png')
                 if not os.path.exists(image_filename):
                     print("Couldn't find character set image file " + image_filename)
                     return

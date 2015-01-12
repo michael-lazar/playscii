@@ -19,7 +19,7 @@ class Camera:
     pan_accel = 0.01
     max_pan_speed = 0.2
     pan_friction = 0.1
-    zoom_accel = 0.01
+    zoom_accel = 0.05
     max_zoom_speed = 0.5
     zoom_friction = 0.1
     # kill velocity if below this

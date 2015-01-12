@@ -70,9 +70,9 @@ class Application:
             if not art or not art.valid:
                 art = ArtFromEDSCII(art_filename, self)
             if not art or not art.valid:
-                art = self.new_art(art_filename)
+                art = self.new_art()
         else:
-            art = self.new_art(art_filename)
+            art = self.new_art()
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [art]
         test_renderable = Renderable(self, art)
@@ -83,7 +83,7 @@ class Application:
         print('init done.')
         # TODO: UI
     
-    def new_art(self, filename):
+    def new_art(self, filename='new'):
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
         return Art(filename, charset, palette, self.starting_width, self.starting_height)
@@ -114,7 +114,10 @@ class Application:
     def update_window_title(self):
         # TODO: once playscii can open multiple documents, get current active
         # document's name
-        full_filename = os.path.abspath(self.art_loaded[0].filename)
+        if os.path.exists(self.art_loaded[0].filename):
+            full_filename = os.path.abspath(self.art_loaded[0].filename)
+        else:
+            full_filename = self.art_loaded[0].filename
         current_frame = self.renderables[0].frame
         title = '%s (frame %s)' % (full_filename, current_frame)
         self.set_window_title(title)
@@ -248,22 +251,13 @@ class Application:
             renderable.update()
         self.camera.update()
         if self.test_mutate_each_frame and random() < 0.5:
-            self.art_loaded[0].mutate()
+            self.art_loaded[0].run_script('mutate')
         if self.test_art:
             art = self.art_loaded[0]
             self.test_art = False
             # load some test data - simulates some user edits:
             # add layers, write text, duplicate that frame, do some animation
-            art.add_layer(0.25)
-            art.add_layer(0.5)
-            art.do_test_text()
-            art.duplicate_frame(0)
-            art.duplicate_frame(0)
-            art.duplicate_frame(0)
-            art.duplicate_frame(0)
-            art.duplicate_frame(0)
-            art.duplicate_frame(0)
-            art.do_test_animation()
+            art.run_script('hello1')
             # pass in self to save function so it can save camera etc
             #art.save_to_file(self)
         # TODO: cursor and UI

@@ -1,14 +1,18 @@
 TODO
 
 - start roughing in UI:
--- toggle UI drawing
--- display current anim frame
+-- FPS counter in upper right
+-- shift-U: toggle UI drawing
+-- display current anim frame?
+- "export to PNG" feature - how? 1:1 sized offscreen render target?
+- command line input - quake console?
+
 
 ---
 
 FIX:
 
-- EDSCII files with extra \n (which crash opening in EDSCII) open but are corrupted, figure out how to fix this.  examples: cloud.ed, headbrain2.ed
+- headbrain2.ed is corrupted, figure out if it can be salvaged with smart parsing - maybe provide a "width override" option?
 
 problem discovered during 2015-01-04~06:
 GLSL really can't handle int/uint attributes!  charIndex looks fine in numpy int32 array data but comes into GLSL totally screwy.  works fine when the array and attribute are floats instead.  bug for PyOpenGL devs?

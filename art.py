@@ -1,4 +1,4 @@
-import json
+import os.path, json
 import numpy as np
 
 from random import randint
@@ -18,6 +18,8 @@ DEFAULT_LAYER_Z = 0
 ART_DIR = 'art/'
 ART_FILE_EXTENSION = 'psci'
 
+SCRIPT_DIR = 'scripts/'
+SCRIPT_FILE_EXTENSION = 'py'
 
 class Art:
     """
@@ -37,7 +39,7 @@ class Art:
     
     def __init__(self, filename, charset, palette, width, height):
         "creates a new, blank document"
-        if not filename.endswith('.%s' % ART_FILE_EXTENSION):
+        if filename and not filename.endswith('.%s' % ART_FILE_EXTENSION):
             filename += '.%s' % ART_FILE_EXTENSION
         self.filename = filename
         self.charset, self.palette = charset, palette
@@ -57,10 +59,9 @@ class Art:
         self.fg_changed_frames, self.bg_changed_frames = [], []
         # clear our single layer to a sensible BG color
         self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
-        
-        # TODO: support non-square characters:
-        # derive quad_width/height from charset aspect; width always 1.0
-        
+        # support non-square characters:
+        # derive quad_height from chars aspect; quad_width always 1.0
+        self.quad_height = self.charset.char_height / self.charset.char_width
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
         # tell renderables to rebind vert and element buffers next update
@@ -196,6 +197,8 @@ class Art:
     def new_uv_layers(self, layers):
         "returns given # of layer's worth of vanilla UV array data"
         # TODO: support for char rotation/flipping will alter these!
+        # use a table of presets for L/R T/B flips and 90/180/270 rotations
+        # and possibly/eventually, scale?
         size = layers * self.width * self.height * UV_STRIDE
         array = np.zeros(shape=size, dtype=np.float32)
         uvs = [0, 0, 1, 0, 0, 1, 1, 1]
@@ -310,195 +313,18 @@ class Art:
         # formatting for better output
         json.dump(d, open(ART_DIR + self.filename, 'w'), sort_keys=False, indent=1)
     
-    def mutate(self):
-        "change a random tile"
-        x = randint(0, self.width-1)
-        y = randint(0, self.height-1)
-        layer = randint(0, self.layers-1)
-        char = randint(0, 128)
-        color_index = self.palette.get_random_color_index()
-        self.set_char_index_at(0, layer, x, y, char)
-        self.set_color_at(0, layer, x, y, color_index)
-        color_index = self.palette.get_random_color_index()
-        self.set_color_at(0, layer, x, y, color_index, False)
-    
-    def do_test_text(self):
-        "sets some test data. assumes: 8x8, 3 layers"
-        # clear 1st layer to black, 2nd and 3rd to transparent
-        self.clear_frame_layer(0, 0, self.palette.darkest_index)
-        self.clear_frame_layer(0, 1)
-        self.clear_frame_layer(0, 2)
-        # write white text onto 3 layers
-        color = self.palette.lightest_index
-        self.write_string(0, 0, 1, 1, 'Hello.', color)
-        # draw snaky ring thingy
-        # color ramp: 2, 10, 6, 13, 14, 12, 3, back to 2
-        # top
-        self.set_tile_at(0, 1, 1, 3, 119, 2)
-        self.set_tile_at(0, 1, 2, 3, 102, 10)
-        self.set_tile_at(0, 1, 3, 3, 102, 6)
-        self.set_tile_at(0, 1, 4, 3, 102, 13)
-        self.set_tile_at(0, 1, 5, 3, 120, 14)
-        # sides
-        self.set_tile_at(0, 1, 1, 4, 145, 3)
-        self.set_tile_at(0, 1, 5, 4, 145, 12)
-        self.set_tile_at(0, 1, 1, 5, 145, 12)
-        self.set_tile_at(0, 1, 5, 5, 145, 3)
-        # bottom
-        self.set_tile_at(0, 1, 1, 6, 121, 14)
-        self.set_tile_at(0, 1, 2, 6, 102, 13)
-        self.set_tile_at(0, 1, 3, 6, 102, 6)
-        self.set_tile_at(0, 1, 4, 6, 102, 10)
-        self.set_tile_at(0, 1, 5, 6, 122, 2)
-        # :]
-        char = self.charset.get_char_index(':')
-        self.set_tile_at(0, 2, 3, 4, char, color)
-        char = self.charset.get_char_index(']')
-        self.set_tile_at(0, 2, 4, 4, char, color)
-    
-    def do_test_animation(self):
-        "sets more test data. assumes: 8x8, 3 layers, 6 frames"
-        # cycle capitals through "hello" text
-        h = self.charset.get_char_index('h')
-        char = self.charset.get_char_index('E')
-        self.set_char_index_at(1, 0, 2, 1, char)
-        self.set_char_index_at(1, 0, 1, 1, h)
-        char = self.charset.get_char_index('L')
-        self.set_char_index_at(2, 0, 3, 1, char)
-        self.set_char_index_at(2, 0, 1, 1, h)
-        self.set_char_index_at(3, 0, 4, 1, char)
-        self.set_char_index_at(3, 0, 1, 1, h)
-        char = self.charset.get_char_index('O')
-        self.set_char_index_at(4, 0, 5, 1, char)
-        self.set_char_index_at(4, 0, 1, 1, h)
-        char = self.charset.get_char_index('!')
-        self.set_char_index_at(5, 0, 6, 1, char)
-        self.set_char_index_at(5, 0, 1, 1, h)
-        self.set_char_index_at(6, 0, 1, 1, h)
-        # make smiley go from ;] to :D
-        char = self.charset.get_char_index(';')
-        self.set_char_index_at(3, 2, 3, 4, char)
-        self.set_char_index_at(4, 2, 3, 4, char)
-        self.set_char_index_at(5, 2, 3, 4, char)
-        char = self.charset.get_char_index('D')
-        self.set_char_index_at(3, 2, 4, 4, char)
-        self.set_char_index_at(4, 2, 4, 4, char)
-        self.set_char_index_at(5, 2, 4, 4, char)
-        # cycle colors for snaky thing
-        #
-        # frame 1 top
-        #
-        self.set_color_at(1, 1, 1, 3, 10)
-        self.set_color_at(1, 1, 2, 3, 6)
-        self.set_color_at(1, 1, 3, 3, 13)
-        self.set_color_at(1, 1, 4, 3, 14)
-        self.set_color_at(1, 1, 5, 3, 12)
-        # frame 1 sides
-        self.set_color_at(1, 1, 1, 4, 2)
-        self.set_color_at(1, 1, 5, 4, 3)
-        self.set_color_at(1, 1, 1, 5, 3)
-        self.set_color_at(1, 1, 5, 5, 2)
-        # frame 1 bottom
-        self.set_color_at(1, 1, 1, 6, 12)
-        self.set_color_at(1, 1, 2, 6, 14)
-        self.set_color_at(1, 1, 3, 6, 13)
-        self.set_color_at(1, 1, 4, 6, 6)
-        self.set_color_at(1, 1, 5, 6, 10)
-        #
-        # frame 2 top
-        #
-        self.set_color_at(2, 1, 1, 3, 6)
-        self.set_color_at(2, 1, 2, 3, 13)
-        self.set_color_at(2, 1, 3, 3, 14)
-        self.set_color_at(2, 1, 4, 3, 12)
-        self.set_color_at(2, 1, 5, 3, 3)
-        # frame 2 sides
-        self.set_color_at(2, 1, 1, 4, 10)
-        self.set_color_at(2, 1, 5, 4, 2)
-        self.set_color_at(2, 1, 1, 5, 2)
-        self.set_color_at(2, 1, 5, 5, 10)
-        # frame 2 bottom
-        self.set_color_at(2, 1, 1, 6, 3)
-        self.set_color_at(2, 1, 2, 6, 12)
-        self.set_color_at(2, 1, 3, 6, 14)
-        self.set_color_at(2, 1, 4, 6, 13)
-        self.set_color_at(2, 1, 5, 6, 6)
-        #
-        # frame 3 top
-        #
-        self.set_color_at(3, 1, 1, 3, 13)
-        self.set_color_at(3, 1, 2, 3, 14)
-        self.set_color_at(3, 1, 3, 3, 12)
-        self.set_color_at(3, 1, 4, 3, 3)
-        self.set_color_at(3, 1, 5, 3, 2)
-        # frame 3 sides
-        self.set_color_at(3, 1, 1, 4, 6)
-        self.set_color_at(3, 1, 5, 4, 10)
-        self.set_color_at(3, 1, 1, 5, 10)
-        self.set_color_at(3, 1, 5, 5, 6)
-        # frame 3 bottom
-        self.set_color_at(3, 1, 1, 6, 2)
-        self.set_color_at(3, 1, 2, 6, 3)
-        self.set_color_at(3, 1, 3, 6, 12)
-        self.set_color_at(3, 1, 4, 6, 14)
-        self.set_color_at(3, 1, 5, 6, 13)
-        #
-        # frame 4 top
-        #
-        self.set_color_at(4, 1, 1, 3, 14)
-        self.set_color_at(4, 1, 2, 3, 12)
-        self.set_color_at(4, 1, 3, 3, 3)
-        self.set_color_at(4, 1, 4, 3, 2)
-        self.set_color_at(4, 1, 5, 3, 10)
-        # frame 4 sides
-        self.set_color_at(4, 1, 1, 4, 13)
-        self.set_color_at(4, 1, 5, 4, 6)
-        self.set_color_at(4, 1, 1, 5, 6)
-        self.set_color_at(4, 1, 5, 5, 13)
-        # frame 4 bottom
-        self.set_color_at(4, 1, 1, 6, 10)
-        self.set_color_at(4, 1, 2, 6, 2)
-        self.set_color_at(4, 1, 3, 6, 3)
-        self.set_color_at(4, 1, 4, 6, 12)
-        self.set_color_at(4, 1, 5, 6, 14)
-        #
-        # frame 5 top
-        #
-        self.set_color_at(5, 1, 1, 3, 12)
-        self.set_color_at(5, 1, 2, 3, 3)
-        self.set_color_at(5, 1, 3, 3, 2)
-        self.set_color_at(5, 1, 4, 3, 10)
-        self.set_color_at(5, 1, 5, 3, 6)
-        # frame 5 sides
-        self.set_color_at(5, 1, 1, 4, 14)
-        self.set_color_at(5, 1, 5, 4, 13)
-        self.set_color_at(5, 1, 1, 5, 13)
-        self.set_color_at(5, 1, 5, 5, 14)
-        # frame 5 bottom
-        self.set_color_at(5, 1, 1, 6, 6)
-        self.set_color_at(5, 1, 2, 6, 10)
-        self.set_color_at(5, 1, 3, 6, 2)
-        self.set_color_at(5, 1, 4, 6, 3)
-        self.set_color_at(5, 1, 5, 6, 12)
-        #
-        # frame 6 top
-        #
-        self.set_color_at(6, 1, 1, 3, 3)
-        self.set_color_at(6, 1, 2, 3, 2)
-        self.set_color_at(6, 1, 3, 3, 10)
-        self.set_color_at(6, 1, 4, 3, 6)
-        self.set_color_at(6, 1, 5, 3, 13)
-        # frame 6 sides
-        self.set_color_at(6, 1, 1, 4, 12)
-        self.set_color_at(6, 1, 5, 4, 14)
-        self.set_color_at(6, 1, 1, 5, 14)
-        self.set_color_at(6, 1, 5, 5, 12)
-        # frame 6 bottom
-        self.set_color_at(6, 1, 1, 6, 13)
-        self.set_color_at(6, 1, 2, 6, 6)
-        self.set_color_at(6, 1, 3, 6, 10)
-        self.set_color_at(6, 1, 4, 6, 2)
-        self.set_color_at(6, 1, 5, 6, 3)
+    def run_script(self, script_filename):
+        """
+        Runs a script on this Art. Scripts contain arbitrary python expressions.
+        """
+        script_filename = '%s%s' % (SCRIPT_DIR, script_filename)
+        if not os.path.exists(script_filename):
+            script_filename += '.%s' % SCRIPT_FILE_EXTENSION
+            if not os.path.exists(script_filename):
+                print("Couldn't find script file %s" % script_filename)
+                return
+        exec(open(script_filename).read())
+        print('Executed %s' % script_filename)
     
     def write_string(self, frame, layer, x, y, text, color_index=None):
         "writes out each char of a string to specified tiles"
@@ -529,6 +355,8 @@ class ArtFromDisk(Art):
         self.height = d['height']
         self.charset = app.load_charset(d['charset'])
         self.palette = app.load_palette(d['palette'])
+        # use correct character aspect
+        self.quad_height = self.charset.char_height / self.charset.char_width
         cam = d['camera']
         app.camera.x, app.camera.y, app.camera.z = cam[0], cam[1], cam[2]
         frames = d['frames']
@@ -582,7 +410,7 @@ class ArtFromEDSCII(Art):
     file loader for legacy EDSCII format.
     assumes single frames, single layer, default charset and palette.
     """
-    def __init__(self, filename, app):
+    def __init__(self, filename, app, width_override=None):
         # once load process is complete set this true to signify valid data
         self.valid = False
         self.filename = filename
@@ -592,12 +420,15 @@ class ArtFromEDSCII(Art):
         for line in data.splitlines():
             if len(line) > longest_line:
                 longest_line = len(line)
-        self.width = int(longest_line / 3)
-        # TODO: is this the correct way to derive height?
+        self.width = width_override or int(longest_line / 3)
+        # derive height from width
+        # 2-byte line breaks might produce non-int result, cast erases this
         self.height = int(len(data) / self.width / 3)
         # defaults
         self.charset = app.load_charset(app.starting_charset)
         self.palette = app.load_palette(app.starting_palette)
+        # use correct character aspect
+        self.quad_height = self.charset.char_height / self.charset.char_width
         self.frames = 1
         self.frame_delays = [DEFAULT_FRAME_DELAY]
         self.layers = 1
@@ -611,11 +442,20 @@ class ArtFromEDSCII(Art):
             for i in range(0, len(l), n):
                 yield l[i:i+n]
         # 3 bytes per tile, +1 for line ending
-        lines = chunks(data, (self.width * 3) + 1)
+        # BUT: files saved in windows may have 2 byte line breaks, try to detect
+        lb_length = 1
+        lines = chunks(data, (self.width * 3) + lb_length)
+        for line in lines:
+            if line[-2] == ord('\r') and line[-1] == ord('\n'):
+                print('windows-style line breaks detected')
+                lb_length = 2
+                break
+        # recreate generator after first use
+        lines = chunks(data, (self.width * 3) + lb_length)
         array_index = 0
         for line in lines:
             index = 0
-            while index < len(line) - 1:
+            while index < len(line) - lb_length:
                 chars[array_index:array_index+4] = line[index]
                 # +1 to color indices: playscii color index 0 = transparent
                 fg_colors[array_index:array_index+4] = line[index+1] + 1
