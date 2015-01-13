@@ -1,4 +1,6 @@
 # hello1 test art script
+# everything in this file must be a valid python expression.
+# "self" is the Art that's running us, so we have full access to its namespace!
 
 #
 # sets some test data. assumes: 8x8, 1 layer

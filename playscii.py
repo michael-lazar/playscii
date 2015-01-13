@@ -38,6 +38,7 @@ class Application:
     starting_width, starting_height = 8, 8
     # debug test stuff
     test_mutate_each_frame = False
+    test_life_each_frame = False
     test_art = False
     
     def __init__(self, art_filename):
@@ -86,7 +87,7 @@ class Application:
     def new_art(self, filename='new'):
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
-        return Art(filename, charset, palette, self.starting_width, self.starting_height)
+        return Art(filename, self, charset, palette, self.starting_width, self.starting_height)
     
     def load_charset(self, charset_to_load):
         "creates and returns a character set with the given name"
@@ -230,6 +231,13 @@ class Application:
                 # TEST: p starts/pauses animation playback
                 elif event.key.keysym.sym == sdl2.SDLK_p:
                     self.renderables[0].animating = not self.renderables[0].animating
+                # TEST: toggle artscript running
+                elif event.key.keysym.sym == sdl2.SDLK_m:
+                    art = self.art_loaded[0]
+                    if art.is_script_running('conway'):
+                        art.stop_script('conway')
+                    else:
+                        art.run_script_every('conway', 0.05)
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -250,11 +258,15 @@ class Application:
         for renderable in self.renderables:
             renderable.update()
         self.camera.update()
-        if self.test_mutate_each_frame and random() < 0.5:
-            self.art_loaded[0].run_script('mutate')
+        if self.test_mutate_each_frame:
+            self.test_mutate_each_frame = False
+            self.art_loaded[0].run_script_every('mutate', 0.01)
+        if self.test_life_each_frame:
+            self.test_life_each_frame = False
+            self.art_loaded[0].run_script_every('conway', 0.05)
         if self.test_art:
-            art = self.art_loaded[0]
             self.test_art = False
+            art = self.art_loaded[0]
             # load some test data - simulates some user edits:
             # add layers, write text, duplicate that frame, do some animation
             art.run_script('hello1')

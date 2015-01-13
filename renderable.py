@@ -120,12 +120,11 @@ class Renderable:
         self.anim_timer += self.app.delta_time / 1000
         this_frame_delay = self.art.frame_delays[self.frame]
         while self.anim_timer > this_frame_delay:
-            # TODO: advance_frame calls set_frame which updates all tile buffers
-            # each time; only call set_frame once we've determined the correct
-            # frame!
-            self.advance_frame()
             self.anim_timer -= this_frame_delay
+            # iterate through frames, but don't call set_frame until the end
+            self.frame = (self.frame + 1) % self.art.frames
             this_frame_delay = self.art.frame_delays[self.frame]
+        self.set_frame(self.frame)
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])

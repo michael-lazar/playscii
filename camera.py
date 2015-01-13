@@ -26,8 +26,8 @@ class Camera:
     min_velocity = 0.001
     # map extents
     # TODO: leftover from u4mapvu, generate bounds according to art size
-    min_x,max_x = -25, 25
-    min_y,max_y = -25, 25
+    min_x,max_x = -50, 50
+    min_y,max_y = -50, 50
     min_zoom,max_zoom = 0.5, 25
     # matrices -> worldspace renderable vertex shader uniforms
     fov = 90
@@ -109,6 +109,9 @@ class Camera:
     def set_zoom(self, z):
         # TODO: set lerp target, clear if keyboard etc call zoom()
         self.z = z
+    
+    def set_loc(self, x, y, z):
+        self.x, self.y, self.z = x, y, (z or self.z) # z optional
     
     def mouse_pan(self, dx, dy):
         "pan view based on mouse delta"

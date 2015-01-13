@@ -19,7 +19,7 @@ ART_DIR = 'art/'
 ART_FILE_EXTENSION = 'psci'
 
 SCRIPT_DIR = 'scripts/'
-SCRIPT_FILE_EXTENSION = 'py'
+SCRIPT_FILE_EXTENSION = 'arsc'
 
 class Art:
     """
@@ -37,11 +37,12 @@ class Art:
     quad_width,quad_height = 1, 1
     log_size_changes = False
     
-    def __init__(self, filename, charset, palette, width, height):
+    def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
         if filename and not filename.endswith('.%s' % ART_FILE_EXTENSION):
             filename += '.%s' % ART_FILE_EXTENSION
         self.filename = filename
+        self.app = app
         self.charset, self.palette = charset, palette
         self.width, self.height = width, height
         self.frames = 0
@@ -64,6 +65,10 @@ class Art:
         self.quad_height = self.charset.char_height / self.charset.char_width
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
+        # running scripts and timing info
+        self.scripts = []
+        self.script_rates = []
+        self.scripts_next_exec_time = []
         # tell renderables to rebind vert and element buffers next update
         self.geo_changed = True
         # run update once before renderables initialize so they have
@@ -223,7 +228,7 @@ class Art:
         index = self.get_array_index(layer, x, y)
         return self.fg_colors[frame][index]
     
-    def get_bg_color_index_at(self, x, y):
+    def get_bg_color_index_at(self, frame, layer, x, y):
         index = self.get_array_index(layer, x, y)
         return self.bg_colors[frame][index]
     
@@ -260,6 +265,7 @@ class Art:
             self.set_color_at(frame, layer, x, y, bg, False)
     
     def update(self):
+        self.update_scripts()
         # update our renderables if they're on a frame whose char/colors changed
         if self.geo_changed:
             self.build_geo()
@@ -276,7 +282,7 @@ class Art:
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
     
-    def save_to_file(self, app):
+    def save_to_file(self):
         "build a dict representing all this art's data and write it to disk"
         d = {}
         d['width'] = self.width
@@ -285,7 +291,7 @@ class Art:
         d['charset'] = self.charset.name
         d['palette'] = self.palette.name
         # remember camera location
-        d['camera'] = app.camera.x, app.camera.y, app.camera.z
+        d['camera'] = self.app.camera.x, self.app.camera.y, self.app.camera.z
         # frames and layers are dicts w/ lists of their data + a few properties
         frames = []
         for frame_index in range(self.frames):
@@ -317,14 +323,61 @@ class Art:
         """
         Runs a script on this Art. Scripts contain arbitrary python expressions.
         """
-        script_filename = '%s%s' % (SCRIPT_DIR, script_filename)
-        if not os.path.exists(script_filename):
-            script_filename += '.%s' % SCRIPT_FILE_EXTENSION
-            if not os.path.exists(script_filename):
-                print("Couldn't find script file %s" % script_filename)
-                return
+        script_filename = self.get_valid_script_filename(script_filename)
+        if not script_filename:
+            return
         exec(open(script_filename).read())
         print('Executed %s' % script_filename)
+    
+    def is_script_running(self, script_filename):
+        script_filename = self.get_valid_script_filename(script_filename)
+        return script_filename and script_filename in self.scripts
+    
+    def get_valid_script_filename(self, script_filename):
+        if os.path.exists(script_filename): return script_filename
+        # try adding scripts/ subdir
+        script_filename = '%s%s' % (SCRIPT_DIR, script_filename)
+        if os.path.exists(script_filename): return script_filename
+        # try adding extension
+        script_filename += '.%s' % SCRIPT_FILE_EXTENSION
+        if not os.path.exists(script_filename):
+            print("Couldn't find script file %s" % script_filename)
+            return
+        return script_filename
+    
+    def run_script_every(self, script_filename, rate=0.1):
+        script_filename = self.get_valid_script_filename(script_filename)
+        if not script_filename:
+            return
+        if script_filename in self.scripts:
+            print('script %s is already running.' % script_filename)
+            return
+        self.scripts.append(script_filename)
+        self.script_rates.append(rate)
+        # set next time
+        next_run = (self.app.elapsed_time / 1000) + rate
+        self.scripts_next_exec_time.append(next_run)
+    
+    def stop_script(self, script_filename):
+        # remove from running scripts, rate list, next_exec list
+        script_filename = self.get_valid_script_filename(script_filename)
+        if not script_filename:
+            return
+        if not script_filename in self.scripts:
+            print("script %s exists but isn't running." % script_filename)
+            return
+        script_index = self.scripts.index(script_filename)
+        self.scripts.pop(script_index)
+        self.script_rates.pop(script_index)
+        self.scripts_next_exec_time.pop(script_index)
+    
+    def update_scripts(self):
+        if len(self.scripts) == 0:
+            return
+        for i,script in enumerate(self.scripts):
+            if (self.app.elapsed_time / 1000) > self.scripts_next_exec_time[i]:
+                exec(open(script).read())
+                self.scripts_next_exec_time[i] += self.script_rates[i]
     
     def write_string(self, frame, layer, x, y, text, color_index=None):
         "writes out each char of a string to specified tiles"
@@ -344,6 +397,7 @@ class ArtFromDisk(Art):
     def __init__(self, filename, app):
         self.valid = False
         self.filename = filename
+        self.app = app
         try:
             d = json.load(open(filename))
         # oddly, different exceptions in windows vs linux
@@ -353,12 +407,12 @@ class ArtFromDisk(Art):
             return
         self.width = d['width']
         self.height = d['height']
-        self.charset = app.load_charset(d['charset'])
-        self.palette = app.load_palette(d['palette'])
+        self.charset = self.app.load_charset(d['charset'])
+        self.palette = self.app.load_palette(d['palette'])
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
         cam = d['camera']
-        app.camera.x, app.camera.y, app.camera.z = cam[0], cam[1], cam[2]
+        self.app.camera.set_loc(cam[0], cam[1], cam[2])
         frames = d['frames']
         self.frames = len(frames)
         self.frame_delays = []
@@ -393,6 +447,10 @@ class ArtFromDisk(Art):
             self.uv_mods.append(uvs)
         # TODO: for hot-reload, app should pass in old renderables list
         self.renderables = []
+        # running scripts and timing info
+        self.scripts = []
+        self.script_rates = []
+        self.scripts_next_exec_time = []
         self.geo_changed = True
         self.update()
         print('loaded %s from disk:' % filename)
@@ -414,6 +472,7 @@ class ArtFromEDSCII(Art):
         # once load process is complete set this true to signify valid data
         self.valid = False
         self.filename = filename
+        self.app = app
         # document width = find longest stretch before a \n
         data = open(filename, 'rb').read()
         longest_line = 0
@@ -425,8 +484,8 @@ class ArtFromEDSCII(Art):
         # 2-byte line breaks might produce non-int result, cast erases this
         self.height = int(len(data) / self.width / 3)
         # defaults
-        self.charset = app.load_charset(app.starting_charset)
-        self.palette = app.load_palette(app.starting_palette)
+        self.charset = self.app.load_charset(app.starting_charset)
+        self.palette = self.app.load_palette(app.starting_palette)
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
         self.frames = 1
@@ -468,6 +527,10 @@ class ArtFromEDSCII(Art):
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
         self.renderables = []
+        # running scripts and timing info
+        self.scripts = []
+        self.script_rates = []
+        self.scripts_next_exec_time = []
         self.geo_changed = True
         self.update()
         print('EDSCII file %s loaded from disk:' % filename)

@@ -7,7 +7,6 @@ TODO
 - "export to PNG" feature - how? 1:1 sized offscreen render target?
 - command line input - quake console?
 
-
 ---
 
 FIX:
