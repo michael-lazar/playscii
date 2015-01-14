@@ -3,9 +3,14 @@ TODO
 - start roughing in UI:
 -- FPS counter in upper right
 -- shift-U: toggle UI drawing
--- display current anim frame?
-- "export to PNG" feature - how? 1:1 sized offscreen render target?
-- command line input - quake console?
+-- command line input - quake-style console?
+
+- get cursor working
+-- does edit mode always force straight top down and/or ortho view? or can the cursor work in a 3D scene a la an RTS?
+
+- "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
+-- is color distortion inherent in how good CRT filters work?
+
 
 ---
 

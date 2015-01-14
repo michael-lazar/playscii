@@ -23,6 +23,7 @@ from art import Art, ArtFromDisk, ArtFromEDSCII
 from renderable import Renderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
+from ui import UI
 
 CONFIG_FILENAME = 'playscii.cfg'
 
@@ -57,7 +58,7 @@ class Application:
         # draw black screen while doing other init
         self.sdl_renderer = sdl2.SDL_CreateRenderer(self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
         self.blank_screen()
-        # TODO: SDL_SetWindowIcon(self.window, SDL_Surface* icon)
+        # TODO: SDL_SetWindowIcon(self.window, SDL_Surface* icon) <- ui/logo.png
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         self.camera = Camera(self.window_width, self.window_height)
@@ -81,8 +82,8 @@ class Application:
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         self.update_window_title()
+        self.ui = UI(self, self.sl, self.window_width, self.window_height)
         print('init done.')
-        # TODO: UI
     
     def new_art(self, filename='new'):
         charset = self.load_charset(self.starting_charset)
@@ -142,7 +143,7 @@ class Application:
         self.fb.crt = crt
         # tell camera and UI that view aspect has changed
         self.camera.window_resized(new_width, new_height)
-        #self.ui.window_resized(new_width, new_height)
+        self.ui.window_resized(new_width, new_height)
     
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
@@ -178,11 +179,6 @@ class Application:
         mouse_dx, mouse_dy = ctypes.c_int(0), ctypes.c_int(0)
         sdl2.mouse.SDL_GetRelativeMouseState(mouse_dx, mouse_dy)
         mouse_dx, mouse_dy = int(mouse_dx.value), int(mouse_dy.value)
-        # don't mouse pan view if we're hovering any UI
-        """
-        if len(self.ui.hovered_elements) == 0 and (left_mouse or right_mouse) and mouse_dx != 0 and mouse_dy != 0:
-            self.camera.mouse_pan(mouse_dx, mouse_dy)
-        """
         # directly query keys we don't want affected by OS key repeat delay
         ks = sdl2.SDL_GetKeyboardState(None)
         if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
@@ -243,12 +239,10 @@ class Application:
                     self.camera.zoom(-3)
                 elif event.wheel.y < 0:
                     self.camera.zoom(3)
-            """
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
-            """
         sdl2.SDL_PumpEvents()
         return True
     
@@ -274,7 +268,7 @@ class Application:
             #art.save_to_file(self)
         # TODO: cursor and UI
         #self.cursor.update(self.elapsed_time)
-        #self.ui.update()
+        self.ui.update()
     
     def render(self):
         # draw main scene to framebuffer
@@ -286,7 +280,7 @@ class Application:
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render(self.elapsed_time)
-        #self.ui.render(self.elapsed_time)
+        self.ui.render(self.elapsed_time)
         GL.glUseProgram(0)
         sdl2.SDL_GL_SwapWindow(self.window)
     
