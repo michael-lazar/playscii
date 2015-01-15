@@ -21,6 +21,24 @@ ART_FILE_EXTENSION = 'psci'
 SCRIPT_DIR = 'scripts/'
 SCRIPT_FILE_EXTENSION = 'arsc'
 
+# flip/rotate UV constants
+UV_NORMAL = 0
+UV_ROTATE90 = 1
+UV_ROTATE180 = 2
+UV_ROTATE270 = 3
+UV_FLIPX = 4
+UV_FLIPY = 5
+# flip X & Y is identical to rotate 180
+
+uv_types = {
+    UV_NORMAL:    np.array([0, 0, 1, 0, 0, 1, 1, 1], dtype=np.float32),
+    UV_ROTATE90:  np.array([0, 1, 0, 0, 1, 1, 1, 0], dtype=np.float32),
+    UV_ROTATE180: np.array([1, 1, 0, 1, 1, 0, 0, 0], dtype=np.float32),
+    UV_ROTATE270: np.array([1, 0, 1, 1, 0, 0, 0, 1], dtype=np.float32),
+    UV_FLIPX:     np.array([1, 0, 0, 0, 1, 1, 0, 1], dtype=np.float32),
+    UV_FLIPY:     np.array([0, 1, 1, 1, 0, 0, 1, 0], dtype=np.float32),
+}
+
 class Art:
     """
     Art asset:
@@ -133,7 +151,7 @@ class Art:
             new_array = self.new_uv_layers(1)
             array[index:new_size] = new_array
         # adding a layer changes all frames' UV data
-        self.uv_changed_frames = range(self.frames)
+        for i in range(self.frames): self.uv_changed_frames.append(i)
         if self.log_size_changes:
             print('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
@@ -206,7 +224,7 @@ class Art:
         # and possibly/eventually, scale?
         size = layers * self.width * self.height * UV_STRIDE
         array = np.zeros(shape=size, dtype=np.float32)
-        uvs = [0, 0, 1, 0, 0, 1, 1, 1]
+        uvs = uv_types[UV_NORMAL]
         # UV offsets
         index = 0
         while index < size:
@@ -232,6 +250,16 @@ class Art:
         index = self.get_array_index(layer, x, y)
         return self.bg_colors[frame][index]
     
+    def get_char_transform_at(self, frame, layer, x, y):
+        # array index * 2 because UVs store 8 floats per quad
+        index = self.get_array_index(layer, x, y) * 2
+        uvs = self.uv_mods[frame][index:index+UV_STRIDE].copy()
+        # TODO: there's gotta be a better way to do this than iterating through!
+        # (ok if it's slow for the moment, as nothing perf-critical uses it
+        for k in uv_types:
+            if (uv_types[k] == uvs).all():
+                return k
+    
     # set methods
     def set_char_index_at(self, frame, layer, x, y, char_index):
         index = self.get_array_index(layer, x, y)
@@ -255,7 +283,14 @@ class Art:
         elif not fg and not frame in self.bg_changed_frames:
             self.bg_changed_frames.append(frame)
     
-    def set_tile_at(self, frame, layer, x, y, char_index=None, fg=None, bg=None):
+    def set_char_transform_at(self, frame, layer, x, y, transform):
+        index = self.get_array_index(layer, x, y) * 2
+        self.uv_mods[frame][index:index+UV_STRIDE] = uv_types[transform]
+        if not frame in self.uv_changed_frames:
+            self.uv_changed_frames.append(frame)
+    
+    def set_tile_at(self, frame, layer, x, y, char_index=None, fg=None, bg=None,
+                    transform=None):
         "convenience function for setting (up to) all 3 tile indices at once"
         if char_index:
             self.set_char_index_at(frame, layer, x, y, char_index)
@@ -263,6 +298,8 @@ class Art:
             self.set_color_at(frame, layer, x, y, fg, True)
         if bg:
             self.set_color_at(frame, layer, x, y, bg, False)
+        if transform:
+            self.set_char_transform_at(frame, layer, x, y, transform)
     
     def update(self):
         self.update_scripts()
@@ -300,6 +337,7 @@ class Art:
             frame_chars = self.chars[frame_index]
             frame_fg_colors = self.fg_colors[frame_index]
             frame_bg_colors = self.bg_colors[frame_index]
+            frame_uvs = self.uv_mods[frame_index]
             for layer_index in range(self.layers):
                 layer = { 'z': self.layers_z[layer_index] }
                 tiles = []
@@ -309,7 +347,9 @@ class Art:
                         char = int(frame_chars[array_index])
                         fg = int(frame_fg_colors[array_index])
                         bg = int(frame_bg_colors[array_index])
-                        tiles.append({'char': char, 'fg': fg, 'bg': bg})
+                        # use get method for transform, data's not simply an int
+                        xform = self.get_char_transform_at(frame_index, layer_index, x, y)
+                        tiles.append({'char': char, 'fg': fg, 'bg': bg, 'xform': xform})
                 layer['tiles'] = tiles
                 layers.append(layer)
             frame['layers'] = layers
@@ -317,7 +357,8 @@ class Art:
         d['frames'] = frames
         # TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
-        json.dump(d, open(ART_DIR + self.filename, 'w'), sort_keys=False, indent=1)
+        json.dump(d, open(self.filename, 'w'), sort_keys=False, indent=1)
+        print('saved %s to disk.' % self.filename)
     
     def run_script(self, script_filename):
         """
@@ -396,15 +437,12 @@ class ArtFromDisk(Art):
     
     def __init__(self, filename, app):
         self.valid = False
-        self.filename = filename
-        self.app = app
         try:
             d = json.load(open(filename))
-        # oddly, different exceptions in windows vs linux
-        except UnicodeDecodeError:
+        except:
             return
-        except ValueError:
-            return
+        self.filename = filename
+        self.app = app
         self.width = d['width']
         self.height = d['height']
         self.charset = self.app.load_charset(d['charset'])
@@ -440,6 +478,9 @@ class ArtFromDisk(Art):
                     chars[array_index:array_index+4] = tile['char']
                     fg_colors[array_index:array_index+4] = tile['fg']
                     bg_colors[array_index:array_index+4] = tile['bg']
+                    uv_transform = tile.get('xform', uv_types[UV_NORMAL])
+                    uv_index = array_index*2
+                    uvs[uv_index:uv_index+UV_STRIDE] = uv_transform
                     array_index += 4
             self.chars.append(chars)
             self.fg_colors.append(fg_colors)
@@ -471,10 +512,13 @@ class ArtFromEDSCII(Art):
     def __init__(self, filename, app, width_override=None):
         # once load process is complete set this true to signify valid data
         self.valid = False
-        self.filename = filename
+        try:
+            data = open(filename, 'rb').read()
+        except:
+            return
+        self.filename = '%s.%s' % (os.path.splitext(filename)[0], ART_FILE_EXTENSION)
         self.app = app
         # document width = find longest stretch before a \n
-        data = open(filename, 'rb').read()
         longest_line = 0
         for line in data.splitlines():
             if len(line) > longest_line:

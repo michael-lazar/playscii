@@ -41,6 +41,7 @@ class Application:
     test_mutate_each_frame = False
     test_life_each_frame = False
     test_art = False
+    auto_save = False
     
     def __init__(self, art_filename):
         self.elapsed_time = 0
@@ -66,15 +67,11 @@ class Application:
         self.renderables = []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
-        art = None
-        if art_filename:
-            art = ArtFromDisk(art_filename, self)
+        art = ArtFromDisk(art_filename, self)
+        if not art or not art.valid:
+            art = ArtFromEDSCII(art_filename, self)
             if not art or not art.valid:
-                art = ArtFromEDSCII(art_filename, self)
-            if not art or not art.valid:
-                art = self.new_art()
-        else:
-            art = self.new_art()
+                art = self.new_art(art_filename)
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded = [art]
         test_renderable = Renderable(self, art)
@@ -85,7 +82,8 @@ class Application:
         self.ui = UI(self, self.sl, self.window_width, self.window_height)
         print('init done.')
     
-    def new_art(self, filename='new'):
+    def new_art(self, filename):
+        filename = filename or '%snew' % ART_DIR
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
         return Art(filename, self, charset, palette, self.starting_width, self.starting_height)
@@ -116,10 +114,11 @@ class Application:
     def update_window_title(self):
         # TODO: once playscii can open multiple documents, get current active
         # document's name
-        if os.path.exists(self.art_loaded[0].filename):
-            full_filename = os.path.abspath(self.art_loaded[0].filename)
+        filename = self.art_loaded[0].filename
+        if filename and os.path.exists(filename):
+            full_filename = os.path.abspath(filename)
         else:
-            full_filename = self.art_loaded[0].filename
+            full_filename = filename
         current_frame = self.renderables[0].frame
         title = '%s (frame %s)' % (full_filename, current_frame)
         self.set_window_title(title)
@@ -265,7 +264,8 @@ class Application:
             # add layers, write text, duplicate that frame, do some animation
             art.run_script('hello1')
             # pass in self to save function so it can save camera etc
-            #art.save_to_file(self)
+            if self.auto_save:
+                art.save_to_file()
         # TODO: cursor and UI
         #self.cursor.update(self.elapsed_time)
         self.ui.update()
@@ -314,10 +314,10 @@ if __name__ == "__main__":
         # if file still not found, try adding extension
         if not os.path.exists(arg):
             arg += '.%s' % ART_FILE_EXTENSION
-        if os.path.exists(arg):
-            file_to_load = arg
-        else:
+        # use given path + file name even if it doesn't exist; use as new file's name
+        if not os.path.exists(arg):
             print("couldn't find file %s, creating a new document." % sys.argv[1])
+        file_to_load = arg
     app = Application(file_to_load)
     error = app.main_loop()
     app.quit()

@@ -16,6 +16,7 @@ self.clear_frame_layer(0, 2)
 # write white text onto 3 layers
 color = self.palette.lightest_index
 self.write_string(0, 0, 1, 1, 'Hello.', color)
+self.set_char_transform_at(0, 0, 2, 1, UV_ROTATE90)
 # draw snaky ring thingy
 # color ramp: 2, 10, 6, 13, 14, 12, 3, back to 2
 # top
@@ -75,6 +76,7 @@ char = self.charset.get_char_index('D')
 self.set_char_index_at(3, 2, 4, 4, char)
 self.set_char_index_at(4, 2, 4, 4, char)
 self.set_char_index_at(5, 2, 4, 4, char)
+self.set_char_transform_at(4, 2, 4, 4, UV_FLIPX)
 # cycle colors for snaky thing
 #
 # frame 1 top
