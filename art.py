@@ -162,7 +162,8 @@ class Art:
         layer_size = self.width * self.height * 4
         index = layer * layer_size
         self.chars[frame][index:index+layer_size] = 0
-        # TODO: clear UVs as well once something can modify them, eg rotate/flip
+        # "clear" UVs to UV_NORMAL
+        self.uv_mods[frame][index*2:index*2+UV_STRIDE] = uv_types[UV_NORMAL]
         self.fg_colors[frame][index:index+layer_size] = 0
         self.bg_colors[frame][index:index+layer_size] = bg_color
         # tell this frame to update
@@ -219,11 +220,9 @@ class Art:
     
     def new_uv_layers(self, layers):
         "returns given # of layer's worth of vanilla UV array data"
-        # TODO: support for char rotation/flipping will alter these!
-        # use a table of presets for L/R T/B flips and 90/180/270 rotations
-        # and possibly/eventually, scale?
         size = layers * self.width * self.height * UV_STRIDE
         array = np.zeros(shape=size, dtype=np.float32)
+        # default new layer of UVs to "normal" transform
         uvs = uv_types[UV_NORMAL]
         # UV offsets
         index = 0
@@ -254,8 +253,8 @@ class Art:
         # array index * 2 because UVs store 8 floats per quad
         index = self.get_array_index(layer, x, y) * 2
         uvs = self.uv_mods[frame][index:index+UV_STRIDE].copy()
-        # TODO: there's gotta be a better way to do this than iterating through!
-        # (ok if it's slow for the moment, as nothing perf-critical uses it
+        # TODO: there's gotta be a better way to do this than iterating thru uv_types!
+        # (ok if it's slow for the moment, as nothing perf-critical uses it)
         for k in uv_types:
             if (uv_types[k] == uvs).all():
                 return k
@@ -478,7 +477,7 @@ class ArtFromDisk(Art):
                     chars[array_index:array_index+4] = tile['char']
                     fg_colors[array_index:array_index+4] = tile['fg']
                     bg_colors[array_index:array_index+4] = tile['bg']
-                    uv_transform = tile.get('xform', uv_types[UV_NORMAL])
+                    uv_transform = uv_types[tile.get('xform', UV_NORMAL)]
                     uv_index = array_index*2
                     uvs[uv_index:uv_index+UV_STRIDE] = uv_transform
                     array_index += 4
