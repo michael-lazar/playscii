@@ -28,7 +28,7 @@ class CharacterSet:
         # first line = image file
         image_filename = char_data.pop(0).strip()
         image_filename = os.path.splitext(image_filename)[0]
-        if not os.path.exists(image_filename):
+        if not os.path.exists(image_filename) or os.path.isdir(image_filename):
             image_filename = CHARSET_DIR + image_filename
             if not os.path.exists(image_filename):
                 image_filename += '.png'

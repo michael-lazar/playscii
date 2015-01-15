@@ -386,12 +386,14 @@ class Art:
         return script_filename
     
     def run_script_every(self, script_filename, rate=0.1):
+        "starts a script running on this Art at a regular rate."
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
             return
         if script_filename in self.scripts:
             print('script %s is already running.' % script_filename)
             return
+        # add to "scripts currently running" list
         self.scripts.append(script_filename)
         self.script_rates.append(rate)
         # set next time

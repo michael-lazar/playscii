@@ -79,7 +79,7 @@ class Application:
         self.renderables.append(test_renderable)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         self.update_window_title()
-        self.ui = UI(self, self.sl, self.window_width, self.window_height)
+        self.ui = UI(self)
         print('init done.')
     
     def new_art(self, filename):
@@ -180,23 +180,25 @@ class Application:
         mouse_dx, mouse_dy = int(mouse_dx.value), int(mouse_dy.value)
         # directly query keys we don't want affected by OS key repeat delay
         ks = sdl2.SDL_GetKeyboardState(None)
-        if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
-            self.camera.pan(0, 1)
-        if ks[sdl2.SDL_SCANCODE_DOWN] or ks[sdl2.SDL_SCANCODE_S]:
-            self.camera.pan(0, -1)
-        if ks[sdl2.SDL_SCANCODE_LEFT] or ks[sdl2.SDL_SCANCODE_A]:
-            self.camera.pan(-1, 0)
-        if ks[sdl2.SDL_SCANCODE_RIGHT] or ks[sdl2.SDL_SCANCODE_D]:
-            self.camera.pan(1, 0)
-        if ks[sdl2.SDL_SCANCODE_X]:
-            self.camera.zoom(-1)
-        if ks[sdl2.SDL_SCANCODE_Z]:
-            self.camera.zoom(1)
+        # get modifier states
         alt_pressed, ctrl_pressed = False, False
         if ks[sdl2.SDL_SCANCODE_LALT] or ks[sdl2.SDL_SCANCODE_RALT]:
             alt_pressed = True
         if ks[sdl2.SDL_SCANCODE_LCTRL] or ks[sdl2.SDL_SCANCODE_RCTRL]:
             ctrl_pressed = True
+        if not alt_pressed and not ctrl_pressed:
+            if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
+                self.camera.pan(0, 1)
+            if ks[sdl2.SDL_SCANCODE_DOWN] or ks[sdl2.SDL_SCANCODE_S]:
+                self.camera.pan(0, -1)
+            if ks[sdl2.SDL_SCANCODE_LEFT] or ks[sdl2.SDL_SCANCODE_A]:
+                self.camera.pan(-1, 0)
+            if ks[sdl2.SDL_SCANCODE_RIGHT] or ks[sdl2.SDL_SCANCODE_D]:
+                self.camera.pan(1, 0)
+            if ks[sdl2.SDL_SCANCODE_X]:
+                self.camera.zoom(-1)
+            if ks[sdl2.SDL_SCANCODE_Z]:
+                self.camera.zoom(1)
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
                 return False
@@ -233,6 +235,15 @@ class Application:
                         art.stop_script('conway')
                     else:
                         art.run_script_every('conway', 0.05)
+                # TEST: alt + arrow keys move object
+                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
+                    self.renderables[0].y += 0.1
+                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
+                    self.renderables[0].y -= 0.1
+                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
+                    self.renderables[0].x -= 0.1
+                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
+                    self.renderables[0].x += 0.1
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)

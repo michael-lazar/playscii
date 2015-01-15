@@ -2,8 +2,7 @@
 
 uniform mat4 projection;
 uniform mat4 view;
-//uniform mat4 rotation;
-//uniform mat4 scale;
+uniform vec3 objectPosition;
 uniform int charMapWidth;
 uniform int charMapHeight;
 
@@ -22,7 +21,7 @@ out float theBgColorIndex;
 
 void main()
 {
-	gl_Position = projection * view * vec4(vertPosition, 1);
+	gl_Position = projection * view * (vec4(objectPosition, 0) + vec4(vertPosition, 1));
 	// translate 1D character index into tile UV coordinates
 	// thanks Ian MacLarty, Sean Barrett and goldbuick for help with this!
     float tileX = mod(charIndex, charMapWidth);

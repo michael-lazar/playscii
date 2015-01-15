@@ -11,6 +11,7 @@ class Renderable:
     frag_shader_source = 'renderable_f.glsl'
     log_animation = False
     log_buffer_updates = False
+    grain_strength = 0
     
     def __init__(self, app, art):
         self.app = app
@@ -21,7 +22,7 @@ class Renderable:
         self.animating = False
         self.anim_timer = 0
         # world space position
-        # TODO: object translation/rotation/scale matrices
+        # TODO: object rotation/scale matrices, if needed
         self.x, self.y, self.z = 0, 0, 0
         self.camera = self.app.camera
         # bind VAO etc before doing shaders etc
@@ -30,13 +31,16 @@ class Renderable:
         self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
         self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
         self.view_matrix_uniform = self.shader.get_uniform_location('view')
+        self.position_uniform = self.shader.get_uniform_location('objectPosition')
         self.charset_width_uniform = self.shader.get_uniform_location('charMapWidth')
         self.charset_height_uniform = self.shader.get_uniform_location('charMapHeight')
         self.char_uv_width_uniform = self.shader.get_uniform_location('charUVWidth')
         self.char_uv_height_uniform = self.shader.get_uniform_location('charUVHeight')
         self.charset_tex_uniform = self.shader.get_uniform_location('charset')
         self.palette_tex_uniform = self.shader.get_uniform_location('palette')
+        self.grain_tex_uniform = self.shader.get_uniform_location('grain')
         self.palette_width_uniform = self.shader.get_uniform_location('palTextureWidth')
+        self.grain_strength_uniform = self.shader.get_uniform_location('grainStrength')
         self.create_buffers()
         # finish
         GL.glBindVertexArray(0)
@@ -132,20 +136,25 @@ class Renderable:
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
-        # bind textures
+        # bind textures - character set, palette, UI grain
         GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glUniform1i(self.charset_tex_uniform, 0)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.charset.texture.gltex)
         GL.glActiveTexture(GL.GL_TEXTURE1)
         GL.glUniform1i(self.palette_tex_uniform, 1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.palette.texture.gltex)
-        # set active texture unit back after binding second texture
+        GL.glActiveTexture(GL.GL_TEXTURE2)
+        GL.glUniform1i(self.grain_tex_uniform, 2)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.ui.grain_texture.gltex)
+        # set active texture unit back after binding 2nd-Nth textures
         GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glUniform1i(self.charset_width_uniform, self.art.charset.map_width)
         GL.glUniform1i(self.charset_height_uniform, self.art.charset.map_height)
         GL.glUniform1f(self.char_uv_width_uniform, self.art.charset.u_width)
         GL.glUniform1f(self.char_uv_height_uniform, self.art.charset.v_height)
         GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
+        GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
+        GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         # camera uniforms
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.camera.projection_matrix)
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.camera.view_matrix)

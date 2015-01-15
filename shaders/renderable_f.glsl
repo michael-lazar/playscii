@@ -2,12 +2,16 @@
 
 uniform sampler2D charset;
 uniform sampler2D palette;
+uniform sampler2D grain;
 // width of the generated palette texture, ie palette.MAX_COLORS
 uniform float palTextureWidth;
+uniform float grainStrength;
 
 in vec2 texCoords;
 in float theFgColorIndex;
 in float theBgColorIndex;
+
+const float grainSize = 0.0025;
 
 out vec4 outColor;
 
@@ -25,10 +29,9 @@ void main()
 	// any totally transparent pixels get the BG color
 	colorUV.x = (theBgColorIndex + 0.01) / palTextureWidth;
 	vec4 bgColor = texture(palette, colorUV);
-	// TODO: Mark Wonnacott suggests: instead of a branch, maybe:
-	// colour = bg * alpha + fg * (1 - alpha)
-	// ie colour = mix(bg, fg, alpha)
-	if ( outColor.a == 0.0 ) {
-		outColor = bgColor;
-	}
+	// thanks Mark Wonnacott for tip on how to do this w/o a branch
+	outColor = mix(bgColor, fgColor, outColor.a);
+	// apply "grain" for eg UI elements
+	vec4 grainColor = texture2D(grain, gl_FragCoord.xy * grainSize);
+	outColor.rgb += (0.5 - grainColor.rgb) * grainStrength;
 }
