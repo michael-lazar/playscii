@@ -3,12 +3,13 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import FPSCounter
+from ui_element import FPSCounterUI
 
 UI_ASSET_DIR = 'ui/'
 
 class UI:
     
+    scale = 1
     charset_name = 'ui'
     palette_name = 'c64'
     # low-contrast background texture that distinguishes UI from flat color
@@ -21,9 +22,13 @@ class UI:
         self.view_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         self.charset = self.app.load_charset(self.charset_name)
         self.palette = self.app.load_palette(self.palette_name)
+        
         # TODO: determine width and height of current window in chars
+        # use floats, window might be a fractional # of chars wide/tall
+        self.width_tiles, self.height_tiles = 0, 0
+        
         self.elements = []
-        test = FPSCounter(self)
+        test = FPSCounterUI(self)
         self.elements.append(test)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
@@ -39,8 +44,14 @@ class UI:
     
     def update(self):
         for e in self.elements:
-            e.update_art()
+            e.update()
             e.art.update()
+    
+    def clicked(self, button):
+        pass
+    
+    def unclicked(self, button):
+        pass
     
     def destroy(self):
         pass

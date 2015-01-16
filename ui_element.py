@@ -1,5 +1,3 @@
-from random import randint
-
 from art import Art
 from renderable import Renderable
 
@@ -13,7 +11,7 @@ class UIElement:
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
     
-    def update_art(self):
+    def update(self):
         pass
 
 
@@ -30,12 +28,15 @@ class UIRenderable(Renderable):
         return self.ui.view_matrix
 
 
-class FPSCounter(UIElement):
-    width, height = 10, 2
-    def update_art(self):
-        color = 0
-        self.art.clear_frame_layer(0, 0, color)
+class FPSCounterUI(UIElement):
+    width, height = 9, 2
+    def update(self):
+        text = '%.1ffps' % self.ui.app.fps
+        x = self.width - len(text)
+        bg = 2
+        self.art.clear_frame_layer(0, 0, bg)
         color = self.ui.palette.lightest_index
-        self.art.write_string(0, 0, 0, 0, 'Testing 1!', color)
-        color = randint(1, len(self.ui.palette.colors))
-        self.art.write_string(0, 0, 0, 1, 'Testing 2!', color)
+        self.art.write_string(0, 0, x, 0, text, color)
+        text = '%.1fms ' % self.ui.app.frame_time
+        x = self.width - len(text)
+        self.art.write_string(0, 0, x, 1, text, color)

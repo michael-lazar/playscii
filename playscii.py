@@ -31,6 +31,7 @@ class Application:
     
     window_width, window_height = 800, 600
     fullscreen = False
+    # framerate: uncapped if -1
     framerate = 60
     base_title = 'Playscii'
     # starting document defaults
@@ -80,6 +81,7 @@ class Application:
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         self.update_window_title()
         self.ui = UI(self)
+        self.frame_time, self.fps = 0, 0
         print('init done.')
     
     def new_art(self, filename):
@@ -157,11 +159,18 @@ class Application:
             running = self.input()
             self.update()
             self.render()
-            sdl2.SDL_Delay(int(1000/self.framerate))
+            self.sl.check_hot_reload()
+            # TODO: use sdlgfx framerate manager class?
             elapsed_time = sdl2.timer.SDL_GetTicks()
             self.delta_time = elapsed_time - self.elapsed_time
             self.elapsed_time = elapsed_time
-            self.sl.check_hot_reload()
+            # determine FPS
+            # alpha: lower = smoother
+            alpha = 0.2
+            self.frame_time = alpha * self.delta_time + (1 - alpha) * self.frame_time
+            self.fps = 1000 / self.frame_time
+            if self.framerate != -1:
+                sdl2.timer.SDL_Delay(int(1000/self.framerate))
         return 1
     
     def input(self):
