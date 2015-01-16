@@ -3,13 +3,14 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import FPSCounterUI
+from ui_element import UIArt, FPSCounterUI
 
 UI_ASSET_DIR = 'ui/'
 
 class UI:
     
-    scale = 1
+    # user-configured UI scale factor
+    scale = 1.0
     charset_name = 'ui'
     palette_name = 'c64'
     # low-contrast background texture that distinguishes UI from flat color
@@ -22,12 +23,10 @@ class UI:
         self.view_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         self.charset = self.app.load_charset(self.charset_name)
         self.palette = self.app.load_palette(self.palette_name)
-        
-        # TODO: determine width and height of current window in chars
-        # use floats, window might be a fractional # of chars wide/tall
-        self.width_tiles, self.height_tiles = 0, 0
-        
+        # create elements
         self.elements = []
+        # set geo sizes, force scale update
+        self.set_scale(self.scale, True)
         test = FPSCounterUI(self)
         self.elements.append(test)
         # grain texture
@@ -38,13 +37,35 @@ class UI:
         self.grain_texture.set_wrap(GL.GL_REPEAT)
         self.grain_texture.set_filter(GL.GL_LINEAR, GL.GL_LINEAR_MIPMAP_LINEAR)
     
-    def window_resized(self, new_width, new_height):
+    def set_scale(self, new_scale, force_update=False):
+        new_scale = max(1, new_scale)
+        if new_scale == self.scale and not force_update:
+            return
+        self.scale = max(1, new_scale)
+        # update UI renderable geo sizes for new scale
+        # determine width and height of current window in chars
+        # use floats, window might be a fractional # of chars wide/tall
+        aspect = self.app.window_height / self.app.window_width
+        self.width_tiles = self.app.window_width / self.charset.char_width
+        self.height_tiles = self.app.window_height / self.charset.char_height
+        UIArt.quad_width = (2 / self.width_tiles) * self.scale * aspect
+        UIArt.quad_height = (2 / self.height_tiles) * self.scale * aspect
+        # tell elements to refresh
+        for e in self.elements:
+            e.reset_loc()
+            e.art.geo_changed = True
+    
+    def window_resized(self):
         # adjust for new aspect ratio
-        self.projection_matrix[0][0] = new_height / new_width
+        self.projection_matrix[0][0] = self.app.window_height / self.app.window_width
+        # tell all elements to resize for new window
+        for e in self.elements:
+            e.reset_loc()
     
     def update(self):
         for e in self.elements:
             e.update()
+            # art update: tell renderables to refresh buffers
             e.art.update()
     
     def clicked(self, button):

@@ -38,6 +38,8 @@ class Application:
     starting_charset = 'c64'
     starting_palette = 'c64'
     starting_width, starting_height = 8, 8
+    # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
+    capslock_is_ctrl = False
     # debug test stuff
     test_mutate_each_frame = False
     test_life_each_frame = False
@@ -144,7 +146,7 @@ class Application:
         self.fb.crt = crt
         # tell camera and UI that view aspect has changed
         self.camera.window_resized(new_width, new_height)
-        self.ui.window_resized(new_width, new_height)
+        self.ui.window_resized()
     
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
@@ -169,8 +171,12 @@ class Application:
             alpha = 0.2
             self.frame_time = alpha * self.delta_time + (1 - alpha) * self.frame_time
             self.fps = 1000 / self.frame_time
+            # delay to maintain framerate, if uncapped
             if self.framerate != -1:
-                sdl2.timer.SDL_Delay(int(1000/self.framerate))
+                delay = int(1000 / self.framerate)
+                # TODO: determine frame work time, subtract from delay to get
+                # accurate framerate
+                sdl2.timer.SDL_Delay(delay)
         return 1
     
     def input(self):
@@ -194,6 +200,8 @@ class Application:
         if ks[sdl2.SDL_SCANCODE_LALT] or ks[sdl2.SDL_SCANCODE_RALT]:
             alt_pressed = True
         if ks[sdl2.SDL_SCANCODE_LCTRL] or ks[sdl2.SDL_SCANCODE_RCTRL]:
+            ctrl_pressed = True
+        if self.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             ctrl_pressed = True
         if not alt_pressed and not ctrl_pressed:
             if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
@@ -227,6 +235,11 @@ class Application:
                     self.camera.set_zoom(2)
                 elif event.key.keysym.sym == sdl2.SDLK_c:
                     self.fb.toggle_crt()
+                # ctrl +/- changes UI scale
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
+                    self.ui.set_scale(self.ui.scale + 1)
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_MINUS:
+                    self.ui.set_scale(self.ui.scale - 1)
                 # TEST: < > / , . rewind / advance anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     self.renderables[0].rewind_frame()
@@ -253,6 +266,7 @@ class Application:
                     self.ui.elements[0].renderable.x -= 0.1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
                     self.ui.elements[0].renderable.x += 0.1
+                    self.ui.elements[0].renderable.log_loc()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)

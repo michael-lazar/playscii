@@ -54,6 +54,7 @@ class Art:
     """
     quad_width,quad_height = 1, 1
     log_size_changes = False
+    recalc_quad_height = True
     
     def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
@@ -80,7 +81,8 @@ class Art:
         self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
         # support non-square characters:
         # derive quad_height from chars aspect; quad_width always 1.0
-        self.quad_height *= self.charset.char_height / self.charset.char_width
+        if self.recalc_quad_height:
+            self.quad_height *= self.charset.char_height / self.charset.char_width
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
         # running scripts and timing info

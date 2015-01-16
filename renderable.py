@@ -134,6 +134,9 @@ class Renderable:
         GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(5, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.fg_buffer, self.bg_buffer])
     
+    def log_loc(self):
+        print('%s: %s,%s,%s' % (self, self.x, self.y, self.z))
+    
     def get_projection_matrix(self):
         """
         UIRenderable overrides this so it doesn't have to override Renderable.render
