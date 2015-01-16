@@ -134,6 +134,16 @@ class Renderable:
         GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(5, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.fg_buffer, self.bg_buffer])
     
+    def get_projection_matrix(self):
+        """
+        UIRenderable overrides this so it doesn't have to override Renderable.render
+        and duplicate lots of code.
+        """
+        return self.camera.projection_matrix
+    
+    def get_view_matrix(self):
+        return self.camera.view_matrix
+    
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
         # bind textures - character set, palette, UI grain
@@ -156,8 +166,8 @@ class Renderable:
         GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         # camera uniforms
-        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.camera.projection_matrix)
-        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.camera.view_matrix)
+        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
+        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.get_view_matrix())
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

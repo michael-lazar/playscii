@@ -93,7 +93,7 @@ class Application:
         # already loaded?
         for charset in self.charsets:
             if charset_to_load == charset.name:
-                return
+                return charset
         new_charset = CharacterSet(charset_to_load)
         self.charsets.append(new_charset)
         # return newly loaded charset to whatever's requesting it
@@ -102,7 +102,7 @@ class Application:
     def load_palette(self, palette_to_load):
         for palette in self.palettes:
             if palette.name == palette_to_load:
-                return
+                return palette
         new_palette = Palette(palette_to_load)
         self.palettes.append(new_palette)
         return new_palette
@@ -237,13 +237,13 @@ class Application:
                         art.run_script_every('conway', 0.05)
                 # TEST: alt + arrow keys move object
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
-                    self.renderables[0].y += 0.1
+                    self.ui.elements[0].renderable.y += 0.1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    self.renderables[0].y -= 0.1
+                    self.ui.elements[0].renderable.y -= 0.1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    self.renderables[0].x -= 0.1
+                    self.ui.elements[0].renderable.x -= 0.1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    self.renderables[0].x += 0.1
+                    self.ui.elements[0].renderable.x += 0.1
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -274,10 +274,10 @@ class Application:
             # load some test data - simulates some user edits:
             # add layers, write text, duplicate that frame, do some animation
             art.run_script('hello1')
-            # pass in self to save function so it can save camera etc
-            if self.auto_save:
-                art.save_to_file()
-        # TODO: cursor and UI
+        # test saving functionality
+        if self.auto_save:
+            art.save_to_file()
+        # TODO: cursor
         #self.cursor.update(self.elapsed_time)
         self.ui.update()
     

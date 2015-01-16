@@ -80,7 +80,7 @@ class Art:
         self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
         # support non-square characters:
         # derive quad_height from chars aspect; quad_width always 1.0
-        self.quad_height = self.charset.char_height / self.charset.char_width
+        self.quad_height *= self.charset.char_height / self.charset.char_width
         # list of Renderables using us - each new Renderable adds itself
         self.renderables = []
         # running scripts and timing info
