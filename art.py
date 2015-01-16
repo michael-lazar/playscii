@@ -55,6 +55,7 @@ class Art:
     quad_width,quad_height = 1, 1
     log_size_changes = False
     recalc_quad_height = True
+    log_creation = True
     
     def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
@@ -94,12 +95,13 @@ class Art:
         # run update once before renderables initialize so they have
         # something to bind
         self.update()
-        print('created new document:')
-        print('  character set: %s' % self.charset.name)
-        print('  palette: %s' % self.palette.name)
-        print('  width/height: %s x %s' % (self.width, self.height))
-        print('  frames: %s' % self.frames)
-        print('  layers: %s' % self.layers)
+        if self.log_creation:
+            print('created new document:')
+            print('  character set: %s' % self.charset.name)
+            print('  palette: %s' % self.palette.name)
+            print('  width/height: %s x %s' % (self.width, self.height))
+            print('  frames: %s' % self.frames)
+            print('  layers: %s' % self.layers)
     
     def add_frame(self, delay=DEFAULT_FRAME_DELAY):
         "adds a blank frame to end of frame sequence"
@@ -158,6 +160,26 @@ class Art:
             print('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
         self.geo_changed = True
+    
+    def resize(self, new_width, new_height, new_bg=0):
+        "resizes this Art to the given dimensions, cropping or expanding as needed"
+        width_delta = self.width - new_width
+        height_delta = self.height - new_height
+        # TODO: support for adding/removing rows/columns from an origin, eg crop
+        if width_delta < 0:
+            self.add_columns(-width_delta, new_bg)
+        elif width_delta > 0:
+            self.remove_columns(width_delta)
+        if height_delta < 0:
+            self.add_rows(-height_delta, new_bg)
+        elif height_delta > 0:
+            self.remove_rows(height_delta)
+        self.width, self.height = new_width, new_height
+    
+    def add_columns(self, columns, new_bg):
+        # TODO: do actual resize! omg will i have to move everything to 2D numpy arrays?
+        for i in range(columns):
+            pass
     
     def clear_frame_layer(self, frame, layer, bg_color=0):
         "clears given layer of given frame to transparent BG + no characters"
@@ -497,12 +519,13 @@ class ArtFromDisk(Art):
         self.scripts_next_exec_time = []
         self.geo_changed = True
         self.update()
-        print('loaded %s from disk:' % filename)
-        print('  character set: %s' % self.charset.name)
-        print('  palette: %s' % self.palette.name)
-        print('  width/height: %s x %s' % (self.width, self.height))
-        print('  frames: %s' % self.frames)
-        print('  layers: %s' % self.layers)
+        if self.log_creation:
+            print('loaded %s from disk:' % filename)
+            print('  character set: %s' % self.charset.name)
+            print('  palette: %s' % self.palette.name)
+            print('  width/height: %s x %s' % (self.width, self.height))
+            print('  frames: %s' % self.frames)
+            print('  layers: %s' % self.layers)
         # signify to app that this file loaded successfully
         self.valid = True
 
@@ -580,6 +603,7 @@ class ArtFromEDSCII(Art):
         self.scripts_next_exec_time = []
         self.geo_changed = True
         self.update()
-        print('EDSCII file %s loaded from disk:' % filename)
-        print('  width/height: %s x %s' % (self.width, self.height))
+        if self.log_creation:
+            print('EDSCII file %s loaded from disk:' % filename)
+            print('  width/height: %s x %s' % (self.width, self.height))
         self.valid = True

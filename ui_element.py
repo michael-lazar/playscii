@@ -1,3 +1,4 @@
+from math import ceil
 from art import Art
 from renderable import Renderable
 
@@ -13,7 +14,12 @@ class UIElement:
         self.art = UIArt(None, self.ui.app, self.ui.charset, self.ui.palette, self.width, self.height)
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
+        self.init_art()
         self.reset_loc()
+    
+    def init_art(self):
+        "runs as init is finishing"
+        pass
     
     def reset_loc(self):
         inv_aspect = self.ui.app.window_width / self.ui.app.window_height
@@ -28,11 +34,13 @@ class UIElement:
         self.renderable.x, self.renderable.y = self.x, self.y
     
     def update(self):
+        "runs every frame"
         pass
 
 
 class UIArt(Art):
     recalc_quad_height = False
+    log_creation = False
 
 
 class UIRenderable(Renderable):
@@ -44,6 +52,28 @@ class UIRenderable(Renderable):
     
     def get_view_matrix(self):
         return self.ui.view_matrix
+
+
+class StatusBarUI(UIElement):
+    
+    snap_bottom = True
+    snap_left = True
+    width = 160 # TODO: width will vary, must rebuild!
+    
+    def init_art(self):
+        self.width = ceil(self.ui.width_tiles)
+        # must resize here, as window width will vary
+        self.art.resize(self.width, self.height)
+        
+        bg = self.ui.palette.lightest_index
+        self.art.clear_frame_layer(0, 0, bg)
+        color = self.ui.palette.darkest_index
+        text = 'hi!'
+        self.art.write_string(0, 0, 1, 0, text, color)
+        self.art.geo_changed = True
+    
+    def update(self):
+        pass
 
 
 class FPSCounterUI(UIElement):

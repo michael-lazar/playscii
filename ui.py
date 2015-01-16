@@ -3,7 +3,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI
+from ui_element import UIArt, StatusBarUI, FPSCounterUI
 
 UI_ASSET_DIR = 'ui/'
 
@@ -27,8 +27,10 @@ class UI:
         self.elements = []
         # set geo sizes, force scale update
         self.set_scale(self.scale, True)
-        test = FPSCounterUI(self)
-        self.elements.append(test)
+        fps_counter = FPSCounterUI(self)
+        status_bar = StatusBarUI(self)
+        self.elements.append(fps_counter)
+        self.elements.append(status_bar)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')

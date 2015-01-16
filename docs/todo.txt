@@ -1,7 +1,6 @@
 TODO
 
 - start roughing in UI:
--- FPS counter in upper right
 -- shift-U: toggle UI drawing
 -- command line input - quake-style console?
 
