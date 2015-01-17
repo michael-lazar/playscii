@@ -58,17 +58,15 @@ class StatusBarUI(UIElement):
     
     snap_bottom = True
     snap_left = True
-    width = 160 # TODO: width will vary, must rebuild!
     
     def init_art(self):
         self.width = ceil(self.ui.width_tiles)
         # must resize here, as window width will vary
         self.art.resize(self.width, self.height)
-        
         bg = self.ui.palette.lightest_index
         self.art.clear_frame_layer(0, 0, bg)
+        text = 'test status bar text...'
         color = self.ui.palette.darkest_index
-        text = 'hi!'
         self.art.write_string(0, 0, 1, 0, text, color)
         self.art.geo_changed = True
     

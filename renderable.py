@@ -132,7 +132,7 @@ class Renderable:
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
-        GL.glDeleteBuffers(5, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.fg_buffer, self.bg_buffer])
+        GL.glDeleteBuffers(6, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.uv_buffer, self.fg_buffer, self.bg_buffer])
     
     def log_loc(self):
         print('%s: %s,%s,%s' % (self, self.x, self.y, self.z))

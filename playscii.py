@@ -324,6 +324,7 @@ class Application:
         for r in self.renderables:
             r.destroy()
         self.fb.destroy()
+        self.ui.destroy()
         for charset in self.charsets:
             charset.texture.destroy()
         for palette in self.palettes:

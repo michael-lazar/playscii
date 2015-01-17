@@ -77,7 +77,9 @@ class UI:
         pass
     
     def destroy(self):
-        pass
+        for e in self.elements:
+            e.renderable.destroy()
+        self.grain_texture.destroy()
     
     def render(self, elapsed_time):
         for e in self.elements:

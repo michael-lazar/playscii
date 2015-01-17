@@ -161,23 +161,17 @@ class Art:
     
     def resize(self, new_width, new_height, new_bg=0):
         "resizes this Art to the given dimensions, cropping or expanding as needed"
-        width_delta = self.width - new_width
-        height_delta = self.height - new_height
-        # TODO: support for adding/removing rows/columns from an origin, eg crop
-        if width_delta < 0:
-            self.add_columns(-width_delta, new_bg)
-        elif width_delta > 0:
-            self.remove_columns(width_delta)
-        if height_delta < 0:
-            self.add_rows(-height_delta, new_bg)
-        elif height_delta > 0:
-            self.remove_rows(height_delta)
         self.width, self.height = new_width, new_height
-    
-    def add_columns(self, columns, new_bg):
-        # TODO: do actual resize! omg will i have to move everything to 2D numpy arrays?
-        for i in range(columns):
-            pass
+        new_shape = (self.layers, self.height, self.width, 4)
+        new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
+        for frame in range(self.frames):
+            self.chars[frame] = np.resize(self.chars[frame], new_shape)
+            self.fg_colors[frame] = np.resize(self.fg_colors[frame], new_shape)
+            self.bg_colors[frame] = np.resize(self.bg_colors[frame], new_shape)
+            self.uv_mods[frame] = np.resize(self.uv_mods[frame], new_uv_shape)
+        # adding a layer changes all frames' UV data
+        for i in range(self.frames): self.uv_changed_frames.append(i)
+        # TODO: use specified background color for newly created tiles?
     
     def clear_frame_layer(self, frame, layer, bg_color=0):
         "clears given layer of given frame to transparent BG + no characters"
