@@ -31,12 +31,22 @@ UV_FLIPY = 5
 # flip X & Y is identical to rotate 180
 
 uv_types = {
-    UV_NORMAL:    np.array([0, 0, 1, 0, 0, 1, 1, 1], dtype=np.float32),
-    UV_ROTATE90:  np.array([0, 1, 0, 0, 1, 1, 1, 0], dtype=np.float32),
-    UV_ROTATE180: np.array([1, 1, 0, 1, 1, 0, 0, 0], dtype=np.float32),
-    UV_ROTATE270: np.array([1, 0, 1, 1, 0, 0, 0, 1], dtype=np.float32),
-    UV_FLIPX:     np.array([1, 0, 0, 0, 1, 1, 0, 1], dtype=np.float32),
-    UV_FLIPY:     np.array([0, 1, 1, 1, 0, 0, 1, 0], dtype=np.float32),
+    UV_NORMAL:    (0, 0, 1, 0, 0, 1, 1, 1),
+    UV_ROTATE90:  (0, 1, 0, 0, 1, 1, 1, 0),
+    UV_ROTATE180: (1, 1, 0, 1, 1, 0, 0, 0),
+    UV_ROTATE270: (1, 0, 1, 1, 0, 0, 0, 1),
+    UV_FLIPX:     (1, 0, 0, 0, 1, 1, 0, 1),
+    UV_FLIPY:     (0, 1, 1, 1, 0, 0, 1, 0)
+}
+
+# reverse dict for easy (+ fast?) lookup in eg get_char_transform_at
+uv_types_reverse = {
+    uv_types[UV_NORMAL]: UV_NORMAL,
+    uv_types[UV_ROTATE90]: UV_ROTATE90,
+    uv_types[UV_ROTATE180]: UV_ROTATE180,
+    uv_types[UV_ROTATE270]: UV_ROTATE270,
+    uv_types[UV_FLIPX]: UV_FLIPX,
+    uv_types[UV_FLIPY]: UV_FLIPY
 }
 
 class Art:
@@ -108,7 +118,8 @@ class Art:
         self.frames += 1
         self.frame_delays.append(delay)
         tiles = self.layers * self.width * self.height
-        blank_array = np.zeros(shape=tiles * 4, dtype=np.float32)
+        shape = (self.layers, self.height, self.width, 4)
+        blank_array = np.zeros(shape, dtype=np.float32)
         self.chars.append(blank_array)
         self.fg_colors.append(blank_array.copy())
         self.bg_colors.append(blank_array.copy())
@@ -131,29 +142,16 @@ class Art:
             print('duplicated frame %s as frame %s' % (frame_index, self.frames-1))
     
     def add_layer(self, z=DEFAULT_LAYER_Z):
-        "adds a blank layer"
-        layer_size = self.width * self.height * 4
-        index = self.layers * layer_size
         self.layers += 1
         self.layers_z.append(z)
-        # char/color data for all layers in one array, so resize instead
-        # of reinitializing
-        new_size = index + layer_size
-        def expand_array(array, new_size, layer_size, index):
-            array.resize(new_size, refcheck=False)
-            # populate with "blank" values at appropriate (end) spot
-            new_layer_array = np.zeros(shape=layer_size, dtype=np.float32)
-            array[index:new_size] = new_layer_array
-        for component_list in [self.chars, self.fg_colors, self.bg_colors]:
-            for array in component_list:
-                expand_array(array, new_size, layer_size, index)
-        # UV data: different size, special initialization (2 floats per vert)
-        index *= 2
-        new_size *= 2
-        for array in self.uv_mods:
-            array.resize(new_size, refcheck=False)
-            new_array = self.new_uv_layers(1)
-            array[index:new_size] = new_array
+        # simply add another layer to our 3D array
+        new_tile_shape = (self.layers, self.height, self.width, 4)
+        new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
+        for frame in range(self.frames):
+            self.chars[frame] = np.resize(self.chars[frame], new_tile_shape)
+            self.fg_colors[frame] = np.resize(self.fg_colors[frame], new_tile_shape)
+            self.bg_colors[frame] = np.resize(self.bg_colors[frame], new_tile_shape)
+            self.uv_mods[frame] = np.resize(self.uv_mods[frame], new_uv_shape)
         # adding a layer changes all frames' UV data
         for i in range(self.frames): self.uv_changed_frames.append(i)
         if self.log_size_changes:
@@ -183,13 +181,13 @@ class Art:
     
     def clear_frame_layer(self, frame, layer, bg_color=0):
         "clears given layer of given frame to transparent BG + no characters"
-        layer_size = self.width * self.height * 4
-        index = layer * layer_size
-        self.chars[frame][index:index+layer_size] = 0
         # "clear" UVs to UV_NORMAL
-        self.uv_mods[frame][index*2:index*2+UV_STRIDE] = uv_types[UV_NORMAL]
-        self.fg_colors[frame][index:index+layer_size] = 0
-        self.bg_colors[frame][index:index+layer_size] = bg_color
+        for y in range(self.height):
+            for x in range(self.width):
+                self.uv_mods[frame][layer][y][x] = uv_types[UV_NORMAL]
+                self.chars[frame][layer][y][x] = 0
+                self.fg_colors[frame][layer][y][x] = 0
+                self.bg_colors[frame][layer][y][x] = bg_color
         # tell this frame to update
         if frame not in self.char_changed_frames:
             self.char_changed_frames.append(frame)
@@ -204,16 +202,14 @@ class Art:
     
     def build_geo(self):
         "builds the vertex and element arrays used by all layers"
-        tiles = self.layers * self.width * self.height
-        all_verts_size = tiles * VERT_STRIDE
-        self.vert_array = np.empty(shape=all_verts_size, dtype=np.float32)
-        all_elems_size = tiles * ELEM_STRIDE
+        shape = (self.layers, self.height, self.width, VERT_STRIDE)
+        self.vert_array = np.empty(shape, dtype=np.float32)
+        all_elems_size = self.layers * self.width * self.height * ELEM_STRIDE
         self.elem_array = np.empty(shape=all_elems_size, dtype=np.uint32)
         # generate geo according to art size
         # vert_index corresponds to # of verts, loc_index to position in array
         # (given that each vert has 3 components)
         vert_index = 0
-        loc_index = 0
         elem_index = 0
         for layer in range(self.layers):
             for tile_y in range(self.height):
@@ -232,8 +228,7 @@ class Art:
                     verts += [x1, y1, z]
                     verts += [x2, y2, z]
                     verts += [x3, y3, z]
-                    self.vert_array[loc_index:loc_index+VERT_STRIDE] = verts
-                    loc_index += VERT_STRIDE
+                    self.vert_array[layer][tile_y][tile_x] = verts
                     # vertex elements
                     elements = [vert_index, vert_index+1, vert_index+2]
                     elements += [vert_index+1, vert_index+2, vert_index+3]
@@ -244,49 +239,34 @@ class Art:
     
     def new_uv_layers(self, layers):
         "returns given # of layer's worth of vanilla UV array data"
-        size = layers * self.width * self.height * UV_STRIDE
-        array = np.zeros(shape=size, dtype=np.float32)
+        shape = (layers, self.height, self.width, UV_STRIDE)
+        array = np.zeros(shape, dtype=np.float32)
         # default new layer of UVs to "normal" transform
         uvs = uv_types[UV_NORMAL]
-        # UV offsets
-        index = 0
-        while index < size:
-            array[index:index+UV_STRIDE] = uvs
-            index += UV_STRIDE
+        for layer in range(layers):
+            for y in range(self.height):
+                for x in range(self.width):
+                    array[layer][y][x] = uvs
         return array
-    
-    def get_array_index(self, layer, x, y):
-        "returns the index into tile array data for a given layer + x + y"
-        # multiply by 4 because we store each value for each vert in quad
-        return ((layer * self.width * self.height) + (y * self.width) + x) * 4
     
     # get methods
     def get_char_index_at(self, frame, layer, x, y):
-        index = self.get_array_index(layer, x, y)
-        return self.chars[frame][index]
+        return int(self.chars[frame][layer][y][x][0])
     
     def get_fg_color_index_at(self, frame, layer, x, y):
-        index = self.get_array_index(layer, x, y)
-        return self.fg_colors[frame][index]
+        return int(self.fg_colors[frame][layer][y][x][0])
     
     def get_bg_color_index_at(self, frame, layer, x, y):
-        index = self.get_array_index(layer, x, y)
-        return self.bg_colors[frame][index]
+        return int(self.bg_colors[frame][layer][y][x][0])
     
     def get_char_transform_at(self, frame, layer, x, y):
-        # array index * 2 because UVs store 8 floats per quad
-        index = self.get_array_index(layer, x, y) * 2
-        uvs = self.uv_mods[frame][index:index+UV_STRIDE].copy()
-        # TODO: there's gotta be a better way to do this than iterating thru uv_types!
-        # (ok if it's slow for the moment, as nothing perf-critical uses it)
-        for k in uv_types:
-            if (uv_types[k] == uvs).all():
-                return k
+        uvs = self.uv_mods[frame][layer][y][x]
+        # use reverse dict of tuples b/c they're hashable
+        return uv_types_reverse.get(tuple(uvs), UV_NORMAL)
     
     # set methods
     def set_char_index_at(self, frame, layer, x, y, char_index):
-        index = self.get_array_index(layer, x, y)
-        self.chars[frame][index:index+4] = char_index
+        self.chars[frame][layer][y][x] = char_index
         # next update, tell renderables on the changed frame to update buffers
         if not frame in self.char_changed_frames:
             self.char_changed_frames.append(frame)
@@ -299,16 +279,14 @@ class Art:
         update_array = self.fg_colors[frame]
         if not fg:
             update_array = self.bg_colors[frame]
-        index = self.get_array_index(layer, x, y)
-        update_array[index:index+4] = color_index
+        update_array[layer][y][x] = color_index
         if fg and not frame in self.fg_changed_frames:
             self.fg_changed_frames.append(frame)
         elif not fg and not frame in self.bg_changed_frames:
             self.bg_changed_frames.append(frame)
     
     def set_char_transform_at(self, frame, layer, x, y, transform):
-        index = self.get_array_index(layer, x, y) * 2
-        self.uv_mods[frame][index:index+UV_STRIDE] = uv_types[transform]
+        self.uv_mods[frame][layer][y][x] = uv_types[transform]
         if not frame in self.uv_changed_frames:
             self.uv_changed_frames.append(frame)
     
@@ -357,19 +335,14 @@ class Art:
         for frame_index in range(self.frames):
             frame = { 'delay': self.frame_delays[frame_index] }
             layers = []
-            frame_chars = self.chars[frame_index]
-            frame_fg_colors = self.fg_colors[frame_index]
-            frame_bg_colors = self.bg_colors[frame_index]
-            frame_uvs = self.uv_mods[frame_index]
             for layer_index in range(self.layers):
                 layer = { 'z': self.layers_z[layer_index] }
                 tiles = []
                 for y in range(self.height):
                     for x in range(self.width):
-                        array_index = self.get_array_index(layer_index, x, y)
-                        char = int(frame_chars[array_index])
-                        fg = int(frame_fg_colors[array_index])
-                        bg = int(frame_bg_colors[array_index])
+                        char = int(self.chars[frame_index][layer_index][y][x][0])
+                        fg = int(self.fg_colors[frame_index][layer_index][y][x][0])
+                        bg = int(self.bg_colors[frame_index][layer_index][y][x][0])
                         # use get method for transform, data's not simply an int
                         xform = self.get_char_transform_at(frame_index, layer_index, x, y)
                         tiles.append({'char': char, 'fg': fg, 'bg': bg, 'xform': xform})
@@ -491,22 +464,24 @@ class ArtFromDisk(Art):
         self.fg_changed_frames, self.bg_changed_frames = [], []
         tiles = self.layers * self.width * self.height
         # build tile data arrays from frame+layer lists
+        shape = (self.layers, self.height, self.width, 4)
         for frame in frames:
             self.frame_delays.append(frame['delay'])
-            chars = np.zeros(shape=tiles * 4, dtype=np.float32)
+            chars = np.zeros(shape, dtype=np.float32)
             uvs = self.new_uv_layers(self.layers)
             fg_colors = chars.copy()
             bg_colors = chars.copy()
-            array_index = 0
-            for layer in frame['layers']:
+            for layer_index,layer in enumerate(frame['layers']):
+                x, y = 0, 0
                 for tile in layer['tiles']:
-                    chars[array_index:array_index+4] = tile['char']
-                    fg_colors[array_index:array_index+4] = tile['fg']
-                    bg_colors[array_index:array_index+4] = tile['bg']
-                    uv_transform = uv_types[tile.get('xform', UV_NORMAL)]
-                    uv_index = array_index*2
-                    uvs[uv_index:uv_index+UV_STRIDE] = uv_transform
-                    array_index += 4
+                    chars[layer_index][y][x] = tile['char']
+                    fg_colors[layer_index][y][x] = tile['fg']
+                    bg_colors[layer_index][y][x] = tile['bg']
+                    uvs[layer_index][y][x] = uv_types[tile.get('xform', UV_NORMAL)]
+                    x += 1
+                    if x >= self.width:
+                        x = 0
+                        y += 1
             self.chars.append(chars)
             self.fg_colors.append(fg_colors)
             self.bg_colors.append(bg_colors)
@@ -562,8 +537,8 @@ class ArtFromEDSCII(Art):
         self.frame_delays = [DEFAULT_FRAME_DELAY]
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
-        tiles = self.width * self.height
-        chars = np.zeros(shape=tiles * 4, dtype=np.float32)
+        shape = (self.layers, self.height, self.width, 4)
+        chars = np.zeros(shape, dtype=np.float32)
         fg_colors = chars.copy()
         bg_colors = chars.copy()
         # populate char/color arrays by scanning width-long chunks of file
@@ -581,16 +556,19 @@ class ArtFromEDSCII(Art):
                 break
         # recreate generator after first use
         lines = chunks(data, (self.width * 3) + lb_length)
-        array_index = 0
+        x, y = 0, 0
         for line in lines:
             index = 0
             while index < len(line) - lb_length:
-                chars[array_index:array_index+4] = line[index]
+                chars[0][y][x] = line[index]
                 # +1 to color indices: playscii color index 0 = transparent
-                fg_colors[array_index:array_index+4] = line[index+1] + 1
-                bg_colors[array_index:array_index+4] = line[index+2] + 1
+                fg_colors[0][y][x] = line[index+1] + 1
+                bg_colors[0][y][x] = line[index+2] + 1
                 index += 3
-                array_index += 4
+                x += 1
+                if x >= self.width:
+                    x = 0
+                    y += 1
         self.chars = [chars]
         self.uv_mods = [self.new_uv_layers(self.layers)]
         self.fg_colors, self.bg_colors = [fg_colors], [bg_colors]

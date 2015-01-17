@@ -2,8 +2,6 @@ import math
 import numpy as np
 import vector
 
-identity = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-
 def clamp(val, lowest, highest):
     return min(highest, max(lowest, val))
 
@@ -49,7 +47,7 @@ class Camera:
         assert(self.far_z != self.near_z)
         rad = math.radians(self.fov)
         tan_half_fov = math.tan(rad / 2)
-        m = np.array(identity, dtype=np.float32, copy=True)
+        m = np.eye(4, 4, dtype=np.float32)
         m[0][0] = 1 / (aspect * tan_half_fov)
         m[1][1] = 1 / tan_half_fov
         m[2][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
@@ -76,7 +74,7 @@ class Camera:
         look_x = look_x.normalize()
         look_y = look_y.normalize()
         # turn into a matrix
-        m = np.array(identity, dtype=np.float32, copy=True)
+        m = np.eye(4, 4, dtype=np.float32)
         m[0][0] = look_x.x
         m[1][0] = look_x.y
         m[2][0] = look_x.z

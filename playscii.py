@@ -300,6 +300,7 @@ class Application:
         # test saving functionality
         if self.auto_save:
             art.save_to_file()
+            self.auto_save = False
         # TODO: cursor
         #self.cursor.update(self.elapsed_time)
         self.ui.update()
