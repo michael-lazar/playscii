@@ -205,29 +205,18 @@ class Application:
         mouse_dx, mouse_dy = ctypes.c_int(0), ctypes.c_int(0)
         sdl2.mouse.SDL_GetRelativeMouseState(mouse_dx, mouse_dy)
         mouse_dx, mouse_dy = int(mouse_dx.value), int(mouse_dy.value)
-        # directly query keys we don't want affected by OS key repeat delay
+        # get keyboard state so later we can directly query keys
         ks = sdl2.SDL_GetKeyboardState(None)
         # get modifier states
-        alt_pressed, ctrl_pressed = False, False
+        shift_pressed, alt_pressed, ctrl_pressed = False, False, False
+        if ks[sdl2.SDL_SCANCODE_LSHIFT] or ks[sdl2.SDL_SCANCODE_RSHIFT]:
+            shift_pressed = True
         if ks[sdl2.SDL_SCANCODE_LALT] or ks[sdl2.SDL_SCANCODE_RALT]:
             alt_pressed = True
         if ks[sdl2.SDL_SCANCODE_LCTRL] or ks[sdl2.SDL_SCANCODE_RCTRL]:
             ctrl_pressed = True
         if self.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             ctrl_pressed = True
-        if not alt_pressed and not ctrl_pressed:
-            if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
-                self.camera.pan(0, 1)
-            if ks[sdl2.SDL_SCANCODE_DOWN] or ks[sdl2.SDL_SCANCODE_S]:
-                self.camera.pan(0, -1)
-            if ks[sdl2.SDL_SCANCODE_LEFT] or ks[sdl2.SDL_SCANCODE_A]:
-                self.camera.pan(-1, 0)
-            if ks[sdl2.SDL_SCANCODE_RIGHT] or ks[sdl2.SDL_SCANCODE_D]:
-                self.camera.pan(1, 0)
-            if ks[sdl2.SDL_SCANCODE_X]:
-                self.camera.zoom(-1)
-            if ks[sdl2.SDL_SCANCODE_Z]:
-                self.camera.zoom(1)
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
                 return False
@@ -235,10 +224,23 @@ class Application:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
                     self.resize(event.window.data1, event.window.data2)
             elif event.type == sdl2.SDL_KEYDOWN:
+                # ctrl q: quit
                 if ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_q:
                     return False
-                elif event.key.keysym.sym == sdl2.SDLK_RETURN and alt_pressed:
+                elif event.key.keysym.sym == sdl2.SDLK_BACKQUOTE:
+                    self.ui.console.visible = not self.ui.console.visible
+                # ctrl +/-: change UI scale
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
+                    self.ui.set_scale(self.ui.scale + 1)
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_MINUS:
+                    if self.ui.scale > 1:
+                        self.ui.set_scale(self.ui.scale - 1)
+                # alt-enter: toggle fullscreen
+                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RETURN:
                     self.toggle_fullscreen()
+                # if console is up, pass input to it - keys above work regardless
+                elif self.ui.console.visible:
+                    self.ui.console.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
                 # TODO: redo these from u4mapvu
                 elif event.key.keysym.sym == sdl2.SDLK_1:
                     self.camera.set_zoom(1)
@@ -246,14 +248,6 @@ class Application:
                     self.camera.set_zoom(2)
                 elif event.key.keysym.sym == sdl2.SDLK_c:
                     self.fb.toggle_crt()
-                # ctrl +/- changes UI scale
-                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
-                    self.ui.set_scale(self.ui.scale + 1)
-                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_MINUS:
-                    if self.ui.scale > 1:
-                        self.ui.set_scale(self.ui.scale - 1)
-                elif event.key.keysym.sym == sdl2.SDLK_BACKQUOTE:
-                    self.ui.console.visible = not self.ui.console.visible
                 # TEST: < > / , . rewind / advance anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     self.renderables[0].rewind_frame()
@@ -290,6 +284,20 @@ class Application:
                 self.ui.unclicked(event.button.button)
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
+        # directly query keys we don't want affected by OS key repeat delay
+        if not alt_pressed and not ctrl_pressed and not self.ui.console.visible:
+            if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
+                self.camera.pan(0, 1)
+            if ks[sdl2.SDL_SCANCODE_DOWN] or ks[sdl2.SDL_SCANCODE_S]:
+                self.camera.pan(0, -1)
+            if ks[sdl2.SDL_SCANCODE_LEFT] or ks[sdl2.SDL_SCANCODE_A]:
+                self.camera.pan(-1, 0)
+            if ks[sdl2.SDL_SCANCODE_RIGHT] or ks[sdl2.SDL_SCANCODE_D]:
+                self.camera.pan(1, 0)
+            if ks[sdl2.SDL_SCANCODE_X]:
+                self.camera.zoom(-1)
+            if ks[sdl2.SDL_SCANCODE_Z]:
+                self.camera.zoom(1)
         sdl2.SDL_PumpEvents()
         return True
     

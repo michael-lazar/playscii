@@ -1,3 +1,4 @@
+import sdl2
 from math import ceil
 from art import Art
 from renderable import Renderable
@@ -100,6 +101,7 @@ class FPSCounterUI(UIElement):
 
 class ConsoleUI(UIElement):
     
+    visible = False
     height_screen_pct = 0.5
     snap_top = True
     snap_left = True
@@ -124,7 +126,7 @@ class ConsoleUI(UIElement):
     
     def clear(self):
         self.art.clear_frame_layer(0, 0, self.bg_color_index)
-        # line -1 is always a line of ____________...
+        # line -1 is always a line of ____________
         text = '_' * self.width
         self.art.write_string(0, 0, 0, -1, text, self.text_color)
     
@@ -135,10 +137,68 @@ class ConsoleUI(UIElement):
         self.art.write_string(0, 0, 0, -2, line, self.text_color)
         # update art from log lines
         log_index = -1
+        # max line length = width of console minus prompt + _
+        max_line_length = self.ui.width_tiles - 3
         for y in range(self.height - 3, 0, -1):
             try:
                 line = self.ui.app.log_lines[log_index]
             except IndexError:
                 break
+            # trim to width of console
+            # TODO: this doesn't seem to work, fix char screen size issues first
+            if len(line) > max_line_length:
+                line = line[:max_line_length]
             self.art.write_string(0, 0, 1, y, line, self.text_color)
             log_index -= 1
+        # TODO: save out current log lines, bail early next update if no change
+    
+    def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+        keystr = sdl2.SDL_GetKeyName(key).decode()
+        if keystr == 'Return':
+            # TODO: parse!
+            line = '%s %s' % (self.prompt, self.current_line)
+            self.ui.app.log(line)
+            self.parse(self.current_line)
+            # TODO: add to command history
+            self.current_line = ''
+        elif keystr == 'Tab':
+            # TODO: autocomplete
+            pass
+        elif keystr == 'Up':
+            # TODO: command history
+            pass
+        elif keystr == 'Backspace' and len(self.current_line) > 0:
+            # alt-backspace: delete to start of line
+            # TODO: delete to last delimiter, eg periods
+            if alt_pressed:
+                self.current_line = ''
+            else:
+                self.current_line = self.current_line[:-1]
+        elif keystr == 'Space':
+            keystr = ' '
+        # ignore any other non-character keys
+        if len(keystr) > 1:
+            return
+        if keystr.isalpha() and not shift_pressed:
+            keystr = keystr.lower()
+        elif not keystr.isalpha() and shift_pressed:
+            keystr = shifts[keystr]
+        self.current_line += keystr
+    
+    def parse(self, line):
+        # TODO: compare line against a list of known commands, if it matches one
+        # have that command handle it. if not, try to eval n give useful error if fail
+        try:
+            output = str(eval(line))
+        except:
+            # TODO: more useful error text from interpreter
+            output = 'error'
+        self.ui.app.log(output)
+
+
+# TODO: this probably breaks for non-US english KB layouts, find a better way!
+shifts = {
+    '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*',
+    '9': '(', '0': ')', '-': '_', '=': '+', '`': '~', '[': '{', ']': '}', '\\': '|',
+    ';': ':', "'": '"', ',': '<', '.': '>', '/': '?'
+}
