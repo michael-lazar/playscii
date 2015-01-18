@@ -3,7 +3,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, StatusBarUI, FPSCounterUI
+from ui_element import UIArt, StatusBarUI, FPSCounterUI, ConsoleUI
 
 UI_ASSET_DIR = 'ui/'
 
@@ -26,11 +26,13 @@ class UI:
         # create elements
         self.elements = []
         # set geo sizes, force scale update
-        self.set_scale(self.scale, True)
+        self.set_scale(self.scale)
         fps_counter = FPSCounterUI(self)
         status_bar = StatusBarUI(self)
+        self.console = ConsoleUI(self)
         self.elements.append(fps_counter)
         self.elements.append(status_bar)
+        self.elements.append(self.console)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')
@@ -39,21 +41,24 @@ class UI:
         self.grain_texture.set_wrap(GL.GL_REPEAT)
         self.grain_texture.set_filter(GL.GL_LINEAR, GL.GL_LINEAR_MIPMAP_LINEAR)
     
-    def set_scale(self, new_scale, force_update=False):
-        new_scale = max(1, new_scale)
-        if new_scale == self.scale and not force_update:
-            return
-        self.scale = max(1, new_scale)
+    def set_scale(self, new_scale):
+        self.scale = new_scale
         # update UI renderable geo sizes for new scale
         # determine width and height of current window in chars
         # use floats, window might be a fractional # of chars wide/tall
         aspect = self.app.window_height / self.app.window_width
-        self.width_tiles = self.app.window_width / self.charset.char_width
-        self.height_tiles = self.app.window_height / self.charset.char_height
-        UIArt.quad_width = (2 / self.width_tiles) * self.scale * aspect
-        UIArt.quad_height = (2 / self.height_tiles) * self.scale * aspect
+        self.width_tiles = self.app.window_width / (self.charset.char_width * self.scale)
+        self.height_tiles = self.app.window_height / (self.charset.char_height * self.scale)
+        self.app.log('scale %s: screen is now %s tiles wide, %s tiles high' % (self.scale, self.width_tiles, self.height_tiles))
+        # any new UI elements created should use new scale
+        
+        # TODO: something about this is busted, fix!!
+        
+        UIArt.quad_width = (2 / self.width_tiles) * aspect
+        UIArt.quad_height = (2 / self.height_tiles) * aspect
         # tell elements to refresh
         for e in self.elements:
+            e.art.quad_width, e.art.quad_height = UIArt.quad_width, UIArt.quad_height
             e.reset_loc()
             e.art.geo_changed = True
     
@@ -83,4 +88,5 @@ class UI:
     
     def render(self, elapsed_time):
         for e in self.elements:
-            e.renderable.render(elapsed_time)
+            if e.visible:
+                e.renderable.render(elapsed_time)

@@ -1,11 +1,23 @@
 TODO
 
-- start roughing in UI:
--- shift-U: toggle UI drawing
--- command line input - quake-style console?
+quake style console:
+- bonus: slides down and fades in when invoked reverse when dismissed - add "overall alpha" uniform to renderable_f.glsl
+- accept and display text input when visible!
+- input lines are first checked for special command status (eg save), if not found then try to eval() the expression and print result to console
+
+status bar:
+- selected character, fg/bg color in status bar, c/shift-c to cycle char, etc
+- draw selected char and colors in current art's charset + palette - support for UI elements (ie draw in screen space) that use alt charsets/palettes
+-- how to get this drawing at the right size in the status bar even though the characters are of different size?  (tweak quad size for colors, determine an appropriate quad size for char)
+
+- shift-U: toggle UI drawing
 
 - get cursor working
--- does edit mode always force straight top down and/or ortho view? or can the cursor work in a 3D scene a la an RTS?
+-- move with arrow keys
+-- screen-to-3D for mouse pointer
+-- [ ] shift active edited layer?
+-- draw grid at Z of currently active layer
+?? does edit mode always force straight top down and/or ortho view? or can the cursor work in a 3D scene a la an RTS?
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- is color distortion inherent in how good CRT filters work?

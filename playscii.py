@@ -26,6 +26,9 @@ from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI
 
 CONFIG_FILENAME = 'playscii.cfg'
+LOG_FILENAME = 'console.log'
+
+VERSION = 0.01
 
 class Application:
     
@@ -46,7 +49,10 @@ class Application:
     test_art = False
     auto_save = False
     
-    def __init__(self, art_filename):
+    def __init__(self, log_file, log_lines, art_filename):
+        # log fed in from __main__, might already have stuff in it
+        self.log_file = log_file
+        self.log_lines = log_lines
         self.elapsed_time = 0
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
@@ -65,7 +71,7 @@ class Application:
         # TODO: SDL_SetWindowIcon(self.window, SDL_Surface* icon) <- ui/logo.png
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
-        self.camera = Camera(self.window_width, self.window_height)
+        self.camera = Camera(self, self.window_width, self.window_height)
         # TODO: cursor
         self.renderables = []
         # lists of currently loaded character sets and palettes
@@ -84,7 +90,13 @@ class Application:
         self.update_window_title()
         self.ui = UI(self)
         self.frame_time, self.fps = 0, 0
-        print('init done.')
+        self.log('init done.')
+    
+    def log(self, new_line):
+        "write to log file, stdout, and in-app console log"
+        self.log_file.write('%s\n' % new_line)
+        self.log_lines.append(new_line)
+        print(new_line)
     
     def new_art(self, filename):
         filename = filename or '%snew' % ART_DIR
@@ -98,7 +110,7 @@ class Application:
         for charset in self.charsets:
             if charset_to_load == charset.name:
                 return charset
-        new_charset = CharacterSet(charset_to_load)
+        new_charset = CharacterSet(self, charset_to_load)
         self.charsets.append(new_charset)
         # return newly loaded charset to whatever's requesting it
         return new_charset
@@ -107,7 +119,7 @@ class Application:
         for palette in self.palettes:
             if palette.name == palette_to_load:
                 return palette
-        new_palette = Palette(palette_to_load)
+        new_palette = Palette(self, palette_to_load)
         self.palettes.append(new_palette)
         return new_palette
     
@@ -223,8 +235,7 @@ class Application:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
                     self.resize(event.window.data1, event.window.data2)
             elif event.type == sdl2.SDL_KEYDOWN:
-                # TODO: move exit to something safer, eg ctrl-q
-                if event.key.keysym.sym == sdl2.SDLK_ESCAPE:
+                if ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_q:
                     return False
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN and alt_pressed:
                     self.toggle_fullscreen()
@@ -239,7 +250,10 @@ class Application:
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
                     self.ui.set_scale(self.ui.scale + 1)
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_MINUS:
-                    self.ui.set_scale(self.ui.scale - 1)
+                    if self.ui.scale > 1:
+                        self.ui.set_scale(self.ui.scale - 1)
+                elif event.key.keysym.sym == sdl2.SDLK_BACKQUOTE:
+                    self.ui.console.visible = not self.ui.console.visible
                 # TEST: < > / , . rewind / advance anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     self.renderables[0].rewind_frame()
@@ -333,6 +347,7 @@ class Application:
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
         sdl2.SDL_Quit()
+        self.log_file.close()
 
 
 # load in config - may change above values and submodule class defaults
@@ -342,6 +357,13 @@ if os.path.exists(CONFIG_FILENAME):
 
 if __name__ == "__main__":
     file_to_load = None
+    # start log file even before Application has initialized so we can write to it
+    log_file = open(LOG_FILENAME, 'w')
+    log_lines = []
+    line = '%s v%s' % (Application.base_title, VERSION)
+    log_file.write('%s\n' % line)
+    log_lines.append(line)
+    print(line)
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         # if file not found, try adding art subdir
@@ -352,9 +374,12 @@ if __name__ == "__main__":
             arg += '.%s' % ART_FILE_EXTENSION
         # use given path + file name even if it doesn't exist; use as new file's name
         if not os.path.exists(arg):
-            print("couldn't find file %s, creating a new document." % sys.argv[1])
+            err_text = "couldn't find file %s, creating a new document." % sys.argv[1]
+            log_file.write(err_text)
+            log_lines.append(err_text)
+            print(err_text)
         file_to_load = arg
-    app = Application(file_to_load)
+    app = Application(log_file, log_lines, file_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)

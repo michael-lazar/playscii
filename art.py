@@ -106,12 +106,12 @@ class Art:
         # something to bind
         self.update()
         if self.log_creation:
-            print('created new document:')
-            print('  character set: %s' % self.charset.name)
-            print('  palette: %s' % self.palette.name)
-            print('  width/height: %s x %s' % (self.width, self.height))
-            print('  frames: %s' % self.frames)
-            print('  layers: %s' % self.layers)
+            self.app.log('created new document:')
+            self.app.log('  character set: %s' % self.charset.name)
+            self.app.log('  palette: %s' % self.palette.name)
+            self.app.log('  width/height: %s x %s' % (self.width, self.height))
+            self.app.log('  frames: %s' % self.frames)
+            self.app.log('  layers: %s' % self.layers)
     
     def add_frame(self, delay=DEFAULT_FRAME_DELAY):
         "adds a blank frame to end of frame sequence"
@@ -126,7 +126,7 @@ class Art:
         # UV init is more complex than just all zeroes
         self.uv_mods.append(self.new_uv_layers(self.layers))
         if self.log_size_changes:
-            print('frame %s added with %s layers' % (self.frames-1, self.layers))
+            self.app.log('frame %s added with %s layers' % (self.frames-1, self.layers))
     
     def duplicate_frame(self, frame_index):
         "adds a duplicate of specified frame to end of frame sequence"
@@ -139,7 +139,7 @@ class Art:
         self.fg_colors.append(self.fg_colors[frame_index].copy())
         self.bg_colors.append(self.bg_colors[frame_index].copy())
         if self.log_size_changes:
-            print('duplicated frame %s as frame %s' % (frame_index, self.frames-1))
+            self.app.log('duplicated frame %s as frame %s' % (frame_index, self.frames-1))
     
     def add_layer(self, z=DEFAULT_LAYER_Z):
         self.layers += 1
@@ -155,7 +155,7 @@ class Art:
         # adding a layer changes all frames' UV data
         for i in range(self.frames): self.uv_changed_frames.append(i)
         if self.log_size_changes:
-            print('added layer %s' % (self.layers))
+            self.app.log('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
         self.geo_changed = True
     
@@ -348,7 +348,7 @@ class Art:
         # TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=False, indent=1)
-        print('saved %s to disk.' % self.filename)
+        self.app.log('saved %s to disk.' % self.filename)
     
     def run_script(self, script_filename):
         """
@@ -358,7 +358,7 @@ class Art:
         if not script_filename:
             return
         exec(open(script_filename).read())
-        print('Executed %s' % script_filename)
+        self.app.log('Executed %s' % script_filename)
     
     def is_script_running(self, script_filename):
         script_filename = self.get_valid_script_filename(script_filename)
@@ -372,7 +372,7 @@ class Art:
         # try adding extension
         script_filename += '.%s' % SCRIPT_FILE_EXTENSION
         if not os.path.exists(script_filename):
-            print("Couldn't find script file %s" % script_filename)
+            self.app.log("Couldn't find script file %s" % script_filename)
             return
         return script_filename
     
@@ -382,7 +382,7 @@ class Art:
         if not script_filename:
             return
         if script_filename in self.scripts:
-            print('script %s is already running.' % script_filename)
+            self.app.log('script %s is already running.' % script_filename)
             return
         # add to "scripts currently running" list
         self.scripts.append(script_filename)
@@ -397,7 +397,7 @@ class Art:
         if not script_filename:
             return
         if not script_filename in self.scripts:
-            print("script %s exists but isn't running." % script_filename)
+            self.app.log("script %s exists but isn't running." % script_filename)
             return
         script_index = self.scripts.index(script_filename)
         self.scripts.pop(script_index)
@@ -489,12 +489,12 @@ class ArtFromDisk(Art):
         self.geo_changed = True
         self.update()
         if self.log_creation:
-            print('loaded %s from disk:' % filename)
-            print('  character set: %s' % self.charset.name)
-            print('  palette: %s' % self.palette.name)
-            print('  width/height: %s x %s' % (self.width, self.height))
-            print('  frames: %s' % self.frames)
-            print('  layers: %s' % self.layers)
+            self.app.log('loaded %s from disk:' % filename)
+            self.app.log('  character set: %s' % self.charset.name)
+            self.app.log('  palette: %s' % self.palette.name)
+            self.app.log('  width/height: %s x %s' % (self.width, self.height))
+            self.app.log('  frames: %s' % self.frames)
+            self.app.log('  layers: %s' % self.layers)
         # signify to app that this file loaded successfully
         self.valid = True
 
@@ -545,7 +545,7 @@ class ArtFromEDSCII(Art):
         lines = chunks(data, (self.width * 3) + lb_length)
         for line in lines:
             if line[-2] == ord('\r') and line[-1] == ord('\n'):
-                print('windows-style line breaks detected')
+                self.app.log('windows-style line breaks detected')
                 lb_length = 2
                 break
         # recreate generator after first use
@@ -576,6 +576,6 @@ class ArtFromEDSCII(Art):
         self.geo_changed = True
         self.update()
         if self.log_creation:
-            print('EDSCII file %s loaded from disk:' % filename)
-            print('  width/height: %s x %s' % (self.width, self.height))
+            self.app.log('EDSCII file %s loaded from disk:' % filename)
+            self.app.log('  width/height: %s x %s' % (self.width, self.height))
         self.valid = True

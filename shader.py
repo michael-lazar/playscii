@@ -18,7 +18,7 @@ class ShaderLord:
         self.last_check = 0
         for shader in self.shaders:
             if shader.vert_source_file == vert_source_file and shader.frag_source_file == frag_source_file:
-                #print('%s already uses same source' % shader)
+                #self.app.log('%s already uses same source' % shader)
                 return shader
         s = Shader(vert_source_file, frag_source_file)
         self.shaders.append(s)
@@ -73,9 +73,9 @@ class Shader:
         new_shader_source = open(SHADER_PATH + file_to_reload, 'rb').read()
         try:
             new_shader = shaders.compileShader(new_shader_source, shader_type)
-            print('success: reloaded shader file %s' % file_to_reload)
+            self.app.log('success: reloaded shader file %s' % file_to_reload)
         except:
-            print('error: failed reloading shader file %s' % file_to_reload)
+            self.app.log('error: failed reloading shader file %s' % file_to_reload)
             return
         # recompile program with new shader
         if shader_type == GL.GL_VERTEX_SHADER:

@@ -6,6 +6,7 @@ uniform sampler2D grain;
 // width of the generated palette texture, ie palette.MAX_COLORS
 uniform float palTextureWidth;
 uniform float grainStrength;
+uniform float bgColorAlpha;
 
 in vec2 texCoords;
 in float theFgColorIndex;
@@ -29,6 +30,7 @@ void main()
 	// any totally transparent pixels get the BG color
 	colorUV.x = (theBgColorIndex + 0.01) / palTextureWidth;
 	vec4 bgColor = texture(palette, colorUV);
+	bgColor.a *= bgColorAlpha;
 	// thanks Mark Wonnacott for tip on how to do this w/o a branch
 	outColor = mix(bgColor, fgColor, outColor.a);
 	// apply "grain" for eg UI elements

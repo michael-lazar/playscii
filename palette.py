@@ -11,7 +11,8 @@ class Palette:
     
     logg = False
     
-    def __init__(self, src_filename):
+    def __init__(self, app, src_filename):
+        self.app = app
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
         pal_filename = PALETTE_DIR + src_filename
@@ -19,7 +20,7 @@ class Palette:
         if not os.path.exists(pal_filename):
             pal_filename += '.png'
             if not os.path.exists(pal_filename):
-                print("Couldn't find palette image file" + pal_filename)
+                self.app.log("Couldn't find palette image file" + pal_filename)
         src_img = Image.open(pal_filename)
         src_img = src_img.convert('RGBA')
         width, height = src_img.size
@@ -53,10 +54,10 @@ class Palette:
         #img.save('palette.png')
         self.texture = Texture(img.tostring(), MAX_COLORS, 1)
         if self.logg:
-            print('new palette from %s:' % pal_filename)
-            print('  unique colors found: %s' % int(len(self.colors)-1))
-            print('  darkest color index: %s' % self.darkest_index)
-            print('  lightest color index: %s' % self.lightest_index)
+            self.app.log('new palette from %s:' % pal_filename)
+            self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
+            self.app.log('  darkest color index: %s' % self.darkest_index)
+            self.app.log('  lightest color index: %s' % self.lightest_index)
     
     def get_random_color_index(self):
         # exclude transparent first index

@@ -12,6 +12,7 @@ class Renderable:
     log_animation = False
     log_buffer_updates = False
     grain_strength = 0
+    bg_alpha = 1
     
     def __init__(self, app, art):
         self.app = app
@@ -41,6 +42,7 @@ class Renderable:
         self.grain_tex_uniform = self.shader.get_uniform_location('grain')
         self.palette_width_uniform = self.shader.get_uniform_location('palTextureWidth')
         self.grain_strength_uniform = self.shader.get_uniform_location('grainStrength')
+        self.bg_alpha_uniform = self.shader.get_uniform_location('bgColorAlpha')
         self.create_buffers()
         # finish
         GL.glBindVertexArray(0)
@@ -94,7 +96,7 @@ class Renderable:
     def update_buffer(self, buffer_index, array, target, buffer_type, data_type,
                       attrib_name, attrib_size):
         if self.log_buffer_updates:
-            print('update_buffer: %s, %s, %s, %s, %s, %s, %s' % (buffer_index, array, target, buffer_type, data_type, attrib_name, attrib_size))
+            self.app.log('update_buffer: %s, %s, %s, %s, %s, %s, %s' % (buffer_index, array, target, buffer_type, data_type, attrib_name, attrib_size))
         GL.glBindBuffer(target, buffer_index)
         GL.glBufferData(target, array.nbytes, array, buffer_type)
         if attrib_name:
@@ -116,7 +118,7 @@ class Renderable:
         self.frame = new_frame_index % self.art.frames
         self.update_tile_buffers(True, True, True, True)
         if self.log_animation:
-            print('%s animating from frames %s to %s' % (self, old_frame, self.frame))
+            self.app.log('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
     def update(self):
         if not self.animating:
@@ -135,7 +137,7 @@ class Renderable:
         GL.glDeleteBuffers(6, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.uv_buffer, self.fg_buffer, self.bg_buffer])
     
     def log_loc(self):
-        print('%s: %s,%s,%s' % (self, self.x, self.y, self.z))
+        self.app.log('%s: %s,%s,%s' % (self, self.x, self.y, self.z))
     
     def get_projection_matrix(self):
         """
@@ -167,6 +169,7 @@ class Renderable:
         GL.glUniform1f(self.char_uv_height_uniform, self.art.charset.v_height)
         GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
         GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
+        GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         # camera uniforms
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())

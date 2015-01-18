@@ -32,7 +32,8 @@ class Camera:
     near_z = 0.0001
     far_z = 100000
     
-    def __init__(self, window_width, window_height):
+    def __init__(self, app, window_width, window_height):
+        self.app = app
         self.x, self.y = self.start_x, self.start_y
         self.z = self.start_zoom
         self.vel_x, self.vel_y, self.vel_z = 0,0,0
@@ -146,4 +147,4 @@ class Camera:
         # set view matrix from xyz
         self.calc_view_matrix()
         if self.logg:
-            print('camera x=%s, y=%s, z=%s' % (self.x, self.y, self.z))
+            self.app.log('camera x=%s, y=%s, z=%s' % (self.x, self.y, self.z))
