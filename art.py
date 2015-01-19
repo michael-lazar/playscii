@@ -347,7 +347,7 @@ class Art:
         d['frames'] = frames
         # TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
-        json.dump(d, open(self.filename, 'w'), sort_keys=False, indent=1)
+        json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
         self.app.log('saved %s to disk.' % self.filename)
     
     def run_script(self, script_filename):

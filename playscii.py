@@ -54,6 +54,7 @@ class Application:
         self.log_file = log_file
         self.log_lines = log_lines
         self.elapsed_time = 0
+        self.should_quit = False
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
@@ -168,9 +169,8 @@ class Application:
         sdl2.SDL_SetWindowFullscreen(self.window, flags)
     
     def main_loop(self):
-        running = True
-        while running:
-            running = self.input()
+        while not self.should_quit:
+            self.input()
             self.update()
             self.render()
             self.sl.check_hot_reload()
@@ -219,14 +219,14 @@ class Application:
             ctrl_pressed = True
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
-                return False
+                self.should_quit = True
             elif event.type == sdl2.SDL_WINDOWEVENT:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
                     self.resize(event.window.data1, event.window.data2)
             elif event.type == sdl2.SDL_KEYDOWN:
                 # ctrl q: quit
                 if ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_q:
-                    return False
+                    self.should_quit = True
                 elif event.key.keysym.sym == sdl2.SDLK_BACKQUOTE:
                     self.ui.console.visible = not self.ui.console.visible
                 # ctrl +/-: change UI scale
@@ -299,7 +299,6 @@ class Application:
             if ks[sdl2.SDL_SCANCODE_Z]:
                 self.camera.zoom(1)
         sdl2.SDL_PumpEvents()
-        return True
     
     def update(self):
         for art in self.art_loaded:

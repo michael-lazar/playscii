@@ -2,7 +2,6 @@ TODO
 
 quake style console:
 - bonus: slides down and fades in when invoked reverse when dismissed - add "overall alpha" uniform to renderable_f.glsl
-- accept and display text input when visible!
 - input lines are first checked for special command status (eg save), if not found then try to eval() the expression and print result to console
 
 status bar:

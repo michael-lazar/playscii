@@ -3,7 +3,8 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, StatusBarUI, FPSCounterUI, ConsoleUI
+from ui_element import UIArt, StatusBarUI, FPSCounterUI
+from ui_console import ConsoleUI
 
 UI_ASSET_DIR = 'ui/'
 
