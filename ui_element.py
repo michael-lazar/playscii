@@ -1,3 +1,4 @@
+import numpy as np
 from math import ceil
 
 from art import Art
@@ -24,15 +25,14 @@ class UIElement:
         pass
     
     def reset_loc(self):
-        inv_aspect = self.ui.app.window_width / self.ui.app.window_height
         if self.snap_top:
             self.y = 1
         elif self.snap_bottom:
             self.y = self.art.quad_height * self.height - 1
         if self.snap_left:
-            self.x = -inv_aspect
+            self.x = -1
         elif self.snap_right:
-            self.x = inv_aspect - (self.art.quad_width * self.width)
+            self.x = 1 - (self.art.quad_width * self.width)
         self.renderable.x, self.renderable.y = self.x, self.y
     
     def update(self):
@@ -50,7 +50,9 @@ class UIRenderable(Renderable):
     grain_strength = 0.2
     
     def get_projection_matrix(self):
-        return self.ui.projection_matrix
+        # don't use projection matrix, ie identity[0][0]=aspect;
+        # rather do all aspect correction in UI.set_scale when determining quad size
+        return self.ui.view_matrix
     
     def get_view_matrix(self):
         return self.ui.view_matrix

@@ -2,7 +2,9 @@ TODO
 
 quake style console:
 - bonus: slides down and fades in when invoked reverse when dismissed - add "overall alpha" uniform to renderable_f.glsl
-- input lines are first checked for special command status (eg save), if not found then try to eval() the expression and print result to console
+commands:
+- save [name]: saves current art, or saves current art under given filename
+- open [name]: opens art file by the given name
 
 status bar:
 - selected character, fg/bg color in status bar, c/shift-c to cycle char, etc

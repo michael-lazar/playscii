@@ -23,7 +23,7 @@ from art import Art, ArtFromDisk, ArtFromEDSCII
 from renderable import Renderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
-from ui import UI
+from ui import UI, SCALE_INCREMENT
 
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
@@ -148,7 +148,7 @@ class Application:
         sdl2.SDL_RenderFillRect(self.sdl_renderer, r)
         sdl2.SDL_GL_SwapWindow(self.window)
     
-    def resize(self, new_width, new_height):
+    def resize_window(self, new_width, new_height):
         GL.glViewport(0, 0, new_width, new_height)
         self.window_width, self.window_height = new_width, new_height
         # preserve FB state, eg CRT shader enabled
@@ -222,7 +222,7 @@ class Application:
                 self.should_quit = True
             elif event.type == sdl2.SDL_WINDOWEVENT:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
-                    self.resize(event.window.data1, event.window.data2)
+                    self.resize_window(event.window.data1, event.window.data2)
             elif event.type == sdl2.SDL_KEYDOWN:
                 # ctrl q: quit
                 if ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_q:
@@ -231,10 +231,10 @@ class Application:
                     self.ui.console.visible = not self.ui.console.visible
                 # ctrl +/-: change UI scale
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
-                    self.ui.set_scale(self.ui.scale + 1)
+                    self.ui.set_scale(self.ui.scale + SCALE_INCREMENT)
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_MINUS:
-                    if self.ui.scale > 1:
-                        self.ui.set_scale(self.ui.scale - 1)
+                    if self.ui.scale > 1 + SCALE_INCREMENT:
+                        self.ui.set_scale(self.ui.scale - SCALE_INCREMENT)
                 # alt-enter: toggle fullscreen
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RETURN:
                     self.toggle_fullscreen()

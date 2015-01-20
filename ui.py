@@ -7,6 +7,7 @@ from ui_element import UIArt, StatusBarUI, FPSCounterUI
 from ui_console import ConsoleUI
 
 UI_ASSET_DIR = 'ui/'
+SCALE_INCREMENT = 0.25
 
 class UI:
     
@@ -20,8 +21,11 @@ class UI:
     def __init__(self, app):
         self.app = app
         aspect = self.app.window_height / self.app.window_width
-        self.projection_matrix = np.array([[aspect, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-        self.view_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        # TODO: remove below comment when it's clear current approach is correct
+        #self.projection_matrix = np.array([[aspect, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        # for UI, view /and/ projection matrix are identity
+        # (aspect correction is done in set_scale)
+        self.view_matrix = np.eye(4, 4, dtype=np.float32)
         self.charset = self.app.load_charset(self.charset_name)
         self.palette = self.app.load_palette(self.palette_name)
         # create elements
@@ -41,34 +45,38 @@ class UI:
         self.grain_texture = Texture(img.tostring(), width, height)
         self.grain_texture.set_wrap(GL.GL_REPEAT)
         self.grain_texture.set_filter(GL.GL_LINEAR, GL.GL_LINEAR_MIPMAP_LINEAR)
+        # update elements that weren't created when UI scale was determined
+        self.set_elements_scale()
     
     def set_scale(self, new_scale):
         self.scale = new_scale
         # update UI renderable geo sizes for new scale
         # determine width and height of current window in chars
         # use floats, window might be a fractional # of chars wide/tall
-        aspect = self.app.window_height / self.app.window_width
         self.width_tiles = self.app.window_width / (self.charset.char_width * self.scale)
         self.height_tiles = self.app.window_height / (self.charset.char_height * self.scale)
-        self.app.log('scale %s: screen is now %s tiles wide, %s tiles high' % (self.scale, self.width_tiles, self.height_tiles))
+        #self.app.log('scale %s: screen is now %s tiles wide, %s tiles high' % (self.scale, self.width_tiles, self.height_tiles))
         # any new UI elements created should use new scale
-        
-        # TODO: something about this is busted, fix!!
-        
-        UIArt.quad_width = (2 / self.width_tiles) * aspect
-        UIArt.quad_height = (2 / self.height_tiles) * aspect
+        inv_aspect = self.app.window_width / self.app.window_height
+        UIArt.quad_width = 2 / self.width_tiles * inv_aspect
+        UIArt.quad_height = 2 / self.height_tiles * inv_aspect
         # tell elements to refresh
+        self.set_elements_scale()
+    
+    def set_elements_scale(self):
         for e in self.elements:
             e.art.quad_width, e.art.quad_height = UIArt.quad_width, UIArt.quad_height
+            # Art dimensions may well need to change
+            e.init_art()
             e.reset_loc()
             e.art.geo_changed = True
     
     def window_resized(self):
+        # TODO: remove below comments when it's clear current approach is correct
         # adjust for new aspect ratio
-        self.projection_matrix[0][0] = self.app.window_height / self.app.window_width
-        # tell all elements to resize for new window
-        for e in self.elements:
-            e.reset_loc()
+        #self.projection_matrix[0][0] = self.app.window_height / self.app.window_width
+        # recalc renderables' quad size (same scale, different aspect)
+        self.set_scale(self.scale)
     
     def update(self):
         for e in self.elements:

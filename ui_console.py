@@ -40,7 +40,8 @@ commands = {
 class ConsoleUI(UIElement):
     
     visible = False
-    height_screen_pct = 0.5
+    # how far down the screen the console reaches when visible
+    height_screen_pct = 0.75
     snap_top = True
     snap_left = True
     bg_alpha = 0.5
@@ -50,7 +51,9 @@ class ConsoleUI(UIElement):
     
     def init_art(self):
         self.width = ceil(self.ui.width_tiles)
-        self.height = int(self.ui.height_tiles * self.height_screen_pct)
+        # % of screen must take aspect into account
+        inv_aspect = self.ui.app.window_height / self.ui.app.window_width
+        self.height = int(self.ui.height_tiles * self.height_screen_pct * inv_aspect)
         # dim background
         self.renderable.bg_alpha = self.bg_alpha
         # must resize here, as window width will vary
