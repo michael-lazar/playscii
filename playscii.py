@@ -74,19 +74,10 @@ class Application:
         self.sl = ShaderLord(self)
         self.camera = Camera(self, self.window_width, self.window_height)
         # TODO: cursor
-        self.renderables = []
+        self.art_loaded, self.renderables = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
-        art = ArtFromDisk(art_filename, self)
-        if not art or not art.valid:
-            art = ArtFromEDSCII(art_filename, self)
-            if not art or not art.valid:
-                art = self.new_art(art_filename)
-        # keep a list of all art assets loaded (stub for MDI support)
-        self.art_loaded = [art]
-        test_renderable = Renderable(self, art)
-        # add renderables to list in reverse draw order (only world for now)
-        self.renderables.append(test_renderable)
+        self.load_art(art_filename)
         self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
         self.update_window_title()
         self.ui = UI(self)
@@ -104,6 +95,45 @@ class Application:
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
         return Art(filename, self, charset, palette, self.starting_width, self.starting_height)
+    
+    def load_art(self, filename):
+        """
+        determine a viable filename and load it from disk;
+        create new file if unsuccessful
+        """
+        orig_filename = filename
+        # try adding art subdir
+        if not os.path.exists(filename):
+            filename = '%s%s' % (ART_DIR, filename)
+        # if not found, try adding extension
+        if not os.path.exists(filename):
+            filename += '.%s' % ART_FILE_EXTENSION
+        art = None
+        # use given path + file name even if it doesn't exist; use as new file's name
+        if not os.path.exists(filename):
+            self.log("couldn't find file %s, creating new document %s" % (orig_filename, filename))
+            art = self.new_art(filename)
+        else:
+            for a in self.art_loaded:
+                # TODO: this check doesn't work on EDSCII imports b/c its name changes
+                if a.filename == filename:
+                    self.log('Art file %s already loaded' % filename)
+                    return
+            art = ArtFromDisk(filename, self)
+            if not art or not art.valid:
+                art = ArtFromEDSCII(filename, self)
+            # if file failed to load, create a new file with that name
+            # TODO: this may be foolish, ensure this never overwrites user data
+            if not art or not art.valid:
+                art = self.new_art(filename)
+        # keep a list of all art assets loaded (stub for MDI support)
+        self.art_loaded.append(art)
+        renderable = Renderable(self, art)
+        self.renderables.append(renderable)
+        # TEST: offset new loaded renderables so you can distinguish them
+        x = y = (len(self.art_loaded) - 1) * 2
+        renderable.x += x
+        renderable.y += y
     
     def load_charset(self, charset_to_load):
         "creates and returns a character set with the given name"
@@ -167,6 +197,8 @@ class Application:
         if self.fullscreen:
             flags = sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
         sdl2.SDL_SetWindowFullscreen(self.window, flags)
+        # for all intents and purposes, this is like resizing the window
+        self.resize_window(self.window_width, self.window_height)
     
     def main_loop(self):
         while not self.should_quit:
@@ -228,7 +260,7 @@ class Application:
                 if ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_q:
                     self.should_quit = True
                 elif event.key.keysym.sym == sdl2.SDLK_BACKQUOTE:
-                    self.ui.console.visible = not self.ui.console.visible
+                    self.ui.console.toggle()
                 # ctrl +/-: change UI scale
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
                     self.ui.set_scale(self.ui.scale + SCALE_INCREMENT)
@@ -367,25 +399,14 @@ if __name__ == "__main__":
     # start log file even before Application has initialized so we can write to it
     log_file = open(LOG_FILENAME, 'w')
     log_lines = []
+    # startup message: application and version #
     line = '%s v%s' % (Application.base_title, VERSION)
     log_file.write('%s\n' % line)
     log_lines.append(line)
     print(line)
+    file_to_load = None
     if len(sys.argv) > 1:
-        arg = sys.argv[1]
-        # if file not found, try adding art subdir
-        if not os.path.exists(arg):
-            arg = '%s%s' % (ART_DIR, arg)
-        # if file still not found, try adding extension
-        if not os.path.exists(arg):
-            arg += '.%s' % ART_FILE_EXTENSION
-        # use given path + file name even if it doesn't exist; use as new file's name
-        if not os.path.exists(arg):
-            err_text = "couldn't find file %s, creating a new document." % sys.argv[1]
-            log_file.write(err_text)
-            log_lines.append(err_text)
-            print(err_text)
-        file_to_load = arg
+        file_to_load = sys.argv[1]
     app = Application(log_file, log_lines, file_to_load)
     error = app.main_loop()
     app.quit()

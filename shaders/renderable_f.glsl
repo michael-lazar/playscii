@@ -7,6 +7,7 @@ uniform sampler2D grain;
 uniform float palTextureWidth;
 uniform float grainStrength;
 uniform float bgColorAlpha;
+uniform float alpha;
 
 in vec2 texCoords;
 in float theFgColorIndex;
@@ -36,4 +37,6 @@ void main()
 	// apply "grain" for eg UI elements
 	vec4 grainColor = texture2D(grain, gl_FragCoord.xy * grainSize);
 	outColor.rgb += (0.5 - grainColor.rgb) * grainStrength;
+	// overall alpha
+	outColor.a *= alpha;
 }

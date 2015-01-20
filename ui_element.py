@@ -17,11 +17,11 @@ class UIElement:
         self.art = UIArt(None, self.ui.app, self.ui.charset, self.ui.palette, self.width, self.height)
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
-        self.init_art()
+        self.reset_art()
         self.reset_loc()
     
-    def init_art(self):
-        "runs as init is finishing"
+    def reset_art(self):
+        "restores this element's Art to its initial state; runs on init and resize"
         pass
     
     def reset_loc(self):
@@ -63,7 +63,7 @@ class StatusBarUI(UIElement):
     snap_bottom = True
     snap_left = True
     
-    def init_art(self):
+    def reset_art(self):
         self.width = ceil(self.ui.width_tiles)
         # must resize here, as window width will vary
         self.art.resize(self.width, self.height)

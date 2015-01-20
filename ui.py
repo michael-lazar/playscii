@@ -67,7 +67,7 @@ class UI:
         for e in self.elements:
             e.art.quad_width, e.art.quad_height = UIArt.quad_width, UIArt.quad_height
             # Art dimensions may well need to change
-            e.init_art()
+            e.reset_art()
             e.reset_loc()
             e.art.geo_changed = True
     

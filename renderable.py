@@ -12,6 +12,7 @@ class Renderable:
     log_animation = False
     log_buffer_updates = False
     grain_strength = 0
+    alpha = 1
     bg_alpha = 1
     
     def __init__(self, app, art):
@@ -42,6 +43,7 @@ class Renderable:
         self.grain_tex_uniform = self.shader.get_uniform_location('grain')
         self.palette_width_uniform = self.shader.get_uniform_location('palTextureWidth')
         self.grain_strength_uniform = self.shader.get_uniform_location('grainStrength')
+        self.alpha_uniform = self.shader.get_uniform_location('alpha')
         self.bg_alpha_uniform = self.shader.get_uniform_location('bgColorAlpha')
         self.create_buffers()
         # finish
@@ -170,6 +172,7 @@ class Renderable:
         GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
         GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
         GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
+        GL.glUniform1f(self.alpha_uniform, self.alpha)
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         # camera uniforms
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
