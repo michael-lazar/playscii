@@ -1,10 +1,11 @@
 TODO
 
 quake style console:
-- bonus: slides down and fades in when invoked reverse when dismissed - add "overall alpha" uniform to renderable_f.glsl
-commands:
-- save [name]: saves current art, or saves current art under given filename
-- open [name]: opens art file by the given name
+- get proper error messages from python when eval fails
+- up arrow: page through command history
+- find out why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
+-- provide easy access to global program state, eg above should be "app.camera.tilt_y"
+- save command: saves current art, or saves current art under given filename
 
 status bar:
 - selected character, fg/bg color in status bar, c/shift-c to cycle char, etc
