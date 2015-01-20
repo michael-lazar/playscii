@@ -1,10 +1,8 @@
 TODO
 
 quake style console:
-- get proper error messages from python when eval fails
-- up arrow: page through command history
+- fix: when resizing window, console prompt and user input line disappears
 - find out why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
--- provide easy access to global program state, eg above should be "app.camera.tilt_y"
 - save command: saves current art, or saves current art under given filename
 
 status bar:

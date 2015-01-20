@@ -102,6 +102,7 @@ class Application:
         create new file if unsuccessful
         """
         orig_filename = filename
+        filename = filename or 'new'
         # try adding art subdir
         if not os.path.exists(filename):
             filename = '%s%s' % (ART_DIR, filename)
@@ -111,7 +112,10 @@ class Application:
         art = None
         # use given path + file name even if it doesn't exist; use as new file's name
         if not os.path.exists(filename):
-            self.log("couldn't find file %s, creating new document %s" % (orig_filename, filename))
+            text = 'creating new document %s' % filename
+            if orig_filename:
+                text = "couldn't find file %s, %s" % (orig_filename, text)
+            self.log(text)
             art = self.new_art(filename)
         else:
             for a in self.art_loaded:
@@ -135,22 +139,22 @@ class Application:
         renderable.x += x
         renderable.y += y
     
-    def load_charset(self, charset_to_load):
+    def load_charset(self, charset_to_load, log=True):
         "creates and returns a character set with the given name"
         # already loaded?
         for charset in self.charsets:
             if charset_to_load == charset.name:
                 return charset
-        new_charset = CharacterSet(self, charset_to_load)
+        new_charset = CharacterSet(self, charset_to_load, log)
         self.charsets.append(new_charset)
         # return newly loaded charset to whatever's requesting it
         return new_charset
     
-    def load_palette(self, palette_to_load):
+    def load_palette(self, palette_to_load, log=True):
         for palette in self.palettes:
             if palette.name == palette_to_load:
                 return palette
-        new_palette = Palette(self, palette_to_load)
+        new_palette = Palette(self, palette_to_load, log)
         self.palettes.append(new_palette)
         return new_palette
     
@@ -265,7 +269,7 @@ class Application:
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
                     self.ui.set_scale(self.ui.scale + SCALE_INCREMENT)
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_MINUS:
-                    if self.ui.scale > 1 + SCALE_INCREMENT:
+                    if self.ui.scale > SCALE_INCREMENT * 2:
                         self.ui.set_scale(self.ui.scale - SCALE_INCREMENT)
                 # alt-enter: toggle fullscreen
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RETURN:

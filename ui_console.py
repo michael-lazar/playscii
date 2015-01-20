@@ -57,6 +57,9 @@ class ConsoleUI(UIElement):
     bg_color_index = 7 # dark grey
     highlight_color = 6 # yellow
     prompt = '>'
+    right_margin = 3
+    # transient, but must be set here b/c UIElement.init calls reset_art
+    current_line = ''
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
@@ -66,27 +69,33 @@ class ConsoleUI(UIElement):
         self.target_y = 2
         # start off top of screen
         self.renderable.y = self.y = 2
+        # user input and log
         self.last_lines = []
+        self.command_history = []
+        self.history_index = 0
         # junk data in last user line so it changes on first update
         self.last_user_line = 'test'
+        # max line length = width of console minus prompt + _
+        self.max_line_length = int(self.art.width) - self.right_margin
     
     def reset_art(self):
-        self.width = ceil(self.ui.width_tiles)
+        self.width = int(self.ui.width_tiles * self.ui.scale)
         # % of screen must take aspect into account
         inv_aspect = self.ui.app.window_height / self.ui.app.window_width
-        self.height = int(self.ui.height_tiles * self.height_screen_pct * inv_aspect)
+        self.height = int(self.ui.height_tiles * self.height_screen_pct * inv_aspect * self.ui.scale)
         # dim background
         self.renderable.bg_alpha = self.bg_alpha
         # must resize here, as window width will vary
         self.art.resize(self.width, self.height)
+        self.max_line_length = int(self.width) - self.right_margin
         self.text_color = self.ui.palette.lightest_index
         self.clear()
-        self.current_line = ''
-        self.art.write_string(0, 0, 1, -2, self.prompt, self.text_color)
-        text = 'test console text'
-        self.art.write_string(0, 0, 1, -3, text, self.text_color)
+        # truncate current user line if it's too long for new width
+        self.current_line = self.current_line[:self.max_line_length]
+        #self.update_user_line()
         # empty log lines so they refresh from app
-        self.log_lines = []
+        self.last_user_line = 'XXtestXX'
+        self.last_lines = []
         self.art.geo_changed = True
     
     def toggle(self):
@@ -156,17 +165,14 @@ class ConsoleUI(UIElement):
     def update_log_lines(self):
         "update art from log lines"
         log_index = -1
-        # max line length = width of console minus prompt + _
-        max_line_length = int(self.art.width) - 3
         for y in range(self.height - 3, -1, -1):
             try:
                 line = self.ui.app.log_lines[log_index]
             except IndexError:
                 break
-            # trim to width of console
-            # TODO: this doesn't seem to work, fix char screen size issues first
-            if len(line) > max_line_length:
-                line = line[:max_line_length]
+            # trim line to width of console
+            if len(line) >= self.max_line_length:
+                line = line[:self.max_line_length]
             self.art.write_string(0, 0, 1, y, line, self.text_color)
             log_index -= 1
     
@@ -179,6 +185,9 @@ class ConsoleUI(UIElement):
         # gets expensive
         user_input_changed = self.last_user_line != self.current_line
         log_changed = self.last_lines != self.ui.app.log_lines
+        # remember log & user lines, bail early next update if no change
+        self.last_lines = self.ui.app.log_lines[:]
+        self.last_user_line = self.current_line
         if not user_input_changed and not log_changed:
             return
         # if log lines changed, clear all tiles to shift in new text
@@ -188,33 +197,54 @@ class ConsoleUI(UIElement):
         # update user line independently of log, it changes at a different rate
         if user_input_changed:
             self.update_user_line()
-        # remember current log and user lines, bail early next update if no change
-        self.last_lines = self.ui.app.log_lines[:]
-        self.last_user_line = self.current_line
+    
+    def visit_command_history(self, index):
+        if len(self.command_history) == 0:
+            return
+        self.history_index = index
+        self.history_index %= len(self.command_history)
+        self.current_line = self.command_history[self.history_index]
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         "handles a key from Application.input"
         keystr = sdl2.SDL_GetKeyName(key).decode()
         if keystr == 'Return':
-            # TODO: parse!
             line = '%s %s' % (self.prompt, self.current_line)
             self.ui.app.log(line)
+            self.command_history.append(self.current_line)
             self.parse(self.current_line)
-            # TODO: add to command history
             self.current_line = ''
+            self.history_index = 0
         elif keystr == 'Tab':
-            # TODO: autocomplete
+            # TODO: autocomplete (commands, filenames)
             pass
         elif keystr == 'Up':
-            # TODO: command history
-            pass
+            # page back through command history
+            self.visit_command_history(self.history_index - 1)
+        elif keystr == 'Down':
+            # page forward through command history
+            self.visit_command_history(self.history_index + 1)
         elif keystr == 'Backspace' and len(self.current_line) > 0:
-            # alt-backspace: delete to start of line
-            # TODO: delete to last delimiter, eg periods
+            # alt-backspace: delete to last delimiter, eg periods
             if alt_pressed:
-                self.current_line = ''
+                # "index to delete to"
+                delete_index = -1
+                for delimiter in delimiters:
+                    this_delimiter_index = self.current_line.rfind(delimiter)
+                    if this_delimiter_index > delete_index:
+                        delete_index = this_delimiter_index
+                if delete_index > -1:
+                    self.current_line = self.current_line[:delete_index]
+                else:
+                    self.current_line = ''
+                    # user is bailing on whatever they were typing,
+                    # reset position in cmd history
+                    self.history_index = 0
             else:
                 self.current_line = self.current_line[:-1]
+                if len(self.current_line) == 0:
+                    # same as above: reset position in cmd history
+                    self.history_index = 0
         elif keystr == 'Space':
             keystr = ' '
         # ignore any other non-character keys
@@ -224,27 +254,39 @@ class ConsoleUI(UIElement):
             keystr = keystr.lower()
         elif not keystr.isalpha() and shift_pressed:
             keystr = shifts[keystr]
-        self.current_line += keystr
+        if len(self.current_line) < self.max_line_length:
+            self.current_line += keystr
     
     def parse(self, line):
         # is line in a list of know commands? if so, handle it.
         items = line.split()
-        if items[0] in commands:
+        output = None
+        if len(items) == 0:
+            pass
+        elif items[0] in commands:
             cmd = commands[items[0]]
             output = cmd.execute(self, items[1:])
         else:
             # if not, try python eval, give useful error if it fails
             try:
+                # set some locals for easy access from eval
+                ui = self.ui
+                app = ui.app
+                camera = app.camera
+                # TODO: eval can't actually change values, how to do this?
                 output = str(eval(line))
-            except:
-                # TODO: actually useful error text from interpreter
-                output = 'error'
+            except Exception as e:
+                # try to output useful error text
+                output = '%s: %s' % (e.__class__.__name__, str(e))
         # commands CAN return None, so only log if there's something
-        if output:
+        if output and output != 'None':
             self.ui.app.log(output)
 
 
-# TODO: this probably breaks for non-US english KB layouts, find a better way!
+# delimiters - alt-backspace deletes to most recent one of these
+delimiters = [' ', '.', ')', ']', ',', '_']
+
+# TODO: find out if this breaks for non-US english KB layouts
 shifts = {
     '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*',
     '9': '(', '0': ')', '-': '_', '=': '+', '`': '~', '[': '{', ']': '}', '\\': '|',

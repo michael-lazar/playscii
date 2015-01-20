@@ -13,7 +13,7 @@ in vec2 texCoords;
 in float theFgColorIndex;
 in float theBgColorIndex;
 
-const float grainSize = 0.0025;
+const float grainSize = 0.0075;
 
 out vec4 outColor;
 

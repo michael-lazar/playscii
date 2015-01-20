@@ -9,9 +9,7 @@ MAX_COLORS = 255
 
 class Palette:
     
-    logg = False
-    
-    def __init__(self, app, src_filename):
+    def __init__(self, app, src_filename, log):
         self.app = app
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
@@ -53,8 +51,8 @@ class Palette:
         # debug: save out generated palette texture
         #img.save('palette.png')
         self.texture = Texture(img.tostring(), MAX_COLORS, 1)
-        if self.logg:
-            self.app.log('new palette from %s:' % pal_filename)
+        if log:
+            self.app.log("loaded palette '%s' from %s:" % (self.name, pal_filename))
             self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
             self.app.log('  darkest color index: %s' % self.darkest_index)
             self.app.log('  lightest color index: %s' % self.lightest_index)

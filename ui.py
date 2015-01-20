@@ -26,8 +26,8 @@ class UI:
         # for UI, view /and/ projection matrix are identity
         # (aspect correction is done in set_scale)
         self.view_matrix = np.eye(4, 4, dtype=np.float32)
-        self.charset = self.app.load_charset(self.charset_name)
-        self.palette = self.app.load_palette(self.palette_name)
+        self.charset = self.app.load_charset(self.charset_name, False)
+        self.palette = self.app.load_palette(self.palette_name, False)
         # create elements
         self.elements = []
         # set geo sizes, force scale update
@@ -49,19 +49,25 @@ class UI:
         self.set_elements_scale()
     
     def set_scale(self, new_scale):
+        old_scale = self.scale
         self.scale = new_scale
         # update UI renderable geo sizes for new scale
         # determine width and height of current window in chars
         # use floats, window might be a fractional # of chars wide/tall
-        self.width_tiles = self.app.window_width / (self.charset.char_width * self.scale)
-        self.height_tiles = self.app.window_height / (self.charset.char_height * self.scale)
-        #self.app.log('scale %s: screen is now %s tiles wide, %s tiles high' % (self.scale, self.width_tiles, self.height_tiles))
+        aspect = self.app.window_width / self.app.window_height
+        inv_aspect = self.app.window_height / self.app.window_width
+        # TODO: this math is correct but hard to follow, rewrite for clarity
+        width = self.app.window_width / (self.charset.char_width * self.scale * inv_aspect)
+        height = self.app.window_height / (self.charset.char_height * self.scale * inv_aspect)
         # any new UI elements created should use new scale
-        inv_aspect = self.app.window_width / self.app.window_height
-        UIArt.quad_width = 2 / self.width_tiles * inv_aspect
-        UIArt.quad_height = 2 / self.height_tiles * inv_aspect
+        UIArt.quad_width = 2 / width * aspect
+        UIArt.quad_height = 2 / height * aspect
+        self.width_tiles = width * inv_aspect / self.scale
+        self.height_tiles = height / self.scale
         # tell elements to refresh
         self.set_elements_scale()
+        if self.scale != old_scale:
+            self.app.log('UI scale is now %s (%.3f x %.3f)' % (self.scale, self.width_tiles, self.height_tiles))
     
     def set_elements_scale(self):
         for e in self.elements:

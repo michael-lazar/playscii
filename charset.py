@@ -8,10 +8,9 @@ CHARSET_FILE_EXTENSION = 'char'
 
 class CharacterSet:
     
-    logg = False
     transparent_color = (0, 0, 0)
     
-    def __init__(self, app, src_filename):
+    def __init__(self, app, src_filename, log):
         self.app = app
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
@@ -67,8 +66,8 @@ class CharacterSet:
         self.u_width = self.char_width / self.image_width
         self.v_height = self.char_height / self.image_height
         # report
-        if self.logg:
-            self.app.log('new charmap from %s:' % char_data_filename)
+        if log:
+            self.app.log("loaded charmap '%s' from %s:" % (self.name, char_data_filename))
             self.app.log('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
             #self.app.log('  %s characters' % len(self.chars))
             self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
