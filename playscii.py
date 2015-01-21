@@ -323,6 +323,9 @@ class Application:
                 elif event.key.keysym.sym == sdl2.SDLK_p:
                     for r in self.active_art.renderables:
                         r.animating = not r.animating
+                # TEST: enter does UI.DBG_paint!
+                elif event.key.keysym.sym == sdl2.SDLK_RETURN:
+                    self.ui.DBG_paint()
                 # TEST: toggle artscript running
                 elif event.key.keysym.sym == sdl2.SDLK_m:
                     if self.active_art.is_script_running('conway'):
@@ -349,13 +352,13 @@ class Application:
                         self.log('Camera tilt engaged.')
                 # arrow keys move cursor
                 elif event.key.keysym.sym == sdl2.SDLK_UP:
-                    self.cursor.y += 1
+                    self.cursor.move(0, 1)
                 elif event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    self.cursor.y -= 1
+                    self.cursor.move(0, -1)
                 elif event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    self.cursor.x -= 1
+                    self.cursor.move(-1, 0)
                 elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    self.cursor.x += 1
+                    self.cursor.move(1, 0)
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)

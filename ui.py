@@ -122,6 +122,11 @@ class UI:
     def unclicked(self, button):
         pass
     
+    def DBG_paint(self):
+        "simple quick function to test painting"
+        x, y = self.app.cursor.get_tile()
+        self.app.active_art.set_tile_at(0, 0, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
+    
     def destroy(self):
         for e in self.elements:
             e.renderable.destroy()

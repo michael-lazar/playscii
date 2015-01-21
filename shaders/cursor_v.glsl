@@ -3,10 +3,33 @@
 uniform mat4 projection;
 uniform mat4 view;
 uniform vec3 objectPosition;
+uniform vec3 objectScale;
+uniform vec2 quadSize;
+uniform vec2 vertTransform;
+uniform vec2 vertOffset;
 
-attribute vec3 vertPosition;
+in vec3 vertPosition;
+
+mat4 scale(float x, float y, float z)
+{
+    return mat4(
+        vec4(x,   0.0, 0.0, 0.0),
+        vec4(0.0, y,   0.0, 0.0),
+        vec4(0.0, 0.0, z,   0.0),
+        vec4(0.0, 0.0, 0.0, 1.0)
+    );
+}
 
 void main()
 {
-	gl_Position = projection * view * (vec4(objectPosition, 0) + vec4(vertPosition, 1));
+	float z = vertPosition.z;
+	vec4 xform = vec4(vertTransform, 1, 1);
+	vec4 offset = vec4(vertOffset * quadSize, 0, 1);
+	// model = all 4 corners in the right place
+	vec4 model = vec4(vertPosition, 1) * xform + offset;
+	// scale and transform model
+	model *= scale(objectScale.x, objectScale.y, objectScale.z);
+	model += vec4(objectPosition, 0);
+	// apply camera
+	gl_Position = projection * view * model;
 }
