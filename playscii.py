@@ -210,12 +210,14 @@ class Application:
     
     def main_loop(self):
         while not self.should_quit:
+            tick_time = sdl2.timer.SDL_GetTicks()
             self.input()
             self.update()
             self.render()
             self.sl.check_hot_reload()
-            # TODO: use sdlgfx framerate manager class?
             elapsed_time = sdl2.timer.SDL_GetTicks()
+            # determine frame work time, feed it into delay
+            tick_time = elapsed_time - tick_time
             self.delta_time = elapsed_time - self.elapsed_time
             self.elapsed_time = elapsed_time
             # determine FPS
@@ -226,8 +228,8 @@ class Application:
             # delay to maintain framerate, if uncapped
             if self.framerate != -1:
                 delay = int(1000 / self.framerate)
-                # TODO: determine frame work time, subtract from delay to get
-                # accurate framerate
+                # subtract work time from delay to maintain framerate
+                delay -= min(delay, tick_time)
                 sdl2.timer.SDL_Delay(delay)
         return 1
     
@@ -304,7 +306,10 @@ class Application:
                         self.ui.select_bg(self.ui.selected_bg_color-1)
                     else:
                         self.ui.select_bg(self.ui.selected_bg_color+1)
-                # TEST: < > / , . rewind / advance anim frame
+                # shift-U: toggle UI visibility
+                elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
+                    self.ui.visible = not self.ui.visible
+                # < > / , . rewind / advance current art's anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     for r in self.active_art.renderables:
                         r.rewind_frame()
@@ -313,9 +318,10 @@ class Application:
                     for r in self.active_art.renderables:
                         r.advance_frame()
                     self.update_window_title()
-                # TEST: p starts/pauses animation playback
+                # p starts/pauses animation playback of current art
                 elif event.key.keysym.sym == sdl2.SDLK_p:
-                    self.renderables[0].animating = not self.renderables[0].animating
+                    for r in self.active_art.renderables:
+                        r.animating = not r.animating
                 # TEST: toggle artscript running
                 elif event.key.keysym.sym == sdl2.SDLK_m:
                     if self.active_art.is_script_running('conway'):
@@ -380,7 +386,8 @@ class Application:
             self.auto_save = False
         # TODO: cursor
         #self.cursor.update(self.elapsed_time)
-        self.ui.update()
+        if self.ui.visible:
+            self.ui.update()
     
     def render(self):
         # draw main scene to framebuffer
@@ -392,11 +399,13 @@ class Application:
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render(self.elapsed_time)
-        self.ui.render(self.elapsed_time)
+        if self.ui.visible:
+            self.ui.render(self.elapsed_time)
         GL.glUseProgram(0)
         sdl2.SDL_GL_SwapWindow(self.window)
     
     def quit(self):
+        self.log('Thank you for using Playscii!  <3')
         # TODO: save to temp file quit?
         for r in self.renderables:
             r.destroy()

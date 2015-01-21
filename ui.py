@@ -18,6 +18,7 @@ class UI:
     palette_name = 'c64'
     # low-contrast background texture that distinguishes UI from flat color
     grain_texture = 'bgnoise_alpha.png'
+    visible = True
     
     def __init__(self, app):
         self.app = app

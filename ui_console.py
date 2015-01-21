@@ -13,7 +13,6 @@ class ConsoleCommand:
 class QuitCommand(ConsoleCommand):
     def execute(console, args):
         console.ui.app.should_quit = True
-        return 'exited!'
 
 
 class SaveCommand(ConsoleCommand):
@@ -23,9 +22,6 @@ class SaveCommand(ConsoleCommand):
             # TODO: create Art.set_filename to append extension, dir, etc
             self.active_art.filename = args[1]
         self.active_art.save_to_file()
-        #return "saved file '%s'" % ' '.join(args)
-        # don't return any text, save command does its own
-        return
 
 
 class OpenCommand(ConsoleCommand):
