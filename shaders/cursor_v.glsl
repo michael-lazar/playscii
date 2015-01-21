@@ -24,7 +24,7 @@ void main()
 {
 	float z = vertPosition.z;
 	vec4 xform = vec4(vertTransform, 1, 1);
-	vec4 offset = vec4(vertOffset * quadSize, 0, 1);
+	vec4 offset = vec4(vertOffset * quadSize, 0, 0);
 	// model = all 4 corners in the right place
 	vec4 model = vec4(vertPosition, 1) * xform + offset;
 	// scale and transform model

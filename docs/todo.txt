@@ -1,14 +1,12 @@
 TODO
 
-- get cursor working
--- draw all 4 corners of it
--- concept of "currently active layer" that edits go to, cursor constrained to its Z
--- screen-to-3D for mouse pointer
+cursor:
+- fix: weird discrepancy between Art world scale and increments Cursor moves at
+- concept of "currently active layer" that edits go to, cursor constrained to its Z
+- screen-to-3D for mouse pointer, LMB paints
 -- only update cursor from mouse loc when mouse moves!
--- [ ] shift active edited layer?
--- draw grid at Z of currently active layer
-?? does edit mode always force straight top down and/or ortho view? or can the cursor work in a 3D scene a la an RTS?
---- nah, hopefully this isn't necessary
+- [ ] shift active edited layer?
+- draw wireframe grid at Z of currently active layer
 
 quake style console:
 - understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!

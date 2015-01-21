@@ -334,14 +334,17 @@ class Application:
                         self.active_art.run_script_every('conway', 0.05)
                 # TEST: alt + arrow keys move object
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
-                    self.ui.elements[0].renderable.y += 0.1
+                    self.renderables[0].y += 1
+                    self.renderables[0].log_loc()
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    self.ui.elements[0].renderable.y -= 0.1
+                    self.renderables[0].y -= 1
+                    self.renderables[0].log_loc()
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    self.ui.elements[0].renderable.x -= 0.1
+                    self.renderables[0].x -= 1
+                    self.renderables[0].log_loc()
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    self.ui.elements[0].renderable.x += 0.1
-                    self.ui.elements[0].renderable.log_loc()
+                    self.renderables[0].x += 1
+                    self.renderables[0].log_loc()
                 # TEST: shift-T toggles camera tilt
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     if self.camera.y_tilt == 0.5:

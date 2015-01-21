@@ -110,18 +110,17 @@ class Cursor:
         GL.glBindVertexArray(0)
     
     def move(self, delta_x, delta_y):
-        # TODO: understand why * 2 is necessary here!
-        self.x += delta_x * 2
-        self.y += delta_y * 2
-    
-    def get_tile(self):
-        return self.x / 2, -self.y / 2
-    
-    def update(self, elapsed_time):
-        self.scale_x = 2.5 + (math.sin(elapsed_time / 100) / 25 - 0.5)
-        self.scale_y = self.scale_x
+        self.x += delta_x
+        self.y += delta_y
         if self.logg:
             self.app.log('Cursor: %s,%s,%s scale %.2f,%.2f' % (self.x, self.y, self.z, self.scale_x, self.scale_y))
+    
+    def get_tile(self):
+        return self.x, -self.y
+    
+    def update(self, elapsed_time):
+        self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 25 - 0.5)
+        self.scale_y = self.scale_x
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
