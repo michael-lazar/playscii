@@ -44,7 +44,18 @@ class CharacterSet:
         # strip newlines from mapping
         for row in range(self.map_height):
             char_data[row] = char_data[row].strip('\r\n')
-        self.char_mapping = char_data
+        # char mapping: a dict
+        self.char_mapping = {}
+        index = 0
+        for line in char_data:
+            for char in line:
+                if not char in self.char_mapping:
+                    self.char_mapping[char] = index
+                index += 1
+            if index >= self.map_width * self.map_height:
+                break
+        # last valid index a character can be
+        self.last_index = index
         # load and process image
         img = Image.open(image_filename)
         img = img.convert('RGBA')
@@ -69,19 +80,9 @@ class CharacterSet:
         if log:
             self.app.log("loaded charmap '%s' from %s:" % (self.name, char_data_filename))
             self.app.log('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
-            #self.app.log('  %s characters' % len(self.chars))
             self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
             self.app.log('  char map width/height is %s x %s' % (self.map_width, self.map_height))
-            #self.app.log('  alphabet starts at index %s' % self.a)
-            #self.app.log('  blank character at index %s' % self.blank)
-        # TODO: account for / prevent non-square images!
+            self.app.log('  last character index: %s' % self.last_index)
     
     def get_char_index(self, char):
-        # TODO: self.char_mapping should obviously be a dict!
-        i = 0
-        for line in self.char_mapping:
-            for other_char in line:
-                if char == other_char:
-                    return i
-                i += 1
-        return 0
+        return self.char_mapping.get(char, 0)

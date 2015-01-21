@@ -55,6 +55,8 @@ class Application:
         self.log_lines = log_lines
         self.elapsed_time = 0
         self.should_quit = False
+        # the current art being edited
+        self.active_art = None
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
@@ -138,6 +140,8 @@ class Application:
         x = y = (len(self.art_loaded) - 1) * 2
         renderable.x += x
         renderable.y += y
+        # set as active
+        self.active_art = art
     
     def load_charset(self, charset_to_load, log=True):
         "creates and returns a character set with the given name"
@@ -165,7 +169,7 @@ class Application:
     def update_window_title(self):
         # TODO: once playscii can open multiple documents, get current active
         # document's name
-        filename = self.art_loaded[0].filename
+        filename = self.active_art.filename
         if filename and os.path.exists(filename):
             full_filename = os.path.abspath(filename)
         else:
@@ -282,25 +286,42 @@ class Application:
                     self.camera.set_zoom(1)
                 elif event.key.keysym.sym == sdl2.SDLK_2:
                     self.camera.set_zoom(2)
-                elif event.key.keysym.sym == sdl2.SDLK_c:
+                elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
+                # select next/previous char/fg/bg
+                elif event.key.keysym.sym == sdl2.SDLK_c:
+                    if shift_pressed:
+                        self.ui.select_char(self.ui.selected_char-1)
+                    else:
+                        self.ui.select_char(self.ui.selected_char+1)
+                elif event.key.keysym.sym == sdl2.SDLK_f:
+                    if shift_pressed:
+                        self.ui.select_fg(self.ui.selected_fg_color-1)
+                    else:
+                        self.ui.select_fg(self.ui.selected_fg_color+1)
+                elif event.key.keysym.sym == sdl2.SDLK_b:
+                    if shift_pressed:
+                        self.ui.select_bg(self.ui.selected_bg_color-1)
+                    else:
+                        self.ui.select_bg(self.ui.selected_bg_color+1)
                 # TEST: < > / , . rewind / advance anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
-                    self.renderables[0].rewind_frame()
+                    for r in self.active_art.renderables:
+                        r.rewind_frame()
                     self.update_window_title()
                 elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
-                    self.renderables[0].advance_frame()
+                    for r in self.active_art.renderables:
+                        r.advance_frame()
                     self.update_window_title()
                 # TEST: p starts/pauses animation playback
                 elif event.key.keysym.sym == sdl2.SDLK_p:
                     self.renderables[0].animating = not self.renderables[0].animating
                 # TEST: toggle artscript running
                 elif event.key.keysym.sym == sdl2.SDLK_m:
-                    art = self.art_loaded[0]
-                    if art.is_script_running('conway'):
-                        art.stop_script('conway')
+                    if self.active_art.is_script_running('conway'):
+                        self.active_art.stop_script('conway')
                     else:
-                        art.run_script_every('conway', 0.05)
+                        self.active_art.run_script_every('conway', 0.05)
                 # TEST: alt + arrow keys move object
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
                     self.ui.elements[0].renderable.y += 0.1
@@ -344,16 +365,15 @@ class Application:
         self.camera.update()
         if self.test_mutate_each_frame:
             self.test_mutate_each_frame = False
-            self.art_loaded[0].run_script_every('mutate', 0.01)
+            self.active_art.run_script_every('mutate', 0.01)
         if self.test_life_each_frame:
             self.test_life_each_frame = False
-            self.art_loaded[0].run_script_every('conway', 0.05)
+            self.active_art.run_script_every('conway', 0.05)
         if self.test_art:
             self.test_art = False
-            art = self.art_loaded[0]
             # load some test data - simulates some user edits:
             # add layers, write text, duplicate that frame, do some animation
-            art.run_script('hello1')
+            self.active_art.run_script('hello1')
         # test saving functionality
         if self.auto_save:
             art.save_to_file()

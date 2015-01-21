@@ -1,7 +1,7 @@
 // first line: source image (base filename + .png assumed)
 c64.png
 // second line: map dimensions
-16, 16
+16, 10
  !"#$%&'()*+,-./
 0123456789:;<=>?
 @abcdefghijklmno
@@ -11,11 +11,5 @@ PQRSTUVWXYZ
    _            
                 
                 
-          \     
-                
-                
-                
-                
-                
-                
+          \
 // end

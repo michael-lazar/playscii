@@ -3,8 +3,9 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, StatusBarUI, FPSCounterUI
+from ui_element import UIArt, FPSCounterUI
 from ui_console import ConsoleUI
+from ui_status_bar import StatusBarUI
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -28,15 +29,21 @@ class UI:
         self.view_matrix = np.eye(4, 4, dtype=np.float32)
         self.charset = self.app.load_charset(self.charset_name, False)
         self.palette = self.app.load_palette(self.palette_name, False)
+        # currently selected char, fg color, bg color
+        art_char = self.app.active_art.charset
+        art_pal = self.app.active_art.palette
+        self.selected_char = art_char.get_char_index('A') or 2
+        self.selected_fg_color = art_pal.lightest_index
+        self.selected_bg_color = art_pal.darkest_index
         # create elements
         self.elements = []
         # set geo sizes, force scale update
         self.set_scale(self.scale)
         fps_counter = FPSCounterUI(self)
-        status_bar = StatusBarUI(self)
         self.console = ConsoleUI(self)
+        self.status_bar = StatusBarUI(self)
         self.elements.append(fps_counter)
-        self.elements.append(status_bar)
+        self.elements.append(self.status_bar)
         self.elements.append(self.console)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
@@ -84,6 +91,24 @@ class UI:
         # recalc renderables' quad size (same scale, different aspect)
         self.set_scale(self.scale)
     
+    def select_char(self, new_char_index):
+        # wrap at last valid index
+        self.selected_char = new_char_index % self.app.active_art.charset.last_index
+    
+    def select_color(self, new_color_index, fg):
+        "common code for select_fg/bg"
+        new_color_index %= len(self.app.active_art.palette.colors)
+        if fg:
+            self.selected_fg_color = new_color_index
+        else:
+            self.selected_bg_color = new_color_index
+    
+    def select_fg(self, new_fg_index):
+        self.select_color(new_fg_index, True)
+    
+    def select_bg(self, new_bg_index):
+        self.select_color(new_bg_index, False)
+    
     def update(self):
         for e in self.elements:
             e.update()
@@ -104,4 +129,4 @@ class UI:
     def render(self, elapsed_time):
         for e in self.elements:
             if e.visible:
-                e.renderable.render(elapsed_time)
+                e.render(elapsed_time)

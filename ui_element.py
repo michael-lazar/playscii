@@ -38,6 +38,9 @@ class UIElement:
     def update(self):
         "runs every frame"
         pass
+    
+    def render(self, elapsed_time):
+        self.renderable.render(elapsed_time)
 
 
 class UIArt(Art):
@@ -56,26 +59,6 @@ class UIRenderable(Renderable):
     
     def get_view_matrix(self):
         return self.ui.view_matrix
-
-
-class StatusBarUI(UIElement):
-    
-    snap_bottom = True
-    snap_left = True
-    
-    def reset_art(self):
-        self.width = ceil(self.ui.width_tiles)
-        # must resize here, as window width will vary
-        self.art.resize(self.width, self.height)
-        bg = self.ui.palette.lightest_index
-        self.art.clear_frame_layer(0, 0, bg)
-        text = 'test status bar text...'
-        color = self.ui.palette.darkest_index
-        self.art.write_string(0, 0, 1, 0, text, color)
-        self.art.geo_changed = True
-    
-    def update(self):
-        pass
 
 
 class FPSCounterUI(UIElement):

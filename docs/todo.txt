@@ -1,14 +1,8 @@
 TODO
 
 quake style console:
-- fix: when resizing window, console prompt and user input line disappears
-- find out why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
+- understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
 - save command: saves current art, or saves current art under given filename
-
-status bar:
-- selected character, fg/bg color in status bar, c/shift-c to cycle char, etc
-- draw selected char and colors in current art's charset + palette - support for UI elements (ie draw in screen space) that use alt charsets/palettes
--- how to get this drawing at the right size in the status bar even though the characters are of different size?  (tweak quad size for colors, determine an appropriate quad size for char)
 
 - shift-U: toggle UI drawing
 
