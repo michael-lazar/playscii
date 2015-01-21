@@ -1,20 +1,22 @@
 TODO
 
+- get cursor working
+-- draw all 4 corners of it
+-- concept of "currently active layer" that edits go to, cursor constrained to its Z
+-- screen-to-3D for mouse pointer
+-- only update cursor from mouse loc when mouse moves!
+-- [ ] shift active edited layer?
+-- draw grid at Z of currently active layer
+?? does edit mode always force straight top down and/or ortho view? or can the cursor work in a 3D scene a la an RTS?
+--- nah, hopefully this isn't necessary
+
 quake style console:
 - understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
 - save command: saves current art, or saves current art under given filename
 
-- shift-U: toggle UI drawing
-
-- get cursor working
--- move with arrow keys
--- screen-to-3D for mouse pointer
--- [ ] shift active edited layer?
--- draw grid at Z of currently active layer
-?? does edit mode always force straight top down and/or ortho view? or can the cursor work in a 3D scene a la an RTS?
-
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- is color distortion inherent in how good CRT filters work?
+-- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
 
 
 ---

@@ -24,6 +24,7 @@ from renderable import Renderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI, SCALE_INCREMENT
+from cursor import Cursor
 
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
@@ -75,7 +76,7 @@ class Application:
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         self.camera = Camera(self, self.window_width, self.window_height)
-        # TODO: cursor
+        self.cursor = Cursor(self)
         self.art_loaded, self.renderables = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
@@ -240,9 +241,9 @@ class Application:
         left_mouse = mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_LEFT)
         middle_mouse = mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_MIDDLE)
         right_mouse = mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_RIGHT)
-        #self.cursor.mouse_x,self.cursor.mouse_y = int(mouse_x.value), int(mouse_y.value)
+        self.cursor.mouse_x,self.cursor.mouse_y = int(mouse_x.value), int(mouse_y.value)
         # tell UI about mouse as well
-        #self.ui.mouse_x, self.ui.mouse_y = self.cursor.mouse_x,self.cursor.mouse_y
+        self.ui.mouse_x, self.ui.mouse_y = self.cursor.mouse_x,self.cursor.mouse_y
         # relative mouse move state for panning
         mouse_dx, mouse_dy = ctypes.c_int(0), ctypes.c_int(0)
         sdl2.mouse.SDL_GetRelativeMouseState(mouse_dx, mouse_dy)
@@ -338,6 +339,23 @@ class Application:
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
                     self.ui.elements[0].renderable.x += 0.1
                     self.ui.elements[0].renderable.log_loc()
+                # TEST: shift-T toggles camera tilt
+                elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
+                    if self.camera.y_tilt == 0.5:
+                        self.camera.y_tilt = 0
+                        self.log('Camera tilt disengaged.')
+                    else:
+                        self.camera.y_tilt = 0.5
+                        self.log('Camera tilt engaged.')
+                # arrow keys move cursor
+                elif event.key.keysym.sym == sdl2.SDLK_UP:
+                    self.cursor.y += 1
+                elif event.key.keysym.sym == sdl2.SDLK_DOWN:
+                    self.cursor.y -= 1
+                elif event.key.keysym.sym == sdl2.SDLK_LEFT:
+                    self.cursor.x -= 1
+                elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
+                    self.cursor.x += 1
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -349,13 +367,13 @@ class Application:
                 self.ui.clicked(event.button.button)
         # directly query keys we don't want affected by OS key repeat delay
         if not alt_pressed and not ctrl_pressed and not self.ui.console.visible:
-            if ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_W]:
+            if ks[sdl2.SDL_SCANCODE_W]:
                 self.camera.pan(0, 1)
-            if ks[sdl2.SDL_SCANCODE_DOWN] or ks[sdl2.SDL_SCANCODE_S]:
+            if ks[sdl2.SDL_SCANCODE_S]:
                 self.camera.pan(0, -1)
-            if ks[sdl2.SDL_SCANCODE_LEFT] or ks[sdl2.SDL_SCANCODE_A]:
+            if ks[sdl2.SDL_SCANCODE_A]:
                 self.camera.pan(-1, 0)
-            if ks[sdl2.SDL_SCANCODE_RIGHT] or ks[sdl2.SDL_SCANCODE_D]:
+            if ks[sdl2.SDL_SCANCODE_D]:
                 self.camera.pan(1, 0)
             if ks[sdl2.SDL_SCANCODE_X]:
                 self.camera.zoom(-1)
@@ -384,8 +402,7 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        # TODO: cursor
-        #self.cursor.update(self.elapsed_time)
+        self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
     
@@ -396,6 +413,7 @@ class Application:
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         for r in self.renderables:
             r.render(self.elapsed_time)
+        self.cursor.render(self.elapsed_time)
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render(self.elapsed_time)

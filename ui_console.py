@@ -152,7 +152,7 @@ class ConsoleUI(UIElement):
             self.art.write_string(0, 0, offset, -2, args, self.text_color)
         else:
             self.art.write_string(0, 0, 2, -2, self.current_line, self.text_color)
-        # draw underscore for cursor at end of input string
+        # draw underscore for caret at end of input string
         x = len(self.prompt) + len(self.current_line) + 1
         i = self.ui.charset.get_char_index('_')
         self.art.set_char_index_at(0, 0, x, -2, i)
