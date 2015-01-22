@@ -14,12 +14,12 @@ class Camera:
     start_zoom = 2.5
     y_tilt = 0
     # pan/zoom speed tuning
-    pan_accel = 0.01
+    pan_accel = 0.005
     max_pan_speed = 0.4
     pan_friction = 0.1
     # factor by which zoom level modifies pan speed
     pan_zoom_increase_factor = 2
-    zoom_accel = 0.05
+    zoom_accel = 0.03
     max_zoom_speed = 0.5
     zoom_friction = 0.1
     # kill velocity if below this

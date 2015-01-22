@@ -20,7 +20,7 @@ class Grid:
     def __init__(self, app):
         self.app = app
         self.x, self.y, self.z = 0, 0, 0
-        self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        self.scale_x, self.scale_y, self.scale_z = 1, 1, 0
         self.build_geo()
         self.reset_loc()
         self.vao = GL.glGenVertexArrays(1)

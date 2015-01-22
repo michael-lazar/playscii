@@ -88,6 +88,7 @@ class Application:
         self.update_window_title()
         self.cursor = Cursor(self)
         self.grid = Grid(self)
+        self.ui.set_active_layer(0)
         self.frame_time, self.fps = 0, 0
         self.log('init done.')
     
@@ -177,8 +178,9 @@ class Application:
             full_filename = os.path.abspath(filename)
         else:
             full_filename = filename
-        current_frame = self.renderables[0].frame
-        title = '%s (frame %s)' % (full_filename, current_frame)
+        frame = self.renderables[0].frame
+        layer = self.ui.active_layer
+        title = '%s (frame %s, layer %s)' % (full_filename, frame, layer)
         self.set_window_title(title)
     
     def blank_screen(self):
@@ -328,6 +330,11 @@ class Application:
                 elif event.key.keysym.sym == sdl2.SDLK_p:
                     for r in self.ui.active_art.renderables:
                         r.animating = not r.animating
+                # [ ] set active layer
+                elif event.key.keysym.sym == sdl2.SDLK_RIGHTBRACKET:
+                    self.ui.set_active_layer(self.ui.active_layer + 1)
+                elif event.key.keysym.sym == sdl2.SDLK_LEFTBRACKET:
+                    self.ui.set_active_layer(self.ui.active_layer - 1)
                 # TEST: enter does UI.DBG_paint
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
                     self.ui.DBG_paint()
@@ -355,11 +362,11 @@ class Application:
                     self.renderables[0].log_loc()
                 # TEST: shift-T toggles camera tilt
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
-                    if self.camera.y_tilt == 0.5:
+                    if self.camera.y_tilt == 2:
                         self.camera.y_tilt = 0
                         self.log('Camera tilt disengaged.')
                     else:
-                        self.camera.y_tilt = 0.5
+                        self.camera.y_tilt = 2
                         self.log('Camera tilt engaged.')
                 # arrow keys move cursor
                 elif event.key.keysym.sym == sdl2.SDLK_UP:

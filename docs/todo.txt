@@ -1,9 +1,6 @@
 TODO
 
 cursor:
-- concept of "currently active layer" that edits go to, cursor constrained to its Z
-- [ ] shift active edited layer
-- draw grid at Z of currently active layer
 - screen-to-3D for mouse pointer, LMB paints
 -- only update cursor from mouse loc when mouse moves!
 
@@ -19,6 +16,8 @@ quake style console:
 ---
 
 FIX:
+
+- status bar swatch sizes are incorrect, vary based on screen aspect
 
 - headbrain2.ed is corrupted, figure out if it can be salvaged with smart parsing - maybe provide a "width override" option?
 

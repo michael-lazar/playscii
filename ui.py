@@ -24,6 +24,7 @@ class UI:
         self.app = app
         # the current art being edited
         self.active_art = active_art
+        self.active_layer = 0
         aspect = self.app.window_height / self.app.window_width
         # TODO: remove below comment when it's clear current approach is correct
         #self.projection_matrix = np.array([[aspect, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
@@ -94,6 +95,12 @@ class UI:
         # recalc renderables' quad size (same scale, different aspect)
         self.set_scale(self.scale)
     
+    def set_active_layer(self, new_layer):
+        self.active_layer = min(max(0, new_layer), self.active_art.layers-1)
+        self.app.grid.z = self.active_art.layers_z[self.active_layer]
+        self.app.cursor.z = self.active_art.layers_z[self.active_layer]
+        self.app.update_window_title()
+    
     def select_char(self, new_char_index):
         # wrap at last valid index
         self.selected_char = new_char_index % self.active_art.charset.last_index
@@ -127,13 +134,13 @@ class UI:
     def DBG_paint(self):
         "simple quick function to test painting"
         x, y = self.app.cursor.get_tile()
-        self.active_art.set_tile_at(0, 0, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
+        self.active_art.set_tile_at(0, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
     
     def DBG_grab(self):
         x, y = self.app.cursor.get_tile()
-        self.selected_char = self.active_art.get_char_index_at(0, 0, x, y)
-        self.selected_fg_color = self.active_art.get_fg_color_index_at(0, 0, x, y)
-        self.selected_bg_color = self.active_art.get_bg_color_index_at(0, 0, x, y)
+        self.selected_char = self.active_art.get_char_index_at(0, self.active_layer, x, y)
+        self.selected_fg_color = self.active_art.get_fg_color_index_at(0, self.active_layer, x, y)
+        self.selected_bg_color = self.active_art.get_bg_color_index_at(0, self.active_layer, x, y)
     
     def destroy(self):
         for e in self.elements:
