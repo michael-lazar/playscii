@@ -126,12 +126,13 @@ class Cursor:
         self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
         self.scale_y = self.scale_x
         #print('%s %s (d %s %s)' % (self.app.mouse_x, self.app.mouse_y, self.app.mouse_dx, self.app.mouse_dy))
-        # update cursor if mouse moved
-        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0:
+        # update cursor if mouse OR camera moved
+        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and not self.app.camera.moved_this_frame:
             return
         # normalized device coordinates
-        x = (2 * self.app.mouse_x) / self.app.camera.window_width - 1
-        y = (-2 * self.app.mouse_y) / self.app.camera.window_height + 1
+        x = (2 * self.app.mouse_x) / self.app.window_width - 1
+        y = (-2 * self.app.mouse_y) / self.app.window_height + 1
+        # reverse camera projection
         pjm = np.matrix(self.app.camera.projection_matrix)
         vm = np.matrix(self.app.camera.view_matrix)
         vp_inverse = (pjm * vm).getI()

@@ -178,9 +178,11 @@ class Application:
             full_filename = os.path.abspath(filename)
         else:
             full_filename = filename
-        frame = self.renderables[0].frame
-        layer = self.ui.active_layer
-        title = '%s (frame %s, layer %s)' % (full_filename, frame, layer)
+        frame = self.renderables[0].frame + 1
+        frames = self.ui.active_art.frames
+        layer = self.ui.active_layer + 1
+        layers = self.ui.active_art.layers
+        title = '%s (frame %s/%s, layer %s/%s)' % (full_filename, frame, frames, layer, layers)
         self.set_window_title(title)
     
     def blank_screen(self):
@@ -201,7 +203,7 @@ class Application:
         self.fb = Framebuffer(self)
         self.fb.crt = crt
         # tell camera and UI that view aspect has changed
-        self.camera.window_resized(new_width, new_height)
+        self.camera.window_resized()
         self.ui.window_resized()
     
     def toggle_fullscreen(self):

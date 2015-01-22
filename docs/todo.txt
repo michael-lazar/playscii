@@ -1,6 +1,11 @@
 TODO
 
-ability to toggle between perspective and ortho views (steal unity's cool lerp?)
+0.1:
+- z issue in tiltcam
+- status bar swatch sizes
+- save [filename] command works properly
+- windows exe build?
+
 
 quake style console:
 - understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
@@ -10,6 +15,7 @@ quake style console:
 -- is color distortion inherent in how good CRT filters work?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
 
+ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
 ---
 

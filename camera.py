@@ -39,12 +39,12 @@ class Camera:
         self.x, self.y = self.start_x, self.start_y
         self.z = self.start_zoom
         self.vel_x, self.vel_y, self.vel_z = 0,0,0
-        self.window_width, self.window_height = self.app.window_width, self.app.window_height
+        self.moved_this_frame = False
         self.calc_projection_matrix()
         self.calc_view_matrix()
     
     def calc_projection_matrix(self):
-        aspect = self.window_width / self.window_height
+        aspect = self.app.window_width / self.app.window_height
         # https://github.com/g-truc/glm/blob/master/glm/gtc/matrix_transform.inl
         assert(aspect != 0)
         assert(self.far_z != self.near_z)
@@ -105,8 +105,7 @@ class Camera:
     def zoom(self, dz):
         self.vel_z += dz * self.zoom_accel
     
-    def window_resized(self, new_width, new_height):
-        self.window_width, self.window_height = new_width, new_height
+    def window_resized(self):
         self.calc_projection_matrix()
     
     def set_zoom(self, z):
@@ -126,6 +125,8 @@ class Camera:
         self.pan(-x, y)
     
     def update(self):
+        # remember last position to see if it changed
+        self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         # clamp velocity
         self.vel_x = clamp(self.vel_x, -self.max_pan_speed, self.max_pan_speed)
         self.vel_y = clamp(self.vel_y, -self.max_pan_speed, self.max_pan_speed)
@@ -152,3 +153,4 @@ class Camera:
         self.calc_view_matrix()
         if self.logg:
             self.app.log('camera x=%s, y=%s, z=%s' % (self.x, self.y, self.z))
+        self.moved_this_frame = self.x != self.last_x or self.y != self.last_y or self.z != self.last_z
