@@ -2,8 +2,7 @@ TODO
 
 0.1:
 - z issue in tiltcam
-- status bar swatch sizes
-- save [filename] command works properly
+-- mouse cursor doesn't match tile boundaries on >0Z layers
 - windows exe build?
 
 

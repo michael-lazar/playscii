@@ -18,8 +18,7 @@ class StatusBarUI(UIElement):
     bg_swatch_x = bg_label_x + len(bg_label)
     
     def __init__(self, ui):
-        UIElement.__init__(self, ui)
-        art = self.ui.active_art
+        art = ui.active_art
         # create 3 custom Arts w/ source charset and palette, renderables for each
         self.char_art = UIArt(None, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.char_renderable = UIRenderable(ui.app, self.char_art)
@@ -29,8 +28,9 @@ class StatusBarUI(UIElement):
         self.bg_renderable = UIRenderable(ui.app, self.bg_art)
         # set some properties in bulk
         for r in [self.char_renderable, self.fg_renderable, self.bg_renderable]:
-            r.ui = self.ui
+            r.ui = ui
             r.grain_strength = 0
+        UIElement.__init__(self, ui)
     
     def reset_art(self):
         self.width = ceil(self.ui.width_tiles)
@@ -44,6 +44,9 @@ class StatusBarUI(UIElement):
         self.art.write_string(0, 0, self.fg_label_x, 0, self.fg_label, color)
         self.art.write_string(0, 0, self.bg_label_x, 0, self.bg_label, color)
         self.art.geo_changed = True
+        self.char_art.geo_changed = True
+        self.fg_art.geo_changed = True
+        self.bg_art.geo_changed = True
     
     def update(self):
         # set color swatches
@@ -62,9 +65,6 @@ class StatusBarUI(UIElement):
             art.update()
     
     def position_swatch(self, renderable, x_offset):
-        # TODO: this is bugged, swatches get too big as window gets wider
-        aspect = self.ui.app.window_width / self.ui.app.window_height
-        inv_aspect = 1 / aspect
         renderable.x = (self.char_art.quad_width * x_offset) - 1
         renderable.y = self.char_art.quad_height - 1
     

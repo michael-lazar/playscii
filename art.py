@@ -354,6 +354,17 @@ class Art:
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
         self.app.log('saved %s to disk.' % self.filename)
     
+    def set_filename(self, new_filename):
+        # append extension if missing
+        if not new_filename.endswith('.%s' % ART_FILE_EXTENSION):
+            new_filename += '.%s' % ART_FILE_EXTENSION
+        # if no dir given, assume art/ dir
+        #if not '/' in new_filename:
+        if os.path.basename(new_filename) == new_filename:
+            new_filename = '%s%s' % (ART_DIR, new_filename)
+        # TODO: check if file already exists?
+        self.filename = new_filename
+    
     def run_script(self, script_filename):
         """
         Runs a script on this Art. Scripts contain arbitrary python expressions.

@@ -19,9 +19,9 @@ class SaveCommand(ConsoleCommand):
     def execute(console, args):
         # save currently active file
         art = console.ui.active_art
-        if len(args) > 1:
-            # TODO: create Art.set_filename to append extension, dir, etc
-            art.filename = args[1]
+        # set new filename if given
+        if len(args) > 0:
+            art.set_filename(' '.join(args))
         art.save_to_file()
 
 

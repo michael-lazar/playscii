@@ -25,9 +25,6 @@ class UI:
         # the current art being edited
         self.active_art = active_art
         self.active_layer = 0
-        aspect = self.app.window_height / self.app.window_width
-        # TODO: remove below comment when it's clear current approach is correct
-        #self.projection_matrix = np.array([[aspect, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         # for UI, view /and/ projection matrix are identity
         # (aspect correction is done in set_scale)
         self.view_matrix = np.eye(4, 4, dtype=np.float32)
@@ -89,9 +86,6 @@ class UI:
             e.art.geo_changed = True
     
     def window_resized(self):
-        # TODO: remove below comments when it's clear current approach is correct
-        # adjust for new aspect ratio
-        #self.projection_matrix[0][0] = self.app.window_height / self.app.window_width
         # recalc renderables' quad size (same scale, different aspect)
         self.set_scale(self.scale)
     
