@@ -1,0 +1,7 @@
+./*.orig
+dist/*.*
+__pycache__/*.*
+.idea/*.*
+console.log
+playscii.cfg
+

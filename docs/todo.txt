@@ -1,0 +1,40 @@
+TODO
+
+status bar: show current tool (placeholder), filename, frame and layer #s, cursor tile coords, remove frame and layer #s from window title
+
+main popup!
+- spacebar brings it up
+- two panes: tool and picker
+- tool: just paint, grab, and erase for now; fixed 1 tile brush size
+- picker: character set and palette, with grid overlay to make boundaries clear
+-- how to convey "this char/color is selected"?  fg vs bg color?
+-- how to convey "transparent"?  make it look like this in status bar too
+- don't move cursor while popup is up - arrow keys navigate picker
+
+
+quake style console:
+- understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
+
+- "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
+-- is color distortion inherent in how good CRT filters work?
+-- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
+
+ability to toggle between perspective and ortho views (steal unity's cool lerp?)
+
+---
+
+FIX:
+
+
+0.1
+- z issue in tiltcam
+- mouse cursor doesn't match tile boundaries on >0Z layers
+
+
+low priority:
+
+- headbrain2.ed is corrupted, figure out if it can be salvaged with smart parsing - maybe provide a "width override" option?
+
+problem discovered during 2015-01-04~06:
+GLSL really can't handle int/uint attributes!  charIndex looks fine in numpy int32 array data but comes into GLSL totally screwy.  works fine when the array and attribute are floats instead.  bug for PyOpenGL devs?
+possible test program: two quads side by side, each doing some trivial shader that involves an arbitrary number, only difference being one is driven by an int attribute and the other by a float.

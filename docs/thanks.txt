@@ -1,0 +1,38 @@
+
+Playscii was made with the support of many nice people:
+
+
+Patrons:
+
+[TODO: full patron list]
+
+
+Programming Help:
+
+Shawn Walker
+Sean Barrett
+Mark Wonnacott
+Ian MacLarty
+goldbuick
+
+
+Tool Design Inspiration:
+
+Anna Anthropy
+Andi McClure
+Bret Victor
+Tim Sweeney (ZZT)
+Craig Hickman (Kid Pix)
+Bill Atkinson (HyperCard)
+
+
+Love, Encouragement, Moral Support:
+
+L Stiger
+Gail, Gil, and Elise LeBreton
+Brendan Sinclair
+Liz Ryerson
+Johnnemann Nordhagen
+Aubrey Hesselgren
+Zak McClendon
+#tool-design

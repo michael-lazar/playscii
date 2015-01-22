@@ -1,0 +1,87 @@
+
+
+second design approach circa first week of january 2015
+
+art stores no intermediate lists, just arrays of ints for char, fg & bg colors
+shader does the rest!
+compute char UV in the vert shader
+get fg and bg colors from index by sampling from a 1D palette texture
+pass in texture dimensions as uniforms (2 bits of data that don't change per object)
+art's get and set methods compute index into array and return/set directly
+no layer or frame objects!  an Art keeps lists of em, and a few lists for data that used to live in each instance eg frame delay and layer Z.
+
+
+---
+
+design notes circa xmas 2014
+
+art only changes when user edits
+renderable updates from art when user edits or animation frame changes
+
+is a texture lookup for the palette (1D or otherwise) even necessary?  table of colors in the renderable's color buffers might be sufficient
+
+is iterating through every tile in an art (layer) to update a renderable going to be bad for perf when lots of renderables are doing it every few frames?
+PROBABLY, YES
+
+so: arts generate the openGL arrays (verts, elements, UVs, colors) and keep them around, update them piecemeal and only when edits are made; renderables grab these arrays from their art and resubmit the buffer data as needed
+
+---
+
+ascii engine - playscii?
+early notes circa september/october 2014
+
+core principles:
+- ASCII art with transparency and multiple layers (mainly for easier editing but also FX)
+- animation support - multiple frames per file, # of layers constant across frames
+- edit (art and animation) mode integrated with live game mode, press a key to start editing a game you're playing
+-- NOT a full game creation tool, no in-app code editing or visual scripting - game behavior defined through python objects/compionents
+- important stuff hot reloads, definitely: sprites, animations, shaders(?), possibly: character sets, palettes
+- MDI: edit multiple files
+X developed in tandem + ships with example games in different styles: a top-down vs side view, realtime vs turn-based
+-- on hold: all work goes towards Secret Game Project
+
+---
+
+- copy unity's rad ortho/persp camera mode switch a la https://twitter.com/pixelatedcrown/status/530857568240168960
+- characters can be >1 gridsquares big (but are always 1:1 aspect?)
+- objects can consist of >1 gridsquares
+- files can have multiple "pages", eg for animation
+-- how to define frame timing? for an anim, each page stays up for a certain time
+- edit mode vs play mode
+-- or: edit mode (like a level editor) vs paint mode (like edscii) vs play mode
+- MDI: multiple files can be open, switch between em
+- file references update when you change the referenced file (edit a sprite, see changes immediately)
+- "transparent" is a valid BG or FG color
+- objects can reference files, their pages define animations
+- objects specify whether they move on char grid or pixel grid
+- layers can have z-depths set, only drawn in "play" mode
+- levels: single page of a file, collision can be painted in a special layer
+- edit mode concepts: file, page/frame, layer, tile, character, color
+- animation playback in sub window?  edit while watching anim, set pages that define anim and their timings
+- play mode concepts: world (collection of levels?), level, layer, object, sprite, animation
+- levels (screens) can scroll on char grid or pixel grid
+- selection of different CRT emulation shaders
+
+test content:
+- fireworks animation
+- matrix screensaver-like noninteractive nonanimation
+- endless ladder climbing remake
+- real example game: "escape tunnel"
+
+work:
+- UI mockups
+- architecture, UI/concept classes
+- what drives object behavior?
+- how does edit mode work exactly?
+-- pick and place objects from a library?
+-- how to edit object properties?
+-- how to specify connections between objects?
+
+references:
+- Mark Wonnacott's kooltool: http://ragzouken.itch.io/kooltool
+- libtcod / libdoryen: http://doryen.eptalys.net/libtcod
+
+edscii daily doodle ideas:
+- big wizard
+- toucan
+- tunnels under earth
