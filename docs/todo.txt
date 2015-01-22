@@ -1,8 +1,6 @@
 TODO
 
-cursor:
-- screen-to-3D for mouse pointer, LMB paints
--- only update cursor from mouse loc when mouse moves!
+ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
 quake style console:
 - understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
@@ -16,6 +14,8 @@ quake style console:
 ---
 
 FIX:
+
+- Z is off(?) when view is tilted.  probably some fiddling in Cursor.update.
 
 - status bar swatch sizes are incorrect, vary based on screen aspect
 

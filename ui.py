@@ -134,10 +134,15 @@ class UI:
     def DBG_paint(self):
         "simple quick function to test painting"
         x, y = self.app.cursor.get_tile()
+        # don't allow painting out of bounds
+        if not self.active_art.is_tile_inside(x, y):
+            return
         self.active_art.set_tile_at(0, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
     
     def DBG_grab(self):
         x, y = self.app.cursor.get_tile()
+        if not self.active_art.is_tile_inside(x, y):
+            return
         self.selected_char = self.active_art.get_char_index_at(0, self.active_layer, x, y)
         self.selected_fg_color = self.active_art.get_fg_color_index_at(0, self.active_layer, x, y)
         self.selected_bg_color = self.active_art.get_bg_color_index_at(0, self.active_layer, x, y)

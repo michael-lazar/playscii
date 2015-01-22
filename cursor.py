@@ -116,12 +116,35 @@ class Cursor:
             self.app.log('Cursor: %s,%s,%s scale %.2f,%.2f' % (self.x, self.y, self.z, self.scale_x, self.scale_y))
     
     def get_tile(self):
-        return self.x, -self.y
+        return int(self.x), int(-self.y)
     
     def update(self, elapsed_time):
+        # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
         self.scale_y = self.scale_x
+        #print('%s %s (d %s %s)' % (self.app.mouse_x, self.app.mouse_y, self.app.mouse_dx, self.app.mouse_dy))
+        # update cursor if mouse moved
+        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0:
+            return
+        # normalized device coordinates
+        x = (2 * self.app.mouse_x) / self.app.camera.window_width - 1
+        y = (-2 * self.app.mouse_y) / self.app.camera.window_height + 1
+        pjm = np.matrix(self.app.camera.projection_matrix)
+        vm = np.matrix(self.app.camera.view_matrix)
+        vp_inverse = (pjm * vm).getI()
+        z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
+        point = vp_inverse.dot(np.array([x, y, z, 0]))
+        point = point.getA()
+        cz = self.app.camera.z
+        # TODO: account for distance between current layer and camera somehow!
+        # apply camera offsets
+        self.x = point[0][0] * cz + self.app.camera.x
+        self.y = point[0][1] * cz + self.app.camera.y
+        # snap to tile
+        w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
+        self.x = math.floor(self.x * (1 / w)) * w
+        self.y = math.ceil(self.y * (1 / h)) * h
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)

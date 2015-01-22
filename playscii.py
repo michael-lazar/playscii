@@ -60,6 +60,7 @@ class Application:
         self.log_lines = log_lines
         self.elapsed_time = 0
         self.should_quit = False
+        self.mouse_x, self.mouse_y = 0, 0
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
@@ -171,8 +172,7 @@ class Application:
         sdl2.SDL_SetWindowTitle(self.window, new_title)
     
     def update_window_title(self):
-        # TODO: once playscii can open multiple documents, get current active
-        # document's name
+        # display current active document's name and info
         filename = self.ui.active_art.filename
         if filename and os.path.exists(filename):
             full_filename = os.path.abspath(filename)
@@ -239,19 +239,17 @@ class Application:
         return 1
     
     def input(self):
-        # get mouse state and tell cursor
-        mouse_x, mouse_y = ctypes.c_int(0), ctypes.c_int(0)
-        mouse = sdl2.mouse.SDL_GetMouseState(mouse_x, mouse_y)
-        left_mouse = mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_LEFT)
-        middle_mouse = mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_MIDDLE)
-        right_mouse = mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_RIGHT)
-        self.cursor.mouse_x,self.cursor.mouse_y = int(mouse_x.value), int(mouse_y.value)
-        # tell UI about mouse as well
-        self.ui.mouse_x, self.ui.mouse_y = self.cursor.mouse_x,self.cursor.mouse_y
-        # relative mouse move state for panning
-        mouse_dx, mouse_dy = ctypes.c_int(0), ctypes.c_int(0)
-        sdl2.mouse.SDL_GetRelativeMouseState(mouse_dx, mouse_dy)
-        mouse_dx, mouse_dy = int(mouse_dx.value), int(mouse_dy.value)
+        # get and store mouse state
+        mx, my = ctypes.c_int(0), ctypes.c_int(0)
+        mouse = sdl2.mouse.SDL_GetMouseState(mx, my)
+        left_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_LEFT))
+        middle_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_MIDDLE))
+        right_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_RIGHT))
+        self.mouse_x, self.mouse_y = int(mx.value), int(my.value)
+        # relative mouse move state
+        mdx, mdy = ctypes.c_int(0), ctypes.c_int(0)
+        sdl2.mouse.SDL_GetRelativeMouseState(mdx, mdy)
+        self.mouse_dx, self.mouse_dy = int(mdx.value), int(mdy.value)
         # get keyboard state so later we can directly query keys
         ks = sdl2.SDL_GetKeyboardState(None)
         # get modifier states
@@ -386,6 +384,10 @@ class Application:
                 self.ui.unclicked(event.button.button)
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
+                if event.button.button == sdl2.SDL_BUTTON_LEFT:
+                    self.ui.DBG_paint()
+                elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
+                    self.ui.DBG_grab()
         # directly query keys we don't want affected by OS key repeat delay
         if not alt_pressed and not ctrl_pressed and not self.ui.console.visible:
             if ks[sdl2.SDL_SCANCODE_W]:

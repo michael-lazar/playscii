@@ -243,6 +243,10 @@ class Art:
                     array[layer][y][x] = uvs
         return array
     
+    def is_tile_inside(self, x, y):
+        "returns True if given X,Y tile coord is within our bounds"
+        return 0 <= x < self.width and 0 <= y < self.height
+    
     # get methods
     def get_char_index_at(self, frame, layer, x, y):
         return int(self.chars[frame][layer][y][x][0])
