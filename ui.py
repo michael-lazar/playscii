@@ -20,8 +20,10 @@ class UI:
     grain_texture = 'bgnoise_alpha.png'
     visible = True
     
-    def __init__(self, app):
+    def __init__(self, app, active_art):
         self.app = app
+        # the current art being edited
+        self.active_art = active_art
         aspect = self.app.window_height / self.app.window_width
         # TODO: remove below comment when it's clear current approach is correct
         #self.projection_matrix = np.array([[aspect, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
@@ -31,8 +33,8 @@ class UI:
         self.charset = self.app.load_charset(self.charset_name, False)
         self.palette = self.app.load_palette(self.palette_name, False)
         # currently selected char, fg color, bg color
-        art_char = self.app.active_art.charset
-        art_pal = self.app.active_art.palette
+        art_char = self.active_art.charset
+        art_pal = self.active_art.palette
         self.selected_char = art_char.get_char_index('A') or 2
         self.selected_fg_color = art_pal.lightest_index
         self.selected_bg_color = art_pal.darkest_index
@@ -94,11 +96,11 @@ class UI:
     
     def select_char(self, new_char_index):
         # wrap at last valid index
-        self.selected_char = new_char_index % self.app.active_art.charset.last_index
+        self.selected_char = new_char_index % self.active_art.charset.last_index
     
     def select_color(self, new_color_index, fg):
         "common code for select_fg/bg"
-        new_color_index %= len(self.app.active_art.palette.colors)
+        new_color_index %= len(self.active_art.palette.colors)
         if fg:
             self.selected_fg_color = new_color_index
         else:
@@ -125,7 +127,13 @@ class UI:
     def DBG_paint(self):
         "simple quick function to test painting"
         x, y = self.app.cursor.get_tile()
-        self.app.active_art.set_tile_at(0, 0, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
+        self.active_art.set_tile_at(0, 0, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
+    
+    def DBG_grab(self):
+        x, y = self.app.cursor.get_tile()
+        self.selected_char = self.active_art.get_char_index_at(0, 0, x, y)
+        self.selected_fg_color = self.active_art.get_fg_color_index_at(0, 0, x, y)
+        self.selected_bg_color = self.active_art.get_bg_color_index_at(0, 0, x, y)
     
     def destroy(self):
         for e in self.elements:

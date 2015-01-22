@@ -19,7 +19,7 @@ class StatusBarUI(UIElement):
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
-        art = self.ui.app.active_art
+        art = self.ui.active_art
         # create 3 custom Arts w/ source charset and palette, renderables for each
         self.char_art = UIArt(None, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.char_renderable = UIRenderable(ui.app, self.char_art)

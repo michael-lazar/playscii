@@ -15,8 +15,10 @@ class Camera:
     y_tilt = 0
     # pan/zoom speed tuning
     pan_accel = 0.01
-    max_pan_speed = 0.2
+    max_pan_speed = 0.4
     pan_friction = 0.1
+    # factor by which zoom level modifies pan speed
+    pan_zoom_increase_factor = 2
     zoom_accel = 0.05
     max_zoom_speed = 0.5
     zoom_friction = 0.1
@@ -26,7 +28,7 @@ class Camera:
     # TODO: leftover from u4mapvu, generate bounds according to art size
     min_x,max_x = -50, 50
     min_y,max_y = -50, 50
-    min_zoom,max_zoom = 0.5, 25
+    min_zoom,max_zoom = 2, 25
     # matrices -> worldspace renderable vertex shader uniforms
     fov = 90
     near_z = 0.0001
@@ -95,8 +97,10 @@ class Camera:
         self.view_matrix = m
     
     def pan(self, dx, dy):
-        self.vel_x += dx * self.pan_accel
-        self.vel_y += dy * self.pan_accel
+        # modify pan speed based on zoom according to a factor
+        m = ((1 * self.pan_zoom_increase_factor) * self.z) / self.min_zoom
+        self.vel_x += dx * self.pan_accel * m
+        self.vel_y += dy * self.pan_accel * m
     
     def zoom(self, dz):
         self.vel_z += dz * self.zoom_accel

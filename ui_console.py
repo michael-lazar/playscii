@@ -18,10 +18,11 @@ class QuitCommand(ConsoleCommand):
 class SaveCommand(ConsoleCommand):
     def execute(console, args):
         # save currently active file
+        art = console.ui.active_art
         if len(args) > 1:
             # TODO: create Art.set_filename to append extension, dir, etc
-            self.active_art.filename = args[1]
-        self.active_art.save_to_file()
+            art.filename = args[1]
+        art.save_to_file()
 
 
 class OpenCommand(ConsoleCommand):
@@ -268,7 +269,7 @@ class ConsoleUI(UIElement):
                 ui = self.ui
                 app = ui.app
                 camera = app.camera
-                art = app.active_art
+                art = ui.active_art
                 # TODO: eval can't actually change values, how to do this?
                 output = str(eval(line))
             except Exception as e:

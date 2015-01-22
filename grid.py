@@ -15,6 +15,7 @@ class Grid:
     # squares to show past extents of active Art
     art_margin = 4
     visible = True
+    draw_axes = False
     
     def __init__(self, app):
         self.app = app
@@ -61,30 +62,32 @@ class Grid:
     
     def build_geo(self):
         "build vert, element, and color arrays for"
-        w, h = self.app.active_art.width, self.app.active_art.height
+        w, h = self.app.ui.active_art.width, self.app.ui.active_art.height
         ew, eh = w + (self.art_margin * 2), h + (self.art_margin * 2)
         # frame
         v = [(0, 0), (ew, 0), (0, -eh), (ew, -eh)]
         e = [0, 1, 1, 3, 3, 2, 2, 0]
         color = EXTENTS_COLOR
         c = color * 4
+        index = 4
         # axes - Y and X
-        v += [(ew/2, -eh), (ew/2, 0), (0, -eh/2), (ew, -eh/2)]
-        e += [4, 5, 6, 7]
-        color = AXIS_COLOR
-        c += color * 4
+        if self.draw_axes:
+            v += [(ew/2, -eh), (ew/2, 0), (0, -eh/2), (ew, -eh/2)]
+            e += [4, 5, 6, 7]
+            color = AXIS_COLOR
+            c += color * 4
+            index = 8
         # vertical lines
         color = BASE_COLOR
-        index = 8
-        for x in range(1, eh):
+        for x in range(1, ew):
             # skip middle line
-            if x != eh/2:
+            if not self.draw_axes or x != ew/2:
                 v += [(x, -eh), (x, 0)]
                 e += [index, index+1]
                 c += color * 2
                 index += 2
-        for y in range(1, ew):
-            if y != ew/2:
+        for y in range(1, eh):
+            if not self.draw_axes or y != eh/2:
                 v += [(0, -y), (ew, -y)]
                 e += [index, index+1]
                 c += color * 2
@@ -125,7 +128,7 @@ class Grid:
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.view_matrix)
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
-        GL.glUniform2f(self.quad_size_uniform, self.app.active_art.quad_width, self.app.active_art.quad_height)
+        GL.glUniform2f(self.quad_size_uniform, self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height)
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

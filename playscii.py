@@ -60,8 +60,6 @@ class Application:
         self.log_lines = log_lines
         self.elapsed_time = 0
         self.should_quit = False
-        # the current art being edited
-        self.active_art = None
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
@@ -85,8 +83,9 @@ class Application:
         self.charsets, self.palettes = [], []
         self.load_art(art_filename)
         self.fb = Framebuffer(self)
+        # initialize UI with first art loaded active
+        self.ui = UI(self, self.art_loaded[0])
         self.update_window_title()
-        self.ui = UI(self)
         self.cursor = Cursor(self)
         self.grid = Grid(self)
         self.frame_time, self.fps = 0, 0
@@ -146,8 +145,6 @@ class Application:
         x = y = (len(self.art_loaded) - 1) * 2
         renderable.x += x
         renderable.y += y
-        # set as active
-        self.active_art = art
     
     def load_charset(self, charset_to_load, log=True):
         "creates and returns a character set with the given name"
@@ -175,7 +172,7 @@ class Application:
     def update_window_title(self):
         # TODO: once playscii can open multiple documents, get current active
         # document's name
-        filename = self.active_art.filename
+        filename = self.ui.active_art.filename
         if filename and os.path.exists(filename):
             full_filename = os.path.abspath(filename)
         else:
@@ -320,26 +317,29 @@ class Application:
                     self.grid.visible = not self.grid.visible
                 # < > / , . rewind / advance current art's anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
-                    for r in self.active_art.renderables:
+                    for r in self.ui.active_art.renderables:
                         r.rewind_frame()
                     self.update_window_title()
                 elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
-                    for r in self.active_art.renderables:
+                    for r in self.ui.active_art.renderables:
                         r.advance_frame()
                     self.update_window_title()
                 # p starts/pauses animation playback of current art
                 elif event.key.keysym.sym == sdl2.SDLK_p:
-                    for r in self.active_art.renderables:
+                    for r in self.ui.active_art.renderables:
                         r.animating = not r.animating
-                # TEST: enter does UI.DBG_paint!
+                # TEST: enter does UI.DBG_paint
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
                     self.ui.DBG_paint()
+                # TEST: q does DBG_grab
+                elif event.key.keysym.sym == sdl2.SDLK_q:
+                    self.ui.DBG_grab()
                 # TEST: toggle artscript running
                 elif event.key.keysym.sym == sdl2.SDLK_m:
-                    if self.active_art.is_script_running('conway'):
-                        self.active_art.stop_script('conway')
+                    if self.ui.active_art.is_script_running('conway'):
+                        self.ui.active_art.stop_script('conway')
                     else:
-                        self.active_art.run_script_every('conway', 0.05)
+                        self.ui.active_art.run_script_every('conway', 0.05)
                 # TEST: alt + arrow keys move object
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
                     self.renderables[0].y += 1
@@ -403,15 +403,15 @@ class Application:
         self.camera.update()
         if self.test_mutate_each_frame:
             self.test_mutate_each_frame = False
-            self.active_art.run_script_every('mutate', 0.01)
+            self.ui.active_art.run_script_every('mutate', 0.01)
         if self.test_life_each_frame:
             self.test_life_each_frame = False
-            self.active_art.run_script_every('conway', 0.05)
+            self.ui.active_art.run_script_every('conway', 0.05)
         if self.test_art:
             self.test_art = False
             # load some test data - simulates some user edits:
             # add layers, write text, duplicate that frame, do some animation
-            self.active_art.run_script('hello1')
+            self.ui.active_art.run_script('hello1')
         # test saving functionality
         if self.auto_save:
             art.save_to_file()

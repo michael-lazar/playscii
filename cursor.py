@@ -63,7 +63,7 @@ class Cursor:
     
     vert_shader_source = 'cursor_v.glsl'
     frag_shader_source = 'cursor_f.glsl'
-    
+    alpha = 1
     logg = False
     
     def __init__(self, app):
@@ -103,6 +103,7 @@ class Cursor:
         self.quad_size_uniform = self.shader.get_uniform_location('quadSize')
         self.xform_uniform = self.shader.get_uniform_location('vertTransform')
         self.offset_uniform = self.shader.get_uniform_location('vertOffset')
+        self.alpha_uniform = self.shader.get_uniform_location('baseAlpha')
         # finish
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
@@ -118,7 +119,8 @@ class Cursor:
         return self.x, -self.y
     
     def update(self, elapsed_time):
-        self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 25 - 0.5)
+        self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
+        self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
         self.scale_y = self.scale_x
     
     def render(self, elapsed_time):
@@ -128,7 +130,8 @@ class Cursor:
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform4fv(self.color_uniform, 1, self.color)
-        GL.glUniform2f(self.quad_size_uniform, self.app.active_art.quad_width, self.app.active_art.quad_height)
+        GL.glUniform2f(self.quad_size_uniform, self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height)
+        GL.glUniform1f(self.alpha_uniform, self.alpha)
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
