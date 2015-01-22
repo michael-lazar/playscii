@@ -32,12 +32,12 @@ class Camera:
     near_z = 0.0001
     far_z = 100000
     
-    def __init__(self, app, window_width, window_height):
+    def __init__(self, app):
         self.app = app
         self.x, self.y = self.start_x, self.start_y
         self.z = self.start_zoom
         self.vel_x, self.vel_y, self.vel_z = 0,0,0
-        self.window_width, self.window_height = window_width, window_height
+        self.window_width, self.window_height = self.app.window_width, self.app.window_height
         self.calc_projection_matrix()
         self.calc_view_matrix()
     

@@ -441,8 +441,9 @@ class ArtFromDisk(Art):
         self.palette = self.app.load_palette(d['palette'])
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
-        cam = d['camera']
-        self.app.camera.set_loc(cam[0], cam[1], cam[2])
+        if not self.app.override_saved_camera:
+            cam = d['camera']
+            self.app.camera.set_loc(cam[0], cam[1], cam[2])
         frames = d['frames']
         self.frames = len(frames)
         self.frame_delays = []

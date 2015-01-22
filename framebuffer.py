@@ -6,8 +6,9 @@ class Framebuffer:
     start_crt_enabled = True
     disable_crt = False
     
-    def __init__(self, shader_lord, width, height):
-        self.width, self.height = width, height
+    def __init__(self, app):
+        self.app = app
+        self.width, self.height = self.app.window_width, self.app.window_height
         # bind vao before compiling shaders
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
@@ -23,10 +24,10 @@ class Framebuffer:
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
         GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, width, height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, self.width, self.height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
         self.depth_buffer = GL.glGenRenderbuffers(1)
         GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, self.depth_buffer)
-        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_DEPTH_COMPONENT16, width, height)
+        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_DEPTH_COMPONENT16, self.width, self.height)
         GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, 0)
         self.framebuffer = GL.glGenFramebuffers(1)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.framebuffer)
@@ -34,9 +35,9 @@ class Framebuffer:
         GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_RENDERBUFFER, self.depth_buffer)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         # shaders
-        self.plain_shader = shader_lord.new_shader('framebuffer_v.glsl', 'framebuffer_f.glsl')
+        self.plain_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f.glsl')
         if not self.disable_crt:
-            self.crt_shader = shader_lord.new_shader('framebuffer_v.glsl', 'framebuffer_f_crt.glsl')
+            self.crt_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f_crt.glsl')
         self.crt = self.disable_crt or self.start_crt_enabled
         # shader uniforms and attributes
         self.plain_tex_uniform = self.plain_shader.get_uniform_location('fbo_texture')

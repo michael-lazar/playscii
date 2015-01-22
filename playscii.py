@@ -25,6 +25,7 @@ from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI, SCALE_INCREMENT
 from cursor import Cursor
+from grid import Grid
 
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
@@ -44,6 +45,9 @@ class Application:
     starting_width, starting_height = 8, 8
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
+    bg_color = (0.1, 0.1, 0.1, 1)
+    # if True, ignore camera loc saved in .psci files
+    override_saved_camera = False
     # debug test stuff
     test_mutate_each_frame = False
     test_life_each_frame = False
@@ -75,15 +79,16 @@ class Application:
         # TODO: SDL_SetWindowIcon(self.window, SDL_Surface* icon) <- ui/logo.png
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
-        self.camera = Camera(self, self.window_width, self.window_height)
-        self.cursor = Cursor(self)
+        self.camera = Camera(self)
         self.art_loaded, self.renderables = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
         self.load_art(art_filename)
-        self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
+        self.fb = Framebuffer(self)
         self.update_window_title()
         self.ui = UI(self)
+        self.cursor = Cursor(self)
+        self.grid = Grid(self)
         self.frame_time, self.fps = 0, 0
         self.log('init done.')
     
@@ -194,7 +199,7 @@ class Application:
         crt = self.fb.crt
         # create a new framebuffer in its place
         # TODO: determine if it's better to do this or change existing fb
-        self.fb = Framebuffer(self.sl, self.window_width, self.window_height)
+        self.fb = Framebuffer(self)
         self.fb.crt = crt
         # tell camera and UI that view aspect has changed
         self.camera.window_resized(new_width, new_height)
@@ -310,6 +315,9 @@ class Application:
                 # shift-U: toggle UI visibility
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
                     self.ui.visible = not self.ui.visible
+                # G: toggle grid visibilty:
+                elif event.key.keysym.sym == sdl2.SDLK_g:
+                    self.grid.visible = not self.grid.visible
                 # < > / , . rewind / advance current art's anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
                     for r in self.active_art.renderables:
@@ -411,14 +419,17 @@ class Application:
         self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
+        self.grid.update()
     
     def render(self):
         # draw main scene to framebuffer
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
-        GL.glClearColor(0.1, 0.1, 0.1, 1)
+        GL.glClearColor(*self.bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         for r in self.renderables:
             r.render(self.elapsed_time)
+        if self.grid.visible:
+            self.grid.render(self.elapsed_time)
         self.cursor.render(self.elapsed_time)
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)

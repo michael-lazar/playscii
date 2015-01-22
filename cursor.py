@@ -68,7 +68,6 @@ class Cursor:
     
     def __init__(self, app):
         self.app = app
-        self.camera = self.app.camera
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         # offsets to render the 4 corners at
@@ -124,8 +123,8 @@ class Cursor:
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
-        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.camera.projection_matrix)
-        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.camera.view_matrix)
+        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.projection_matrix)
+        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.view_matrix)
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform4fv(self.color_uniform, 1, self.color)
