@@ -119,6 +119,8 @@ class Cursor:
         return int(self.x), int(-self.y)
     
     def update(self, elapsed_time):
+        # save old positions before update
+        self.last_x, self.last_y = self.x, self.y
         # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
@@ -145,6 +147,12 @@ class Cursor:
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         self.x = math.floor(self.x * (1 / w)) * w
         self.y = math.ceil(self.y * (1 / h)) * h
+        if self.x != self.last_x or self.y != self.last_y:
+            self.entered_new_tile()
+    
+    def entered_new_tile(self):
+        if self.app.left_mouse:
+            self.app.ui.DBG_paint()
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)

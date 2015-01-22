@@ -242,9 +242,9 @@ class Application:
         # get and store mouse state
         mx, my = ctypes.c_int(0), ctypes.c_int(0)
         mouse = sdl2.mouse.SDL_GetMouseState(mx, my)
-        left_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_LEFT))
-        middle_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_MIDDLE))
-        right_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_RIGHT))
+        self.left_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_LEFT))
+        self.middle_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_MIDDLE))
+        self.right_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_RIGHT))
         self.mouse_x, self.mouse_y = int(mx.value), int(my.value)
         # relative mouse move state
         mdx, mdy = ctypes.c_int(0), ctypes.c_int(0)
