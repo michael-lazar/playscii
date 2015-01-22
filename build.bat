@@ -15,13 +15,13 @@ python setup.py py2exe
 
 echo Copying PyOpenGL libs to build dir...
 mkdir dist\OpenGL
-xcopy /e /v "%PYTHONPATH%\Lib\site-packages\OpenGL\*.*" dist\OpenGL\
-del /s dist\OpenGL\*.pyc
-del /s dist\OpenGL\*.pyo
+xcopy /e /v /Q "%PYTHONPATH%\Lib\site-packages\OpenGL\*.*" dist\OpenGL\
+del /s /Q dist\OpenGL\*.pyc
+del /s /Q dist\OpenGL\*.pyo
 
 echo Copying SDL2.dll...
 copy %SDLPATH%\SDL2.dll dist\
-
+     
 echo Copying Playscii data files...
 mkdir dist\art
 copy /v art\*.* dist\art\
