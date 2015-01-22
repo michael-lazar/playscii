@@ -30,7 +30,7 @@ from grid import Grid
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
 
-VERSION = 0.1.0
+VERSION = '0.1.0'
 
 class Application:
     
