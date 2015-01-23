@@ -139,11 +139,13 @@ class Cursor:
         z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
         point = vp_inverse.dot(np.array([x, y, z, 0]))
         point = point.getA()
-        cz = self.app.camera.z
-        # TODO: account for distance between current layer and camera somehow!
+        cz = self.app.camera.z - z
         # apply camera offsets
         self.x = point[0][0] * cz + self.app.camera.x
         self.y = point[0][1] * cz + self.app.camera.y
+        # TODO: does below properly account for distance between current
+        # layer and camera? close but maybe still inaccurate
+        self.y += self.app.camera.y_tilt
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         self.x = math.floor(self.x * (1 / w)) * w
