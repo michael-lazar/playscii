@@ -42,6 +42,8 @@ class Application:
     # framerate: uncapped if -1
     framerate = 60
     base_title = 'Playscii'
+    # force to run even if we can't get an OpenGL 2.1 context
+    run_if_opengl_incompatible = False
     # starting document defaults
     starting_charset = 'c64'
     starting_palette = 'c64'
@@ -75,6 +77,21 @@ class Application:
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
                                   video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
+        # report GL version, vendor, GLSL version etc
+        ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
+        self.log('OpenGL detected: %s' % ver.decode('utf-8'))
+        glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
+        self.log('GLSL detected: %s' % glsl_ver.decode('utf-8'))
+        # verify that we got at least a 2.1 context
+        majorv, minorv = ctypes.c_int(0), ctypes.c_int(0)
+        video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, majorv)
+        video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, minorv)
+        context_version = majorv.value + (minorv.value * 0.1)
+        if context_version < 2.1:
+            self.log('Could not create an OpenGL 2.1 context, your hardware appears to be incompatible!  Sorry :[')
+            if not self.run_if_opengl_incompatible:
+                self.should_quit = True
+                return
         # draw black screen while doing other init
         self.sdl_renderer = sdl2.SDL_CreateRenderer(self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
         self.blank_screen()
