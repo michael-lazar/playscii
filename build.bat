@@ -5,10 +5,11 @@ REM Playscii windows EXE build batch
 REM Build needs to know where your python and SDL2 dll are, modify
 REM the two lines below as needed:
 set PYTHONPATH="c:\Python34"
-set SDLPATH="c:\util"
+set SDLPATH=".\"
 
 echo Removing old build...
-del /S /Q dist\
+rmdir /S /Q dist\
+mkdir dist
 
 echo Creating new build...
 python setup.py py2exe
@@ -21,7 +22,7 @@ del /s /Q dist\OpenGL\*.pyo
 
 echo Copying SDL2.dll...
 copy %SDLPATH%\SDL2.dll dist\
-     
+
 echo Copying Playscii data files...
 mkdir dist\art
 copy /v art\*.* dist\art\
