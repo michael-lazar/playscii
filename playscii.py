@@ -78,9 +78,14 @@ class Application:
                                   video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
         # report GL version, vendor, GLSL version etc
-        ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
+        # try single-argument GL2.0 version first
+        ver = GL.glGetString(GL.GL_VERSION)
+        if not ver:
+            ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
         self.log('OpenGL detected: %s' % ver.decode('utf-8'))
-        glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
+        glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
+        if not glsl_ver:
+            glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
         self.log('GLSL detected: %s' % glsl_ver.decode('utf-8'))
         # verify that we got at least a 2.1 context
         majorv, minorv = ctypes.c_int(0), ctypes.c_int(0)
