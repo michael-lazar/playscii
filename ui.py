@@ -24,6 +24,7 @@ class UI:
         self.app = app
         # the current art being edited
         self.active_art = active_art
+        self.active_frame = 0
         self.active_layer = 0
         # for UI, view /and/ projection matrix are identity
         # (aspect correction is done in set_scale)
@@ -88,6 +89,16 @@ class UI:
     def window_resized(self):
         # recalc renderables' quad size (same scale, different aspect)
         self.set_scale(self.scale)
+    
+    def set_active_frame(self, new_frame):
+        new_frame %= self.active_art.frames
+        # bail if frame is still the same, eg we only have 1 frame
+        if new_frame == self.active_frame:
+            return
+        self.active_frame = new_frame
+        # update active art's renderables
+        for r in self.active_art.renderables:
+            r.set_frame(self.active_frame)
     
     def set_active_layer(self, new_layer):
         self.active_layer = min(max(0, new_layer), self.active_art.layers-1)

@@ -114,6 +114,8 @@ class Application:
         self.charsets, self.palettes = [], []
         self.load_art(art_filename)
         self.fb = Framebuffer(self)
+        # setting cursor None now makes for easier check in status bar drawing
+        self.cursor = None
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded[0])
         self.update_window_title()
@@ -209,12 +211,7 @@ class Application:
             full_filename = os.path.abspath(filename)
         else:
             full_filename = filename
-        frame = self.renderables[0].frame + 1
-        frames = self.ui.active_art.frames
-        layer = self.ui.active_layer + 1
-        layers = self.ui.active_art.layers
-        title = '%s (frame %s/%s, layer %s/%s)' % (full_filename, frame, frames, layer, layers)
-        self.set_window_title(title)
+        self.set_window_title(full_filename)
     
     def blank_screen(self):
         r = sdl2.SDL_Rect()
@@ -350,13 +347,9 @@ class Application:
                     self.grid.visible = not self.grid.visible
                 # < > / , . rewind / advance current art's anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
-                    for r in self.ui.active_art.renderables:
-                        r.rewind_frame()
-                    self.update_window_title()
+                    self.ui.set_active_frame(self.ui.active_frame - 1)
                 elif event.key.keysym.sym == sdl2.SDLK_PERIOD:
-                    for r in self.ui.active_art.renderables:
-                        r.advance_frame()
-                    self.update_window_title()
+                    self.ui.set_active_frame(self.ui.active_frame + 1)
                 # p starts/pauses animation playback of current art
                 elif event.key.keysym.sym == sdl2.SDLK_p:
                     for r in self.ui.active_art.renderables:

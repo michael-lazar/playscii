@@ -427,14 +427,19 @@ class Art:
                 exec(open(script).read())
                 self.scripts_next_exec_time[i] += self.script_rates[i]
     
-    def write_string(self, frame, layer, x, y, text, color_index=None):
+    def write_string(self, frame, layer, x, y, text, fg_color_index=None, bg_color_index=None, right_justify=False):
         "writes out each char of a string to specified tiles"
-        x_offset = 0
+        if right_justify:
+            x_offset = -len(text)
+        else:
+            x_offset = 0
         for char in text:
             idx = self.charset.get_char_index(char)
             self.set_char_index_at(frame, layer, x+x_offset, y, idx)
-            if color_index:
-                self.set_color_at(frame, layer, x+x_offset, y, color_index, True)
+            if fg_color_index:
+                self.set_color_at(frame, layer, x+x_offset, y, fg_color_index, True)
+            if bg_color_index:
+                self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
 
 
