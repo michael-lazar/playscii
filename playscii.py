@@ -5,6 +5,9 @@ from random import random
 # obnoxious PyOpenGL workaround for py2exe
 import platform
 if platform.system() == 'Windows':
+    import os
+    # set env variable so pysdl2 can find sdl2.dll
+    os.environ['PYSDL2_DLL_PATH'] = '.'
     sys.path += ['.']
 
 # app imports

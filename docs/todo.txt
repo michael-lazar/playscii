@@ -1,14 +1,19 @@
 TODO
 
-0.1:
-- z issue in tiltcam
--- mouse cursor doesn't match tile boundaries on >0Z layers
-- windows exe build?
+status bar: show current tool (placeholder), filename, frame and layer #s, cursor tile coords, remove frame and layer #s from window title
+
+main popup!
+- spacebar brings it up
+- two panes: tool and picker
+- tool: just paint, grab, and erase for now; fixed 1 tile brush size
+- picker: character set and palette, with grid overlay to make boundaries clear
+-- how to convey "this char/color is selected"?  fg vs bg color?
+-- how to convey "transparent"?  make it look like this in status bar too
+- don't move cursor while popup is up - arrow keys navigate picker
 
 
 quake style console:
 - understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
-- save command: saves current art, or saves current art under given filename
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- is color distortion inherent in how good CRT filters work?
@@ -20,9 +25,13 @@ ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
 FIX:
 
-- Z is off(?) when view is tilted.  probably some fiddling in Cursor.update.
 
-- status bar swatch sizes are incorrect, vary based on screen aspect
+0.1
+- z issue in tiltcam
+- mouse cursor doesn't match tile boundaries on >0Z layers
+
+
+low priority:
 
 - headbrain2.ed is corrupted, figure out if it can be salvaged with smart parsing - maybe provide a "width override" option?
 
