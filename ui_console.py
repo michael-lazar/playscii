@@ -270,8 +270,15 @@ class ConsoleUI(UIElement):
                 app = ui.app
                 camera = app.camera
                 art = ui.active_art
-                # TODO: eval can't actually change values, how to do this?
-                output = str(eval(line))
+                # special handling of assignment statements, eg x = 3:
+                # detect strings that pattern-match, send them to exec(),
+                # send all other strings to eval()
+                eq_index = line.find('=')
+                is_assignment = eq_index != -1 and line[eq_index+1] != '='
+                if is_assignment:
+                    exec(line)
+                else:
+                    output = str(eval(line))
             except Exception as e:
                 # try to output useful error text
                 output = '%s: %s' % (e.__class__.__name__, str(e))
