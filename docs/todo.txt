@@ -1,34 +1,23 @@
 TODO
 
-status bar: show current tool (placeholder), filename, frame and layer #s, cursor tile coords, remove frame and layer #s from window title
-
 main popup!
 - spacebar brings it up
 - two panes: tool and picker
-- tool: just paint, grab, and erase for now; fixed 1 tile brush size
+- tool: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
 - picker: character set and palette, with grid overlay to make boundaries clear
 -- how to convey "this char/color is selected"?  fg vs bg color?
 -- how to convey "transparent"?  make it look like this in status bar too
 - don't move cursor while popup is up - arrow keys navigate picker
 
-
-quake style console:
-- understand why setting object properties directly, eg "self.ui.app.camera.tilt_y = 0.5" doesn't work!
-
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
--- is color distortion inherent in how good CRT filters work?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
+-- is color distortion inherent in how good CRT filters work?
 
 ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
 ---
 
 FIX:
-
-
-0.1
-- z issue in tiltcam
-- mouse cursor doesn't match tile boundaries on >0Z layers
 
 
 low priority:
