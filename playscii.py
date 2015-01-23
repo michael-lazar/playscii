@@ -60,6 +60,7 @@ class Application:
     auto_save = False
     
     def __init__(self, log_file, log_lines, art_filename):
+        self.init_success = False
         # log fed in from __main__, might already have stuff in it
         self.log_file = log_file
         self.log_lines = log_lines
@@ -79,21 +80,25 @@ class Application:
         self.context = sdl2.SDL_GL_CreateContext(self.window)
         # report GL version, vendor, GLSL version etc
         # try single-argument GL2.0 version first
-        ver = GL.glGetString(GL.GL_VERSION)
-        if not ver:
-            ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
-        self.log('OpenGL detected: %s' % ver.decode('utf-8'))
+        gl_ver = GL.glGetString(GL.GL_VERSION)
+        if not gl_ver:
+            gl_ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
+        gl_ver = gl_ver.decode('utf-8')
+        self.log('OpenGL detected: %s' % gl_ver)
         glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
         if not glsl_ver:
             glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
-        self.log('GLSL detected: %s' % glsl_ver.decode('utf-8'))
+        glsl_ver = glsl_ver.decode('utf-8')
+        self.log('GLSL detected: %s' % glsl_ver)
         # verify that we got at least a 2.1 context
         majorv, minorv = ctypes.c_int(0), ctypes.c_int(0)
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, majorv)
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, minorv)
         context_version = majorv.value + (minorv.value * 0.1)
-        if context_version < 2.1:
-            self.log('Could not create an OpenGL 2.1 context, your hardware appears to be incompatible!  Sorry :[')
+        vao_support = bool(GL.glGenVertexArrays)
+        self.log('Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
+        if not vao_support  or context_version < 2.1 or gl_ver.startswith('2.0'):
+            self.log("Could not create a compatible OpenGL context, your hardware doesn't appear to meet Playscii's requirements!  Sorry ;_________;")
             if not self.run_if_opengl_incompatible:
                 self.should_quit = True
                 return
@@ -116,6 +121,7 @@ class Application:
         self.grid = Grid(self)
         self.ui.set_active_layer(0)
         self.frame_time, self.fps = 0, 0
+        self.init_success = True
         self.log('init done.')
     
     def log(self, new_line):
@@ -477,16 +483,16 @@ class Application:
     
     def quit(self):
         self.log('Thank you for using Playscii!  <3')
-        # TODO: save to temp file quit?
-        for r in self.renderables:
-            r.destroy()
-        self.fb.destroy()
-        self.ui.destroy()
-        for charset in self.charsets:
-            charset.texture.destroy()
-        for palette in self.palettes:
-            palette.texture.destroy()
-        self.sl.destroy()
+        if self.init_success:
+            for r in self.renderables:
+                r.destroy()
+            self.fb.destroy()
+            self.ui.destroy()
+            for charset in self.charsets:
+                charset.texture.destroy()
+            for palette in self.palettes:
+                palette.texture.destroy()
+            self.sl.destroy()
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
         sdl2.SDL_Quit()
