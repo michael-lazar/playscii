@@ -1,0 +1,61 @@
+winXP 32-bit virtualbox image, hardware acceleration enabled
+
+
+OpenGL Warning: No pincher, please call crStateSetCurrentPointers() in your SPU
+creating new document art/new.psci
+Traceback (most recent call last):
+  File "playscii.py", line 491, in <module>
+    app = Application(log_file, log_lines, file_to_load)
+  File "playscii.py", line 87, in __init__
+    self.load_art(art_filename)
+  File "playscii.py", line 130, in load_art
+    art = self.new_art(filename)
+  File "playscii.py", line 106, in new_art
+    charset = self.load_charset(self.starting_charset)
+  File "playscii.py", line 159, in load_charset
+    new_charset = CharacterSet(self, charset_to_load, log)
+  File "c:\playscii\charset.py", line 73, in __init__
+    self.texture = Texture(img.tostring(), self.image_width, self.image_height)
+  File "c:\playscii\texture.py", line 24, in __init__
+    GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
+  File "c:\python34\lib\site-packages\OpenGL\platform\baseplatform.py", line 407, in __call__
+    self.__name__, self.__name__,
+OpenGL.error.NullFunctionError: Attempt to call an undefined function glGenerateMipmap, check for bool(glGenerateMipmap) before calling
+
+
+---
+
+bind VAO before texture stuff:
+
+OpenGL Warning: No pincher, please call crStateSetCurrentPointers() in your SPU
+Traceback (most recent call last):
+  File "c:\python34\lib\site-packages\OpenGL\latebind.py", line 41, in __call__
+    return self._finalCall( *args, **named )
+TypeError: 'NoneType' object is not callable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "playscii.py", line 491, in <module>
+    app = Application(log_file, log_lines, file_to_load)
+  File "playscii.py", line 87, in __init__
+    self.load_art(art_filename)
+  File "playscii.py", line 130, in load_art
+    art = self.new_art(filename)
+  File "playscii.py", line 106, in new_art
+    charset = self.load_charset(self.starting_charset)
+  File "playscii.py", line 159, in load_charset
+    new_charset = CharacterSet(self, charset_to_load, log)
+  File "c:\playscii\charset.py", line 73, in __init__
+    self.texture = Texture(img.tostring(), self.image_width, self.image_height)
+  File "c:\playscii\texture.py", line 17, in __init__
+    vao = GL.glGenVertexArrays(1)
+  File "c:\python34\lib\site-packages\OpenGL\latebind.py", line 45, in __call__
+    return self._finalCall( *args, **named )
+  File "c:\python34\lib\site-packages\OpenGL\wrapper.py", line 657, in wrapperCall
+    result = wrappedOperation( *cArguments )
+  File "c:\python34\lib\site-packages\OpenGL\platform\baseplatform.py", line 407, in __call__
+    self.__name__, self.__name__,
+OpenGL.error.NullFunctionError: Attempt to call an undefined function glGenVertexArrays, check for bool(glGenVertexArrays) before calling
+
+

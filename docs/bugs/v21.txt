@@ -1,0 +1,5 @@
+tried launching in Parallels (as I run a Mac). Didn't work! playscii.log reads:
+Traceback (most recent call last):
+ File "playscii.py", line 12, in <module>
+ File "c:\python34\lib\site-packages\zipextimporter.py", line 116, in load_module
+zipimport.ZipImportError: can't find module sdl2 
