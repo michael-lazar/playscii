@@ -6,6 +6,7 @@ from texture import Texture
 from ui_element import UIArt, FPSCounterUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
+from ui_popup import ToolPopup
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -44,9 +45,11 @@ class UI:
         fps_counter = FPSCounterUI(self)
         self.console = ConsoleUI(self)
         self.status_bar = StatusBarUI(self)
+        self.popup = ToolPopup(self)
         self.elements.append(fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.console)
+        self.elements.append(self.popup)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')

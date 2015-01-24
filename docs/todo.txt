@@ -1,7 +1,6 @@
 TODO
 
 main popup!
-- spacebar brings it up
 - two panes: tool and picker
 - tool: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
 - picker: character set and palette, with grid overlay to make boundaries clear

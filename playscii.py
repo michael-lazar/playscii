@@ -323,6 +323,9 @@ class Application:
                     self.camera.set_zoom(2)
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
+                # spacebar: pop up tool / selector
+                elif event.key.keysym.sym == sdl2.SDLK_SPACE:
+                    self.ui.popup.show()
                 # select next/previous char/fg/bg
                 elif event.key.keysym.sym == sdl2.SDLK_c:
                     if shift_pressed:
@@ -401,6 +404,10 @@ class Application:
                     self.cursor.move(-1, 0)
                 elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
                     self.cursor.move(1, 0)
+            elif event.type == sdl2.SDL_KEYUP:
+                # spacebar up: dismiss selector popup
+                if event.key.keysym.sym == sdl2.SDLK_SPACE:
+                    self.ui.popup.hide()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)

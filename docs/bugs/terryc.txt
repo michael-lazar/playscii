@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File ".\OpenGL\latebind.py", line 41, in __call__
+    return self._finalCall( *args, **named )
+TypeError: 'NoneType' object is not callable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "playscii.py", line 489, in <module>
+  File "playscii.py", line 85, in __init__
+  File "playscii.py", line 128, in load_art
+  File "playscii.py", line 104, in new_art
+  File "playscii.py", line 157, in load_charset
+  File "c:\playscii\charset.py", line 73, in __init__
+  File "c:\playscii\texture.py", line 16, in __init__
+  File ".\OpenGL\latebind.py", line 61, in __call__
+    return self.wrapperFunction( self.baseFunction, *args, **named )
+  File ".\OpenGL\GL\exceptional.py", line 178, in glGenTextures
+    baseFunction( count, textures)
+  File ".\OpenGL\latebind.py", line 45, in __call__
+    return self._finalCall( *args, **named )
+  File ".\OpenGL\wrapper.py", line 664, in wrapperCall
+    raise err
+  File ".\OpenGL\wrapper.py", line 657, in wrapperCall
+    result = wrappedOperation( *cArguments )
+  File ".\OpenGL\platform\baseplatform.py", line 402, in __call__
+    return self( *args, **named )
+  File ".\OpenGL\error.py", line 232, in glCheckError
+    baseOperation = baseOperation,
+OpenGL.error.GLError: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glGenTextures,
+	pyArgs = (1, c_ulong(0)),
+	cArgs = (1, <cparam 'P' (000000000464FB90)>),
+	cArguments = (1, <cparam 'P' (000000000464FB90)>)
+)
