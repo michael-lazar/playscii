@@ -21,7 +21,10 @@ class UIElement:
         self.reset_loc()
     
     def reset_art(self):
-        "restores this element's Art to its initial state; runs on init and resize"
+        """
+        restores this element's Art to its initial state;
+        runs on init and resize
+        """
         pass
     
     def reset_loc(self):
@@ -79,6 +82,7 @@ class FPSCounterUI(UIElement):
         text = '%.1f fps' % self.ui.app.fps
         x = self.width - len(text)
         self.art.write_string(0, 0, x, 0, text, color)
-        text = '%.1f ms ' % self.ui.app.frame_time
+        # display last tick time; frame_time includes delay, is useless
+        text = '%.1f ms ' % self.ui.app.last_tick_time
         x = self.width - len(text)
         self.art.write_string(0, 0, x, 1, text, color)

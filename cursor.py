@@ -148,8 +148,10 @@ class Cursor:
         self.y += self.app.camera.y_tilt
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
-        self.x = math.floor(self.x * (1 / w)) * w
-        self.y = math.ceil(self.y * (1 / h)) * h
+        self.x = math.floor(self.x / w) * w
+        self.y = math.ceil(self.y / h) * h
+        # TODO: something here is needed to correct for non-square charsets!
+        # current result is 1:2 sets eg DOS skip even-numbered Y coordinates
         if self.x != self.last_x or self.y != self.last_y:
             self.entered_new_tile()
     
