@@ -1,0 +1,21 @@
+user feedback
+
+---
+
+from @Flipyap 2015-01-24:
+
+The way EDSCII works makes it pretty hard to shade things the old-fashioned ASCII way, without the use of colors.
+
+I'd like to be able to bind characters to number keys for quick access to a palette of most frequently used characters/shapes.
+
+The second one is weirder, but it's based on the way an ASCII artist's brain operates.
+
+A pixel weight brush - draw random characters comprised of the same number of pixels (with a slider from fewest to most pixels).
+
+With maybe a lock button to make the brush use the same set of characters for consistency.
+
+Also, the current character palette makes it hard to distinguish connected shaped. It could use some spacing or a grid.
+
+It would also be nice if different tool groups used different cursors. I often couldn't tell if I was in paint or erase mode.
+
+---

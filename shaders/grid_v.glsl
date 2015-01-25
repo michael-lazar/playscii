@@ -24,7 +24,7 @@ mat4 scale(float x, float y, float z)
 void main()
 {
 	// model = all 4 corners in the right place
-	vec4 model = vec4(vertPosition, objectPosition.z, 1);
+	vec4 model = vec4(vertPosition * quadSize, objectPosition.z, 1);
 	// scale and transform model
 	model *= scale(objectScale.x, objectScale.y, objectScale.z);
 	model += vec4(objectPosition, 0);

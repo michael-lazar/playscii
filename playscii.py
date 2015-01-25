@@ -122,7 +122,7 @@ class Application:
         self.cursor = Cursor(self)
         self.grid = Grid(self)
         self.ui.set_active_layer(0)
-        self.frame_time, self.fps = 0, 0
+        self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         self.init_success = True
         self.log('init done.')
     
@@ -266,6 +266,7 @@ class Application:
                 # subtract work time from delay to maintain framerate
                 delay -= min(delay, tick_time)
                 sdl2.timer.SDL_Delay(delay)
+            self.last_tick_time = tick_time
         return 1
     
     def input(self):
