@@ -1,7 +1,7 @@
 import os.path
 from math import ceil
 
-from ui_element import UIElement, UIArt, UIRenderable
+from ui_element import UIElement, UIArt, UIRenderable, UIRenderableX
 
 class StatusBarUI(UIElement):
     
@@ -38,6 +38,10 @@ class StatusBarUI(UIElement):
         for r in [self.char_renderable, self.fg_renderable, self.bg_renderable]:
             r.ui = ui
             r.grain_strength = 0
+        # red X for transparent colors
+        self.x_renderable = StatusBarRenderableX(ui.app)
+        # give it a special reference to this element
+        self.x_renderable.status_bar = self
         UIElement.__init__(self, ui)
     
     def reset_art(self):
@@ -46,6 +50,9 @@ class StatusBarUI(UIElement):
         self.art.resize(self.width, self.height)
         # write chars/colors to the art
         self.rewrite_art()
+        self.x_renderable.scale_x = self.char_art.width
+        self.x_renderable.scale_y = -self.char_art.height
+        # rebuild geo, elements may be new dimensions
         self.art.geo_changed = True
         self.char_art.geo_changed = True
         self.fg_art.geo_changed = True
@@ -152,6 +159,26 @@ class StatusBarUI(UIElement):
     
     def render(self, elapsed_time):
         UIElement.render(self, elapsed_time)
+        # draw wireframe red X /behind/ char if BG transparent
+        if self.ui.selected_bg_color == 0:
+            self.x_renderable.x = self.char_renderable.x
+            self.x_renderable.y = self.char_renderable.y
+            self.x_renderable.render(elapsed_time)
         self.char_renderable.render(elapsed_time)
         self.fg_renderable.render(elapsed_time)
         self.bg_renderable.render(elapsed_time)
+        # draw red X for transparent FG or BG
+        if self.ui.selected_fg_color == 0:
+            self.x_renderable.x = self.fg_renderable.x
+            self.x_renderable.y = self.fg_renderable.y
+            self.x_renderable.render(elapsed_time)
+        if self.ui.selected_bg_color == 0:
+            self.x_renderable.x = self.bg_renderable.x
+            self.x_renderable.y = self.bg_renderable.y
+            self.x_renderable.render(elapsed_time)
+
+
+class StatusBarRenderableX(UIRenderableX):
+    
+    def get_quad_size(self):
+        return self.status_bar.art.quad_width, self.status_bar.art.quad_height

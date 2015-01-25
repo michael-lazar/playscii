@@ -3,7 +3,7 @@ from OpenGL import GL
 from art import VERT_LENGTH
 from palette import MAX_COLORS
 
-class Renderable:
+class TileRenderable:
     
     # vertex shader: includes view projection matrix, XYZ camera uniforms
     vert_shader_source = 'renderable_v.glsl'

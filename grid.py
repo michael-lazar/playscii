@@ -1,6 +1,6 @@
-import ctypes
 import numpy as np
-from OpenGL import GL
+
+from renderable_line import LineRenderable
 
 # grid that displays as guide for Cursor
 
@@ -8,57 +8,12 @@ AXIS_COLOR = (0.8, 0.8, 0.8, 0.5)
 BASE_COLOR = (0.5, 0.5, 0.5, 0.25)
 EXTENTS_COLOR = (0, 0, 0, 1)
 
-class Grid:
+class Grid(LineRenderable):
     
-    vert_shader_source = 'grid_v.glsl'
-    frag_shader_source = 'grid_f.glsl'
     # squares to show past extents of active Art
-    art_margin = 4
+    art_margin = 2
     visible = True
     draw_axes = False
-    
-    def __init__(self, app):
-        self.app = app
-        self.x, self.y, self.z = 0, 0, 0
-        self.scale_x, self.scale_y, self.scale_z = 1, 1, 0
-        self.build_geo()
-        self.reset_loc()
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
-        self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
-        # uniforms
-        self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
-        self.view_matrix_uniform = self.shader.get_uniform_location('view')
-        self.position_uniform = self.shader.get_uniform_location('objectPosition')
-        self.scale_uniform = self.shader.get_uniform_location('objectScale')
-        self.quad_size_uniform = self.shader.get_uniform_location('quadSize')
-        # vert buffers
-        self.vert_buffer, self.elem_buffer = GL.glGenBuffers(2)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vert_array.nbytes,
-                        self.vert_array, GL.GL_STATIC_DRAW)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_array.nbytes,
-                        self.elem_array, GL.GL_STATIC_DRAW)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        self.vert_count = int(len(self.elem_array))
-        self.pos_attrib = self.shader.get_attrib_location('vertPosition')
-        GL.glEnableVertexAttribArray(self.pos_attrib)
-        offset = ctypes.c_void_p(0)
-        GL.glVertexAttribPointer(self.pos_attrib, 2,
-                                 GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        # vert colors
-        self.color_buffer = GL.glGenBuffers(1)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.color_buffer)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.color_array.nbytes,
-                        self.color_array, GL.GL_STATIC_DRAW)
-        self.color_attrib = self.shader.get_attrib_location('vertColor')
-        GL.glEnableVertexAttribArray(self.color_attrib)
-        GL.glVertexAttribPointer(self.color_attrib, 4,
-                                 GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        GL.glBindVertexArray(0)
     
     def build_geo(self):
         "build vert, element, and color arrays for"
@@ -100,40 +55,16 @@ class Grid:
         self.x = -self.art_margin
         self.y = self.art_margin
     
-    def rebind_buffers(self):
-        # resend verts
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vert_array.nbytes,
-                        self.vert_array, GL.GL_STATIC_DRAW)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
-        GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_array.nbytes,
-                        self.elem_array, GL.GL_STATIC_DRAW)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        self.vert_count = int(len(self.elem_array))
-        # resend color
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.color_buffer)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.color_array.nbytes,
-                        self.color_array, GL.GL_STATIC_DRAW)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-    
     def update(self):
         # TODO: if active_art has changed, adjust position and size accordingly,
         # then self.rebind_buffers()
         pass
     
-    def render(self, elapsed_time):
-        GL.glUseProgram(self.shader.program)
-        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.projection_matrix)
-        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.view_matrix)
-        GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
-        GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
-        GL.glUniform2f(self.quad_size_uniform, self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height)
-        GL.glBindVertexArray(self.vao)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        GL.glDrawElements(GL.GL_LINES, self.vert_count,
-                          GL.GL_UNSIGNED_INT, self.elem_array)
-        GL.glDisable(GL.GL_BLEND)
-        GL.glBindVertexArray(0)
-        GL.glUseProgram(0)
+    def get_projection_matrix(self):
+        return self.app.camera.projection_matrix
+    
+    def get_view_matrix(self):
+        return self.app.camera.view_matrix
+    
+    def get_quad_size(self):
+        return self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
