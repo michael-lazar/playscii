@@ -65,6 +65,3 @@ class Grid(LineRenderable):
     
     def get_view_matrix(self):
         return self.app.camera.view_matrix
-    
-    def get_quad_size(self):
-        return self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height

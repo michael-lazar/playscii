@@ -1,5 +1,8 @@
+import math
+import numpy as np
 
-from ui_element import UIElement, UIArt, UIRenderable
+from ui_element import UIElement, UIArt, UIRenderable, UIRenderableX
+from renderable_line import LineRenderable
 
 TAB_TOOLS = 0
 TAB_CHAR_COLOR = 1
@@ -16,8 +19,6 @@ class ToolPopup(UIElement):
     def __init__(self, ui):
         self.charset_swatch = CharacterSetSwatch(ui, self)
         self.palette_swatch = PaletteSwatch(ui, self)
-        # create charset and palette art and renderables
-        # width and height set here, everything else happens in reset_art
         # set which tab is "active"
         self.active_tab = TAB_CHAR_COLOR
         UIElement.__init__(self, ui)
@@ -168,6 +169,20 @@ class CharacterSetSwatch(UISwatch):
 
 class PaletteSwatch(UISwatch):
     
+    def __init__(self, ui, popup):
+        UISwatch.__init__(self, ui, popup)
+        self.transparent_x = UIRenderableX(ui.app, self.art)
+        self.fg_selection_box = SelectionBoxRenderable(ui.app, self.art)
+        self.bg_selection_box = SelectionBoxRenderable(ui.app, self.art)
+        # F label for FG color selection
+        self.f_art = ColorSelectionLabelArt(ui, 'F')
+        self.f_renderable = ColorSelectionLabelRenderable(ui.app, self.f_art)
+        self.f_renderable.ui = ui
+        # B label for BG color seletion
+        self.b_art = ColorSelectionLabelArt(ui, 'B')
+        self.b_renderable = ColorSelectionLabelRenderable(ui.app, self.b_art)
+        self.b_renderable.ui = ui
+    
     def get_size(self):
         # TODO: make colors bigger if palette is small enough
         return len(self.ui.active_art.palette.colors), 1
@@ -189,6 +204,70 @@ class PaletteSwatch(UISwatch):
         self.renderable.y = self.popup.charset_swatch.renderable.y
         self.renderable.y -= self.art.quad_height * self.ui.active_art.charset.map_height
         self.renderable.y -= self.popup.art.quad_height * 2
+        # first color in palette (top left) always transparent
+        self.transparent_x.x = self.renderable.x
+        self.transparent_x.y = self.renderable.y - self.art.quad_height
     
     def update(self):
         self.art.update()
+        # color selection boxes
+        elapsed_time = self.ui.app.elapsed_time
+        color = 0.75 + (math.sin(elapsed_time / 100) / 2)
+        self.fg_selection_box.color = (color, color) * 2
+        self.bg_selection_box.color = (color, color) * 2
+        # fg selection box position
+        # TODO: redo when palette takes multiple rows
+        self.fg_selection_box.x = self.renderable.x
+        self.fg_selection_box.x += self.art.quad_width * self.ui.selected_fg_color
+        self.fg_selection_box.y = self.renderable.y - self.art.quad_height
+        # bg box position
+        self.bg_selection_box.x = self.renderable.x
+        self.bg_selection_box.x += self.art.quad_width * self.ui.selected_bg_color
+        self.bg_selection_box.y = self.renderable.y - self.art.quad_height
+        # FG label position
+        self.f_renderable.alpha = 1 - color
+        self.f_renderable.x = self.fg_selection_box.x
+        self.f_renderable.y = self.renderable.y
+        # center
+        center_offset = (self.art.quad_width - self.popup.art.quad_width) / 2
+        self.f_renderable.x += center_offset
+        # BG label position
+        self.b_renderable.alpha = 1 - color
+        self.b_renderable.x = self.bg_selection_box.x
+        self.b_renderable.y = self.renderable.y
+        self.b_renderable.x += center_offset
+    
+    def render(self, elapsed_time):
+        UISwatch.render(self, elapsed_time)
+        self.transparent_x.render(elapsed_time)
+        self.fg_selection_box.render(elapsed_time)
+        self.bg_selection_box.render(elapsed_time)
+        self.f_renderable.render(elapsed_time)
+        self.b_renderable.render(elapsed_time)
+
+
+class SelectionBoxRenderable(LineRenderable):
+    
+    color = (0.5, 0.5, 0.5, 1)
+    
+    def get_color(self, elapsed_time):
+        return self.color
+    
+    def build_geo(self):
+        self.vert_array = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=np.float32)
+        self.elem_array = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
+        self.color_array = np.array([self.color * 4], dtype=np.float32)
+
+
+class ColorSelectionLabelArt(UIArt):
+    def __init__(self, ui, letter):
+        letter_index = ui.charset.get_char_index(letter)
+        UIArt.__init__(self, None, ui.app, ui.charset, ui.palette, 1, 1)
+        label_color = ui.palette.lightest_index
+        label_bg_color = 0
+        self.set_tile_at(0, 0, 0, 0, letter_index, label_color, label_bg_color)
+
+
+class ColorSelectionLabelRenderable(UIRenderable):
+    # transparent background so we can see the swatch color behind it
+    bg_alpha = 0
