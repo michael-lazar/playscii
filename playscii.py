@@ -459,7 +459,8 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        self.cursor.update(self.elapsed_time)
+        if not self.ui.popup.visible:
+            self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
         self.grid.update()
@@ -473,7 +474,8 @@ class Application:
             r.render(self.elapsed_time)
         if self.grid.visible:
             self.grid.render(self.elapsed_time)
-        self.cursor.render(self.elapsed_time)
+        if not self.ui.popup.visible:
+            self.cursor.render(self.elapsed_time)
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render(self.elapsed_time)

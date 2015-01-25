@@ -123,13 +123,17 @@ class UISwatch():
     
     def render(self, elapsed_time):
         self.renderable.render(elapsed_time)
-        # TODO: draw wireframe selection box
 
 
 class CharacterSetSwatch(UISwatch):
     
     # scale the character set will be drawn at
     char_scale = 2
+    
+    def __init__(self, ui, popup):
+        UISwatch.__init__(self, ui, popup)
+        self.selection_box = SelectionBoxRenderable(ui.app, self.art)
+        self.grid = CharacterGridRenderable(ui.app, self.art)
     
     def get_size(self):
         art = self.ui.active_art
@@ -156,6 +160,8 @@ class CharacterSetSwatch(UISwatch):
         self.renderable.x = self.popup.x + self.popup.swatch_margin
         self.renderable.y = self.popup.y
         self.renderable.y -= self.popup.art.quad_height * 3
+        self.grid.x, self.grid.y = self.renderable.x, self.renderable.y
+        self.grid.y -= self.art.quad_height
     
     def update(self):
         charset = self.ui.active_art.charset
@@ -165,6 +171,22 @@ class CharacterSetSwatch(UISwatch):
             for x in range(charset.map_width):
                 self.art.set_tile_at(0, 0, x, y, None, fg, bg)
         self.art.update()
+        # selection box color
+        elapsed_time = self.ui.app.elapsed_time
+        color = 0.75 + (math.sin(elapsed_time / 100) / 2)
+        self.selection_box.color = (color, color) * 2
+        # position
+        self.selection_box.x = self.renderable.x
+        selection_x = self.ui.selected_char % charset.map_width
+        self.selection_box.x += selection_x * self.art.quad_width
+        self.selection_box.y = self.renderable.y
+        selection_y = (self.ui.selected_char - selection_x) / charset.map_width
+        self.selection_box.y -= (selection_y + 1) * self.art.quad_height
+    
+    def render(self, elapsed_time):
+        UISwatch.render(self, elapsed_time)
+        self.grid.render(elapsed_time)
+        self.selection_box.render(elapsed_time)
 
 
 class PaletteSwatch(UISwatch):
@@ -271,3 +293,24 @@ class ColorSelectionLabelArt(UIArt):
 class ColorSelectionLabelRenderable(UIRenderable):
     # transparent background so we can see the swatch color behind it
     bg_alpha = 0
+
+
+class CharacterGridRenderable(LineRenderable):
+    color = (0.5, 0.5, 0.5, 0.25)
+    def build_geo(self):
+        w, h = self.quad_size_ref.width, self.quad_size_ref.height
+        v = []
+        e = []
+        c = self.color * 4 * w * h
+        index = 0
+        for x in range(1, w):
+            v += [(x, -h+1), (x, 1)]
+            e += [index, index+1]
+            index += 2
+        for y in range(h-1):
+            v += [(w, -y), (0, -y)]
+            e += [index, index+1]
+            index += 2
+        self.vert_array = np.array(v, dtype=np.float32)
+        self.elem_array = np.array(e, dtype=np.uint32)
+        self.color_array = np.array(c, dtype=np.float32)
