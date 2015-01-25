@@ -120,7 +120,7 @@ class Application:
         self.ui = UI(self, self.art_loaded[0])
         self.update_window_title()
         self.cursor = Cursor(self)
-        self.grid = Grid(self)
+        self.grid = Grid(self, self.ui.active_art)
         self.ui.set_active_layer(0)
         self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         self.init_success = True

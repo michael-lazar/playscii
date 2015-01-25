@@ -9,8 +9,9 @@ class LineRenderable():
     vert_shader_source = 'lines_v.glsl'
     frag_shader_source = 'lines_f.glsl'
     
-    def __init__(self, app):
+    def __init__(self, app, quad_size_ref):
         self.app = app
+        self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 0
         self.build_geo()
@@ -24,6 +25,7 @@ class LineRenderable():
         self.position_uniform = self.shader.get_uniform_location('objectPosition')
         self.scale_uniform = self.shader.get_uniform_location('objectScale')
         self.quad_size_uniform = self.shader.get_uniform_location('quadSize')
+        self.color_uniform = self.shader.get_uniform_location('objectColor')
         # vert buffers
         self.vert_buffer, self.elem_buffer = GL.glGenBuffers(2)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
@@ -85,7 +87,10 @@ class LineRenderable():
         return np.eye(4, 4)
     
     def get_quad_size(self):
-        return 1, 1
+        return self.quad_size_ref.quad_width, self.quad_size_ref.quad_height
+    
+    def get_color(self, elapsed_time):
+        return (1, 1, 1, 1)
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
@@ -94,6 +99,7 @@ class LineRenderable():
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform2f(self.quad_size_uniform, *self.get_quad_size())
+        GL.glUniform4f(self.color_uniform, *self.get_color(elapsed_time))
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
