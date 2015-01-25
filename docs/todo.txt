@@ -1,12 +1,9 @@
 TODO
 
 main popup!
-- two panes: tool and picker
-- tool: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
-- picker: character set and palette, with grid overlay to make boundaries clear
--- how to convey "this char/color is selected"?  fg vs bg color?
--- how to convey "transparent"?  make it look like this in status bar too
-- don't move cursor while popup is up - arrow keys navigate picker
+- picker pane: mouse can select characters and colors!
+- tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
+- arrow keys navigate picker as well as mouse?
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
