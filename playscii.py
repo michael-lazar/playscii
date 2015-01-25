@@ -23,7 +23,7 @@ from camera import Camera
 from charset import CharacterSet
 from palette import Palette
 from art import Art, ArtFromDisk, ArtFromEDSCII
-from renderable import Renderable
+from renderable import TileRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI, SCALE_INCREMENT
@@ -174,7 +174,7 @@ class Application:
                 art = self.new_art(filename)
         # keep a list of all art assets loaded (stub for MDI support)
         self.art_loaded.append(art)
-        renderable = Renderable(self, art)
+        renderable = TileRenderable(self, art)
         self.renderables.append(renderable)
         # TEST: offset new loaded renderables so you can distinguish them
         x = y = (len(self.art_loaded) - 1) * 2

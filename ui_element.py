@@ -2,7 +2,8 @@ import numpy as np
 from math import ceil
 
 from art import Art
-from renderable import Renderable
+from renderable import TileRenderable
+from renderable_line import LineRenderable
 
 class UIElement:
     
@@ -51,7 +52,7 @@ class UIArt(Art):
     log_creation = False
 
 
-class UIRenderable(Renderable):
+class UIRenderable(TileRenderable):
     
     grain_strength = 0.2
     
@@ -86,3 +87,14 @@ class FPSCounterUI(UIElement):
         text = '%.1f ms ' % self.ui.app.last_tick_time
         x = self.width - len(text)
         self.art.write_string(0, 0, x, 1, text, color)
+
+
+class UIRenderableX(LineRenderable):
+    
+    "Red X used to denote transparent color in various places"
+    color = (1, 0, 0, 1)
+    
+    def build_geo(self):
+        self.vert_array = np.array([(0, 0), (1, 1), (1, 0), (0, 1)], dtype=np.float32)
+        self.elem_array = np.array([0, 1, 2, 3], dtype=np.uint32)
+        self.color_array = np.array([self.color * 4], dtype=np.float32)

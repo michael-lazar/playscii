@@ -53,7 +53,7 @@ class Art:
     """
     Art asset:
     Contains the data that is modified by user edits and gets saved to disk.
-    Data stored as arrays that Renderables use to populate their buffers.
+    Data stored as arrays that TileRenderables use to populate their buffers.
     
     assumptions:
     - an Art contains 1 or more frames
@@ -94,7 +94,7 @@ class Art:
         # derive quad_height from chars aspect; quad_width always 1.0
         if self.recalc_quad_height:
             self.quad_height *= self.charset.char_height / self.charset.char_width
-        # list of Renderables using us - each new Renderable adds itself
+        # list of TileRenderables using us - each new Renderable adds itself
         self.renderables = []
         # running scripts and timing info
         self.scripts = []
