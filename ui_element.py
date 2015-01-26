@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from math import ceil
 
@@ -15,7 +16,9 @@ class UIElement:
     
     def __init__(self, ui):
         self.ui = ui
-        self.art = UIArt(None, self.ui.app, self.ui.charset, self.ui.palette, self.tile_width, self.tile_height)
+        # generate a unique name
+        art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
+        self.art = UIArt(art_name, self.ui.app, self.ui.charset, self.ui.palette, self.tile_width, self.tile_height)
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
         self.reset_art()
@@ -92,7 +95,7 @@ class UIRenderable(TileRenderable):
 
 class FPSCounterUI(UIElement):
     
-    tile_width, tile_height = 10, 2
+    tile_width, tile_height = 12, 2
     snap_top = True
     snap_right = True
     
@@ -106,9 +109,8 @@ class FPSCounterUI(UIElement):
         if self.ui.app.fps < 10:
             color = 2
         text = '%.1f fps' % self.ui.app.fps
-        x = self.tile_width - len(text)
-        self.art.write_string(0, 0, x, 0, text, color)
+        x = self.tile_width - 1
+        self.art.write_string(0, 0, x, 0, text, color, None, True)
         # display last tick time; frame_time includes delay, is useless
         text = '%.1f ms ' % self.ui.app.last_tick_time
-        x = self.tile_width - len(text)
-        self.art.write_string(0, 0, x, 1, text, color)
+        self.art.write_string(0, 0, x, 1, text, color, None, True)

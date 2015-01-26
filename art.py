@@ -66,6 +66,9 @@ class Art:
     log_size_changes = False
     recalc_quad_height = True
     log_creation = True
+    # avoid writing to characters out of bounds in write_string -
+    # used for debug
+    write_string_range_check = False
     
     def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
@@ -441,6 +444,9 @@ class Art:
             if bg_color_index:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
+            if self.write_string_range_check and (x+x_offset < 0 or x+x_offset > self.width - 1):
+                self.app.log('Warning: %s.write_string went out of bounds at %s,%s' % (self.filename, x+x_offset, y))
+                break
 
 
 class ArtFromDisk(Art):

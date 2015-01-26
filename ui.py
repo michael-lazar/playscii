@@ -129,6 +129,10 @@ class UI:
     def select_bg(self, new_bg_index):
         self.select_color(new_bg_index, False)
     
+    def swap_fg_bg_colors(self):
+        fg, bg = self.selected_fg_color, self.selected_bg_color
+        self.selected_fg_color, self.selected_bg_color = bg, fg
+    
     def get_screen_coords(self, window_x, window_y):
         x = (2 * window_x) / self.app.window_width - 1
         y = (-2 * window_y) / self.app.window_height + 1
@@ -166,7 +170,7 @@ class UI:
     
     def DBG_paint(self):
         "simple quick function to test painting"
-        if self.popup.visible:
+        if self.popup.visible or self.console.visible:
             return
         x, y = self.app.cursor.get_tile()
         # don't allow painting out of bounds
@@ -175,7 +179,7 @@ class UI:
         self.active_art.set_tile_at(0, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
     
     def DBG_grab(self):
-        if self.popup.visible:
+        if self.popup.visible or self.console.visible:
             return
         x, y = self.app.cursor.get_tile()
         if not self.active_art.is_tile_inside(x, y):
