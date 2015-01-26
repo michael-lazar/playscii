@@ -1,4 +1,4 @@
-import math
+import math, time
 import numpy as np
 
 from ui_element import UIElement, UIArt, UIRenderable
@@ -11,7 +11,9 @@ class UISwatch(UIElement):
         self.popup = popup
         self.tile_width, self.tile_height = self.get_size()
         art = self.ui.active_art
-        self.art = UIArt(None, self.ui.app, art.charset, art.palette, self.tile_width, self.tile_height)
+        # generate a unique name for debug purposes
+        art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
+        self.art = UIArt(art_name, self.ui.app, art.charset, art.palette, self.tile_width, self.tile_height)
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
         self.renderable.grain_strength = 0
@@ -176,6 +178,10 @@ class PaletteSwatch(UISwatch):
         # first color in palette (top left) always transparent
         self.transparent_x.x = self.renderable.x
         self.transparent_x.y = self.renderable.y - self.art.quad_height
+        # set f/b_art's quad size
+        self.f_art.quad_width, self.f_art.quad_height = self.b_art.quad_width, self.b_art.quad_height = self.popup.art.quad_width, self.popup.art.quad_height
+        self.f_art.geo_changed = True
+        self.b_art.geo_changed = True
     
     def is_selection_index_valid(self, index):
         return index < len(self.art.palette.colors)
@@ -186,6 +192,8 @@ class PaletteSwatch(UISwatch):
     
     def update(self):
         self.art.update()
+        self.f_art.update()
+        self.b_art.update()
         # color selection boxes
         elapsed_time = self.ui.app.elapsed_time
         color = 0.75 + (math.sin(elapsed_time / 100) / 2)
@@ -205,13 +213,16 @@ class PaletteSwatch(UISwatch):
         self.f_renderable.x = self.fg_selection_box.x
         self.f_renderable.y = self.renderable.y
         # center
-        center_offset = (self.art.quad_width - self.popup.art.quad_width) / 2
-        self.f_renderable.x += center_offset
+        x_offset = (self.art.quad_width - self.popup.art.quad_width) / 2
+        y_offset = (self.art.quad_height - self.popup.art.quad_height) / 2
+        self.f_renderable.x += x_offset
+        self.f_renderable.y -= y_offset
         # BG label position
         self.b_renderable.alpha = 1 - color
         self.b_renderable.x = self.bg_selection_box.x
         self.b_renderable.y = self.renderable.y
-        self.b_renderable.x += center_offset
+        self.b_renderable.x += x_offset
+        self.b_renderable.y -= y_offset
     
     def render(self, elapsed_time):
         UISwatch.render(self, elapsed_time)
@@ -225,7 +236,8 @@ class PaletteSwatch(UISwatch):
 class ColorSelectionLabelArt(UIArt):
     def __init__(self, ui, letter):
         letter_index = ui.charset.get_char_index(letter)
-        UIArt.__init__(self, None, ui.app, ui.charset, ui.palette, 1, 1)
+        art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
+        UIArt.__init__(self, art_name, ui.app, ui.charset, ui.palette, 1, 1)
         label_color = ui.palette.lightest_index
         label_bg_color = 0
         self.set_tile_at(0, 0, 0, 0, letter_index, label_color, label_bg_color)

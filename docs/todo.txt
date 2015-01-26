@@ -2,13 +2,22 @@ TODO
 
 main popup!
 - tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
+-- paint and erase tools: checkboxes for "only affect char/fg/bg"
 - arrow keys navigate picker as well as mouse?
+- mustfix: crash in ui_popup.py on resizing window or changing UI scale
+
+- control to swap fg and bg colors - shift-S?
+
+- when new art is loaded, make it active
+- tab/shift-tab: cycle through active arts, grid adjusts
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
 -- is color distortion inherent in how good CRT filters work?
 
 ability to toggle between perspective and ortho views (steal unity's cool lerp?)
+
+ability to "pin" popup so it stays on screen always
 
 later UI stuff in docs/ui.txt
 

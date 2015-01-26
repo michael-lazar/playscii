@@ -47,14 +47,14 @@ class ToolPopup(UIElement):
         # tools
         if self.active_tab == TAB_CHAR_COLOR:
             bg = self.unselected_tab_color
-        label = ('   %s' % self.tool_tab_label).ljust(tab_width)
+        label = ('%s' % self.tool_tab_label).center(tab_width)
         self.art.write_string(0, 0, 0, 0, label, fg, bg)
         # char/color picker
         bg = self.ui.palette.lightest_index
         if self.active_tab == TAB_TOOLS:
             bg = self.unselected_tab_color
-        label = ('%s   ' % self.char_color_tab_label).rjust(tab_width)
-        self.art.write_string(0, 0, tab_width + 1, 0, label, fg, bg)
+        label = ('%s' % self.char_color_tab_label).center(tab_width + 1)
+        self.art.write_string(0, 0, tab_width-1, 0, label, fg, bg)
         # charset renderable location will be set in update()
         # charset label
         self.art.write_string(0, 0, 2, 2, 'Character Set: %s' % charset.name, fg)

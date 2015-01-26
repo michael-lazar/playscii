@@ -343,6 +343,9 @@ class Application:
                         self.ui.select_bg(self.ui.selected_bg_color-1)
                     else:
                         self.ui.select_bg(self.ui.selected_bg_color+1)
+                # shift-S: swap fg/bg color
+                elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_s:
+                    self.ui.swap_fg_bg_colors()
                 # shift-U: toggle UI visibility
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
                     self.ui.visible = not self.ui.visible
@@ -423,7 +426,7 @@ class Application:
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
                     self.ui.DBG_grab()
         # directly query keys we don't want affected by OS key repeat delay
-        if not alt_pressed and not ctrl_pressed and not self.ui.console.visible:
+        if not alt_pressed and not ctrl_pressed and not shift_pressed and not self.ui.console.visible:
             if ks[sdl2.SDL_SCANCODE_W]:
                 self.camera.pan(0, 1)
             if ks[sdl2.SDL_SCANCODE_S]:
@@ -459,7 +462,7 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        if not self.ui.popup.visible:
+        if not self.ui.popup.visible and not self.ui.console.visible:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
@@ -474,7 +477,7 @@ class Application:
             r.render(self.elapsed_time)
         if self.grid.visible:
             self.grid.render(self.elapsed_time)
-        if not self.ui.popup.visible:
+        if not self.ui.popup.visible and not self.ui.console.visible:
             self.cursor.render(self.elapsed_time)
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)

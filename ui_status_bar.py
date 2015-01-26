@@ -113,12 +113,12 @@ class StatusBarUI(UIElement):
         dark = self.ui.palette.darkest_index
         light = self.ui.palette.lightest_index
         padding = 2
-        x = self.tile_width
+        x = self.tile_width - 1
         art = self.ui.active_art
         # filename
-        filename = ' [nothing]  '
+        filename = ' [nothing] '
         if art:
-            filename = ' %s  ' % os.path.basename(art.filename)
+            filename = ' %s ' % os.path.basename(art.filename)
         # use "right justify" final arg of write_string
         self.art.write_string(0, 0, x, 0, filename, light, dark, True)
         x += -padding - len(filename)
