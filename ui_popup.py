@@ -1,7 +1,7 @@
 
 from ui_element import UIElement, UIArt, UIRenderable
 from ui_swatch import CharacterSetSwatch, PaletteSwatch
-from renderable_line import LineRenderable, SelectionBoxRenderable, UIRenderableX
+from renderable_line import LineRenderable, SelectionBoxRenderable
 
 TAB_TOOLS = 0
 TAB_CHAR_COLOR = 1
@@ -22,6 +22,7 @@ class ToolPopup(UIElement):
         self.cursor_box = SelectionBoxRenderable(ui.app, self.charset_swatch.art)
         # set by swatch.set_cursor_loc based on selection validity
         self.cursor_char = -1
+        self.cursor_color = -1
         # set which tab is "active"
         self.active_tab = TAB_CHAR_COLOR
         UIElement.__init__(self, ui)
@@ -105,13 +106,18 @@ class ToolPopup(UIElement):
     
     def clicked(self, button):
         UIElement.clicked(self, button)
-        # if cursor is over a char or color, make it ui's selected
+        # if cursor is over a char or color, make it the ui's selected one
         if self.cursor_char != -1:
             self.ui.selected_char = self.cursor_char
+        elif self.cursor_color != -1:
+            if button == 1:
+                self.ui.selected_fg_color = self.cursor_color
+            elif button == 3:
+                self.ui.selected_bg_color = self.cursor_color
     
     def render(self, elapsed_time):
         UIElement.render(self, elapsed_time)
         self.charset_swatch.render(elapsed_time)
         self.palette_swatch.render(elapsed_time)
-        if self.cursor_char != -1:
+        if self.cursor_char != -1 or self.cursor_color != -1:
             self.cursor_box.render(elapsed_time)

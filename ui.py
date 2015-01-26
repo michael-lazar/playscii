@@ -146,11 +146,10 @@ class UI:
                 self.hovered_elements.append(e)
                 # only hover if we weren't last update
                 if not e in was_hovering:
-                    print('started hovering %s' % e.__class__.__name__)
+                    e.hovered()
         for e in was_hovering:
             if not e in self.hovered_elements:
-                print('stopped hovering %s' % e.__class__.__name__)
-                #e.unhovered()
+                e.unhovered()
         # update all elements, regardless of whether they're being hovered etc
         for e in self.elements:
             e.update()
@@ -167,6 +166,8 @@ class UI:
     
     def DBG_paint(self):
         "simple quick function to test painting"
+        if self.popup.visible:
+            return
         x, y = self.app.cursor.get_tile()
         # don't allow painting out of bounds
         if not self.active_art.is_tile_inside(x, y):
@@ -174,6 +175,8 @@ class UI:
         self.active_art.set_tile_at(0, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
     
     def DBG_grab(self):
+        if self.popup.visible:
+            return
         x, y = self.app.cursor.get_tile()
         if not self.active_art.is_tile_inside(x, y):
             return
