@@ -1,5 +1,22 @@
 UI design notes
 
+menu bar:
+- file: new, open, save, save as, export current frame to PNG, export animated GIF, quit
+- edit: cut/copy/paste
+- select: select all/none/invert
+
+layer/frame view:
+- matrix w/ layers are rows, frames are columns, scrolls horizontally if lots of frames, vertically if lots of layers
+- thumbnails of each frame across the top
+- clicking frame or layer section of status bar expands/minimizes it
+- exposes layer functionality: add/duplicate/remove layer, adjust layer Z
+-- layer Z order /is/ the layer list ordering, no other index kinda number
+- exposes frame functionality: add/duplicate/remove frame, change frame order, change frame delay
+- playback controls: play/pause, next/previous frame, first/last frame
+- onion skin settings: on/off, # of frames to show
+
+---
+
 mark wonnacott likes EDSCII's spacebar-invoked charset/palette popup, and in kooltool it's effectively multi-tab also offering a tools pane... what if playscii's popup had tabs and that replaced a more conventional left-hand toolbar?
 
 how to show range of open documents? (save for later, when MDI is needed for game editing)

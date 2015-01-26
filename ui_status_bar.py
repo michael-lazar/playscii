@@ -1,7 +1,8 @@
 import os.path
 from math import ceil
 
-from ui_element import UIElement, UIArt, UIRenderable, UIRenderableX
+from ui_element import UIElement, UIArt, UIRenderable
+from renderable_line import UIRenderableX
 
 class StatusBarUI(UIElement):
     
@@ -45,9 +46,9 @@ class StatusBarUI(UIElement):
         UIElement.__init__(self, ui)
     
     def reset_art(self):
-        self.width = ceil(self.ui.width_tiles)
+        self.tile_width = ceil(self.ui.width_tiles)
         # must resize here, as window width will vary
-        self.art.resize(self.width, self.height)
+        self.art.resize(self.tile_width, self.tile_height)
         # write chars/colors to the art
         self.rewrite_art()
         self.x_renderable.scale_x = self.char_art.width
@@ -112,7 +113,7 @@ class StatusBarUI(UIElement):
         dark = self.ui.palette.darkest_index
         light = self.ui.palette.lightest_index
         padding = 2
-        x = self.width
+        x = self.tile_width
         art = self.ui.active_art
         # filename
         filename = ' [nothing]  '

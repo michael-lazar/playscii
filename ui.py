@@ -20,6 +20,7 @@ class UI:
     # low-contrast background texture that distinguishes UI from flat color
     grain_texture = 'bgnoise_alpha.png'
     visible = True
+    logg = False
     
     def __init__(self, app, active_art):
         self.app = app
@@ -40,6 +41,7 @@ class UI:
         self.selected_bg_color = art_pal.darkest_index
         # create elements
         self.elements = []
+        self.hovered_elements = []
         # set geo sizes, force scale update
         self.set_scale(self.scale)
         fps_counter = FPSCounterUI(self)
@@ -127,17 +129,41 @@ class UI:
     def select_bg(self, new_bg_index):
         self.select_color(new_bg_index, False)
     
+    def get_screen_coords(self, window_x, window_y):
+        x = (2 * window_x) / self.app.window_width - 1
+        y = (-2 * window_y) / self.app.window_height + 1
+        return x, y
+    
     def update(self):
+        # window coordinates -> OpenGL coordinates
+        x, y = self.get_screen_coords(self.app.mouse_x, self.app.mouse_y)
+        # test elements for hover
+        was_hovering = self.hovered_elements[:]
+        self.hovered_elements = []
+        for e in self.elements:
+            # only check visible elements
+            if e.visible and e.is_inside(x, y):
+                self.hovered_elements.append(e)
+                # only hover if we weren't last update
+                if not e in was_hovering:
+                    print('started hovering %s' % e.__class__.__name__)
+        for e in was_hovering:
+            if not e in self.hovered_elements:
+                print('stopped hovering %s' % e.__class__.__name__)
+                #e.unhovered()
+        # update all elements, regardless of whether they're being hovered etc
         for e in self.elements:
             e.update()
             # art update: tell renderables to refresh buffers
             e.art.update()
     
     def clicked(self, button):
-        pass
+        for e in self.hovered_elements:
+            e.clicked(button)
     
     def unclicked(self, button):
-        pass
+        for e in self.hovered_elements:
+            e.unclicked(button)
     
     def DBG_paint(self):
         "simple quick function to test painting"
