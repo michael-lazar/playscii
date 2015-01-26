@@ -23,6 +23,40 @@ class UISwatch(UIElement):
     def get_size(self):
         return 1, 1
     
+    def set_cursor_loc(self, cursor, mouse_x, mouse_y):
+        """
+        common, generalized code for both character and palette swatches:
+        set cursor's screen location, tile location, and quad size.
+        """
+        # get location within char map
+        w, h = self.art.quad_width, self.art.quad_height
+        tile_x = (mouse_x - self.x) / w
+        tile_y = (mouse_y - self.y) / h
+        # snap to tile
+        tile_x = int(math.floor(tile_x / w) * w)
+        tile_y = int(math.ceil(tile_y / h) * h)
+        # back to screen coords
+        x = tile_x * w + self.x
+        y = (tile_y - 1) * h + self.y
+        tile_index = (abs(tile_y) * self.art.width) + tile_x
+        # if a valid character isn't hovered, bail
+        if not self.is_selection_index_valid(tile_index):
+            self.set_cursor_selection_index(-1)
+            return
+        # cool, set cursor location & size
+        self.set_cursor_selection_index(tile_index)
+        cursor.quad_size_ref = self.art
+        cursor.tile_x = cursor.tile_y = tile_x, tile_y
+        cursor.x, cursor.y = x, y
+    
+    def is_selection_index_valid(self, index):
+        "returns True if given index is valid for choices this swatch offers"
+        return False
+    
+    def set_cursor_selection_index(self, index):
+        "another set_cursor_loc support method, overriden by subclasses"
+        self.popup.blah = index
+    
     def render(self, elapsed_time):
         self.renderable.render(elapsed_time)
 
@@ -66,28 +100,12 @@ class CharacterSetSwatch(UISwatch):
         self.grid.x, self.grid.y = self.x, self.y
         self.grid.y -= self.art.quad_height
     
-    def set_cursor_loc(self, cursor, mouse_x, mouse_y):
-        "set cursor's screen location, tile location, and quad size"
-        # get location within char map
-        w, h = self.art.quad_width, self.art.quad_height
-        tile_x = (mouse_x - self.x) / w
-        tile_y = (mouse_y - self.y) / h
-        # snap to tile
-        tile_x = int(math.floor(tile_x / w) * w)
-        tile_y = int(math.ceil(tile_y / h) * h)
-        # back to screen coords
-        x = tile_x * w + self.x
-        y = (tile_y - 1) * h + self.y
-        tile_index = (abs(tile_y) * self.art.charset.map_width) + tile_x
-        # if a valid character isn't hovered, bail
-        if tile_index >= self.art.charset.last_index:
-            self.popup.cursor_char = -1
-            return
-        # cool, set cursor location & size
-        self.popup.cursor_char = tile_index
-        cursor.quad_size_ref = self.art
-        cursor.tile_x = cursor.tile_y = tile_x, tile_y
-        cursor.x, cursor.y = x, y
+    def is_selection_index_valid(self, index):
+        return index < self.art.charset.last_index
+    
+    def set_cursor_selection_index(self, index):
+        self.popup.cursor_char = index
+        self.popup.cursor_color = -1
     
     def update(self):
         charset = self.ui.active_art.charset
@@ -159,9 +177,12 @@ class PaletteSwatch(UISwatch):
         self.transparent_x.x = self.renderable.x
         self.transparent_x.y = self.renderable.y - self.art.quad_height
     
-    def set_cursor_loc(self, cursor, screen_x, screen_y):
-        # TODO: set cursor's screen location, tile location, and quad size
-        cursor.x, cursor.y = self.renderable.x, self.renderable.y
+    def is_selection_index_valid(self, index):
+        return index < len(self.art.palette.colors)
+    
+    def set_cursor_selection_index(self, index):
+        self.popup.cursor_color = index
+        self.popup.cursor_char = -1
     
     def update(self):
         self.art.update()

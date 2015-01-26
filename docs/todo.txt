@@ -1,7 +1,6 @@
 TODO
 
 main popup!
-- picker pane: mouse can select characters and colors!
 - tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
 - arrow keys navigate picker as well as mouse?
 
