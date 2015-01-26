@@ -108,3 +108,29 @@ class LineRenderable():
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
+
+
+class UIRenderableX(LineRenderable):
+    
+    "Red X used to denote transparent color in various places"
+    color = (1, 0, 0, 1)
+    
+    def build_geo(self):
+        self.vert_array = np.array([(0, 0), (1, 1), (1, 0), (0, 1)], dtype=np.float32)
+        self.elem_array = np.array([0, 1, 2, 3], dtype=np.uint32)
+        self.color_array = np.array([self.color * 4], dtype=np.float32)
+
+
+class SelectionBoxRenderable(LineRenderable):
+    
+    "used for UI selection boxes etc"
+    
+    color = (0.5, 0.5, 0.5, 1)
+    
+    def get_color(self, elapsed_time):
+        return self.color
+    
+    def build_geo(self):
+        self.vert_array = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=np.float32)
+        self.elem_array = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
+        self.color_array = np.array([self.color * 4], dtype=np.float32)

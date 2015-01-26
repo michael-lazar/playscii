@@ -118,6 +118,26 @@ class Cursor:
     def get_tile(self):
         return int(self.x), int(-self.y)
     
+    def screen_to_world(self, screen_x, screen_y):
+        # normalized device coordinates
+        x = (2 * screen_x) / self.app.window_width - 1
+        y = (-2 * screen_y) / self.app.window_height + 1
+        # reverse camera projection
+        pjm = np.matrix(self.app.camera.projection_matrix)
+        vm = np.matrix(self.app.camera.view_matrix)
+        vp_inverse = (pjm * vm).getI()
+        z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
+        point = vp_inverse.dot(np.array([x, y, z, 0]))
+        point = point.getA()
+        cz = self.app.camera.z - z
+        # apply camera offsets
+        x = point[0][0] * cz + self.app.camera.x
+        y = point[0][1] * cz + self.app.camera.y
+        # TODO: does below properly account for distance between current
+        # layer and camera? close but maybe still inaccurate
+        y += self.app.camera.y_tilt
+        return x, y, z
+    
     def update(self, elapsed_time):
         # save old positions before update
         self.last_x, self.last_y = self.x, self.y
@@ -129,23 +149,7 @@ class Cursor:
         # update cursor if mouse OR camera moved
         if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and not self.app.camera.moved_this_frame:
             return
-        # normalized device coordinates
-        x = (2 * self.app.mouse_x) / self.app.window_width - 1
-        y = (-2 * self.app.mouse_y) / self.app.window_height + 1
-        # reverse camera projection
-        pjm = np.matrix(self.app.camera.projection_matrix)
-        vm = np.matrix(self.app.camera.view_matrix)
-        vp_inverse = (pjm * vm).getI()
-        z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
-        point = vp_inverse.dot(np.array([x, y, z, 0]))
-        point = point.getA()
-        cz = self.app.camera.z - z
-        # apply camera offsets
-        self.x = point[0][0] * cz + self.app.camera.x
-        self.y = point[0][1] * cz + self.app.camera.y
-        # TODO: does below properly account for distance between current
-        # layer and camera? close but maybe still inaccurate
-        self.y += self.app.camera.y_tilt
+        self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         self.x = math.floor(self.x / w) * w

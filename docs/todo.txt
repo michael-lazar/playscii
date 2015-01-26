@@ -11,10 +11,15 @@ main popup!
 
 ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
+later UI stuff in docs/ui.txt
+
 ---
 
 FIX:
 
+rewrite Cursor.screen_to_world to produce same results as gluUnProject:
+https://www.opengl.org/wiki/GluProject_and_gluUnProject_code
+https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
 
 low priority:
 

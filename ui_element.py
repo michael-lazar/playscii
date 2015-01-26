@@ -8,18 +8,24 @@ from renderable_line import LineRenderable
 class UIElement:
     
     # size, in tiles
-    width, height = 1, 1
+    tile_width, tile_height = 1, 1
     snap_top, snap_bottom, snap_left, snap_right = False, False, False, False
     x, y = 0, 0
     visible = True
     
     def __init__(self, ui):
         self.ui = ui
-        self.art = UIArt(None, self.ui.app, self.ui.charset, self.ui.palette, self.width, self.height)
+        self.art = UIArt(None, self.ui.app, self.ui.charset, self.ui.palette, self.tile_width, self.tile_height)
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
         self.reset_art()
         self.reset_loc()
+    
+    def is_inside(self, x, y):
+        "returns True if given point is inside this element's bounds"
+        w = self.tile_width * self.art.quad_width
+        h = self.tile_height * self.art.quad_height
+        return self.x <= x <= self.x+w and self.y >= y >= self.y-h
     
     def reset_art(self):
         """
@@ -28,15 +34,31 @@ class UIElement:
         """
         pass
     
+    def hovered(self):
+        if self.ui.logg:
+            self.ui.app.log('%s hovered' % self.__class__)
+    
+    def unhovered(self):
+        if self.ui.logg:
+            self.ui.app.log('%s unhovered' % self.__class__)
+    
+    def clicked(self, button):
+        if self.ui.logg:
+            self.ui.app.log('%s clicked with button %s' % (self.__class__, button))
+    
+    def unclicked(self, button):
+        if self.ui.logg:
+            self.ui.app.log('%s unclicked with button %s' % (self.__class__, button))
+    
     def reset_loc(self):
         if self.snap_top:
             self.y = 1
         elif self.snap_bottom:
-            self.y = self.art.quad_height * self.height - 1
+            self.y = self.art.quad_height * self.tile_height - 1
         if self.snap_left:
             self.x = -1
         elif self.snap_right:
-            self.x = 1 - (self.art.quad_width * self.width)
+            self.x = 1 - (self.art.quad_width * self.tile_width)
         self.renderable.x, self.renderable.y = self.x, self.y
     
     def update(self):
@@ -45,6 +67,9 @@ class UIElement:
     
     def render(self, elapsed_time):
         self.renderable.render(elapsed_time)
+    
+    def destroy(self):
+        self.renderable.destroy()
 
 
 class UIArt(Art):
@@ -67,7 +92,7 @@ class UIRenderable(TileRenderable):
 
 class FPSCounterUI(UIElement):
     
-    width, height = 10, 2
+    tile_width, tile_height = 10, 2
     snap_top = True
     snap_right = True
     
@@ -81,20 +106,9 @@ class FPSCounterUI(UIElement):
         if self.ui.app.fps < 10:
             color = 2
         text = '%.1f fps' % self.ui.app.fps
-        x = self.width - len(text)
+        x = self.tile_width - len(text)
         self.art.write_string(0, 0, x, 0, text, color)
         # display last tick time; frame_time includes delay, is useless
         text = '%.1f ms ' % self.ui.app.last_tick_time
-        x = self.width - len(text)
+        x = self.tile_width - len(text)
         self.art.write_string(0, 0, x, 1, text, color)
-
-
-class UIRenderableX(LineRenderable):
-    
-    "Red X used to denote transparent color in various places"
-    color = (1, 0, 0, 1)
-    
-    def build_geo(self):
-        self.vert_array = np.array([(0, 0), (1, 1), (1, 0), (0, 1)], dtype=np.float32)
-        self.elem_array = np.array([0, 1, 2, 3], dtype=np.uint32)
-        self.color_array = np.array([self.color * 4], dtype=np.float32)
