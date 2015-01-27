@@ -6,8 +6,6 @@ main popup!
 - arrow keys navigate picker as well as mouse?
 - mustfix: crash in ui_popup.py on resizing window or changing UI scale
 
-fix: when loading a second art and resizing window, popup linerenderable scales get goofed up
-
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
 -- is color distortion inherent in how good CRT filters work?
@@ -21,6 +19,8 @@ later UI stuff in docs/ui.txt
 ---
 
 FIX:
+
+when loading a second art and resizing window, popup linerenderable scales get goofed up
 
 rewrite Cursor.screen_to_world to produce same results as gluUnProject:
 https://www.opengl.org/wiki/GluProject_and_gluUnProject_code

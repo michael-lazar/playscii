@@ -1,4 +1,4 @@
-import ctypes
+import math, ctypes
 from OpenGL import GL
 from art import VERT_LENGTH
 from palette import MAX_COLORS
@@ -14,6 +14,7 @@ class TileRenderable:
     grain_strength = 0
     alpha = 1
     bg_alpha = 1
+    move_rate = 1
     
     def __init__(self, app, art):
         self.app = app
@@ -26,6 +27,8 @@ class TileRenderable:
         # world space position
         # TODO: object rotation/scale matrices, if needed
         self.x, self.y, self.z = 0, 0, 0
+        self.goal_x, self.goal_y, self.goal_z = 0, 0, 0
+        self.moving = False
         self.camera = self.app.camera
         # bind VAO etc before doing shaders etc
         self.vao = GL.glGenVertexArrays(1)
@@ -122,7 +125,46 @@ class TileRenderable:
         if self.log_animation:
             self.app.log('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
+    def move_to(self, x, y, z, travel_time=None):
+        # for fixed travel time, set move rate accordingly
+        if travel_time:
+            frames = (travel_time * 1000) / self.app.frame_time
+            dx = x - self.x
+            dy = y - self.y
+            dz = z - self.z
+            dist = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+            self.move_rate = dist / frames
+        self.moving = True
+        self.goal_x, self.goal_y, self.goal_z = x, y, z
+        self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
+    
+    def update_loc(self):
+        # TODO: probably time to bust out the ol' vector module for this stuff
+        # get delta
+        dx = self.goal_x - self.x
+        dy = self.goal_y - self.y
+        dz = self.goal_z - self.z
+        dist = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
+        # close enough?
+        if dist <= self.move_rate:
+            self.x = self.goal_x
+            self.y = self.goal_y
+            self.z = self.goal_z
+            self.moving = False
+            return
+        # normalize
+        inv_dist = 1 / dist
+        dir_x = dx * inv_dist
+        dir_y = dy * inv_dist
+        dir_z = dz * inv_dist
+        self.x += self.move_rate * dir_x
+        self.y += self.move_rate * dir_y
+        self.z += self.move_rate * dir_z
+        #self.app.log('%s moved to %s,%s' % (self, self.x, self.y))
+    
     def update(self):
+        if self.moving:
+            self.update_loc()
         if not self.animating:
             return
         self.anim_timer += self.app.delta_time / 1000
@@ -143,8 +185,8 @@ class TileRenderable:
     
     def get_projection_matrix(self):
         """
-        UIRenderable overrides this so it doesn't have to override Renderable.render
-        and duplicate lots of code.
+        UIRenderable overrides this so it doesn't have to override
+        Renderable.render and duplicate lots of code.
         """
         return self.camera.projection_matrix
     

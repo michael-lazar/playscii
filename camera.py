@@ -28,7 +28,7 @@ class Camera:
     # TODO: leftover from u4mapvu, generate bounds according to art size
     min_x,max_x = -50, 50
     min_y,max_y = -50, 50
-    min_zoom,max_zoom = 2, 25
+    min_zoom,max_zoom = 2, 50
     # matrices -> worldspace renderable vertex shader uniforms
     fov = 90
     near_z = 0.0001
