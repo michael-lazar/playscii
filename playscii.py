@@ -29,6 +29,8 @@ from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI, SCALE_INCREMENT
 from cursor import Cursor
 from grid import Grid
+# some classes are imported only so the cfg file can modify their defaults
+from renderable_line import LineRenderable
 
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
@@ -383,19 +385,15 @@ class Application:
                         self.ui.active_art.stop_script('conway')
                     else:
                         self.ui.active_art.run_script_every('conway', 0.05)
-                # TEST: alt + arrow keys move object
+                # TEST: alt + arrow keys [do something]
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
-                    self.edit_renderables[0].y += 1
-                    self.edit_renderables[0].log_loc()
+                    pass
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    self.edit_renderables[0].y -= 1
-                    self.edit_renderables[0].log_loc()
+                    pass
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    self.edit_renderables[0].x -= 1
-                    self.edit_renderables[0].log_loc()
+                    pass
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    self.edit_renderables[0].x += 1
-                    self.edit_renderables[0].log_loc()
+                    pass
                 # TEST: shift-T toggles camera tilt
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     if self.camera.y_tilt == 2:

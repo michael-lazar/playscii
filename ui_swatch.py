@@ -9,7 +9,6 @@ class UISwatch(UIElement):
     def __init__(self, ui, popup):
         self.ui = ui
         self.popup = popup
-        self.renderable = None
         self.reset()
     
     def reset(self):
@@ -18,11 +17,17 @@ class UISwatch(UIElement):
         # generate a unique name for debug purposes
         art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.art = UIArt(art_name, self.ui.app, art.charset, art.palette, self.tile_width, self.tile_height)
-        if self.renderable:
-            self.renderable.destroy()
+        # tear down existing renderables if any
+        if not self.renderables:
+            self.renderables = []
+        else:
+            for r in self.renderables:
+                r.destroy()
+            self.renderables = []
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
         self.renderable.grain_strength = 0
+        self.renderables.append(self.renderable)
         self.reset_art()
     
     def reset_art(self):
@@ -74,10 +79,11 @@ class CharacterSetSwatch(UISwatch):
     # scale the character set will be drawn at
     char_scale = 3
     
-    def __init__(self, ui, popup):
-        UISwatch.__init__(self, ui, popup)
-        self.selection_box = SelectionBoxRenderable(ui.app, self.art)
-        self.grid = CharacterGridRenderable(ui.app, self.art)
+    def reset(self):
+        UISwatch.reset(self)
+        self.selection_box = SelectionBoxRenderable(self.ui.app, self.art)
+        self.grid = CharacterGridRenderable(self.ui.app, self.art)
+        self.renderables += self.selection_box, self.grid
     
     def get_size(self):
         art = self.ui.active_art
@@ -145,19 +151,20 @@ class CharacterSetSwatch(UISwatch):
 
 class PaletteSwatch(UISwatch):
     
-    def __init__(self, ui, popup):
-        UISwatch.__init__(self, ui, popup)
-        self.transparent_x = UIRenderableX(ui.app, self.art)
-        self.fg_selection_box = SelectionBoxRenderable(ui.app, self.art)
-        self.bg_selection_box = SelectionBoxRenderable(ui.app, self.art)
+    def reset(self):
+        UISwatch.reset(self)
+        self.transparent_x = UIRenderableX(self.ui.app, self.art)
+        self.fg_selection_box = SelectionBoxRenderable(self.ui.app, self.art)
+        self.bg_selection_box = SelectionBoxRenderable(self.ui.app, self.art)
         # F label for FG color selection
-        self.f_art = ColorSelectionLabelArt(ui, 'F')
-        self.f_renderable = ColorSelectionLabelRenderable(ui.app, self.f_art)
-        self.f_renderable.ui = ui
+        self.f_art = ColorSelectionLabelArt(self.ui, 'F')
+        self.f_renderable = ColorSelectionLabelRenderable(self.ui.app, self.f_art)
+        self.f_renderable.ui = self.ui
         # B label for BG color seletion
-        self.b_art = ColorSelectionLabelArt(ui, 'B')
-        self.b_renderable = ColorSelectionLabelRenderable(ui.app, self.b_art)
-        self.b_renderable.ui = ui
+        self.b_art = ColorSelectionLabelArt(self.ui, 'B')
+        self.b_renderable = ColorSelectionLabelRenderable(self.ui.app, self.b_art)
+        self.b_renderable.ui = self.ui
+        self.renderables += self.transparent_x, self.fg_selection_box, self.bg_selection_box, self.f_renderable, self.b_renderable
     
     def get_size(self):
         # TODO: make colors bigger if palette is small enough
@@ -255,7 +262,9 @@ class ColorSelectionLabelRenderable(UIRenderable):
 
 
 class CharacterGridRenderable(LineRenderable):
+    
     color = (0.5, 0.5, 0.5, 0.25)
+    
     def build_geo(self):
         w, h = self.quad_size_ref.width, self.quad_size_ref.height
         v = []

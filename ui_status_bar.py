@@ -1,4 +1,4 @@
-import os.path
+import os.path, time
 from math import ceil
 
 from ui_element import UIElement, UIArt, UIRenderable
@@ -29,20 +29,25 @@ class StatusBarUI(UIElement):
     def __init__(self, ui):
         art = ui.active_art
         # create 3 custom Arts w/ source charset and palette, renderables for each
-        self.char_art = UIArt(None, ui.app, art.charset, art.palette, self.swatch_width, 1)
+        art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
+        self.char_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.char_renderable = UIRenderable(ui.app, self.char_art)
-        self.fg_art = UIArt(None, ui.app, art.charset, art.palette, self.swatch_width, 1)
+        self.fg_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.fg_renderable = UIRenderable(ui.app, self.fg_art)
-        self.bg_art = UIArt(None, ui.app, art.charset, art.palette, self.swatch_width, 1)
+        self.bg_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.bg_renderable = UIRenderable(ui.app, self.bg_art)
         # set some properties in bulk
+        self.renderables = []
         for r in [self.char_renderable, self.fg_renderable, self.bg_renderable]:
             r.ui = ui
             r.grain_strength = 0
+            # add to list of renderables to manage eg destroyed on quit
+            self.renderables.append(r)
         # red X for transparent colors
         self.x_renderable = UIRenderableX(ui.app, self.char_art)
         # give it a special reference to this element
         self.x_renderable.status_bar = self
+        self.renderables.append(self.x_renderable)
         UIElement.__init__(self, ui)
     
     def reset_art(self):

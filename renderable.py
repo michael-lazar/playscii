@@ -9,6 +9,7 @@ class TileRenderable:
     vert_shader_source = 'renderable_v.glsl'
     # pixel shader: handles FG/BG colors
     frag_shader_source = 'renderable_f.glsl'
+    log_create_destroy = False
     log_animation = False
     log_buffer_updates = False
     grain_strength = 0
@@ -51,6 +52,15 @@ class TileRenderable:
         self.create_buffers()
         # finish
         GL.glBindVertexArray(0)
+        if self.log_create_destroy:
+            self.app.log('created: %s' % self)
+    
+    def __str__(self):
+        "for debug purposes, return a concise unique name"
+        for i,r in enumerate(self.art.renderables):
+            if r is self:
+                break
+        return '%s %s %s' % (self.art.filename, self.__class__.__name__, i)
     
     def create_buffers(self):
         # vertex positions and elements
@@ -136,7 +146,8 @@ class TileRenderable:
             self.move_rate = dist / frames
         self.moving = True
         self.goal_x, self.goal_y, self.goal_z = x, y, z
-        self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
+        if self.log_animation:
+            self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
     
     def update_loc(self):
         # TODO: probably time to bust out the ol' vector module for this stuff
@@ -179,9 +190,8 @@ class TileRenderable:
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(6, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.uv_buffer, self.fg_buffer, self.bg_buffer])
-    
-    def log_loc(self):
-        self.app.log('%s: %s,%s,%s' % (self, self.x, self.y, self.z))
+        if self.log_create_destroy:
+            self.app.log('destroyed: %s' % self)
     
     def get_projection_matrix(self):
         """
