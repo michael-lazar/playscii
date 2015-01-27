@@ -113,17 +113,17 @@ class UI:
         self.active_frame = min(self.active_frame, self.active_art.frames)
         self.active_layer = min(self.active_layer, self.active_art.layers)
         # reposition all art renderables and change their opacity
-        x = 0
-        margin = self.app.grid.art_margin
-        for i,r in enumerate(self.app.edit_renderables):
+        x, y, margin = 0, 0, self.app.grid.art_margin
+        for r in self.app.edit_renderables:
             # always put active art at 0,0
             if r in self.active_art.renderables:
                 r.alpha = 1
-                r.x, r.y = 0, 0
+                r.move_to(0, 0, 0, 0.1)
             else:
                 r.alpha = 0.5
-                r.x, r.y = x, 0
+                r.move_to(x, y, 0, 0.1)
             x += (r.art.width + margin) * r.art.quad_width
+            y -= (r.art.height + margin) * r.art.quad_height
         # now that renderables are moved, rescale/reposition grid
         self.app.grid.quad_size_ref = self.active_art
         self.app.grid.build_geo()
