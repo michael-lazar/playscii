@@ -20,6 +20,7 @@ class ToolPopup(UIElement):
         self.charset_swatch = CharacterSetSwatch(ui, self)
         self.palette_swatch = PaletteSwatch(ui, self)
         self.cursor_box = SelectionBoxRenderable(ui.app, self.charset_swatch.art)
+        self.renderables = [self.cursor_box]
         # set by swatch.set_cursor_loc based on selection validity
         self.cursor_char = -1
         self.cursor_color = -1

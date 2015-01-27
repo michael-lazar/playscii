@@ -1,4 +1,4 @@
-import ctypes
+import time, ctypes
 import numpy as np
 from OpenGL import GL
 
@@ -8,9 +8,11 @@ class LineRenderable():
     
     vert_shader_source = 'lines_v.glsl'
     frag_shader_source = 'lines_f.glsl'
+    log_create_destroy = False
     
     def __init__(self, app, quad_size_ref):
         self.app = app
+        self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 0
@@ -53,6 +55,12 @@ class LineRenderable():
                                  GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindVertexArray(0)
+        if self.log_create_destroy:
+            self.app.log('created: %s' % self)
+    
+    def __str__(self):
+        "for debug purposes, return a unique name"
+        return self.unique_name
     
     def build_geo(self):
         """
@@ -91,6 +99,12 @@ class LineRenderable():
     
     def get_color(self, elapsed_time):
         return (1, 1, 1, 1)
+    
+    def destroy(self):
+        GL.glDeleteVertexArrays(1, [self.vao])
+        GL.glDeleteBuffers(3, [self.vert_buffer, self.elem_buffer, self.color_buffer])
+        if self.log_create_destroy:
+            self.app.log('destroyed: %s' % self)
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)

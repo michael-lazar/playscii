@@ -13,6 +13,7 @@ class UIElement:
     snap_top, snap_bottom, snap_left, snap_right = False, False, False, False
     x, y = 0, 0
     visible = True
+    renderables = None
     
     def __init__(self, ui):
         self.ui = ui
@@ -21,6 +22,11 @@ class UIElement:
         self.art = UIArt(art_name, self.ui.app, self.ui.charset, self.ui.palette, self.tile_width, self.tile_height)
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
+        # some elements add their own renderables before calling this
+        # constructor, make sure we're not erasing any
+        if not self.renderables:
+            self.renderables = []
+        self.renderables.append(self.renderable)
         self.reset_art()
         self.reset_loc()
     
@@ -72,7 +78,8 @@ class UIElement:
         self.renderable.render(elapsed_time)
     
     def destroy(self):
-        self.renderable.destroy()
+        for r in self.renderables:
+            r.destroy()
 
 
 class UIArt(Art):
