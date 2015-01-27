@@ -52,8 +52,8 @@ class Grid(LineRenderable):
         self.color_array = np.array(c, dtype=np.float32)
     
     def reset_loc(self):
-        self.x = -self.art_margin
-        self.y = self.art_margin
+        self.x = -self.art_margin + self.app.ui.active_art.renderables[0].x
+        self.y = self.art_margin + self.app.ui.active_art.renderables[0].y
     
     def update(self):
         # TODO: if active_art has changed, adjust position and size accordingly,

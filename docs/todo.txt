@@ -6,10 +6,7 @@ main popup!
 - arrow keys navigate picker as well as mouse?
 - mustfix: crash in ui_popup.py on resizing window or changing UI scale
 
-- control to swap fg and bg colors - shift-S?
-
-- when new art is loaded, make it active
-- tab/shift-tab: cycle through active arts, grid adjusts
+fix: when loading a second art and resizing window, popup linerenderable scales get goofed up
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)

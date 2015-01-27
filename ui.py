@@ -95,6 +95,62 @@ class UI:
         # recalc renderables' quad size (same scale, different aspect)
         self.set_scale(self.scale)
     
+    def set_active_art(self, new_art):
+        self.active_art = new_art
+        new_charset = self.active_art.charset
+        new_palette = self.active_art.palette
+        # set for elements that care: status bar, popup
+        self.status_bar.set_active_charset(new_charset)
+        self.status_bar.set_active_palette(new_palette)
+        self.popup.set_active_charset(new_charset)
+        self.popup.set_active_palette(new_palette)
+        self.popup.reset_art()
+        # make sure selected char/colors aren't out of bounds w/ new art
+        self.selected_char %= new_charset.last_index
+        self.selected_fg_color %= len(new_palette.colors) - 1
+        self.selected_bg_color %= len(new_palette.colors) - 1
+        # change active frame and layer if new active art doesn't have that many
+        self.active_frame = min(self.active_frame, self.active_art.frames)
+        self.active_layer = min(self.active_layer, self.active_art.layers)
+        # reposition all art renderables and change their opacity
+        x = 0
+        margin = self.app.grid.art_margin
+        for i,r in enumerate(self.app.edit_renderables):
+            # always put active art at 0,0
+            if r in self.active_art.renderables:
+                r.alpha = 1
+                r.x, r.y = 0, 0
+            else:
+                r.alpha = 0.5
+                r.x, r.y = x, 0
+            x += (r.art.width + margin) * r.art.quad_width
+        # now that renderables are moved, rescale/reposition grid
+        self.app.grid.quad_size_ref = self.active_art
+        self.app.grid.build_geo()
+        self.app.grid.reset_loc()
+        self.app.grid.rebind_buffers()
+        self.app.update_window_title()
+        #self.app.log('%s is now the active art' % self.active_art.filename)
+    
+    def previous_active_art(self):
+        "cycles to next art in app.art_loaded"
+        if len(self.app.art_loaded) == 1:
+            return
+        next_active_art = self.app.art_loaded.pop(-1)
+        self.app.art_loaded.insert(0, next_active_art)
+        next_active_renderable = self.app.edit_renderables.pop(-1)
+        self.app.edit_renderables.insert(0, next_active_renderable)
+        self.set_active_art(self.app.art_loaded[0])
+    
+    def next_active_art(self):
+        if len(self.app.art_loaded) == 1:
+            return
+        last_active_art = self.app.art_loaded.pop(0)
+        self.app.art_loaded.append(last_active_art)
+        last_active_renderable = self.app.edit_renderables.pop(0)
+        self.app.edit_renderables.append(last_active_renderable)
+        self.set_active_art(self.app.art_loaded[0])
+    
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames
         # bail if frame is still the same, eg we only have 1 frame
@@ -176,7 +232,7 @@ class UI:
         # don't allow painting out of bounds
         if not self.active_art.is_tile_inside(x, y):
             return
-        self.active_art.set_tile_at(0, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
+        self.active_art.set_tile_at(self.active_frame, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
     
     def DBG_grab(self):
         if self.popup.visible or self.console.visible:
@@ -184,9 +240,9 @@ class UI:
         x, y = self.app.cursor.get_tile()
         if not self.active_art.is_tile_inside(x, y):
             return
-        self.selected_char = self.active_art.get_char_index_at(0, self.active_layer, x, y)
-        self.selected_fg_color = self.active_art.get_fg_color_index_at(0, self.active_layer, x, y)
-        self.selected_bg_color = self.active_art.get_bg_color_index_at(0, self.active_layer, x, y)
+        self.selected_char = self.active_art.get_char_index_at(self.active_frame, self.active_layer, x, y)
+        self.selected_fg_color = self.active_art.get_fg_color_index_at(self.active_frame, self.active_layer, x, y)
+        self.selected_bg_color = self.active_art.get_bg_color_index_at(self.active_frame, self.active_layer, x, y)
     
     def destroy(self):
         for e in self.elements:

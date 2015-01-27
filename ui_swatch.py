@@ -9,11 +9,17 @@ class UISwatch(UIElement):
     def __init__(self, ui, popup):
         self.ui = ui
         self.popup = popup
+        self.renderable = None
+        self.reset()
+    
+    def reset(self):
         self.tile_width, self.tile_height = self.get_size()
         art = self.ui.active_art
         # generate a unique name for debug purposes
         art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.art = UIArt(art_name, self.ui.app, art.charset, art.palette, self.tile_width, self.tile_height)
+        if self.renderable:
+            self.renderable.destroy()
         self.renderable = UIRenderable(self.ui.app, self.art)
         self.renderable.ui = self.ui
         self.renderable.grain_strength = 0
