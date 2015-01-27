@@ -65,6 +65,14 @@ class StatusBarUI(UIElement):
         self.write_left_elements()
         self.write_right_elements()
     
+    def set_active_charset(self, new_charset):
+        self.char_art.charset = self.fg_art.charset = self.bg_art.charset = new_charset
+        self.reset_art()
+    
+    def set_active_palette(self, new_palette):
+        self.char_art.palette = self.fg_art.palette = self.bg_art.palette = new_palette
+        self.reset_art()
+    
     def update(self):
         # set color swatches
         for i in range(self.swatch_width):

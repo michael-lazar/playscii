@@ -109,13 +109,15 @@ class Application:
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         self.camera = Camera(self)
-        self.art_loaded, self.renderables = [], []
+        self.art_loaded, self.edit_renderables = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
+        # set ui None so load_art can check for its active art on later runs
+        self.ui = None
         self.load_art(art_filename)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
-        self.cursor = None
+        self.cursor, self.grid = None, None
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded[0])
         self.update_window_title()
@@ -173,13 +175,11 @@ class Application:
             if not art or not art.valid:
                 art = self.new_art(filename)
         # keep a list of all art assets loaded (stub for MDI support)
-        self.art_loaded.append(art)
+        self.art_loaded.insert(0, art)
         renderable = TileRenderable(self, art)
-        self.renderables.append(renderable)
-        # TEST: offset new loaded renderables so you can distinguish them
-        x = y = (len(self.art_loaded) - 1) * 2
-        renderable.x += x
-        renderable.y += y
+        self.edit_renderables.insert(0, renderable)
+        if self.ui:
+            self.ui.set_active_art(art)
     
     def load_charset(self, charset_to_load, log=True):
         "creates and returns a character set with the given name"
@@ -366,6 +366,11 @@ class Application:
                     self.ui.set_active_layer(self.ui.active_layer + 1)
                 elif event.key.keysym.sym == sdl2.SDLK_LEFTBRACKET:
                     self.ui.set_active_layer(self.ui.active_layer - 1)
+                elif event.key.keysym.sym == sdl2.SDLK_TAB:
+                    if ctrl_pressed and not shift_pressed:
+                        self.ui.next_active_art()
+                    elif ctrl_pressed and shift_pressed:
+                        self.ui.previous_active_art()
                 # TEST: enter does UI.DBG_paint
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
                     self.ui.DBG_paint()
@@ -380,17 +385,17 @@ class Application:
                         self.ui.active_art.run_script_every('conway', 0.05)
                 # TEST: alt + arrow keys move object
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
-                    self.renderables[0].y += 1
-                    self.renderables[0].log_loc()
+                    self.edit_renderables[0].y += 1
+                    self.edit_renderables[0].log_loc()
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    self.renderables[0].y -= 1
-                    self.renderables[0].log_loc()
+                    self.edit_renderables[0].y -= 1
+                    self.edit_renderables[0].log_loc()
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    self.renderables[0].x -= 1
-                    self.renderables[0].log_loc()
+                    self.edit_renderables[0].x -= 1
+                    self.edit_renderables[0].log_loc()
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    self.renderables[0].x += 1
-                    self.renderables[0].log_loc()
+                    self.edit_renderables[0].x += 1
+                    self.edit_renderables[0].log_loc()
                 # TEST: shift-T toggles camera tilt
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     if self.camera.y_tilt == 2:
@@ -444,7 +449,7 @@ class Application:
     def update(self):
         for art in self.art_loaded:
             art.update()
-        for renderable in self.renderables:
+        for renderable in self.edit_renderables:
             renderable.update()
         self.camera.update()
         if self.test_mutate_each_frame:
@@ -473,7 +478,7 @@ class Application:
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
         GL.glClearColor(*self.bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        for r in self.renderables:
+        for r in self.edit_renderables:
             r.render(self.elapsed_time)
         if self.grid.visible:
             self.grid.render(self.elapsed_time)
@@ -490,7 +495,7 @@ class Application:
     def quit(self):
         self.log('Thank you for using Playscii!  <3')
         if self.init_success:
-            for r in self.renderables:
+            for r in self.edit_renderables:
                 r.destroy()
             self.fb.destroy()
             self.ui.destroy()

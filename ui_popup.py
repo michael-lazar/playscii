@@ -88,6 +88,12 @@ class ToolPopup(UIElement):
     def hide(self):
         self.visible = False
     
+    def set_active_charset(self, new_charset):
+        self.charset_swatch.reset()
+    
+    def set_active_palette(self, new_palette):
+        self.palette_swatch.reset()
+    
     def hovered(self):
         # TODO: anything needed here? sub-element hovers happen in update
         UIElement.hovered(self)
