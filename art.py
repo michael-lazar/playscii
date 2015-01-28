@@ -175,15 +175,16 @@ class Art:
         # adding a layer changes all frames' UV data
         for i in range(self.frames): self.uv_changed_frames.append(i)
         # TODO: use specified background color for newly created tiles?
+        self.geo_changed = True
     
-    def clear_frame_layer(self, frame, layer, bg_color=0):
+    def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
         "clears given layer of given frame to transparent BG + no characters"
         # "clear" UVs to UV_NORMAL
         for y in range(self.height):
             for x in range(self.width):
                 self.uv_mods[frame][layer][y][x] = uv_types[UV_NORMAL]
                 self.chars[frame][layer][y][x] = 0
-                self.fg_colors[frame][layer][y][x] = 0
+                self.fg_colors[frame][layer][y][x] = fg_color or 0
                 self.bg_colors[frame][layer][y][x] = bg_color
         # tell this frame to update
         if frame not in self.char_changed_frames:

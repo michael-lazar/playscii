@@ -92,7 +92,6 @@ class ConsoleUI(UIElement):
         # empty log lines so they refresh from app
         self.last_user_line = 'XXtestXX'
         self.last_lines = []
-        self.art.geo_changed = True
     
     def toggle(self):
         if self.visible:

@@ -7,9 +7,11 @@ from ui_element import UIArt, FPSCounterUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
+from ui_colors import UIColors
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
+
 
 class UI:
     
@@ -28,6 +30,8 @@ class UI:
         self.active_art = active_art
         self.active_frame = 0
         self.active_layer = 0
+        # easy color index lookups
+        self.colors = UIColors()
         # for UI, view /and/ projection matrix are identity
         # (aspect correction is done in set_scale)
         self.view_matrix = np.eye(4, 4, dtype=np.float32)
@@ -196,13 +200,13 @@ class UI:
     
     def update(self):
         # window coordinates -> OpenGL coordinates
-        x, y = self.get_screen_coords(self.app.mouse_x, self.app.mouse_y)
+        mx, my = self.get_screen_coords(self.app.mouse_x, self.app.mouse_y)
         # test elements for hover
         was_hovering = self.hovered_elements[:]
         self.hovered_elements = []
         for e in self.elements:
             # only check visible elements
-            if e.visible and e.is_inside(x, y):
+            if e.visible and e.is_inside(mx, my):
                 self.hovered_elements.append(e)
                 # only hover if we weren't last update
                 if not e in was_hovering:

@@ -3,7 +3,11 @@ UI design notes
 menu bar:
 - file: new, open, save, save as, export current frame to PNG, export animated GIF, quit
 - edit: cut/copy/paste
+- art: next/previous art, resize
 - select: select all/none/invert
+- layer: add/duplicate/remove/change current Z, same functionality as the pane described below
+- frame: add to end/insert/duplicate/remove/change order/change delay, same as below
+- help: help screen, about/credits screen
 
 layer/frame view:
 - matrix w/ layers are rows, frames are columns, scrolls horizontally if lots of frames, vertically if lots of layers
