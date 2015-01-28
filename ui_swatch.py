@@ -109,7 +109,7 @@ class CharacterSetSwatch(UISwatch):
     def reset_loc(self):
         self.x = self.popup.x + self.popup.swatch_margin
         self.y = self.popup.y
-        self.y -= self.popup.art.quad_height * 3
+        self.y -= self.popup.art.quad_height * (self.popup.tab_height + 2)
         self.renderable.x, self.renderable.y = self.x, self.y
         self.grid.x, self.grid.y = self.x, self.y
         self.grid.y -= self.art.quad_height
@@ -158,6 +158,8 @@ class PaletteSwatch(UISwatch):
         self.bg_selection_box = SelectionBoxRenderable(self.ui.app, self.art)
         # F label for FG color selection
         self.f_art = ColorSelectionLabelArt(self.ui, 'F')
+        # make character dark
+        self.f_art.set_color_at(0, 0, 0, 0, self.f_art.palette.darkest_index, True)
         self.f_renderable = ColorSelectionLabelRenderable(self.ui.app, self.f_art)
         self.f_renderable.ui = self.ui
         # B label for BG color seletion
@@ -185,7 +187,9 @@ class PaletteSwatch(UISwatch):
     def reset_loc(self):
         self.x = self.popup.x + self.popup.swatch_margin
         self.y = self.popup.charset_swatch.renderable.y
+        # adjust Y for charset
         self.y -= self.art.quad_height * self.ui.active_art.charset.map_height
+        # adjust Y for palette caption
         self.y -= self.popup.art.quad_height * 2
         self.renderable.x, self.renderable.y = self.x, self.y
         # first color in palette (top left) always transparent
@@ -251,7 +255,7 @@ class ColorSelectionLabelArt(UIArt):
         letter_index = ui.charset.get_char_index(letter)
         art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         UIArt.__init__(self, art_name, ui.app, ui.charset, ui.palette, 1, 1)
-        label_color = ui.palette.lightest_index
+        label_color = ui.colors.white
         label_bg_color = 0
         self.set_tile_at(0, 0, 0, 0, letter_index, label_color, label_bg_color)
 

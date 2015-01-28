@@ -4,7 +4,15 @@ main popup!
 - tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
 -- paint and erase tools: checkboxes for "only affect char/fg/bg"
 - arrow keys navigate picker as well as mouse?
-- mustfix: crash in ui_popup.py on resizing window or changing UI scale
+- arrange palette more intelligently: if lots of colors, arrange them into a grid a la the character set; if fewer, use multiple rows to increase click target size (eg c64 palette becomes 2-3 rows with nice large squares)
+
+undo support:
+- create an EditCommand object for every edit made (1 or more tiles, etc): timestamp, tool used, tiles affected, tile changes
+- each art loaded should have its own command stack
+- when undo is invoked, iterate through those objects and reverse-apply each change to the art
+- when redo is invoked, do the same but in reverse order
+- when an edit is made when the undo stack index is higher than its length, delete any higher items in the stack
+- batch commands made with the same tool within a time window together when undoing, ie don't make the user undo each individual tile painted
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
@@ -20,7 +28,9 @@ later UI stuff in docs/ui.txt
 
 FIX:
 
-when loading a second art and resizing window, popup linerenderable scales get goofed up
+status bar breaks when UI scale changes!
+
+little annoying cracks between quads - UV or vert/element error?
 
 rewrite Cursor.screen_to_world to produce same results as gluUnProject:
 https://www.opengl.org/wiki/GluProject_and_gluUnProject_code

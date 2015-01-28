@@ -51,6 +51,7 @@ class StatusBarUI(UIElement):
         UIElement.__init__(self, ui)
     
     def reset_art(self):
+        UIElement.reset_art(self)
         self.tile_width = ceil(self.ui.width_tiles)
         # must resize here, as window width will vary
         self.art.resize(self.tile_width, self.tile_height)
@@ -59,13 +60,12 @@ class StatusBarUI(UIElement):
         self.x_renderable.scale_x = self.char_art.width
         self.x_renderable.scale_y = -self.char_art.height
         # rebuild geo, elements may be new dimensions
-        self.art.geo_changed = True
         self.char_art.geo_changed = True
         self.fg_art.geo_changed = True
         self.bg_art.geo_changed = True
     
     def rewrite_art(self):
-        bg = self.ui.palette.lightest_index
+        bg = self.ui.colors.white
         self.art.clear_frame_layer(0, 0, bg)
         self.write_left_elements()
         self.write_right_elements()
@@ -114,8 +114,8 @@ class StatusBarUI(UIElement):
         self.art.write_string(0, 0, self.tool_label_x, 0, self.tool_label, color)
         # TODO: get name of tool from UI once they exist
         tool_selection = 'painT'
-        color = self.ui.palette.lightest_index
-        bg = self.ui.palette.darkest_index
+        color = self.ui.colors.white
+        bg = self.ui.colors.black
         self.art.write_string(0, 0, self.tool_selection_x, 0, tool_selection, color, bg)
     
     def write_right_elements(self):
@@ -123,8 +123,8 @@ class StatusBarUI(UIElement):
         fills in right-justified parts of status bar, eg current
         frame/layer/tile and filename
         """
-        dark = self.ui.palette.darkest_index
-        light = self.ui.palette.lightest_index
+        dark = self.ui.colors.black
+        light = self.ui.colors.white
         padding = 2
         x = self.tile_width - 1
         art = self.ui.active_art
