@@ -16,6 +16,7 @@ import sdl2
 import sdl2.ext
 from sdl2 import video
 from OpenGL import GL
+from PIL import Image
 
 # submodules - set here so cfg file can modify them all easily
 from shader import ShaderLord
@@ -31,9 +32,11 @@ from cursor import Cursor
 from grid import Grid
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
+from ui_swatch import CharacterSetSwatch
 
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
+LOGO_FILENAME = 'ui/logo.png'
 
 VERSION = '0.2.0'
 
@@ -107,7 +110,7 @@ class Application:
         # draw black screen while doing other init
         self.sdl_renderer = sdl2.SDL_CreateRenderer(self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
         self.blank_screen()
-        # TODO: SDL_SetWindowIcon(self.window, SDL_Surface* icon) <- ui/logo.png
+        self.set_icon()
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         self.camera = Camera(self)
@@ -129,6 +132,21 @@ class Application:
         self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         self.init_success = True
         self.log('init done.')
+    
+    def set_icon(self):
+        # TODO: this doesn't seem to work in Ubuntu or Windows,
+        # what am i missing?
+        img = Image.open(LOGO_FILENAME).convert('RGBA')
+        # does icon need to be a specific size?
+        img = img.resize((32, 32), Image.ANTIALIAS)
+        w, h = img.size
+        depth, pitch = 32, w * 4
+        #SDL_CreateRGBSurfaceFrom((pixels, width, height, depth, pitch, Rmask, Gmask, Bmask, Amask)
+        #print(img.tostring())
+        icon_surf = sdl2.SDL_CreateRGBSurfaceFrom(img.tobytes(), w, h, depth, pitch, 0x0f00, 0x00f0, 0x000f, 0xf000)
+        # SDL_SetWindowIcon(self.window, SDL_Surface* icon)
+        sdl2.SDL_SetWindowIcon(self.window, icon_surf)
+        sdl2.SDL_FreeSurface(icon_surf)
     
     def log(self, new_line):
         "write to log file, stdout, and in-app console log"

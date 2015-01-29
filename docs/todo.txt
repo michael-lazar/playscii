@@ -1,5 +1,7 @@
 TODO
 
+? why don't clicked colors ever appear?
+
 main popup!
 - tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
 -- paint and erase tools: checkboxes for "only affect char/fg/bg"

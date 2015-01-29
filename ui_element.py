@@ -5,7 +5,7 @@ from math import ceil
 from art import Art
 from renderable import TileRenderable
 from renderable_line import LineRenderable
-from ui_colors import UIColors
+from ui_button import UIButton
 
 class UIElement:
     
@@ -56,16 +56,8 @@ class UIElement:
         self.draw_buttons()
     
     def draw_buttons(self):
-        # write button captions
         for button in self.buttons:
-            if button.caption != '':
-                x, y = button.x, button.y + button.caption_y
-                text = button.caption
-                if button.caption_justify == TEXT_CENTER:
-                    text = text.center(button.width)
-                elif button.caption_justify == TEXT_RIGHT:
-                    text = text.rjust(button.width)
-                self.art.write_string(0, 0, x, y, text, button.normal_fg_color)
+            button.draw()
     
     def hovered(self):
         self.log_event('hovered')
@@ -78,17 +70,17 @@ class UIElement:
         # tell any hovered buttons they've been clicked
         for b in self.hovered_buttons:
             if b.can_click:
+                b.click()
                 if b.callback:
                     b.callback()
-                self.click_button(b)
     
     def unclicked(self, button):
         self.log_event('unclicked', button)
         for b in self.hovered_buttons:
-            self.unclick_button(b)
+            b.unclick()
     
     def log_event(self, event_type, mouse_button=None):
-        #mousebutton = button or '[n/a]'
+        mouse_button = mouse_button or '[n/a]'
         if self.ui.logg:
             self.ui.app.log('%s %s with mouse button %s' % (self.__class__.__name__, event_type, mouse_button))
     
@@ -103,41 +95,6 @@ class UIElement:
             self.x = 1 - (self.art.quad_width * self.tile_width)
         self.renderable.x, self.renderable.y = self.x, self.y
     
-    def get_button_state_colors(self, button, state):
-        fg = getattr(button, '%s_fg_color' % state)
-        bg = getattr(button, '%s_bg_color' % state)
-        return fg, bg
-    
-    def set_button_state_colors(self, button, state):
-        fg, bg = self.get_button_state_colors(button, state)
-        for y in range(button.height):
-            for x in range(button.width):
-                self.art.set_tile_at(0, 0, button.x + x, button.y + y, None, fg, bg)
-    
-    def hover_button(self, button):
-        self.log_button_event(button, 'hovered')
-        self.set_button_state_colors(button, 'hovered')
-    
-    def unhover_button(self, button):
-        self.log_button_event(button, 'unhovered')
-        self.set_button_state_colors(button, 'normal')
-    
-    def click_button(self, button):
-        self.log_button_event(button, 'clicked')
-        self.set_button_state_colors(button, 'clicked')
-    
-    def unclick_button(self, button):
-        self.log_button_event(button, 'unclicked')
-        if button in self.hovered_buttons:
-            self.hover_button(button)
-        else:
-            self.unhover_button(button)
-    
-    def log_button_event(self, button, event_type):
-        "common code for button event logging"
-        if self.ui.logg:
-            self.ui.app.log("%s's %s %s" % (self.__class__.__name__, button.__class__.__name__, event_type))
-    
     def update(self):
         "runs every frame, checks button states"
         # this is very similar to UI.update, implying an alternative structure
@@ -151,10 +108,10 @@ class UIElement:
             if b.can_hover and self.is_inside_button(mx, my, b):
                 self.hovered_buttons.append(b)
                 if not b in was_hovering:
-                    self.hover_button(b)
+                    b.hover()
         for b in was_hovering:
             if not b in self.hovered_buttons:
-                self.unhover_button(b)
+                b.unhover()
         # tiles might have just changed
         self.art.update()
     
@@ -164,32 +121,6 @@ class UIElement:
     def destroy(self):
         for r in self.renderables:
             r.destroy()
-
-
-TEXT_LEFT = 0
-TEXT_CENTER = 1
-TEXT_RIGHT = 2
-
-class UIButton:
-    "clickable button that does something in a UIElement"
-    # x/y/width/height given in tile scale
-    x, y = 0, 0
-    width, height = 1, 1
-    caption = 'TEST'
-    caption_justify = TEXT_LEFT
-    caption_y = 0
-    callback = None
-    normal_fg_color = UIColors.black
-    normal_bg_color = UIColors.lightgrey
-    hovered_fg_color = UIColors.black
-    hovered_bg_color = UIColors.white
-    clicked_fg_color = UIColors.white
-    clicked_bg_color = UIColors.black
-    dimmed_fg_color = UIColors.black
-    dimmed_bg_color = UIColors.medgrey
-    # state variables
-    can_hover = True
-    can_click = True
 
 
 class UIArt(Art):
