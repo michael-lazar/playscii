@@ -77,7 +77,18 @@ class UISwatch(UIElement):
 class CharacterSetSwatch(UISwatch):
     
     # scale the character set will be drawn at
-    char_scale = 3
+    char_scale = 2
+    min_scale = 1
+    max_scale = 5
+    scale_increment = 0.25
+    
+    def increase_scale(self):
+        if self.char_scale <= self.max_scale - self.scale_increment:
+            self.char_scale += self.scale_increment
+    
+    def decrease_scale(self):
+        if self.char_scale >= self.min_scale + self.scale_increment:
+            self.char_scale -= self.scale_increment
     
     def reset(self):
         UISwatch.reset(self)
@@ -188,9 +199,11 @@ class PaletteSwatch(UISwatch):
         self.x = self.popup.x + self.popup.swatch_margin
         self.y = self.popup.charset_swatch.renderable.y
         # adjust Y for charset
-        self.y -= self.art.quad_height * self.ui.active_art.charset.map_height
-        # adjust Y for palette caption
+        self.y -= self.popup.charset_swatch.art.quad_height * self.ui.active_art.charset.map_height
+        # adjust Y for palette caption and character scale
         self.y -= self.popup.art.quad_height * 2
+        # TODO: position palette properly for different character scales
+        #self.y -= self.popup.charset_swatch.char_scale
         self.renderable.x, self.renderable.y = self.x, self.y
         # first color in palette (top left) always transparent
         self.transparent_x.x = self.renderable.x
