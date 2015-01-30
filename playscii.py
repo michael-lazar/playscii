@@ -134,8 +134,6 @@ class Application:
         self.log('init done.')
     
     def set_icon(self):
-        # TODO: this doesn't seem to work in Ubuntu or Windows,
-        # what am i missing?
         img = Image.open(LOGO_FILENAME).convert('RGBA')
         # does icon need to be a specific size?
         img = img.resize((32, 32), Image.ANTIALIAS)
@@ -143,7 +141,7 @@ class Application:
         depth, pitch = 32, w * 4
         #SDL_CreateRGBSurfaceFrom((pixels, width, height, depth, pitch, Rmask, Gmask, Bmask, Amask)
         #print(img.tostring())
-        icon_surf = sdl2.SDL_CreateRGBSurfaceFrom(img.tobytes(), w, h, depth, pitch, 0x0f00, 0x00f0, 0x000f, 0xf000)
+        icon_surf = sdl2.SDL_CreateRGBSurfaceFrom(img.tobytes(), w, h, depth, pitch, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000)
         # SDL_SetWindowIcon(self.window, SDL_Surface* icon)
         sdl2.SDL_SetWindowIcon(self.window, icon_surf)
         sdl2.SDL_FreeSurface(icon_surf)
