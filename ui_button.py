@@ -39,7 +39,7 @@ class UIButton:
     def log_event(self, event_type):
         "common code for button event logging"
         if self.element.ui.logg:
-            self.element.ui.app.log("%s's %s %s" % (self.element.__class__.__name__, self.__class__.__name__, event_type))
+            self.element.ui.app.log("UIButton: %s's %s %s" % (self.element.__class__.__name__, self.__class__.__name__, event_type))
     
     def set_state(self, new_state):
         if not new_state in BUTTON_STATES:

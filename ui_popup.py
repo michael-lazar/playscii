@@ -98,7 +98,6 @@ class ToolPopup(UIElement):
         print('HI')
     
     def tool_tab_button_pressed(self):
-        #print('tool tab selected')
         self.active_tab = TAB_TOOLS
         self.char_color_tab_button.can_hover = True
         self.char_color_tab_button.dimmed = True
@@ -109,7 +108,6 @@ class ToolPopup(UIElement):
         self.draw_buttons()
     
     def char_color_tab_button_pressed(self):
-        #print('char / color tab selected')
         self.active_tab = TAB_CHAR_COLOR
         self.tool_tab_button.can_hover = True
         self.tool_tab_button.dimmed = True
@@ -122,10 +120,14 @@ class ToolPopup(UIElement):
     def scale_charset_up_button_pressed(self):
         self.charset_swatch.increase_scale()
         self.reset_art()
+        self.charset_swatch.reset_loc()
+        self.palette_swatch.reset_loc()
     
     def scale_charset_down_button_pressed(self):
         self.charset_swatch.decrease_scale()
         self.reset_art()
+        self.charset_swatch.reset_loc()
+        self.palette_swatch.reset_loc()
     
     def draw_char_color_tab(self):
         "draw non-button bits of this tab"
@@ -168,11 +170,13 @@ class ToolPopup(UIElement):
         self.tile_width = (cqw * charset.map_width + margin) / UIArt.quad_width
         # tile height = height of charset + distance from top of popup
         self.tile_height = (cqh * charset.map_height) / UIArt.quad_height + margin
-        self.tile_height += self.tab_height + 6
+        # account for popup info lines etc: charset name + palette name + 1 padding each
+        extra_lines = 5
+        # account for size of palette + bottom margin
+        palette_height = ((self.palette_swatch.art.height * self.palette_swatch.art.quad_height) + self.swatch_margin) / UIArt.quad_height
+        self.tile_height += self.tab_height + palette_height + extra_lines
         if old_width != self.tile_width or old_height != self.tile_height:
             self.art.resize(int(self.tile_width), int(self.tile_height), self.bg_color)
-        # clear art at its new size
-        #self.art.clear_frame_layer(0, 0, bg, fg)
         # panel text - position different elements based on selected tab
         if self.active_tab == TAB_CHAR_COLOR:
             self.draw_char_color_tab()
