@@ -9,6 +9,7 @@ class LineRenderable():
     vert_shader_source = 'lines_v.glsl'
     frag_shader_source = 'lines_f.glsl'
     log_create_destroy = False
+    line_width = 1
     
     def __init__(self, app, quad_size_ref):
         self.app = app
@@ -117,6 +118,7 @@ class LineRenderable():
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        GL.glLineWidth(self.line_width)
         GL.glDrawElements(GL.GL_LINES, self.vert_count,
                           GL.GL_UNSIGNED_INT, self.elem_array)
         GL.glDisable(GL.GL_BLEND)
@@ -140,6 +142,7 @@ class SelectionBoxRenderable(LineRenderable):
     "used for UI selection boxes etc"
     
     color = (0.5, 0.5, 0.5, 1)
+    line_width = 2
     
     def get_color(self, elapsed_time):
         return self.color

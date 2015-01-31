@@ -180,19 +180,28 @@ class PaletteSwatch(UISwatch):
         self.renderables += self.transparent_x, self.fg_selection_box, self.bg_selection_box, self.f_renderable, self.b_renderable
     
     def get_size(self):
-        # TODO: make colors bigger if palette is small enough
-        return len(self.ui.active_art.palette.colors), 1
+        # balance rows/columns according to character set swatch width
+        charmap_width = self.popup.charset_swatch.art.charset.map_width
+        colors = len(self.popup.charset_swatch.art.palette.colors)
+        rows = math.ceil(colors / charmap_width)
+        columns = math.ceil(colors / rows)
+        return columns, rows
     
     def reset_art(self):
-        # TODO: if # of colors in palette is reasonable, make palette quads
-        # double sized, taking up more lines as needed
+        # base our quad size on charset's
         cqw, cqh = self.popup.charset_swatch.art.quad_width, self.popup.charset_swatch.art.quad_height
-        self.art.quad_width = cqw
-        self.art.quad_height = cqh
+        # maximize item size based on row/column determined in get_size()
+        self.art.quad_width = (self.art.charset.map_width / self.art.width) * cqw
+        self.art.quad_height = (self.art.charset.map_width / self.art.width) * cqh
         self.art.clear_frame_layer(0, 0, 0)
         palette = self.ui.active_art.palette
-        for x in range(len(palette.colors)):
-            self.art.set_color_at(0, 0, x, 0, x, False)
+        i = 0
+        for y in range(self.tile_height):
+            for x in range(self.tile_width):
+                if i >= len(palette.colors):
+                    break
+                self.art.set_color_at(0, 0, x, y, i, False)
+                i += 1
         self.art.geo_changed = True
     
     def reset_loc(self):
@@ -230,19 +239,20 @@ class PaletteSwatch(UISwatch):
         self.fg_selection_box.color = (color, color) * 2
         self.bg_selection_box.color = (color, color) * 2
         # fg selection box position
-        # TODO: redo when palette takes multiple rows
         self.fg_selection_box.x = self.renderable.x
-        self.fg_selection_box.x += self.art.quad_width * self.ui.selected_fg_color
-        self.fg_selection_box.y = self.renderable.y - self.art.quad_height
+        self.fg_selection_box.x += self.art.quad_width * (self.ui.selected_fg_color % self.art.width)
+        self.fg_selection_box.y = self.renderable.y
+        self.fg_selection_box.y -= self.art.quad_height * math.ceil((self.ui.selected_fg_color + 1) / self.art.width)
         # bg box position
         self.bg_selection_box.x = self.renderable.x
-        self.bg_selection_box.x += self.art.quad_width * self.ui.selected_bg_color
-        self.bg_selection_box.y = self.renderable.y - self.art.quad_height
+        self.bg_selection_box.x += self.art.quad_width * (self.ui.selected_bg_color % self.art.width)
+        self.bg_selection_box.y = self.renderable.y
+        self.bg_selection_box.y -= self.art.quad_height * math.ceil((self.ui.selected_bg_color + 1) / self.art.width)
         # FG label position
         self.f_renderable.alpha = 1 - color
         self.f_renderable.x = self.fg_selection_box.x
-        self.f_renderable.y = self.renderable.y
-        # center
+        self.f_renderable.y = self.fg_selection_box.y + self.art.quad_height
+        # center F in box
         x_offset = (self.art.quad_width - self.popup.art.quad_width) / 2
         y_offset = (self.art.quad_height - self.popup.art.quad_height) / 2
         self.f_renderable.x += x_offset
@@ -250,7 +260,7 @@ class PaletteSwatch(UISwatch):
         # BG label position
         self.b_renderable.alpha = 1 - color
         self.b_renderable.x = self.bg_selection_box.x
-        self.b_renderable.y = self.renderable.y
+        self.b_renderable.y = self.bg_selection_box.y + self.art.quad_height
         self.b_renderable.x += x_offset
         self.b_renderable.y -= y_offset
     

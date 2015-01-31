@@ -1,12 +1,19 @@
 TODO
 
 ? why don't clicked colors ever appear?
+-- *.hovered_elements is empty when clicked happens?
 
 main popup!
 - tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
 -- paint and erase tools: checkboxes for "only affect char/fg/bg"
 - arrow keys navigate picker as well as mouse?
 - arrange palette more intelligently: if lots of colors, arrange them into a grid a la the character set; if fewer, use multiple rows to increase click target size (eg c64 palette becomes 2-3 rows with nice large squares)
+-- PaletteSwatch.min_scale - palette items are never smaller than this size (in character swatch tiles)?
+--  divide # of rows resulting from this by 2, then increase tile size to create balanced rows.  eg a 16 color palette + 1 transparent color = 17 entries / 16 char tiles = 2 rows, math.ceil(17 / 2) = 9, 9 / 16 char tiles = resulting palette swatch art quad size:
+rows = math.ceil(len(palette.colors) / charset.map_width)
+columns = math.ceil(len(palette.colors) / rows)
+palette_swatch.art.quad_width = palette_swatch.art.quad_height = (columns / charset.map_width) * charset_swatch.art.quad_width
+-- test with c64 palette as well as  v small palettes (gameboy) as well as large ones (atari):
 
 undo support:
 - create an EditCommand object for every edit made (1 or more tiles, etc): timestamp, tool used, tiles affected, tile changes

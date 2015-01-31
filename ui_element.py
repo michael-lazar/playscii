@@ -76,13 +76,14 @@ class UIElement:
     
     def unclicked(self, button):
         self.log_event('unclicked', button)
+        # TODO: by this time self.hovered_buttons == [], figure out why!
         for b in self.hovered_buttons:
             b.unclick()
     
     def log_event(self, event_type, mouse_button=None):
         mouse_button = mouse_button or '[n/a]'
         if self.ui.logg:
-            self.ui.app.log('%s %s with mouse button %s' % (self.__class__.__name__, event_type, mouse_button))
+            self.ui.app.log('UIElement: %s %s with mouse button %s' % (self.__class__.__name__, event_type, mouse_button))
     
     def reset_loc(self):
         if self.snap_top:
