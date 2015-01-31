@@ -144,6 +144,13 @@ class Art:
         if self.log_size_changes:
             self.app.log('duplicated frame %s as frame %s' % (frame_index, self.frames-1))
     
+    def set_charset(self, new_charset):
+        if self.recalc_quad_height:
+            self.quad_width = 1
+            self.quad_height = 1 * (self.charset.char_height / self.charset.char_width)
+        self.charset = new_charset
+        self.geo_changed = True
+    
     def add_layer(self, z=DEFAULT_LAYER_Z):
         self.layers += 1
         self.layers_z.append(z)

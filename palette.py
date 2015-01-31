@@ -10,6 +10,7 @@ MAX_COLORS = 255
 class Palette:
     
     def __init__(self, app, src_filename, log):
+        self.init_success = False
         self.app = app
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
@@ -18,7 +19,8 @@ class Palette:
         if not os.path.exists(pal_filename):
             pal_filename += '.png'
             if not os.path.exists(pal_filename):
-                self.app.log("Couldn't find palette image file" + pal_filename)
+                self.app.log("Couldn't find palette image file %s" % pal_filename)
+                return
         src_img = Image.open(pal_filename)
         src_img = src_img.convert('RGBA')
         width, height = src_img.size
@@ -56,6 +58,7 @@ class Palette:
             self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
             self.app.log('  darkest color index: %s' % self.darkest_index)
             self.app.log('  lightest color index: %s' % self.lightest_index)
+        self.init_success = True
     
     def get_random_color_index(self):
         # exclude transparent first index

@@ -208,17 +208,24 @@ class Application:
             if charset_to_load == charset.name:
                 return charset
         new_charset = CharacterSet(self, charset_to_load, log)
-        self.charsets.append(new_charset)
-        # return newly loaded charset to whatever's requesting it
-        return new_charset
+        if new_charset.init_success:
+            self.charsets.append(new_charset)
+            return new_charset
+        else:
+            # if init failed (eg bad filename) return something safe
+            return self.ui.active_art.charset
     
     def load_palette(self, palette_to_load, log=True):
         for palette in self.palettes:
             if palette.name == palette_to_load:
                 return palette
         new_palette = Palette(self, palette_to_load, log)
-        self.palettes.append(new_palette)
-        return new_palette
+        if new_palette.init_success:
+            self.palettes.append(new_palette)
+            return new_palette
+        else:
+            # if init failed (eg bad filename) return something safe
+            return self.ui.active_art.palette
     
     def set_window_title(self, text):
         new_title = bytes('%s - %s' % (self.base_title, text), 'utf-8')

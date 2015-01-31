@@ -11,12 +11,13 @@ class CharacterSet:
     transparent_color = (0, 0, 0)
     
     def __init__(self, app, src_filename, log):
+        self.init_success = False
         self.app = app
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
         char_data_filename = CHARSET_DIR + src_filename + '.%s' % CHARSET_FILE_EXTENSION
         if not os.path.exists(char_data_filename):
-            self.app.log("Couldn't find character set data file " + char_data_filename)
+            self.app.log("Couldn't find character set data file %s" % char_data_filename)
             return
         char_data_src = open(char_data_filename).readlines()
         # allow comments: discard any line in char data starting with //
@@ -36,7 +37,7 @@ class CharacterSet:
                     # if no image found, try name of data file w/ png extension
                     image_filename = char_data_filename.replace('.%s' % CHARSET_FILE_EXTENSION, '.png')
                 if not os.path.exists(image_filename):
-                    self.app.log("Couldn't find character set image file " + image_filename)
+                    self.app.log("Couldn't find character set image file %s" % image_filename)
                     return
         # second line = character set dimensions
         second_line = char_data.pop(0).strip().split(',')
@@ -83,6 +84,7 @@ class CharacterSet:
             self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
             self.app.log('  char map width/height is %s x %s' % (self.map_width, self.map_height))
             self.app.log('  last character index: %s' % self.last_index)
+        self.init_success = True
     
     def get_char_index(self, char):
         return self.char_mapping.get(char, 0)

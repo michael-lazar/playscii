@@ -31,12 +31,30 @@ class OpenCommand(ConsoleCommand):
         console.ui.app.load_art(filename)
 
 
+class LoadPaletteCommand(ConsoleCommand):
+    def execute(console, args):
+        filename = ' '.join(args)
+        palette = console.ui.app.load_palette(filename)
+        console.ui.active_art.palette = palette
+        console.ui.popup.set_active_palette(palette)
+
+
+class LoadCharSetCommand(ConsoleCommand):
+    def execute(console, args):
+        filename = ' '.join(args)
+        charset = console.ui.app.load_charset(filename)
+        console.ui.active_art.charset = charset
+        console.ui.popup.set_active_charset(charset)
+
+
 # map strings to command classes for ConsoleUI.parse
 commands = {
     'exit': QuitCommand,
     'quit': QuitCommand,
     'save': SaveCommand,
-    'open': OpenCommand
+    'open': OpenCommand,
+    'char': LoadCharSetCommand,
+    'pal': LoadPaletteCommand
 }
 
 
