@@ -130,6 +130,7 @@ class UIRenderableX(LineRenderable):
     
     "Red X used to denote transparent color in various places"
     color = (1, 0, 0, 1)
+    line_width = 2
     
     def build_geo(self):
         self.vert_array = np.array([(0, 0), (1, 1), (1, 0), (0, 1)], dtype=np.float32)

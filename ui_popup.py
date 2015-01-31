@@ -210,10 +210,24 @@ class ToolPopup(UIElement):
         self.visible = False
     
     def set_active_charset(self, new_charset):
+        self.charset_swatch.art.charset = new_charset
+        self.palette_swatch.art.charset = new_charset
+        # make sure selected char isn't out of bounds w/ new set
+        self.ui.selected_char %= new_charset.last_index
+        self.ui.status_bar.set_active_charset(new_charset)
         self.charset_swatch.reset()
+        self.reset_art()
+        self.ui.active_art.set_charset(new_charset)
     
     def set_active_palette(self, new_palette):
+        self.charset_swatch.art.palette = new_palette
+        self.palette_swatch.art.palette = new_palette
+        # make sure selected colors aren't out of bounds w/ new palette
+        self.ui.selected_fg_color %= len(new_palette.colors) - 1
+        self.ui.selected_bg_color %= len(new_palette.colors) - 1
+        self.ui.status_bar.set_active_palette(new_palette)
         self.palette_swatch.reset()
+        self.reset_art()
     
     def hovered(self):
         # TODO: anything needed here? sub-element hovers happen in update

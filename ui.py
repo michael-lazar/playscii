@@ -103,19 +103,12 @@ class UI:
         self.active_art = new_art
         new_charset = self.active_art.charset
         new_palette = self.active_art.palette
-        # make sure selected char/colors aren't out of bounds w/ new art
-        self.selected_char %= new_charset.last_index
-        self.selected_fg_color %= len(new_palette.colors) - 1
-        self.selected_bg_color %= len(new_palette.colors) - 1
         # change active frame and layer if new active art doesn't have that many
         self.active_frame = min(self.active_frame, self.active_art.frames)
         self.active_layer = min(self.active_layer, self.active_art.layers)
-        # set for elements that care: status bar, popup
-        self.status_bar.set_active_charset(new_charset)
-        self.status_bar.set_active_palette(new_palette)
+        # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)
-        self.popup.reset_art()
         # reposition all art renderables and change their opacity
         x, y, margin = 0, 0, self.app.grid.art_margin
         for r in self.app.edit_renderables:
