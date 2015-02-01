@@ -5,6 +5,8 @@ from ui_swatch import CharacterSetSwatch, PaletteSwatch
 from ui_colors import UIColors
 from renderable_line import LineRenderable, SelectionBoxRenderable
 
+TOOL_PANE_WIDTH = 10
+
 class ToolTabButton(UIButton):
     x, y = 0, 0
     caption_y = 1
@@ -31,10 +33,52 @@ class CharSetScaleDownButton(UIButton):
     caption = '-'
     caption_justify = TEXT_CENTER
 
-class TestToolButton(UIButton):
-    width = 10
+class ToolButton(UIButton):
+    "a tool entry in the tool tab's left hand pane. populated from UI.tools"
+    width = TOOL_PANE_WIDTH
     caption = 'TOOLZ'
     y = ToolTabButton.height + 1
+
+class BrushSizeUpButton(UIButton):
+    width = 3
+    y = ToolTabButton.height + 2
+    caption = '+'
+    caption_justify = TEXT_CENTER
+    normal_fg_color = UIColors.white
+    normal_bg_color = UIColors.medgrey
+
+class BrushSizeDownButton(UIButton):
+    width = 3
+    y = BrushSizeUpButton.y
+    caption = '-'
+    caption_justify = TEXT_CENTER
+    normal_fg_color = UIColors.white
+    normal_bg_color = UIColors.medgrey
+
+class AffectCharToggleButton(UIButton):
+    width = 1
+    x = TOOL_PANE_WIDTH + 1
+    y = BrushSizeUpButton.y + 3
+    # don't paint caption from string
+    should_draw_caption = False
+    normal_fg_color = UIColors.white
+    normal_bg_color = UIColors.medgrey
+
+class AffectFgToggleButton(UIButton):
+    width = AffectCharToggleButton.width
+    x = AffectCharToggleButton.x
+    y = AffectCharToggleButton.y + 1
+    should_draw_caption = False
+    normal_fg_color = UIColors.white
+    normal_bg_color = UIColors.medgrey
+
+class AffectBgToggleButton(UIButton):
+    width = 1
+    x = AffectCharToggleButton.x
+    y = AffectCharToggleButton.y + 2
+    should_draw_caption = False
+    normal_fg_color = UIColors.white
+    normal_bg_color = UIColors.medgrey
 
 
 TAB_TOOLS = 0
@@ -52,6 +96,13 @@ class ToolPopup(UIElement):
     bg_color = UIColors.lightgrey
     charset_label = 'Character Set:'
     palette_label = 'Color Palette:'
+    brush_size_label = 'Brush size:'
+    affects_heading_label = 'Affects:'
+    affects_char_label = 'Character'
+    affects_fg_label = 'Foreground Color'
+    affects_bg_label = 'Background Color'
+    # index of check mark character in UI charset
+    check_char_index = 131
     # map classes to member names / callbacks
     button_names = {
         ToolTabButton: 'tool_tab',
@@ -62,10 +113,15 @@ class ToolPopup(UIElement):
         CharSetScaleDownButton: 'scale_charset_down',
     }
     tool_tab_button_names = {
-        TestToolButton: 'test_tool'
+        BrushSizeUpButton: 'brush_size_up',
+        BrushSizeDownButton: 'brush_size_down',
+        AffectCharToggleButton: 'toggle_affect_char',
+        AffectFgToggleButton: 'toggle_affect_fg',
+        AffectBgToggleButton: 'toggle_affect_bg',
     }
     
     def __init__(self, ui):
+        self.ui = ui
         self.charset_swatch = CharacterSetSwatch(ui, self)
         self.palette_swatch = PaletteSwatch(ui, self)
         self.cursor_box = SelectionBoxRenderable(ui.app, self.charset_swatch.art)
@@ -79,6 +135,17 @@ class ToolPopup(UIElement):
         self.common_buttons = self.create_buttons_from_map(self.button_names)
         self.char_color_tab_buttons = self.create_buttons_from_map(self.char_color_tab_button_names)
         self.tool_tab_buttons = self.create_buttons_from_map(self.tool_tab_button_names)
+        # populate more tool tab buttons from UI's list of tools
+        for y,tool in enumerate(self.ui.tools):
+            tool_button = ToolButton(self)
+            # caption: 1-space padding from left
+            tool_button.caption = ' %s' % tool.name
+            tool_button.y += y
+            def callback():
+                self.ui.set_selected_tool(self.ui.tools[y])
+                self.draw_tool_tab()
+            tool_button.callback = callback
+            self.tool_tab_buttons.append(tool_button)
         UIElement.__init__(self, ui)
         # set initial tab state
         self.char_color_tab_button_pressed()
@@ -93,9 +160,6 @@ class ToolPopup(UIElement):
             button.callback = getattr(self, cb_name)
             buttons.append(button)
         return buttons
-    
-    def test_tool_button_pressed(self):
-        print('HI')
     
     def tool_tab_button_pressed(self):
         self.active_tab = TAB_TOOLS
@@ -129,6 +193,31 @@ class ToolPopup(UIElement):
         self.charset_swatch.reset_loc()
         self.palette_swatch.reset_loc()
     
+    def brush_size_up_button_pressed(self):
+        self.ui.selected_tool.increase_brush_size()
+        self.draw_tool_tab()
+        self.draw_buttons()
+    
+    def brush_size_down_button_pressed(self):
+        self.ui.selected_tool.decrease_brush_size()
+        self.draw_tool_tab()
+        self.draw_buttons()
+    
+    def toggle_affect_char_button_pressed(self):
+        self.ui.selected_tool.affects_char = not self.ui.selected_tool.affects_char
+        self.draw_tool_tab()
+        self.draw_buttons()
+    
+    def toggle_affect_fg_button_pressed(self):
+        self.ui.selected_tool.affects_fg_color = not self.ui.selected_tool.affects_fg_color
+        self.draw_tool_tab()
+        self.draw_buttons()
+    
+    def toggle_affect_bg_button_pressed(self):
+        self.ui.selected_tool.affects_bg_color = not self.ui.selected_tool.affects_bg_color
+        self.draw_tool_tab()
+        self.draw_buttons()
+    
     def draw_char_color_tab(self):
         "draw non-button bits of this tab"
         # charset renderable location will be set in update()
@@ -157,7 +246,47 @@ class ToolPopup(UIElement):
     
     def draw_tool_tab(self):
         self.art.clear_frame_layer(0, 0, self.bg_color, self.fg_color)
-        self.art.write_string(0, 0, 2, self.tab_height + 3, 'hi')
+        # fill tool bar with dimmer color, highlight selected tool
+        for y in range(self.art.height):
+            for x in range(TOOL_PANE_WIDTH):
+                self.art.set_color_at(0, 0, x, y, self.ui.colors.medgrey, False)
+        # set selected tool BG lighter
+        y = self.tab_height + 1
+        for i,tool in enumerate(self.ui.tools):
+            tool_button = self.tool_tab_buttons[i]
+            if tool == self.ui.selected_tool:
+                tool_button.normal_bg_color = self.ui.colors.lightgrey
+            else:
+                tool_button.normal_bg_color = self.ui.colors.medgrey
+        # draw current tool settings
+        x = TOOL_PANE_WIDTH + 1
+        y = self.tab_height + 2
+        # brush size
+        if self.ui.selected_tool.brush_size:
+            self.brush_size_down_button.visible = True
+            self.brush_size_up_button.visible = True
+            label = self.brush_size_label
+            # calculate X of + and - buttons based on size string
+            self.brush_size_down_button.x = TOOL_PANE_WIDTH + len(label) + 1
+            label += ' ' * (self.brush_size_down_button.width + 1)
+            label += '%s' % self.ui.selected_tool.brush_size
+            self.brush_size_up_button.x = TOOL_PANE_WIDTH + len(label) + 2
+            self.art.write_string(0, 0, x, y, label)
+        else:
+            self.brush_size_down_button.visible = False
+            self.brush_size_up_button.visible = False
+        # affects char/fg/bg settings
+        y += 2
+        self.art.write_string(0, 0, x, y, self.affects_heading_label)
+        y += 1
+        # set affects-* button labels AND captions
+        def get_affects_char(affects):
+            return [0, self.check_char_index][affects]
+        for label,toggle in [(self.affects_char_label, self.ui.selected_tool.affects_char), (self.affects_fg_label, self.ui.selected_tool.affects_fg_color), (self.affects_bg_label, self.ui.selected_tool.affects_bg_color)]:
+            self.art.write_string(0, 0, x+2, y, '%s' % label)
+            #self.art.set_tile_at(0, 0, x, y, get_affects_char(toggle), 4, 2)
+            self.art.set_char_index_at(0, 0, x, y, get_affects_char(toggle))
+            y += 1
     
     def reset_art(self):
         self.charset_swatch.reset_art()
@@ -228,10 +357,6 @@ class ToolPopup(UIElement):
         self.ui.status_bar.set_active_palette(new_palette)
         self.palette_swatch.reset()
         self.reset_art()
-    
-    def hovered(self):
-        # TODO: anything needed here? sub-element hovers happen in update
-        UIElement.hovered(self)
     
     def update(self):
         UIElement.update(self)

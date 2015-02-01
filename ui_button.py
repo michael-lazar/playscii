@@ -16,6 +16,8 @@ class UIButton:
     width, height = 1, 1
     caption = 'TEST'
     caption_justify = TEXT_LEFT
+    # paint caption from string, or not
+    should_draw_caption = True
     caption_y = 0
     callback = None
     normal_fg_color = UIColors.black
@@ -96,5 +98,5 @@ class UIButton:
     
     def draw(self):
         self.set_state_colors()
-        if self.caption != '':
+        if self.should_draw_caption and self.caption != '':
             self.draw_caption()

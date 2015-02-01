@@ -76,7 +76,6 @@ class UIElement:
     
     def unclicked(self, button):
         self.log_event('unclicked', button)
-        # TODO: by this time self.hovered_buttons == [], figure out why!
         for b in self.hovered_buttons:
             b.unclick()
     
@@ -106,7 +105,9 @@ class UIElement:
         was_hovering = self.hovered_buttons[:]
         self.hovered_buttons = []
         for b in self.buttons:
-            if b.can_hover and self.is_inside_button(mx, my, b):
+            # element.clicked might have been set it non-hoverable, acknowledge
+            # its hoveredness here so it can unhover correctly
+            if (b.can_hover or b.state == 'clicked') and self.is_inside_button(mx, my, b):
                 self.hovered_buttons.append(b)
                 if not b in was_hovering:
                     b.hover()

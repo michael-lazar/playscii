@@ -112,8 +112,8 @@ class StatusBarUI(UIElement):
         self.art.write_string(0, 0, self.fg_label_x, 0, self.fg_label, color)
         self.art.write_string(0, 0, self.bg_label_x, 0, self.bg_label, color)
         self.art.write_string(0, 0, self.tool_label_x, 0, self.tool_label, color)
-        # TODO: get name of tool from UI once they exist
-        tool_selection = 'painT'
+        # get name of tool from UI
+        tool_selection = self.ui.selected_tool.name
         color = self.ui.colors.white
         bg = self.ui.colors.black
         self.art.write_string(0, 0, self.tool_selection_x, 0, tool_selection, color, bg)
