@@ -11,7 +11,7 @@ EXTENTS_COLOR = (0, 0, 0, 1)
 class Grid(LineRenderable):
     
     # squares to show past extents of active Art
-    art_margin = 2
+    art_margin = 0
     visible = True
     draw_axes = False
     
@@ -56,8 +56,6 @@ class Grid(LineRenderable):
         self.y = self.art_margin
     
     def update(self):
-        # TODO: if active_art has changed, adjust position and size accordingly,
-        # then self.rebind_buffers()
         pass
     
     def get_projection_matrix(self):

@@ -302,13 +302,13 @@ class Art:
     def set_tile_at(self, frame, layer, x, y, char_index=None, fg=None, bg=None,
                     transform=None):
         "convenience function for setting (up to) all 3 tile indices at once"
-        if char_index:
+        if char_index is not None:
             self.set_char_index_at(frame, layer, x, y, char_index)
-        if fg:
+        if fg is not None:
             self.set_color_at(frame, layer, x, y, fg, True)
-        if bg:
+        if bg is not None:
             self.set_color_at(frame, layer, x, y, bg, False)
-        if transform:
+        if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
     def update(self):
@@ -360,7 +360,7 @@ class Art:
             frame['layers'] = layers
             frames.append(frame)
         d['frames'] = frames
-        # TODO: below gives not-so-pretty-printing, find out way to control
+        # MAYBE-TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
         self.app.log('saved %s to disk.' % self.filename)

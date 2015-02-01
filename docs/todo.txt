@@ -1,10 +1,5 @@
 TODO
 
-main popup!
-- tool pane: left bar selects, right side has tool properties. just paint, grab, and erase for now; fixed 1 tile brush size
--- paint and erase tools: checkboxes for "only affect char/fg/bg"
-- arrow keys navigate picker as well as mouse?
-
 undo support:
 - create an EditCommand object for every edit made (1 or more tiles, etc): timestamp, tool used, tiles affected, tile changes
 - each art loaded should have its own command stack
@@ -12,6 +7,10 @@ undo support:
 - when redo is invoked, do the same but in reverse order
 - when an edit is made when the undo stack index is higher than its length, delete any higher items in the stack
 - batch commands made with the same tool within a time window together when undoing, ie don't make the user undo each individual tile painted
+
+main popup
+- "use global settings" toggle for tools with an "affects" mask - when true, setting one of the current tool's masks changes all tool's masks
+- arrow keys navigate picker as well as mouse?
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)

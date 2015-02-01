@@ -86,7 +86,7 @@ class UI:
         # use floats, window might be a fractional # of chars wide/tall
         aspect = self.app.window_width / self.app.window_height
         inv_aspect = self.app.window_height / self.app.window_width
-        # TODO: this math is correct but hard to follow, rewrite for clarity
+        # MAYBE-TODO: this math is correct but hard to follow, rewrite for clarity
         width = self.app.window_width / (self.charset.char_width * self.scale * inv_aspect)
         height = self.app.window_height / (self.charset.char_height * self.scale * inv_aspect)
         # any new UI elements created should use new scale

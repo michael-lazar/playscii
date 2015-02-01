@@ -307,7 +307,7 @@ class ConsoleUI(UIElement):
 # delimiters - alt-backspace deletes to most recent one of these
 delimiters = [' ', '.', ')', ']', ',', '_']
 
-# TODO: find out if this breaks for non-US english KB layouts
+# MAYBE-TODO: find out if this breaks for non-US english KB layouts
 shifts = {
     '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*',
     '9': '(', '0': ')', '-': '_', '=': '+', '`': '~', '[': '{', ']': '}', '\\': '|',
