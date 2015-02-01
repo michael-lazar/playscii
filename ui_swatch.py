@@ -101,7 +101,7 @@ class CharacterSetSwatch(UISwatch):
         return art.charset.map_width, art.charset.map_height
     
     def reset_art(self):
-        # TODO: using screen resolution, try to set quad size to an even
+        # MAYBE-TODO: using screen resolution, try to set quad size to an even
         # multiple of screen so the sampling doesn't get chunky
         aspect = self.ui.app.window_width / self.ui.app.window_height
         charset = self.art.charset
@@ -211,8 +211,6 @@ class PaletteSwatch(UISwatch):
         self.y -= self.popup.charset_swatch.art.quad_height * self.ui.active_art.charset.map_height
         # adjust Y for palette caption and character scale
         self.y -= self.popup.art.quad_height * 2
-        # TODO: position palette properly for different character scales
-        #self.y -= self.popup.charset_swatch.char_scale
         self.renderable.x, self.renderable.y = self.x, self.y
         # first color in palette (top left) always transparent
         self.transparent_x.x = self.renderable.x

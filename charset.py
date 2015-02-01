@@ -69,7 +69,7 @@ class CharacterSet:
             for x in range(self.image_width):
                 color = img.getpixel((x, y))
                 if color[:3] == self.transparent_color[:3]:
-                    # TODO: does keeping non-alpha color improve sampling?
+                    # MAYBE-TODO: does keeping non-alpha color improve sampling?
                     img.putpixel((x, y), (color[0], color[1], color[2], 0))
         self.texture = Texture(img.tostring(), self.image_width, self.image_height)
         # store character dimensions and UV size

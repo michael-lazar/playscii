@@ -96,7 +96,7 @@ class Shader:
 
 
 class ShaderUniform:
-    # TODO: class for remembering uniform name, type, index.
+    # MAYBE-TODO: class for remembering uniform name, type, index.
     # a Shader keeps a list of these, Renderables tell their Shader to set
     # them.  set methods use correct type and "try" to avoid crashes on
     # hot-reload when a uniform is commented out of live GLSL.
