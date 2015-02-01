@@ -344,11 +344,13 @@ class Application:
                 # if console is up, pass input to it - keys above work regardless
                 elif self.ui.console.visible:
                     self.ui.console.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
-                # TODO: redo these from u4mapvu
+                # 1/2/3: set current tool affects char/fg/bg
                 elif event.key.keysym.sym == sdl2.SDLK_1:
-                    self.camera.set_zoom(1)
+                    self.ui.selected_tool.affects_char = not self.ui.selected_tool.affects_char
                 elif event.key.keysym.sym == sdl2.SDLK_2:
-                    self.camera.set_zoom(2)
+                    self.ui.selected_tool.affects_fg_color = not self.ui.selected_tool.affects_fg_color
+                elif event.key.keysym.sym == sdl2.SDLK_3:
+                    self.ui.selected_tool.affects_bg_color = not self.ui.selected_tool.affects_bg_color
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
                 # spacebar: pop up tool / selector
@@ -398,12 +400,12 @@ class Application:
                         self.ui.next_active_art()
                     elif ctrl_pressed and shift_pressed:
                         self.ui.previous_active_art()
-                # TEST: enter does UI.DBG_paint
+                # enter does UI.paint
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
-                    self.ui.DBG_paint()
-                # TEST: q does DBG_grab
+                    self.ui.paint()
+                # q does quick grab
                 elif event.key.keysym.sym == sdl2.SDLK_q:
-                    self.ui.DBG_grab()
+                    self.ui.quick_grab()
                 # TEST: toggle artscript running
                 elif event.key.keysym.sym == sdl2.SDLK_m:
                     if self.ui.active_art.is_script_running('conway'):
@@ -450,9 +452,9 @@ class Application:
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    self.ui.DBG_paint()
+                    self.ui.paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
-                    self.ui.DBG_grab()
+                    self.ui.quick_grab()
         # directly query keys we don't want affected by OS key repeat delay
         if not alt_pressed and not ctrl_pressed and not shift_pressed and not self.ui.console.visible:
             if ks[sdl2.SDL_SCANCODE_W]:

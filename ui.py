@@ -8,6 +8,7 @@ from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_colors import UIColors
+from ui_tool import PencilTool, EraseTool, GrabTool
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -23,6 +24,7 @@ class UI:
     grain_texture = 'bgnoise_alpha.png'
     visible = True
     logg = False
+    tool_classes = [ PencilTool, EraseTool, GrabTool ]
     
     def __init__(self, app, active_art):
         self.app = app
@@ -43,6 +45,16 @@ class UI:
         self.selected_char = art_char.get_char_index('A') or 2
         self.selected_fg_color = art_pal.lightest_index
         self.selected_bg_color = art_pal.darkest_index
+        self.selected_tool = None
+        self.tools = []
+        # create tools
+        for t in self.tool_classes:
+            new_tool = t(self)
+            tool_name = '%s_tool' % new_tool.name
+            setattr(self, tool_name, new_tool)
+            # stick in a list for popup tool tab
+            self.tools.append(new_tool)
+        self.selected_tool = self.pencil_tool
         # create elements
         self.elements = []
         self.hovered_elements = []
@@ -148,6 +160,10 @@ class UI:
         self.app.edit_renderables.append(last_active_renderable)
         self.set_active_art(self.app.art_loaded[0])
     
+    def set_selected_tool(self, new_tool):
+        self.selected_tool = new_tool
+        self.popup.reset_art()
+    
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames
         # bail if frame is still the same, eg we only have 1 frame
@@ -221,25 +237,16 @@ class UI:
         for e in self.hovered_elements:
             e.unclicked(button)
     
-    def DBG_paint(self):
+    def paint(self):
         "simple quick function to test painting"
         if self.popup.visible or self.console.visible:
             return
-        x, y = self.app.cursor.get_tile()
-        # don't allow painting out of bounds
-        if not self.active_art.is_tile_inside(x, y):
-            return
-        self.active_art.set_tile_at(self.active_frame, self.active_layer, x, y, self.selected_char, self.selected_fg_color, self.selected_bg_color)
+        self.selected_tool.paint()
     
-    def DBG_grab(self):
+    def quick_grab(self):
         if self.popup.visible or self.console.visible:
             return
-        x, y = self.app.cursor.get_tile()
-        if not self.active_art.is_tile_inside(x, y):
-            return
-        self.selected_char = self.active_art.get_char_index_at(self.active_frame, self.active_layer, x, y)
-        self.selected_fg_color = self.active_art.get_fg_color_index_at(self.active_frame, self.active_layer, x, y)
-        self.selected_bg_color = self.active_art.get_bg_color_index_at(self.active_frame, self.active_layer, x, y)
+        self.grab_tool.paint()
     
     def destroy(self):
         for e in self.elements:

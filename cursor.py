@@ -160,8 +160,8 @@ class Cursor:
             self.entered_new_tile()
     
     def entered_new_tile(self):
-        if self.app.left_mouse:
-            self.app.ui.DBG_paint()
+        if self.app.left_mouse and self.app.ui.selected_tool.paint_while_dragging:
+            self.app.ui.selected_tool.paint()
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
