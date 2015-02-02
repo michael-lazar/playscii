@@ -1,20 +1,36 @@
 TODO
 
+variable (>1) brush sizes support
+
+paint preview under cursor!
+- a bit tricky: abandoning approach of "cursor-bound art + renderable reflecting edits" as it can't accurately represent any edits that make transparent any currently opaque pixels
+- alternative: create EditCommands and store edits the cursor /would/ do as ECs, apply them to the active art itself, restore the previous tiles if/when cursor leaves without editing
+-- does this mean an editcommand stores the state that was there before it?  read up on command buffer pattern
+--- if so, edit command stores: frame, layer, x, y, char before/after, fg before/after, etc
+-- cursor keeps list of "cursor edits".  if user paints, those edits get committed to the art, ie added to the undo stack and removed from the cursor edit list.  if user doesn't paint, all edits left in the edit list are undone at start of next cursor update.
+
+
 undo support:
 - create an EditCommand object for every edit made (1 or more tiles, etc): timestamp, tool used, tiles affected, tile changes
 - each art loaded should have its own command stack
-- when undo is invoked, iterate through those objects and reverse-apply each change to the art
+- when undo is invoked, pop each command off the top of the undo stack, reverse-apply each change to the art, place it onto the redo stack
 - when redo is invoked, do the same but in reverse order
-- when an edit is made when the undo stack index is higher than its length, delete any higher items in the stack
+- clear redo stack when an edit is made
 - batch commands made with the same tool within a time window together when undoing, ie don't make the user undo each individual tile painted
-
-main popup
-- "use global settings" toggle for tools with an "affects" mask - when true, setting one of the current tool's masks changes all tool's masks
-- arrow keys navigate picker as well as mouse?
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
--- is color distortion inherent in how good CRT filters work?
+-- or maybe http://wiki.libsdl.org/SDL_RenderReadPixels
+- 1:1 offscreen render target size = charset char size * art size; quad size = render target size / art size
+-- no projection / view / model matrix needed
+-- CRT off/on just runs the same post-proc shader or not?
+- determine if current CRT shader meets visual quality standard for PNG export.  CRT on/off setting respected in exported art.
+- lead on aniGIF export: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
+
+main popup
+- "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
+- arrow keys navigate pickers as well as mouse?
+-- how to resolve 
 
 ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
@@ -29,6 +45,7 @@ FIX:
 status bar breaks when UI scale changes!
 
 little annoying cracks between quads - UV or vert/element error?
+possible lead: http://gamedev.stackexchange.com/questions/76230/how-to-remove-seams-from-a-tile-map-in-3d
 
 rewrite Cursor.screen_to_world to produce same results as gluUnProject:
 https://www.opengl.org/wiki/GluProject_and_gluUnProject_code

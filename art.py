@@ -273,6 +273,13 @@ class Art:
         # use reverse dict of tuples b/c they're hashable
         return uv_types_reverse.get(tuple(uvs), UV_NORMAL)
     
+    def get_tile_at(self, frame, layer, x, y):
+        char = self.get_char_index_at(frame, layer, x, y)
+        fg = self.get_fg_color_index_at(frame, layer, x, y)
+        bg = self.get_bg_color_index_at(frame, layer, x, y)
+        xform = self.get_char_transform_at(frame, layer, x, y)
+        return char, fg, bg, xform
+    
     # set methods
     def set_char_index_at(self, frame, layer, x, y, char_index):
         self.chars[frame][layer][y][x] = char_index

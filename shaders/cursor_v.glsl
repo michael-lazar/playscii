@@ -25,10 +25,10 @@ void main()
 	float z = vertPosition.z;
 	vec4 xform = vec4(vertTransform, 1, 1);
 	vec4 offset = vec4(vertOffset * quadSize, 0, 0);
+	// apply scale to offsets rather than to model; more space between brackets
+	offset *= scale(objectScale.x, objectScale.y, objectScale.z);
 	// model = all 4 corners in the right place
 	vec4 model = vec4(vertPosition, 1) * xform + offset;
-	// scale and transform model
-	model *= scale(objectScale.x, objectScale.y, objectScale.z);
 	model += vec4(objectPosition, 0);
 	// apply camera
 	gl_Position = projection * view * model;
