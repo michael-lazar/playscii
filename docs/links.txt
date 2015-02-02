@@ -26,8 +26,26 @@ https://bitbucket.org/runhello/geodesic/wiki/Home - Andi's Icosa
 
 https://github.com/andyherbert/ansiedit - cool web-based editor
 
-http://fontstruct.com/gallery - tile-based font builder
+http://fontstruct.com/gallery - slick looking tile-based font builder
 
 https://github.com/abagames/mgl - kenta cho's framework
 
 https://pypi.python.org/pypi/Compositor/ - "Morphologically Optimal ASCII Art"
+
+http://www.kameli.net/marq/?page_id=2717 - PETSCII editor from ~2013
+
+http://satellitesrecords.com/artists/c64.htm - C64 synthesizer created by Ryo Kawasaki
+
+
+World/screen projection:
+
+http://webglfactory.blogspot.com/2011/05/how-to-convert-world-to-screen.html
+
+http://trac.bookofhook.com/bookofhook/trac.cgi/wiki/MousePicking
+
+http://www.gamedev.net/topic/508784-unproject--mouse-coordinates-sdl-using-opengl/
+
+https://www.opengl.org/discussion_boards/showthread.php/165951-Glut-Mouse-Coordinates
+
+http://www.antongerdelan.net/opengl/raycasting.html
+

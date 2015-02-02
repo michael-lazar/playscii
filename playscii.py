@@ -345,12 +345,17 @@ class Application:
                 # if console is up, pass input to it - keys above work regardless
                 elif self.ui.console.visible:
                     self.ui.console.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
-                # 1/2/3: set current tool affects char/fg/bg
+                # 1/2: decrease/increase current tool brush size
                 elif event.key.keysym.sym == sdl2.SDLK_1:
-                    self.ui.selected_tool.affects_char = not self.ui.selected_tool.affects_char
+                    self.ui.selected_tool.decrease_brush_size()
                 elif event.key.keysym.sym == sdl2.SDLK_2:
-                    self.ui.selected_tool.affects_fg_color = not self.ui.selected_tool.affects_fg_color
+                    self.ui.selected_tool.increase_brush_size()
+                # 3/4/5: set current tool affects char/fg/bg
                 elif event.key.keysym.sym == sdl2.SDLK_3:
+                    self.ui.selected_tool.affects_char = not self.ui.selected_tool.affects_char
+                elif event.key.keysym.sym == sdl2.SDLK_4:
+                    self.ui.selected_tool.affects_fg_color = not self.ui.selected_tool.affects_fg_color
+                elif event.key.keysym.sym == sdl2.SDLK_5:
                     self.ui.selected_tool.affects_bg_color = not self.ui.selected_tool.affects_bg_color
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()

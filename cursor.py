@@ -1,6 +1,9 @@
-import math, ctypes
+import math, ctypes, time
 import numpy as np
 from OpenGL import GL
+
+from art import Art
+from renderable import TileRenderable
 
 """
 reference diagram:
@@ -73,6 +76,10 @@ class Cursor:
         # offsets to render the 4 corners at
         self.mouse_x, self.mouse_y = 0, 0
         self.color = np.array(BASE_COLOR, dtype=np.float32)
+        # use an Art and TileRenderable to preview result of paint under cursor!
+        art_name = '%s_Cursor' % int(time.time())
+        self.art = Art(art_name, self.app, self.app.ui.active_art.charset, self.app.ui.active_art.palette, 1, 1)
+        self.renderable = TileRenderable(self.app, self.art)
         # GL objects
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
@@ -115,8 +122,26 @@ class Cursor:
         if self.logg:
             self.app.log('Cursor: %s,%s,%s scale %.2f,%.2f' % (self.x, self.y, self.z, self.scale_x, self.scale_y))
     
+    def set_scale(self, new_scale):
+        self.scale_x = self.scale_y = new_scale
+    
     def get_tile(self):
         return int(self.x), int(-self.y)
+    
+    def get_tiles_under_brush(self, base_zero=False):
+        """
+        returns list of tuple coordinates of all tiles under the cursor @ its
+        current brush size
+        """
+        size = self.app.ui.selected_tool.brush_size
+        tiles = []
+        x_start, y_start = int(self.x), int(-self.y)
+        if base_zero:
+            x_start, y_start = 0, 0
+        for y in range(y_start, y_start + size):
+            for x in range(x_start, x_start + size):
+                tiles.append((x, y))
+        return tiles
     
     def screen_to_world(self, screen_x, screen_y):
         # normalized device coordinates
@@ -138,13 +163,29 @@ class Cursor:
         y += self.app.camera.y_tilt
         return x, y, z
     
+    def update_cursor_preview(self):
+        self.renderable.x, self.renderable.y = self.x, self.y
+        if self.art.width != self.scale_x or self.art.width != self.scale_y:
+            self.art.resize(self.scale_x, self.scale_y)
+        # sample + copy active art beneath cursor
+        src_tiles = self.get_tiles_under_brush()
+        for tile in src_tiles:
+            x = tile[0]
+            y = tile[1]
+            char, fg, bg, xform = self.app.ui.active_art.get_tile_at(self.app.ui.active_frame, self.app.ui.active_layer, x, y)
+            x -= self.x
+            y += self.y
+            self.art.set_tile_at(0, 0, x, y, char, fg, bg, xform)
+        # paint cursor preview art with brush at "base zero"
+        self.app.ui.selected_tool.paint(self.art, True)
+        self.art.update()
+    
     def update(self, elapsed_time):
         # save old positions before update
         self.last_x, self.last_y = self.x, self.y
         # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
-        self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
-        self.scale_y = self.scale_x
+        #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
         #print('%s %s (d %s %s)' % (self.app.mouse_x, self.app.mouse_y, self.app.mouse_dx, self.app.mouse_dy))
         # update cursor if mouse OR camera moved
         if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and not self.app.camera.moved_this_frame:
@@ -154,6 +195,13 @@ class Cursor:
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         self.x = math.floor(self.x / w) * w
         self.y = math.ceil(self.y / h) * h
+        # adjust for brush size
+        size = self.app.ui.selected_tool.brush_size
+        self.scale_x = self.scale_y = size
+        size_offset = math.ceil(size / 2) - 1
+        self.x -= size_offset
+        self.y += size_offset
+        self.update_cursor_preview()
         # TODO: something here is needed to correct for non-square charsets!
         # current result is 1:2 sets eg DOS skip even-numbered Y coordinates
         if self.x != self.last_x or self.y != self.last_y:
@@ -164,6 +212,9 @@ class Cursor:
             self.app.ui.selected_tool.paint()
     
     def render(self, elapsed_time):
+        # render cursor preview first
+        if self.app.ui.selected_tool.show_preview:
+            self.renderable.render(elapsed_time)
         GL.glUseProgram(self.shader.program)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.projection_matrix)
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.view_matrix)
