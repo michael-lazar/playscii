@@ -38,7 +38,7 @@ CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 
-VERSION = '0.2.0'
+VERSION = '0.3.0'
 
 class Application:
     
@@ -273,6 +273,51 @@ class Application:
         # for all intents and purposes, this is like resizing the window
         self.resize_window(self.window_width, self.window_height)
     
+    def screenshot(self):
+        "saves a date + time-stamped screenshot"
+        timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
+        output_filename = 'playscii_%s.png' % timestamp
+        w, h = self.window_width, self.window_height
+        pixels = GL.glReadPixels(0, 0, w, h, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,
+                                 outputType=None)
+        pixel_bytes = pixels.flatten().tobytes()
+        img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        img.save(output_filename)
+        self.log('Saved screenshot %s' % output_filename)
+    
+    def export_image(self, art):
+        output_filename = '%s.png' % os.path.splitext(art.filename)[0]
+        # determine art's native size in pixels
+        w = art.charset.char_width * art.width
+        h = art.charset.char_height * art.height
+        # create render target
+        framebuffer = GL.glGenFramebuffers(1)
+        render_buffer = GL.glGenRenderbuffers(1)
+        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, render_buffer)
+        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_RGBA8, w, h)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, framebuffer)
+        GL.glFramebufferRenderbuffer(GL.GL_DRAW_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0,
+                                     GL.GL_RENDERBUFFER, render_buffer)
+        GL.glClearColor(0, 0, 0.1, 0.5)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        # render to it
+        art.renderables[0].render_for_export()
+        GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0)
+        # read pixels from it
+        pixels = GL.glReadPixels(0, 0, w, h, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,
+                                 outputType=None)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+        # cleanup / deinit of GL stuff
+        GL.glDeleteFramebuffers(1, [framebuffer])
+        GL.glDeleteRenderbuffers(1, [render_buffer])
+        # GL pixel data as numpy array -> bytes for PIL image export
+        pixel_bytes = pixels.flatten().tobytes()
+        img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        img.save(output_filename)
+        self.log('%s exported' % output_filename)
+    
     def main_loop(self):
         while not self.should_quit:
             tick_time = sdl2.timer.SDL_GetTicks()
@@ -333,8 +378,12 @@ class Application:
                 # ctrl q: quit
                 if ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_q:
                     self.should_quit = True
+                # `: toggle console
                 elif event.key.keysym.sym == sdl2.SDLK_BACKQUOTE:
                     self.ui.console.toggle()
+                # ctrl-E: export active art to PNG
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_e:
+                    self.export_image(self.ui.active_art)
                 # ctrl +/-: change UI scale
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_EQUALS:
                     self.ui.set_scale(self.ui.scale + SCALE_INCREMENT)
@@ -419,6 +468,9 @@ class Application:
                 # q does quick grab
                 elif event.key.keysym.sym == sdl2.SDLK_q:
                     self.ui.quick_grab()
+                # F12: screenshot
+                elif event.key.keysym.sym == sdl2.SDLK_F12:
+                    self.screenshot()
                 # TEST: toggle artscript running
                 elif event.key.keysym.sym == sdl2.SDLK_m:
                     if self.ui.active_art.is_script_running('conway'):
@@ -529,6 +581,7 @@ class Application:
         self.fb.render(self.elapsed_time)
         if self.ui.visible:
             self.ui.render(self.elapsed_time)
+        #self.ui.active_art.renderables[0].render_for_export()
         GL.glUseProgram(0)
         sdl2.SDL_GL_SwapWindow(self.window)
     

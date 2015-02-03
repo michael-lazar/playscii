@@ -1,22 +1,12 @@
 TODO
 
-variable (>1) brush sizes support
+video:
+show off: tool settings, proper palette display, undo/redo, export
+questions: expected paint behavior, key binds
 
-paint preview under cursor!
-- a bit tricky: abandoning approach of "cursor-bound art + renderable reflecting edits" as it can't accurately represent any edits that make transparent any currently opaque pixels
-- alternative: create EditCommands and store edits the cursor /would/ do as ECs in Cursor.preview_edits, apply them immediately to the active art itself, restore the previous tiles if/when cursor leaves without editing
--- does this mean an editcommand stores the state that was there before it?  read up on command buffer pattern
---- if so, edit command stores: frame, layer, x, y, char before/after, fg before/after, etc
--- cursor keeps list of "cursor edits".  if user paints, those edits get committed to the art, ie added to the art's undo stack and removed from the cursor edit list.  if user doesn't paint, all edits left in the edit list are undone at start of next cursor update.
+identify bugs with current undo/redo and squash the must-fix ones!
 
-
-undo support:
-- create an EditCommand object for every edit made (1 or more tiles, etc): timestamp, tool used, tiles affected, tile changes
-- each art loaded should have its own command stack
-- when undo is invoked, pop each command off the top of the undo stack, reverse-apply each change to the art, place it onto the redo stack
-- when redo is invoked, do the same but in reverse order
-- clear redo stack when an edit is made
-- batch commands made with the same tool within a time window together when undoing, ie don't make the user undo each individual tile painted
+fix unexpected result cases for current paint/erase tool behaviors
 
 - "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
 -- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)

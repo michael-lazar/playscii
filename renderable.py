@@ -1,4 +1,5 @@
 import math, ctypes
+import numpy as np
 from OpenGL import GL
 from art import VERT_LENGTH
 from palette import MAX_COLORS
@@ -21,13 +22,16 @@ class TileRenderable:
         self.app = app
         self.art = art
         self.art.renderables.append(self)
+        # set true momentarily by image export process
+        self.exporting = False
         # frame of our art's animation we're on
         self.frame = 0
         self.animating = False
         self.anim_timer = 0
-        # world space position
-        # TODO: object rotation/scale matrices, if needed
+        # world space position and scale
         self.x, self.y, self.z = 0, 0, 0
+        self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        # TODO: object rotation matrix, if needed
         self.goal_x, self.goal_y, self.goal_z = 0, 0, 0
         self.moving = False
         self.camera = self.app.camera
@@ -38,6 +42,7 @@ class TileRenderable:
         self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
         self.view_matrix_uniform = self.shader.get_uniform_location('view')
         self.position_uniform = self.shader.get_uniform_location('objectPosition')
+        self.scale_uniform = self.shader.get_uniform_location('objectScale')
         self.charset_width_uniform = self.shader.get_uniform_location('charMapWidth')
         self.charset_height_uniform = self.shader.get_uniform_location('charMapHeight')
         self.char_uv_width_uniform = self.shader.get_uniform_location('charUVWidth')
@@ -198,10 +203,32 @@ class TileRenderable:
         UIRenderable overrides this so it doesn't have to override
         Renderable.render and duplicate lots of code.
         """
-        return self.camera.projection_matrix
+        return np.eye(4, 4) if self.exporting else self.camera.projection_matrix
     
     def get_view_matrix(self):
-        return self.camera.view_matrix
+        return np.eye(4, 4) if self.exporting else self.camera.view_matrix
+    
+    def get_loc(self):
+        # start at screen top left when exporting
+        export_loc = (-1, 1, 0) # works, kinda
+        return export_loc if self.exporting else (self.x, self.y, self.z)
+    
+    def get_scale(self):
+        if not self.exporting:
+            return (self.scale_x, self.scale_y, self.scale_z)
+        # fill entire screen exactly when exporting
+        x = 2 / self.art.width
+        y = 2 / self.art.height
+        #print('scale is %.5f x %.5f' % (x, y))
+        return (x, y, 1)
+    
+    def render_for_export(self):
+        self.exporting = True
+        # cursor might be hovering, undo any preview changes
+        for edit in self.art.app.cursor.preview_edits:
+            edit.undo()
+        self.render(0)
+        self.exporting = False
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)
@@ -225,10 +252,13 @@ class TileRenderable:
         GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
         GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
         GL.glUniform1f(self.alpha_uniform, self.alpha)
-        GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
+        GL.glUniform3f(self.position_uniform, *self.get_loc())
+        GL.glUniform3f(self.scale_uniform, *self.get_scale())
         # camera uniforms
-        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
-        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.get_view_matrix())
+        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE,
+                              self.get_projection_matrix())
+        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE,
+                              self.get_view_matrix())
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

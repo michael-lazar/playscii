@@ -47,6 +47,11 @@ class LoadCharSetCommand(ConsoleCommand):
         console.ui.popup.set_active_charset(charset)
 
 
+class ImageExportCommand(ConsoleCommand):
+    def execute(console, args):
+        console.ui.app.export_image(console.ui.active_art)
+
+
 # map strings to command classes for ConsoleUI.parse
 commands = {
     'exit': QuitCommand,
@@ -54,7 +59,8 @@ commands = {
     'save': SaveCommand,
     'open': OpenCommand,
     'char': LoadCharSetCommand,
-    'pal': LoadPaletteCommand
+    'pal': LoadPaletteCommand,
+    'export': ImageExportCommand
 }
 
 
