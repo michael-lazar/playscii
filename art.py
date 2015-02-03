@@ -3,6 +3,8 @@ import numpy as np
 
 from random import randint
 
+from edit_command import CommandStack
+
 # X, Y, Z
 VERT_LENGTH = 3
 # 4 verts in a quad
@@ -77,6 +79,7 @@ class Art:
         self.filename = filename
         self.app = app
         self.charset, self.palette = charset, palette
+        self.command_stack = CommandStack(self)
         self.width, self.height = width, height
         self.frames = 0
         # list of frame delays
@@ -318,6 +321,12 @@ class Art:
         if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
+    def undo(self):
+        self.command_stack.undo()
+    
+    def redo(self):
+        self.command_stack.redo()
+    
     def update(self):
         self.update_scripts()
         # update our renderables if they're on a frame whose char/colors changed
@@ -524,6 +533,7 @@ class ArtFromDisk(Art):
             self.uv_mods.append(uvs)
         # TODO: for hot-reload, app should pass in old renderables list
         self.renderables = []
+        self.command_stack = CommandStack(self)
         # running scripts and timing info
         self.scripts = []
         self.script_rates = []
@@ -611,6 +621,7 @@ class ArtFromEDSCII(Art):
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
         self.renderables = []
+        self.command_stack = CommandStack(self)
         # running scripts and timing info
         self.scripts = []
         self.script_rates = []

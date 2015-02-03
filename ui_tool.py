@@ -1,4 +1,5 @@
 
+from edit_command import EditCommand
 
 class UITool:
     
@@ -17,18 +18,36 @@ class UITool:
         self.affects_fg_color = True
         self.affects_bg_color = True
     
-    def paint(self, art=None, base_zero=False):
-        pass
+    def toggle_affects_char(self):
+        self.affects_char = not self.affects_char
+        self.ui.tool_settings_changed = True
+    
+    def toggle_affects_fg(self):
+        self.affects_fg_color = not self.affects_fg_color
+        self.ui.tool_settings_changed = True
+    
+    def toggle_affects_bg(self):
+        self.affects_bg_color = not self.affects_bg_color
+        self.ui.tool_settings_changed = True
+    
+    def get_paint_commands(self):
+        "returns a list of EditCommands for a given paint operation"
+        return []
     
     def increase_brush_size(self):
-        if self.brush_size:
-            self.brush_size += 1
+        if not self.brush_size:
+            return
+        self.brush_size += 1
         self.ui.app.cursor.set_scale(self.brush_size)
+        self.ui.tool_settings_changed = True
     
     def decrease_brush_size(self):
-        if self.brush_size and self.brush_size > 1:
+        if not self.brush_size:
+            return
+        if self.brush_size > 1:
             self.brush_size -= 1
-        self.ui.app.cursor.set_scale(self.brush_size)
+            self.ui.app.cursor.set_scale(self.brush_size)
+            self.ui.tool_settings_changed = True
 
 
 class PencilTool(UITool):
@@ -44,22 +63,29 @@ class PencilTool(UITool):
         char = self.ui.selected_char if self.affects_char else None
         fg = self.ui.selected_fg_color if self.affects_fg_color else None
         bg = self.ui.selected_bg_color if self.affects_bg_color else None
-        return char, fg, bg
+        # TODO: proper char xform handling for pencil and eraser
+        xform = 0
+        return char, fg, bg, xform
     
-    def paint(self, art=None, base_zero=False):
-        # by default paint to active art, but allow pass-in eg cursor preview
-        art = art or self.ui.active_art
-        # "base zero" = cursor preview, mapping art-space to cursor-art-space
-        tiles = self.ui.app.cursor.get_tiles_under_brush(base_zero)
-        frame = self.ui.active_frame if art == self.ui.active_art else 0
-        layer = self.ui.active_layer if art == self.ui.active_art else 0
-        char, fg, bg = self.get_tile_change()
+    def get_paint_commands(self):
+        commands = []
+        art = self.ui.active_art
+        frame = self.ui.active_frame
+        layer = self.ui.active_layer
+        tiles = self.ui.app.cursor.get_tiles_under_brush()
+        a_char, a_fg, a_bg, a_xform = self.get_tile_change()
         for tile in tiles:
-            x, y = tile[0], tile[1]
             # don't allow painting out of bounds
-            if not art.is_tile_inside(x, y):
+            if not art.is_tile_inside(*tile):
                 continue
-            art.set_tile_at(frame, layer, x, y, char, fg, bg)
+            new_command = EditCommand(art)
+            new_command.set_tile(frame, layer, *tile)
+            b_char, b_fg, b_bg, b_xform = art.get_tile_at(frame, layer, *tile)
+            new_command.set_before(b_char, b_fg, b_bg, b_xform)
+            new_command.set_after(a_char, a_fg, a_bg, a_xform)
+            if not new_command.is_null():
+                commands.append(new_command)
+        return commands
 
 
 class EraseTool(PencilTool):
@@ -71,7 +97,8 @@ class EraseTool(PencilTool):
         char = 0 if self.affects_char else None
         fg = 0 if self.affects_fg_color else None
         bg = 0 if self.affects_bg_color else None
-        return char, fg, bg
+        xform = 0
+        return char, fg, bg, xform
 
 
 class GrabTool(UITool):
@@ -81,7 +108,7 @@ class GrabTool(UITool):
     brush_size = None
     show_preview = False
     
-    def paint(self, art=None, base_zero=False):
+    def paint(self):
         x, y = self.ui.app.cursor.get_tile()
         art = self.ui.active_art
         if not art.is_tile_inside(x, y):

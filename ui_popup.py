@@ -183,29 +183,20 @@ class ToolPopup(UIElement):
         self.palette_swatch.reset_loc()
     
     def brush_size_up_button_pressed(self):
+        # any changes to tool's setting will force redraw of settings tab
         self.ui.selected_tool.increase_brush_size()
-        self.draw_tool_tab()
-        self.draw_buttons()
     
     def brush_size_down_button_pressed(self):
         self.ui.selected_tool.decrease_brush_size()
-        self.draw_tool_tab()
-        self.draw_buttons()
     
     def toggle_affect_char_button_pressed(self):
-        self.ui.selected_tool.affects_char = not self.ui.selected_tool.affects_char
-        self.draw_tool_tab()
-        self.draw_buttons()
+        self.ui.selected_tool.toggle_affects_char()
     
     def toggle_affect_fg_button_pressed(self):
-        self.ui.selected_tool.affects_fg_color = not self.ui.selected_tool.affects_fg_color
-        self.draw_tool_tab()
-        self.draw_buttons()
+        self.ui.selected_tool.toggle_affects_fg()
     
     def toggle_affect_bg_button_pressed(self):
-        self.ui.selected_tool.affects_bg_color = not self.ui.selected_tool.affects_bg_color
-        self.draw_tool_tab()
-        self.draw_buttons()
+        self.ui.selected_tool.toggle_affects_bg()
     
     def pencil_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.pencil_tool)
@@ -380,6 +371,9 @@ class ToolPopup(UIElement):
             # note: self.cursor_box updates in charset_swatch.update
             self.charset_swatch.update()
             self.palette_swatch.update()
+        elif self.active_tab == TAB_TOOLS and self.ui.tool_settings_changed:
+            self.draw_tool_tab()
+            self.draw_buttons()
     
     def clicked(self, button):
         UIElement.clicked(self, button)

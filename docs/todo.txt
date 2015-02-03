@@ -4,10 +4,10 @@ variable (>1) brush sizes support
 
 paint preview under cursor!
 - a bit tricky: abandoning approach of "cursor-bound art + renderable reflecting edits" as it can't accurately represent any edits that make transparent any currently opaque pixels
-- alternative: create EditCommands and store edits the cursor /would/ do as ECs, apply them to the active art itself, restore the previous tiles if/when cursor leaves without editing
+- alternative: create EditCommands and store edits the cursor /would/ do as ECs in Cursor.preview_edits, apply them immediately to the active art itself, restore the previous tiles if/when cursor leaves without editing
 -- does this mean an editcommand stores the state that was there before it?  read up on command buffer pattern
 --- if so, edit command stores: frame, layer, x, y, char before/after, fg before/after, etc
--- cursor keeps list of "cursor edits".  if user paints, those edits get committed to the art, ie added to the undo stack and removed from the cursor edit list.  if user doesn't paint, all edits left in the edit list are undone at start of next cursor update.
+-- cursor keeps list of "cursor edits".  if user paints, those edits get committed to the art, ie added to the art's undo stack and removed from the cursor edit list.  if user doesn't paint, all edits left in the edit list are undone at start of next cursor update.
 
 
 undo support:

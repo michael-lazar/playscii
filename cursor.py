@@ -2,9 +2,6 @@ import math, ctypes, time
 import numpy as np
 from OpenGL import GL
 
-from art import Art
-from renderable import TileRenderable
-
 """
 reference diagram:
 
@@ -73,13 +70,11 @@ class Cursor:
         self.app = app
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        # list of EditCommands for preview
+        self.preview_edits = []
         # offsets to render the 4 corners at
         self.mouse_x, self.mouse_y = 0, 0
         self.color = np.array(BASE_COLOR, dtype=np.float32)
-        # use an Art and TileRenderable to preview result of paint under cursor!
-        art_name = '%s_Cursor' % int(time.time())
-        self.art = Art(art_name, self.app, self.app.ui.active_art.charset, self.app.ui.active_art.palette, 1, 1)
-        self.renderable = TileRenderable(self.app, self.art)
         # GL objects
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
@@ -164,21 +159,19 @@ class Cursor:
         return x, y, z
     
     def update_cursor_preview(self):
-        self.renderable.x, self.renderable.y = self.x, self.y
-        if self.art.width != self.scale_x or self.art.width != self.scale_y:
-            self.art.resize(self.scale_x, self.scale_y)
-        # sample + copy active art beneath cursor
-        src_tiles = self.get_tiles_under_brush()
-        for tile in src_tiles:
-            x = tile[0]
-            y = tile[1]
-            char, fg, bg, xform = self.app.ui.active_art.get_tile_at(self.app.ui.active_frame, self.app.ui.active_layer, x, y)
-            x -= self.x
-            y += self.y
-            self.art.set_tile_at(0, 0, x, y, char, fg, bg, xform)
-        # paint cursor preview art with brush at "base zero"
-        self.app.ui.selected_tool.paint(self.art, True)
-        self.art.update()
+        # undo previous edits
+        for edit in self.preview_edits:
+            edit.undo()
+        # rebuild list of cursor preview commands
+        self.preview_edits = self.app.ui.selected_tool.get_paint_commands()
+        for edit in self.preview_edits:
+            edit.apply()
+    
+    def paint(self):
+        # commit preview edits and clear list so they won't be undone on
+        # next cursor move
+        self.app.ui.active_art.command_stack.commit_commands(self.preview_edits)
+        self.preview_edits = []
     
     def update(self, elapsed_time):
         # save old positions before update
@@ -186,9 +179,8 @@ class Cursor:
         # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
-        #print('%s %s (d %s %s)' % (self.app.mouse_x, self.app.mouse_y, self.app.mouse_dx, self.app.mouse_dy))
-        # update cursor if mouse OR camera moved
-        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and not self.app.camera.moved_this_frame:
+        # update cursor if mouse OR camera moved OR tool settings changed
+        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and not self.app.camera.moved_this_frame and not self.app.ui.tool_settings_changed:
             return
         self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
         # snap to tile
@@ -209,12 +201,9 @@ class Cursor:
     
     def entered_new_tile(self):
         if self.app.left_mouse and self.app.ui.selected_tool.paint_while_dragging:
-            self.app.ui.selected_tool.paint()
+            self.paint()
     
     def render(self, elapsed_time):
-        # render cursor preview first
-        if self.app.ui.selected_tool.show_preview:
-            self.renderable.render(elapsed_time)
         GL.glUseProgram(self.shader.program)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.projection_matrix)
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.view_matrix)

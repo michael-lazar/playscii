@@ -46,6 +46,9 @@ class UI:
         self.selected_fg_color = art_pal.lightest_index
         self.selected_bg_color = art_pal.darkest_index
         self.selected_tool = None
+        # set True when tool settings change, cleared after update, used by
+        # cursor to determine if cursor update needed
+        self.tool_settings_changed = False
         self.tools = []
         # create tools
         for t in self.tool_classes:
@@ -228,6 +231,7 @@ class UI:
             e.update()
             # art update: tell renderables to refresh buffers
             e.art.update()
+        self.tool_settings_changed = False
     
     def clicked(self, button):
         for e in self.hovered_elements:
@@ -236,12 +240,6 @@ class UI:
     def unclicked(self, button):
         for e in self.hovered_elements:
             e.unclicked(button)
-    
-    def paint(self):
-        "simple quick function to test painting"
-        if self.popup.visible or self.console.visible:
-            return
-        self.selected_tool.paint()
     
     def quick_grab(self):
         if self.popup.visible or self.console.visible:
