@@ -1,4 +1,4 @@
-import sys, os.path
+import sys, os.path, time
 
 from random import random
 
@@ -70,6 +70,8 @@ class Application:
         self.log_file = log_file
         self.log_lines = log_lines
         self.elapsed_time = 0
+        # table of last clicked mouse button times
+        self.last_click_times = {}
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         sdl2.ext.init()
@@ -352,11 +354,11 @@ class Application:
                     self.ui.selected_tool.increase_brush_size()
                 # 3/4/5: set current tool affects char/fg/bg
                 elif event.key.keysym.sym == sdl2.SDLK_3:
-                    self.ui.selected_tool.affects_char = not self.ui.selected_tool.affects_char
+                    self.ui.selected_tool.toggle_affects_char()
                 elif event.key.keysym.sym == sdl2.SDLK_4:
-                    self.ui.selected_tool.affects_fg_color = not self.ui.selected_tool.affects_fg_color
+                    self.ui.selected_tool.toggle_affects_fg()
                 elif event.key.keysym.sym == sdl2.SDLK_5:
-                    self.ui.selected_tool.affects_bg_color = not self.ui.selected_tool.affects_bg_color
+                    self.ui.selected_tool.toggle_affects_bg()
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
                 # spacebar: pop up tool / selector
@@ -406,9 +408,14 @@ class Application:
                         self.ui.next_active_art()
                     elif ctrl_pressed and shift_pressed:
                         self.ui.previous_active_art()
-                # enter does UI.paint
+                # shift-ctrl-z does red, ctrl-z does undo
+                elif shift_pressed and ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_z:
+                    self.ui.active_art.redo()
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_z:
+                    self.ui.active_art.undo()
+                # enter does Cursor.paint
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
-                    self.ui.paint()
+                    self.cursor.paint()
                 # q does quick grab
                 elif event.key.keysym.sym == sdl2.SDLK_q:
                     self.ui.quick_grab()
@@ -457,8 +464,10 @@ class Application:
                 self.ui.unclicked(event.button.button)
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
+                # update last clicked time
+                self.last_click_times[int(event.button.button)] = time.time()
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    self.ui.paint()
+                    self.cursor.paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
                     self.ui.quick_grab()
         # directly query keys we don't want affected by OS key repeat delay
