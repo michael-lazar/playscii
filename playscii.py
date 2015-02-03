@@ -197,7 +197,16 @@ class Application:
             # TODO: this may be foolish, ensure this never overwrites user data
             if not art or not art.valid:
                 art = self.new_art(filename)
-        # keep a list of all art assets loaded (stub for MDI support)
+        # add to list of arts loaded
+        self.art_loaded.insert(0, art)
+        renderable = TileRenderable(self, art)
+        self.edit_renderables.insert(0, renderable)
+        if self.ui:
+            self.ui.set_active_art(art)
+    
+    def recover_edscii(self, filename, width_override):
+        "recovers an incorrectly-saved EDSCII file using the given width"
+        art = ArtFromEDSCII(filename, self, width_override)
         self.art_loaded.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)

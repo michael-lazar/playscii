@@ -1,18 +1,11 @@
 TODO
 
-video:
-show off: tool settings, proper palette display, undo/redo, export
-questions: expected paint behavior, key binds
-
 identify bugs with current undo/redo and squash the must-fix ones!
 
 fix unexpected result cases for current paint/erase tool behaviors
 
-- "export to PNG" feature - how? 1:1 sized offscreen render target? does getting pixels from framebuffer preserve alpha?
--- smart people say: try glReadPixels, make sure framebuffer contains an alpha (it should, pixel format is RGBA)
--- or maybe http://wiki.libsdl.org/SDL_RenderReadPixels
+PNG export:
 - 1:1 offscreen render target size = charset char size * art size; quad size = render target size / art size
--- no projection / view / model matrix needed
 -- CRT off/on just runs the same post-proc shader or not?
 - determine if current CRT shader meets visual quality standard for PNG export.  CRT on/off setting respected in exported art.
 - lead on aniGIF export: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
