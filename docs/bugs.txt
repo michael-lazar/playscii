@@ -1,0 +1,17 @@
+bug list
+
+status bar breaks when UI scale changes!
+
+little annoying cracks between quads - UV or vert/element error?
+possible lead: http://gamedev.stackexchange.com/questions/76230/how-to-remove-seams-from-a-tile-map-in-3d
+
+rewrite Cursor.screen_to_world to produce same results as gluUnProject:
+https://www.opengl.org/wiki/GluProject_and_gluUnProject_code
+https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
+
+
+low priority:
+
+problem discovered during 2015-01-04~06:
+GLSL really can't handle int/uint attributes!  charIndex looks fine in numpy int32 array data but comes into GLSL totally screwy.  works fine when the array and attribute are floats instead.  bug for PyOpenGL devs?
+possible test program: two quads side by side, each doing some trivial shader that involves an arbitrary number, only difference being one is driven by an int attribute and the other by a float.
