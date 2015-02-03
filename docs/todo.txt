@@ -1,8 +1,9 @@
 TODO
 
-identify bugs with current undo/redo and squash the must-fix ones!
+identify bugs with current undo/redo and paint tools, squash the must-fix ones and log the lower priority ones!
+troubleshooting undo/redo: good visualization of current stack
 
-fix unexpected result cases for current paint/erase tool behaviors
+mockup for menu bar, frame/layer matrix
 
 PNG export:
 - 1:1 offscreen render target size = charset char size * art size; quad size = render target size / art size
@@ -13,31 +14,10 @@ PNG export:
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
 - arrow keys navigate pickers as well as mouse?
--- how to resolve 
+-- how to resolve transitions between char and color swatches?
 
 ability to toggle between perspective and ortho views (steal unity's cool lerp?)
 
 ability to "pin" popup so it stays on screen always
 
-later UI stuff in docs/ui.txt
-
----
-
-FIX:
-
-status bar breaks when UI scale changes!
-
-little annoying cracks between quads - UV or vert/element error?
-possible lead: http://gamedev.stackexchange.com/questions/76230/how-to-remove-seams-from-a-tile-map-in-3d
-
-rewrite Cursor.screen_to_world to produce same results as gluUnProject:
-https://www.opengl.org/wiki/GluProject_and_gluUnProject_code
-https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
-
-low priority:
-
-- headbrain2.ed is corrupted, figure out if it can be salvaged with smart parsing - maybe provide a "width override" option?
-
-problem discovered during 2015-01-04~06:
-GLSL really can't handle int/uint attributes!  charIndex looks fine in numpy int32 array data but comes into GLSL totally screwy.  works fine when the array and attribute are floats instead.  bug for PyOpenGL devs?
-possible test program: two quads side by side, each doing some trivial shader that involves an arbitrary number, only difference being one is driven by an int attribute and the other by a float.
+further-out UI stuff in docs/ui.txt
