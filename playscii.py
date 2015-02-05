@@ -308,7 +308,8 @@ class Application:
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, framebuffer)
         GL.glFramebufferRenderbuffer(GL.GL_DRAW_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0,
                                      GL.GL_RENDERBUFFER, render_buffer)
-        GL.glClearColor(0, 0, 0.1, 0.5)
+        GL.glViewport(0, 0, w, h)
+        GL.glClearColor(0, 0, 0, 0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         # render to it
         art.renderables[0].render_for_export()
@@ -316,8 +317,9 @@ class Application:
         # read pixels from it
         pixels = GL.glReadPixels(0, 0, w, h, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,
                                  outputType=None)
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         # cleanup / deinit of GL stuff
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+        GL.glViewport(0, 0, self.window_width, self.window_height)
         GL.glDeleteFramebuffers(1, [framebuffer])
         GL.glDeleteRenderbuffers(1, [render_buffer])
         # GL pixel data as numpy array -> bytes for PIL image export
