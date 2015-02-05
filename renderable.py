@@ -210,15 +210,30 @@ class TileRenderable:
     
     def get_loc(self):
         # start at screen top left when exporting
-        export_loc = (-1, 1, 0) # works, kinda
+        # TODO: why does a Y of -0.52 work perfectly for a 40x23 8x8px art?!?
+        export_loc = (-1, -0.52, 0)
+        # for a 48x40 art it's more like -0.15 y loc but still -0.52 Y scale?
+        #export_loc = (-1, -0.15, 0)
         return export_loc if self.exporting else (self.x, self.y, self.z)
     
     def get_scale(self):
         if not self.exporting:
             return (self.scale_x, self.scale_y, self.scale_z)
         # fill entire screen exactly when exporting
-        x = 2 / self.art.width
-        y = 2 / self.art.height
+        aspect = self.art.width / self.art.height
+        inv_aspect = self.art.height / self.art.width
+        # target image size, eg 320x184 for a 40x23 tile art
+        img_w = self.art.charset.char_width * self.art.width
+        img_h = self.art.charset.char_height * self.art.height
+        # art's screen size, eg 40x23 for same art w/ a square charset
+        img_screen_w = self.art.width * self.art.quad_width
+        img_screen_h = self.art.height * self.art.quad_height
+        # smaller # = smaller dimension in final image
+        # NOTE: the line below works for X, don't change it!!
+        x = (img_screen_w / img_w) / self.art.charset.char_width
+        y = (img_screen_h / img_h) / self.art.charset.char_height
+        # TODO: why does a Y of -0.52 work perfectly for a 40x23 8x8px art?!?
+        y += 0.0052
         #print('scale is %.5f x %.5f' % (x, y))
         return (x, y, 1)
     
@@ -227,6 +242,8 @@ class TileRenderable:
         # cursor might be hovering, undo any preview changes
         for edit in self.art.app.cursor.preview_edits:
             edit.undo()
+        # update art to commit changes to the renderable
+        self.art.update()
         self.render(0)
         self.exporting = False
     

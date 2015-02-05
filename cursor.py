@@ -168,6 +168,8 @@ class Cursor:
             edit.apply()
     
     def paint(self):
+        if self.app.ui.popup.visible or self.app.ui.console.visible:
+            return
         # commit preview edits and clear list so they won't be undone on
         # next cursor move
         self.app.ui.active_art.command_stack.commit_commands(self.preview_edits)
@@ -185,8 +187,10 @@ class Cursor:
         self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
+        char_aspect = w / h
+        inv_char_aspect = h / w
         self.x = math.floor(self.x / w) * w
-        self.y = math.ceil(self.y / h) * h
+        self.y = math.ceil(self.y / h) * h * char_aspect
         # adjust for brush size
         size = self.app.ui.selected_tool.brush_size
         self.scale_x = self.scale_y = size

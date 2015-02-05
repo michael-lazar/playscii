@@ -7,10 +7,25 @@ class EditCommand:
     def __init__(self, art):
         self.art = art
         # creation timestamp
-        self.time = time.time()
+        self.creation_time = time.time()
         # last left click time
         # TODO: this might be better to do in whatever code is creating us?
-        self.click_time = self.art.app.last_click_times.get(1, 99999999999999)
+        self.last_click_time = self.art.app.last_click_times.get(1, 99999999999999)
+    
+    def __str__(self):
+        s = 'F%s L%s %s,%s @ %.2f: ' % (self.frame, self.layer, str(self.x).rjust(2, '0'), str(self.y).rjust(2, '0'), self.creation_time)
+        s += 'c%s f%s b%s x%s -> ' % (self.b_char, self.b_fg, self.b_bg, self.b_xform)
+        s += 'c%s f%s b%s x%s' % (self.a_char, self.a_fg, self.a_bg, self.a_xform)
+        return s
+    
+    def __eq__(self, value):
+        items = ['frame', 'layer', 'x', 'y',
+                 'b_char', 'b_fg', 'b_bg', 'b_xform',
+                 'a_char', 'a_fg', 'a_bg', 'a_xform']
+        for item in items:
+            if getattr(self, item) != getattr(value, item):
+                return False
+        return True
     
     def set_tile(self, frame, layer, x, y):
         self.frame, self.layer = frame, layer
@@ -45,6 +60,16 @@ class CommandStack:
         self.art = art
         self.undo_commands, self.redo_commands = [], []
     
+    def __str__(self):
+        s = 'stack for %s:\n' % self.art.filename
+        s += '===\nundo:\n'
+        for cmd in self.undo_commands:
+            s += str(cmd) + '\n'
+        s += '\n===\nredo:\n'
+        for cmd in self.redo_commands:
+            s += str(cmd) + '\n'
+        return s
+    
     def commit_commands(self, new_commands):
         self.undo_commands += new_commands
     
@@ -55,11 +80,11 @@ class CommandStack:
     
     def get_commands_since_last_click(self, command_list, before=False):
         commands = []
-        last_click = command_list[-1].click_time
+        last_click = command_list[-1].last_click_time
         for command in command_list:
-            if not before and command.click_time >= last_click - FUDGE:
+            if not before and command.last_click_time >= last_click - FUDGE:
                 commands.append(command)
-            elif before and command.click_time <= last_click + FUDGE:
+            elif before and command.last_click_time <= last_click + FUDGE:
                 commands.append(command)
         return commands
     
