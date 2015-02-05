@@ -44,20 +44,7 @@ class Camera:
         self.calc_view_matrix()
     
     def calc_projection_matrix(self):
-        aspect = self.app.window_width / self.app.window_height
-        # https://github.com/g-truc/glm/blob/master/glm/gtc/matrix_transform.inl
-        assert(aspect != 0)
-        assert(self.far_z != self.near_z)
-        rad = math.radians(self.fov)
-        tan_half_fov = math.tan(rad / 2)
-        m = np.eye(4, 4, dtype=np.float32)
-        m[0][0] = 1 / (aspect * tan_half_fov)
-        m[1][1] = 1 / tan_half_fov
-        m[2][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
-        m[2][3] = -1
-        m[3][2] = -(2 * self.far_z * self.near_z) / (self.far_z - self.near_z)
-        m[3][3] = 0
-        self.projection_matrix = m
+        self.projection_matrix = self.get_perspective_matrix()
     
     def calc_view_matrix(self):
         eye = vector.Vec3(self.x, self.y, self.z)
@@ -95,6 +82,36 @@ class Camera:
         m[2][3] = 0
         m[3][3] = 1
         self.view_matrix = m
+    
+    def get_perspective_matrix(self):
+        # https://github.com/g-truc/glm/blob/master/glm/gtc/matrix_transform.inl
+        aspect = self.app.window_width / self.app.window_height
+        assert(aspect != 0)
+        assert(self.far_z != self.near_z)
+        rad = math.radians(self.fov)
+        tan_half_fov = math.tan(rad / 2)
+        m = np.eye(4, 4, dtype=np.float32)
+        m[0][0] = 1 / (aspect * tan_half_fov)
+        m[1][1] = 1 / tan_half_fov
+        m[2][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
+        m[2][3] = -1
+        m[3][2] = -(2 * self.far_z * self.near_z) / (self.far_z - self.near_z)
+        m[3][3] = 0
+        return m
+    
+    def get_ortho_matrix(self, width=None, height=None):
+        width, height = width or self.app.window_width, height or self.app.window_height
+        m = np.eye(4, 4, dtype=np.float32)
+        left, bottom = 0, 0
+        right, top = width, height
+        far_z, near_z = -1, 1
+        m[0][0] = 2 / (right - left)
+        m[1][1] = 2 / (top - bottom)
+        m[2][2] = -2 / (self.far_z - self.near_z)
+        m[3][0] = -(right + left) / (right - left)
+        m[3][1] = -(top + bottom) / (top - bottom)
+        m[3][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
+        return m
     
     def pan(self, dx, dy):
         # modify pan speed based on zoom according to a factor
