@@ -1,6 +1,14 @@
 bug list
 
-status bar breaks when UI scale changes!
+quick grab is broken!
+
+- open any art, paint once, undo it, paint again, undo it: only undoes about half the command, undo again it does all but the 1st click's edit, undo again and it undoes.
+
+painting is broken for non-square charsets: changes in Y seem magnified as cursor Y increases.  probably some place in cursor.update that's assuming 1:1 aspect when it shouldn't.
+
+status bar breaks when UI scale changes
+
+status bar becomes unreadable when window's horizontal scale goes low enough - check if left-side items even fit on screen before bothering to draw right-side items
 
 little annoying cracks between quads - UV or vert/element error?
 possible lead: http://gamedev.stackexchange.com/questions/76230/how-to-remove-seams-from-a-tile-map-in-3d

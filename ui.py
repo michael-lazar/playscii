@@ -164,6 +164,7 @@ class UI:
         self.set_active_art(self.app.art_loaded[0])
     
     def set_selected_tool(self, new_tool):
+        self.previous_tool = self.selected_tool
         self.selected_tool = new_tool
         self.popup.reset_art()
     

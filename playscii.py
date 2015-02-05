@@ -523,14 +523,17 @@ class Application:
                     self.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)
+                if event.button.button == sdl2.SDL_BUTTON_RIGHT:
+                    self.ui.set_selected_tool(self.ui.previous_tool)
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                self.ui.clicked(event.button.button)
                 # update last clicked time
                 self.last_click_times[int(event.button.button)] = time.time()
+                self.ui.clicked(event.button.button)
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     self.cursor.paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
-                    self.ui.quick_grab()
+                    self.ui.set_selected_tool(self.ui.grab_tool)
+                    self.cursor.paint()
         # directly query keys we don't want affected by OS key repeat delay
         if not alt_pressed and not ctrl_pressed and not shift_pressed and not self.ui.console.visible:
             if ks[sdl2.SDL_SCANCODE_W]:
