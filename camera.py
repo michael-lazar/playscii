@@ -14,6 +14,7 @@ class Camera:
     start_zoom = 2.5
     y_tilt = 0
     # pan/zoom speed tuning
+    mouse_pan_rate = 10
     pan_accel = 0.005
     max_pan_speed = 0.4
     pan_friction = 0.1
@@ -134,12 +135,11 @@ class Camera:
     
     def mouse_pan(self, dx, dy):
         "pan view based on mouse delta"
-        # TODO: this feels pretty crappy atm, figure out a better way
-        pan_speed = 2
-        il = 1 / math.sqrt(dx ** 2 + dy ** 2)
-        x = dx * il * pan_speed
-        y = dy * il * pan_speed
-        self.pan(-x, y)
+        m = ((1 * self.pan_zoom_increase_factor) * self.z) / self.min_zoom
+        m /= self.max_zoom
+        self.x -= dx / self.mouse_pan_rate * m
+        self.y += dy / self.mouse_pan_rate * m
+        self.vel_x = self.vel_y = 0
     
     def update(self):
         # remember last position to see if it changed

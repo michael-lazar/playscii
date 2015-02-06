@@ -3,7 +3,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI
+from ui_element import UIArt, FPSCounterUI, MessageLineUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -25,6 +25,17 @@ class UI:
     visible = True
     logg = False
     tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool ]
+    tool_selected_log = 'tool selected'
+    art_selected_log = 'Now editing'
+    frame_selected_log = 'Now editing frame'
+    layer_selected_log = 'Now editing layer'
+    swap_color_log = 'Swapped FG/BG colors'
+    affects_char_on_log = 'will affect characters'
+    affects_char_off_log = 'will not affect characters'
+    affects_fg_on_log = 'will affect foreground colors'
+    affects_fg_off_log = 'will not affect foreground colors'
+    affects_bg_on_log = 'will affect background colors'
+    affects_bg_off_log = 'will not affect background colors'
     
     def __init__(self, app, active_art):
         self.app = app
@@ -67,10 +78,12 @@ class UI:
         self.console = ConsoleUI(self)
         self.status_bar = StatusBarUI(self)
         self.popup = ToolPopup(self)
+        self.message_line = MessageLineUI(self)
         self.elements.append(fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.console)
         self.elements.append(self.popup)
+        self.elements.append(self.message_line)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')
@@ -142,7 +155,7 @@ class UI:
         self.app.grid.reset_loc()
         self.app.grid.rebind_buffers()
         self.app.update_window_title()
-        #self.app.log('%s is now the active art' % self.active_art.filename)
+        self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
     
     def previous_active_art(self):
         "cycles to next art in app.art_loaded"
@@ -164,9 +177,13 @@ class UI:
         self.set_active_art(self.app.art_loaded[0])
     
     def set_selected_tool(self, new_tool):
+        if new_tool == self.selected_tool:
+            return
         self.previous_tool = self.selected_tool
         self.selected_tool = new_tool
         self.popup.reset_art()
+        self.tool_settings_changed = True
+        self.message_line.post_line('%s %s' % (self.selected_tool.button_caption, self.tool_selected_log))
     
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames
@@ -177,12 +194,16 @@ class UI:
         # update active art's renderables
         for r in self.active_art.renderables:
             r.set_frame(self.active_frame)
+        self.tool_settings_changed = True
+        self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_frame + 1))
     
     def set_active_layer(self, new_layer):
         self.active_layer = min(max(0, new_layer), self.active_art.layers-1)
         self.app.grid.z = self.active_art.layers_z[self.active_layer]
         self.app.cursor.z = self.active_art.layers_z[self.active_layer]
         self.app.update_window_title()
+        self.tool_settings_changed = True
+        self.message_line.post_line('%s %s' % (self.layer_selected_log, self.active_layer + 1))
     
     def select_char(self, new_char_index):
         # wrap at last valid index
@@ -208,6 +229,7 @@ class UI:
         fg, bg = self.selected_fg_color, self.selected_bg_color
         self.selected_fg_color, self.selected_bg_color = bg, fg
         self.tool_settings_changed = True
+        self.message_line.post_line(self.swap_color_log)
     
     def get_screen_coords(self, window_x, window_y):
         x = (2 * window_x) / self.app.window_width - 1
@@ -222,7 +244,7 @@ class UI:
         self.hovered_elements = []
         for e in self.elements:
             # only check visible elements
-            if e.visible and e.is_inside(mx, my):
+            if e.visible and e.can_hover and e.is_inside(mx, my):
                 self.hovered_elements.append(e)
                 # only hover if we weren't last update
                 if not e in was_hovering:

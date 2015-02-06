@@ -77,6 +77,7 @@ class Cursor:
         self.current_command = None
         # offsets to render the 4 corners at
         self.mouse_x, self.mouse_y = 0, 0
+        self.moved = False
         self.color = np.array(BASE_COLOR, dtype=np.float32)
         # GL objects
         self.vao = GL.glGenVertexArrays(1)
@@ -119,12 +120,17 @@ class Cursor:
         self.y += delta_y
         if self.logg:
             self.app.log('Cursor: %s,%s,%s scale %.2f,%.2f' % (self.x, self.y, self.z, self.scale_x, self.scale_y))
+        self.moved = True
     
     def set_scale(self, new_scale):
         self.scale_x = self.scale_y = new_scale
     
     def get_tile(self):
-        return int(self.x), int(-self.y)
+        # adjust for brush size
+        size = self.app.ui.selected_tool.brush_size
+        size_offset = math.ceil(size / 2) - 1
+        x, y = int(self.x + size_offset), int(-self.y + size_offset)
+        return x, y
     
     def get_tiles_under_brush(self, base_zero=False):
         """
@@ -180,6 +186,8 @@ class Cursor:
     
     def finish_paint(self):
         "invoked by mouse button up and undo"
+        if self.app.ui.popup.visible or self.app.ui.console.visible:
+            return
         # push current command group onto undo stack
         self.current_command.finish_time = self.app.elapsed_time
         self.app.ui.active_art.command_stack.commit_commands(self.current_command)
@@ -191,10 +199,12 @@ class Cursor:
         # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
-        # update cursor if mouse OR camera moved OR tool settings changed
-        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and not self.app.camera.moved_this_frame and not self.app.ui.tool_settings_changed:
+        if self.app.mouse_dx != 0 or self.app.mouse_dy != 0:
+            self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
+            self.moved = True
+        # bail if camera/mouse/keyboard move unchanged
+        if not self.moved and not self.app.camera.moved_this_frame and not self.app.ui.tool_settings_changed:
             return
-        self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         char_aspect = w / h
@@ -208,8 +218,9 @@ class Cursor:
         self.x -= size_offset
         self.y += size_offset
         self.update_cursor_preview()
-        if self.x != self.last_x or self.y != self.last_y:
+        if self.moved or self.x != self.last_x or self.y != self.last_y:
             self.entered_new_tile()
+        self.moved = False
     
     def entered_new_tile(self):
         if self.current_command and self.app.ui.selected_tool.paint_while_dragging:

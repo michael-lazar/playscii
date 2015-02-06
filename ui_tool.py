@@ -22,14 +22,32 @@ class UITool:
     def toggle_affects_char(self):
         self.affects_char = not self.affects_char
         self.ui.tool_settings_changed = True
+        line = self.button_caption + ' '
+        if self.affects_char:
+            line += self.ui.affects_char_on_log
+        else:
+            line += self.ui.affects_char_off_log
+        self.ui.message_line.post_line(line)
     
     def toggle_affects_fg(self):
         self.affects_fg_color = not self.affects_fg_color
         self.ui.tool_settings_changed = True
+        line = self.button_caption + ' '
+        if self.affects_fg_color:
+            line += self.ui.affects_fg_on_log
+        else:
+            line += self.ui.affects_fg_off_log
+        self.ui.message_line.post_line(line)
     
     def toggle_affects_bg(self):
         self.affects_bg_color = not self.affects_bg_color
         self.ui.tool_settings_changed = True
+        line = self.button_caption + ' '
+        if self.affects_bg_color:
+            line += self.ui.affects_bg_on_log
+        else:
+            line += self.ui.affects_bg_off_log
+        self.ui.message_line.post_line(line)
     
     def get_paint_commands(self):
         "returns a list of EditCommandTiles for a given paint operation"
