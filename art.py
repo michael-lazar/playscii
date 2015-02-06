@@ -321,12 +321,6 @@ class Art:
         if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
-    def undo(self):
-        self.command_stack.undo()
-    
-    def redo(self):
-        self.command_stack.redo()
-    
     def update(self):
         self.update_scripts()
         # update our renderables if they're on a frame whose char/colors changed

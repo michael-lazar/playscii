@@ -6,9 +6,9 @@ class Framebuffer:
     start_crt_enabled = True
     disable_crt = False
     
-    def __init__(self, app):
+    def __init__(self, app, width=None, height=None):
         self.app = app
-        self.width, self.height = self.app.window_width, self.app.window_height
+        self.width, self.height = width or self.app.window_width, height or self.app.window_height
         # bind vao before compiling shaders
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)

@@ -207,6 +207,9 @@ class ToolPopup(UIElement):
     def grab_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.grab_tool)
     
+    def rotate_tool_button_pressed(self):
+        self.ui.set_selected_tool(self.ui.rotate_tool)
+    
     def draw_char_color_tab(self):
         "draw non-button bits of this tab"
         # charset renderable location will be set in update()

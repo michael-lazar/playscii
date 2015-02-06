@@ -70,8 +70,6 @@ class Application:
         self.log_file = log_file
         self.log_lines = log_lines
         self.elapsed_time = 0
-        # table of last clicked mouse button times
-        self.last_click_times = {}
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         sdl2.ext.init()
@@ -300,7 +298,13 @@ class Application:
         # determine art's native size in pixels
         w = art.charset.char_width * art.width
         h = art.charset.char_height * art.height
+        # TODO: if CRT is on, use that shader for output w/ a scale factor!
+        scale = 2 if self.fb.crt and not self.fb.disable_crt else 1
         # create render target
+        #export_fb = Framebuffer(self, w * scale, h * scale)
+        #GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, export_fb.framebuffer)
+        #GL.glClearColor(*self.bg_color)
+        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         framebuffer = GL.glGenFramebuffers(1)
         render_buffer = GL.glGenRenderbuffers(1)
         GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, render_buffer)
@@ -313,6 +317,7 @@ class Application:
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         # render to it
         art.renderables[0].render_for_export()
+        #export_fb.render(self.elapsed_time)
         GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0)
         # read pixels from it
         pixels = GL.glReadPixels(0, 0, w, h, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,
@@ -470,12 +475,12 @@ class Application:
                         self.ui.previous_active_art()
                 # shift-ctrl-z does red, ctrl-z does undo
                 elif shift_pressed and ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_z:
-                    self.ui.active_art.redo()
+                    self.ui.redo()
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_z:
-                    self.ui.active_art.undo()
+                    self.ui.undo()
                 # enter does Cursor.paint
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
-                    self.cursor.paint()
+                    self.cursor.start_paint()
                 # q does quick grab
                 elif event.key.keysym.sym == sdl2.SDLK_q:
                     self.ui.quick_grab()
@@ -518,6 +523,8 @@ class Application:
                 # spacebar up: dismiss selector popup
                 if event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.hide()
+                elif event.key.keysym.sym == sdl2.SDLK_RETURN:
+                    self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -525,17 +532,14 @@ class Application:
                     self.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)
-                if event.button.button == sdl2.SDL_BUTTON_RIGHT:
-                    self.ui.set_selected_tool(self.ui.previous_tool)
+                if event.button.button == sdl2.SDL_BUTTON_LEFT:
+                    self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                # update last clicked time
-                self.last_click_times[int(event.button.button)] = time.time()
                 self.ui.clicked(event.button.button)
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    self.cursor.paint()
+                    self.cursor.start_paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
-                    self.ui.set_selected_tool(self.ui.grab_tool)
-                    self.cursor.paint()
+                    self.ui.quick_grab()
         # directly query keys we don't want affected by OS key repeat delay
         if not alt_pressed and not ctrl_pressed and not shift_pressed and not self.ui.console.visible:
             if ks[sdl2.SDL_SCANCODE_W]:

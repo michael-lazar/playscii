@@ -1,15 +1,38 @@
 TODO
 
-identify bugs with current undo/redo and paint tools, squash the must-fix ones and log the lower priority ones!
-troubleshooting undo/redo: good visualization of current stack
+rework / experiment with keybinds:
+camera pan -> something else, maybe shift-WASD?
+CRT -> shift R
+E erase
+A paint/pencil
+R rotate
+Q grab
+
+UITool: "get tile mod" for each tile in a paint op, eg incrementing rotation, no FG paint on char 0 tiles, etc
+
+expected edit behavior:
+don't allow FG paints on tiles with char 0
+
+select tool: S, left click draws/adds to existing selection, right click / alt-left click subtracts from selection, ctrl-a selects all, ctrl-d selects none, ctrl-i inverts selection.  selection area outlined with a pulsing white LineRenderable.
+- refresh selection outline (once) each time a tile is added or removed from selection: iterate over all selected tiles, apply rules to draw lines at its borders, pass lines to line renderable
+- paint tool operations only affect selected tiles
+- selection follows changes of active layer
+- ctrl-x ctrl-c ctrl-v work as expected.  del erases selected area to BG. ctrl-v creates a preview on cursor, a la edscii
+
+character swatch: extra line below charset name and scale, showing "flip: -/X/Y", "rotate: 0/90/180/270", affects all tiles in swatch, selecting a char sets the paint tool's xform
+- status bar shows selected xform to right of BG
+- need a better user-facing term than "xform"
 
 mockup for menu bar, frame/layer matrix
 
+---
+
+further work on existing features:
+
 PNG export:
-- 1:1 offscreen render target size = charset char size * art size; quad size = render target size / art size
--- CRT off/on just runs the same post-proc shader or not?
-- determine if current CRT shader meets visual quality standard for PNG export.  CRT on/off setting respected in exported art.
-- lead on aniGIF export: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
+- CRT off/on affects PNG output, according to a scale factor.
+-- arg 1 of export console command = scale factor override, default is Nx
+- aniGIF export for animations - lead: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
 
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
