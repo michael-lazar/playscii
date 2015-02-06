@@ -2,6 +2,8 @@ import math, ctypes, time
 import numpy as np
 from OpenGL import GL
 
+from edit_command import EditCommand
+
 """
 reference diagram:
 
@@ -70,8 +72,9 @@ class Cursor:
         self.app = app
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
-        # list of EditCommands for preview
+        # list of EditCommandTiles for preview
         self.preview_edits = []
+        self.current_command = None
         # offsets to render the 4 corners at
         self.mouse_x, self.mouse_y = 0, 0
         self.color = np.array(BASE_COLOR, dtype=np.float32)
@@ -167,13 +170,20 @@ class Cursor:
         for edit in self.preview_edits:
             edit.apply()
     
-    def paint(self):
+    def start_paint(self):
         if self.app.ui.popup.visible or self.app.ui.console.visible:
             return
-        # commit preview edits and clear list so they won't be undone on
-        # next cursor move
-        self.app.ui.active_art.command_stack.commit_commands(self.preview_edits)
+        # start a new command group, commit and clear any preview edits
+        self.current_command = EditCommand(self.app.ui.active_art)
+        self.current_command.add_command_tiles(self.preview_edits)
         self.preview_edits = []
+    
+    def finish_paint(self):
+        "invoked by mouse button up and undo"
+        # push current command group onto undo stack
+        self.current_command.finish_time = self.app.elapsed_time
+        self.app.ui.active_art.command_stack.commit_commands(self.current_command)
+        self.current_command = None
     
     def update(self, elapsed_time):
         # save old positions before update
@@ -198,14 +208,14 @@ class Cursor:
         self.x -= size_offset
         self.y += size_offset
         self.update_cursor_preview()
-        # TODO: something here is needed to correct for non-square charsets!
-        # current result is 1:2 sets eg DOS skip even-numbered Y coordinates
         if self.x != self.last_x or self.y != self.last_y:
             self.entered_new_tile()
     
     def entered_new_tile(self):
-        if self.app.left_mouse and self.app.ui.selected_tool.paint_while_dragging:
-            self.paint()
+        if self.current_command and self.app.ui.selected_tool.paint_while_dragging:
+            # add new tile(s) to current command group
+            self.current_command.add_command_tiles(self.preview_edits)
+            self.preview_edits = []
     
     def render(self, elapsed_time):
         GL.glUseProgram(self.shader.program)

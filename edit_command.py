@@ -1,16 +1,35 @@
 import time
 
-FUDGE = 0.1
-
 class EditCommand:
     
     def __init__(self, art):
         self.art = art
-        # creation timestamp
-        self.creation_time = time.time()
-        # last left click time
-        # TODO: this might be better to do in whatever code is creating us?
-        self.last_click_time = self.art.app.last_click_times.get(1, 99999999999999)
+        self.start_time = art.app.elapsed_time
+        self.finish_time = None
+        self.tile_commands = []
+    
+    def add_command_tiles(self, new_command_tiles):
+        "add one or more command tiles"
+        # check type to support one command or a list of commands
+        if type(new_command_tiles) is EditCommandTile:
+            self.tile_commands.append(new_command_tiles)
+        else:
+            self.tile_commands += new_command_tiles[:]
+    
+    def undo(self):
+        for tile_command in self.tile_commands:
+            tile_command.undo()
+    
+    def apply(self):
+        for tile_command in self.tile_commands:
+            tile_command.apply()
+
+
+class EditCommandTile:
+    
+    def __init__(self, art):
+        self.art = art
+        self.creation_time = self.art.app.elapsed_time
     
     def __str__(self):
         s = 'F%s L%s %s,%s @ %.2f: ' % (self.frame, self.layer, str(self.x).rjust(2, '0'), str(self.y).rjust(2, '0'), self.creation_time)
@@ -51,9 +70,6 @@ class EditCommand:
                              self.a_char, self.a_fg, self.a_bg, self.a_xform)
 
 
-# time (in seconds) range within which 
-COMMAND_INTERVAL = 3
-
 class CommandStack:
     
     def __init__(self, art):
@@ -71,55 +87,26 @@ class CommandStack:
         return s
     
     def commit_commands(self, new_commands):
-        self.undo_commands += new_commands
-    
-    def get_recent_commands(self):
-        commands = []
-        # TODO: replace with "get_commands_since_time"
-        return commands
-    
-    def get_commands_since_last_click(self, command_list, before=False):
-        commands = []
-        last_click = command_list[-1].last_click_time
-        for command in command_list:
-            if not before and command.last_click_time >= last_click - FUDGE:
-                commands.append(command)
-            elif before and command.last_click_time <= last_click + FUDGE:
-                commands.append(command)
-        return commands
-    
-    def undo_since_interval(self):
-        pass
-    
-    def undo_since_last_click(self):
-        commands = self.get_commands_since_last_click(self.undo_commands)
-        for command in commands:
-            self.undo_commands.remove(command)
-            command.undo()
-            self.redo_commands.append(command)
-        #print('undid %s commands' % len(commands))
-    
-    def redo_since_last_click(self):
-        commands = self.get_commands_since_last_click(self.redo_commands, True)
-        for command in commands:
-            self.redo_commands.remove(command)
-            command.apply()
-            self.undo_commands.append(command)
-        #print('redid %s commands' % len(commands))
+        # check type to support one command or a list of commands
+        if type(new_commands) is EditCommand:
+            self.undo_commands.append(new_commands)
+        else:
+            self.undo_commands += new_commands[:]
     
     def undo(self):
         if len(self.undo_commands) == 0:
             return
-        if self.art.app.ui.selected_tool.paint_while_dragging:
-            self.undo_since_last_click()
+        command = self.undo_commands.pop()
+        command.undo()
+        self.redo_commands.append(command)
     
     def redo(self):
-        # TODO: find >=1 redo_commands to redo, pop them off end of list,
-        # add them to undo_commands
         if len(self.redo_commands) == 0:
             return
-        if self.art.app.ui.selected_tool.paint_while_dragging:
-            self.redo_since_last_click()
+        command = self.redo_commands.pop()
+        command.apply()
+        self.undo_commands.append(command)
     
     def clear_redo(self):
+        # TODO: when should this be invoked?
         self.redo_commands = []

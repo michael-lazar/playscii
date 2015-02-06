@@ -10,6 +10,8 @@ status bar breaks when UI scale changes
 
 status bar becomes unreadable when window's horizontal scale goes low enough - check if left-side items even fit on screen before bothering to draw right-side items
 
+PNG export: layers that have too high a Z won't show up in export, special-case behavior for near/far Z in renderable export?
+
 little annoying cracks between quads - UV or vert/element error?
 possible lead: http://gamedev.stackexchange.com/questions/76230/how-to-remove-seams-from-a-tile-map-in-3d
 

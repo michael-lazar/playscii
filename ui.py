@@ -8,7 +8,7 @@ from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_colors import UIColors
-from ui_tool import PencilTool, EraseTool, GrabTool
+from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -24,7 +24,7 @@ class UI:
     grain_texture = 'bgnoise_alpha.png'
     visible = True
     logg = False
-    tool_classes = [ PencilTool, EraseTool, GrabTool ]
+    tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool ]
     
     def __init__(self, app, active_art):
         self.app = app
@@ -45,7 +45,7 @@ class UI:
         self.selected_char = art_char.get_char_index('A') or 2
         self.selected_fg_color = art_pal.lightest_index
         self.selected_bg_color = art_pal.darkest_index
-        self.selected_tool = None
+        self.selected_tool, self.previous_tool = None, None
         # set True when tool settings change, cleared after update, used by
         # cursor to determine if cursor update needed
         self.tool_settings_changed = False
@@ -187,6 +187,7 @@ class UI:
     def select_char(self, new_char_index):
         # wrap at last valid index
         self.selected_char = new_char_index % self.active_art.charset.last_index
+        self.tool_settings_changed = True
     
     def select_color(self, new_color_index, fg):
         "common code for select_fg/bg"
@@ -195,6 +196,7 @@ class UI:
             self.selected_fg_color = new_color_index
         else:
             self.selected_bg_color = new_color_index
+        self.tool_settings_changed = True
     
     def select_fg(self, new_fg_index):
         self.select_color(new_fg_index, True)
@@ -205,6 +207,7 @@ class UI:
     def swap_fg_bg_colors(self):
         fg, bg = self.selected_fg_color, self.selected_bg_color
         self.selected_fg_color, self.selected_bg_color = bg, fg
+        self.tool_settings_changed = True
     
     def get_screen_coords(self, window_x, window_y):
         x = (2 * window_x) / self.app.window_width - 1
@@ -245,7 +248,17 @@ class UI:
     def quick_grab(self):
         if self.popup.visible or self.console.visible:
             return
-        self.grab_tool.paint()
+        self.grab_tool.grab()
+        self.tool_settings_changed = True
+    
+    def undo(self):
+        # if still painting, finish
+        if self.app.cursor.current_command:
+            self.app.cursor.finish_paint()
+        self.active_art.command_stack.undo()
+    
+    def redo(self):
+        self.active_art.command_stack.redo()
     
     def destroy(self):
         for e in self.elements:
