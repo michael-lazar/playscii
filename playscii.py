@@ -38,7 +38,7 @@ CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 
 class Application:
     
@@ -424,8 +424,14 @@ class Application:
                     self.ui.selected_tool.toggle_affects_fg()
                 elif event.key.keysym.sym == sdl2.SDLK_5:
                     self.ui.selected_tool.toggle_affects_bg()
-                elif event.key.keysym.sym == sdl2.SDLK_r:
+                elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
+                elif event.key.keysym.sym == sdl2.SDLK_a:
+                    self.ui.set_selected_tool(self.ui.pencil_tool)
+                elif event.key.keysym.sym == sdl2.SDLK_e:
+                    self.ui.set_selected_tool(self.ui.erase_tool)
+                elif event.key.keysym.sym == sdl2.SDLK_r:
+                    self.ui.set_selected_tool(self.ui.rotate_tool)
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.show()
@@ -446,7 +452,7 @@ class Application:
                     else:
                         self.ui.select_bg(self.ui.selected_bg_color+1)
                 # shift-S: swap fg/bg color
-                elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_s:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_s:
                     self.ui.swap_fg_bg_colors()
                 # shift-U: toggle UI visibility
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
@@ -541,7 +547,7 @@ class Application:
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
                     self.ui.quick_grab()
         # directly query keys we don't want affected by OS key repeat delay
-        if not alt_pressed and not ctrl_pressed and not shift_pressed and not self.ui.console.visible:
+        if shift_pressed and not alt_pressed and not ctrl_pressed and not self.ui.console.visible:
             if ks[sdl2.SDL_SCANCODE_W]:
                 self.camera.pan(0, 1)
             if ks[sdl2.SDL_SCANCODE_S]:
@@ -554,6 +560,8 @@ class Application:
                 self.camera.zoom(-1)
             if ks[sdl2.SDL_SCANCODE_Z]:
                 self.camera.zoom(1)
+        if self.middle_mouse and (self.mouse_dx != 0 or self.mouse_dy != 0):
+            self.camera.mouse_pan(self.mouse_dx, self.mouse_dy)
         sdl2.SDL_PumpEvents()
     
     def update(self):

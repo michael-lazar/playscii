@@ -15,6 +15,7 @@ class UIElement:
     x, y = 0, 0
     visible = True
     renderables = None
+    can_hover = True
     buttons = []
     
     def __init__(self, ui):
@@ -164,3 +165,52 @@ class FPSCounterUI(UIElement):
         # display last tick time; frame_time includes delay, is useless
         text = '%.1f ms ' % self.ui.app.last_tick_time
         self.art.write_string(0, 0, x, 1, text, color, None, True)
+
+
+class MessageLineUI(UIElement):
+    
+    "when console outputs something new, show last line here before fading out"
+    
+    snap_left = True
+    # just info, don't bother with hover, click etc
+    can_hover = False
+    hold_time = 1
+    fade_rate = 0.025
+    
+    def __init__(self, ui):
+        UIElement.__init__(self, ui)
+        # line we're currently displaying (even after fading out)
+        self.line = ''
+        # self.line could be from log or elsewhere, remember last log line
+        # so we can determine when to update
+        self.last_log = ''
+        self.last_post = self.ui.app.elapsed_time
+        self.alpha = 1
+    
+    def reset_art(self):
+        self.tile_width = ceil(self.ui.width_tiles)
+        self.art.resize(self.tile_width, self.tile_height)
+        self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+        # one line from top
+        self.y = 1- self.art.quad_height
+        UIElement.reset_loc(self)
+    
+    def post_line(self, new_line):
+        "write a line to this element (without polluting console log with it)"
+        self.line = new_line
+        self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+        self.art.write_string(0, 0, 1, 0, self.line)
+        self.alpha = 1
+        self.last_post = self.ui.app.elapsed_time
+    
+    def update(self):
+        new_log = self.ui.app.log_lines[-1]
+        if self.last_log != new_log:
+            self.last_log = new_log
+            self.post_line(self.last_log)
+        if self.ui.app.elapsed_time > self.last_post + (self.hold_time * 1000):
+            if self.alpha >= self.fade_rate:
+                self.alpha -= self.fade_rate
+            if self.alpha <= self.fade_rate:
+                self.alpha = 0
+        self.renderable.alpha = self.alpha
