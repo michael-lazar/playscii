@@ -16,28 +16,44 @@ If you got it from the project's source code repository, you can either run it f
 
 == Usage ==
 
-If you double-click the Playscii executable or run it from the command line with no extra arguments, the program will open to a new, blank file.  You can also run it from the command line with the art file you'd like to open.  .PSCI files are Playscii's native format, and files with a .ED extension made with EDSCII can also be opened though they will be saved in the new format.  Eventually Playscii will be a complete replacement for EDSCII.
+If you double-click the Playscii executable or run it from the command line with no extra arguments, the program will open a new, blank file.  You can also run it from the command line with the art file you'd like to open.  .PSCI files are Playscii's native format, and files with a .ED extension made with EDSCII can also be opened though they will be saved in the new format - before long Playscii will be a complete replacement for EDSCII.
 
 
 == Controls ==
 
-W A S D: pan the view around
+Shift + W A S D: pan the view around
 
 Mouse / arrow keys: move the cursor around
 
-Left mouse button / enter: paint using the currently selected character, foreground color, and background color
+Left mouse button / enter: paint using the current tool
 
-Mouse wheel / Z / X: zoom the view in and out
+Mouse wheel / Shift + Z / X: zoom the view in and out
 
-C/shift-C: cycle the currently selected character forward or backward through the character set
+A: select Paint tool - lays down tiles with the currently selected character, foreground and background color, and character "transform": normal, rotated 90 degrees, rotated 180, 270, mirrored, flipped.
 
-F/shift-F: cycle the currently selected foreground color forward or backward through the palette
+E: select Erase tool - erases character and foreground for tiles to selected background color, including transparency.
 
-B/shift-B: same as above but for the currently selected background color
+R: select Rotate tool - painting tiles with this rotates them 90 degrees, multiple passes produce the 4 possible rotations.
+
+3/#: cycle the currently selected character forward or backward through the character set
+
+4/$: cycle the currently selected foreground color forward or backward through the palette
+
+5/%: same as above but for the currently selected background color
+
+6/^: cycle through character transforms
+
+C: toggle whether current tool affects characters or not
+
+F: toggle whether current tool affects foreground color or not
+
+B: toggle whether current tool affects background color or not
+
+X: toggle whether current tool affects character transform or not
 
 Right mouse button / Q: "grab" the character and colors the from cursor's current tile, akin to the eyedropper tool in other paint programs
 
-R: toggle CRT shader
+Shift-R: toggle CRT shader
 
 G: toggle grid
 
@@ -53,11 +69,17 @@ Shift-U: toggle UI
 
 < / >: rewind/advance currently animation frame
 
+P: pause/play current animation if art has multiple frames
+
 [ / ]: change actively edited layer
 
 Ctrl E: export current art to PNG
 
+Ctrl S: save current art
+
 F12: take screenshot
+
+Ctrl Q: quit
 
 
 == Running from Source ==
@@ -76,11 +98,11 @@ These libraries are all pretty easy to install using PIP, the package manager th
 
 pip install pysdl2 pyopengl numpy pillow
 
-In Windows the pip executable is in the Scripts\ subdirectory of your Python install folder, eg c:\Python34.  On some Unix-like systems (Linux and maybe OSX) the pip binary to run may be called "pip3" to distinguish it from any Python 2 installations.  You may also need to run pip as super user to let it install system libraries, eg by pre-pending "sudo" to the command above.
+In Windows the pip executable is in the Scripts\ subdirectory of your Python install folder, eg c:\Python34.  On some Unix-like systems (Linux and maybe OSX) the pip binary to run may be called "pip3" to distinguish it from any Python 2 installations.  On Unix-like systems you may also need to run pip as super user to let it install system libraries, eg by pre-pending "sudo" to the command above.
 
 Once you have the dependencies installed, you can run Playscii from source like so:
 
-python playscii.py [optional name of file to open]
+python playscii.py [optional name of art file to open]
 
 
 == Building ==

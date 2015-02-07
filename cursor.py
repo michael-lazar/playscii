@@ -199,16 +199,16 @@ class Cursor:
         # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
-        if self.app.mouse_dx != 0 or self.app.mouse_dy != 0:
+        if self.app.mouse_dx != 0 or self.app.mouse_dy != 0 or self.app.camera.moved_this_frame or self.app.ui.tool_settings_changed:
             self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
             self.moved = True
         # bail if camera/mouse/keyboard move unchanged
-        if not self.moved and not self.app.camera.moved_this_frame and not self.app.ui.tool_settings_changed:
-            return
+        elif not self.moved:
+           return 
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         char_aspect = w / h
-        inv_char_aspect = h / w
+        #inv_char_aspect = h / w
         self.x = math.floor(self.x / w) * w
         self.y = math.ceil(self.y / h) * h * char_aspect
         # adjust for brush size

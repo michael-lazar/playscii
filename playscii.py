@@ -33,6 +33,7 @@ from grid import Grid
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
+from ui_element import UIRenderable
 
 CONFIG_FILENAME = 'playscii.cfg'
 LOG_FILENAME = 'console.log'

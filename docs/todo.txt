@@ -1,14 +1,10 @@
 TODO
 
-redo controls in readme before next release
-
 text entry tool!
 - click/enter to start text entry at cursor location, remember entry start X,Y
 - if input character is in charset's map, write that index, move to next char (go to X,Y+1 if hitting end, bail if hitting last char in art)
 - ESC / arrow key / right click anywhere bails out of entry mode, adds command to undo buffer
 - click/enter also adds command to undo buffer, but keeps entry mode active
-
-character swatch: extra line below charset name and scale, showing "flip: -/X/Y", "rotate: 0/90/180/270"
 
 select tool
 - K, left click draws/adds to existing selection, right click / alt-left click subtracts from selection, ctrl-a selects all, ctrl-d selects none, ctrl-i inverts selection.  selection area outlined with a pulsing white LineRenderable.

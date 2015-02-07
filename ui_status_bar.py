@@ -25,7 +25,7 @@ class StatusBarUI(UIElement):
     xform_selected_width = len('Rotate 180')
     xform_selected_x = xform_label_x + len(xform_label)
     tool_label = 'tool:'
-    tool_label_x = xform_selected_x + xform_selected_width + 1
+    tool_label_x = xform_selected_x + xform_selected_width + 2
     tool_selection_x = tool_label_x + len(tool_label)
     # total width of left-justified items
     left_items_width = tool_selection_x + 7
@@ -223,4 +223,12 @@ class StatusBarUI(UIElement):
             self.dim_renderable.render(elapsed_time)
         if not self.ui.selected_tool.affects_bg_color:
             self.dim_renderable.x = self.bg_renderable.x - self.art.quad_width * len(self.bg_label)
+            self.dim_renderable.render(elapsed_time)
+        if not self.ui.selected_tool.affects_xform:
+            # render dim renderable thrice to cover label and item
+            self.dim_renderable.x = self.xform_label_x * self.art.quad_width - 1
+            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.x = self.xform_selected_x * self.art.quad_width - 1
+            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.x = (self.xform_selected_x + 6) * self.art.quad_width - 1
             self.dim_renderable.render(elapsed_time)
