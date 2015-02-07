@@ -207,3 +207,8 @@ class MessageLineUI(UIElement):
             if self.alpha <= self.fade_rate:
                 self.alpha = 0
         self.renderable.alpha = self.alpha
+    
+    def render(self, elapsed_time):
+        # TODO: draw if popup is visible but not obscuring message line?
+        if not self.ui.popup.visible and not self.ui.console.visible:
+            UIElement.render(self, elapsed_time)
