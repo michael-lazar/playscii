@@ -74,9 +74,7 @@ class ConsoleUI(UIElement):
     height_screen_pct = 0.75
     # how long (seconds) to shift/fade into view when invoked
     show_anim_time = 0.75
-    bg_alpha = 0.5
-    bg_color_index = 7 # dark grey
-    highlight_color = 6 # yellow
+    bg_alpha = 0.75
     prompt = '>'
     # _ ish char
     bottom_line_char_index = 76
@@ -85,6 +83,8 @@ class ConsoleUI(UIElement):
     current_line = ''
     
     def __init__(self, ui):
+        self.bg_color_index = ui.colors.darkgrey
+        self.highlight_color = 8 # yellow
         UIElement.__init__(self, ui)
         # state stuff for console move/fade
         self.alpha = 0

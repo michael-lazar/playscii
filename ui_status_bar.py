@@ -3,6 +3,7 @@ from math import ceil
 
 from ui_element import UIElement, UIArt, UIRenderable
 from renderable_line import UIRenderableX
+from art import uv_names
 
 class StatusBarUI(UIElement):
     
@@ -12,15 +13,19 @@ class StatusBarUI(UIElement):
     char_label = 'ch:'
     fg_label = 'fg:'
     bg_label = 'bg:'
+    xform_label = 'xform:'
     swatch_width = 3
-    char_label_x = 2
+    char_label_x = 1
     char_swatch_x = char_label_x + len(char_label)
-    fg_label_x = char_swatch_x + swatch_width + 2
+    fg_label_x = char_swatch_x + swatch_width + 1
     fg_swatch_x = fg_label_x + len(fg_label)
-    bg_label_x = fg_swatch_x + swatch_width + 2
+    bg_label_x = fg_swatch_x + swatch_width + 1
     bg_swatch_x = bg_label_x + len(bg_label)
+    xform_label_x = bg_swatch_x + swatch_width + 1
+    xform_selected_width = len('Rotate 180')
+    xform_selected_x = xform_label_x + len(xform_label)
     tool_label = 'tool:'
-    tool_label_x = bg_swatch_x + swatch_width + 2
+    tool_label_x = xform_selected_x + xform_selected_width + 1
     tool_selection_x = tool_label_x + len(tool_label)
     # total width of left-justified items
     left_items_width = tool_selection_x + 7
@@ -60,7 +65,6 @@ class StatusBarUI(UIElement):
     def reset_art(self):
         UIElement.reset_art(self)
         self.tile_width = ceil(self.ui.width_tiles * self.ui.scale)
-        print('status bar tile width now %s' % self.tile_width)
         # must resize here, as window width will vary
         self.art.resize(self.tile_width, self.tile_height)
         # write chars/colors to the art
@@ -121,15 +125,20 @@ class StatusBarUI(UIElement):
         fills in left-justified parts of status bar, eg labels for selected
         character/color/tool sections
         """
+        # draw labels first
         color = self.ui.palette.darkest_index
         self.art.write_string(0, 0, self.char_label_x, 0, self.char_label, color)
         self.art.write_string(0, 0, self.fg_label_x, 0, self.fg_label, color)
         self.art.write_string(0, 0, self.bg_label_x, 0, self.bg_label, color)
+        self.art.write_string(0, 0, self.xform_label_x, 0, self.xform_label, color)
         self.art.write_string(0, 0, self.tool_label_x, 0, self.tool_label, color)
-        # get name of tool from UI
-        tool_selection = ' %s ' % self.ui.selected_tool.name
+        # draw selections (tool, xform)
         color = self.ui.colors.white
         bg = self.ui.colors.black
+        xform_selection = uv_names[self.ui.selected_xform]
+        self.art.write_string(0, 0, self.xform_selected_x, 0, xform_selection, color, bg)
+        # get name of tool from UI
+        tool_selection = ' %s ' % self.ui.selected_tool.button_caption
         self.art.write_string(0, 0, self.tool_selection_x, 0, tool_selection, color, bg)
     
     def write_right_elements(self):

@@ -9,6 +9,7 @@ from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool
+from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -36,6 +37,9 @@ class UI:
     affects_fg_off_log = 'will not affect foreground colors'
     affects_bg_on_log = 'will affect background colors'
     affects_bg_off_log = 'will not affect background colors'
+    affects_xform_on_log = 'will affect character rotation/flip'
+    affects_xform_off_log = 'will not affect character rotation/flip'
+    xform_selected_log = 'Selected character transform:'
     
     def __init__(self, app, active_art):
         self.app = app
@@ -56,6 +60,7 @@ class UI:
         self.selected_char = art_char.get_char_index('A') or 2
         self.selected_fg_color = art_pal.lightest_index
         self.selected_bg_color = art_pal.darkest_index
+        self.selected_xform = UV_NORMAL
         self.selected_tool, self.previous_tool = None, None
         # set True when tool settings change, cleared after update, used by
         # cursor to determine if cursor update needed
@@ -184,6 +189,22 @@ class UI:
         self.popup.reset_art()
         self.tool_settings_changed = True
         self.message_line.post_line('%s %s' % (self.selected_tool.button_caption, self.tool_selected_log))
+    
+    def set_selected_xform(self, new_xform):
+        self.selected_xform = new_xform
+        self.popup.set_xform(new_xform)
+        self.tool_settings_changed = True
+        line = '%s %s' % (self.xform_selected_log, uv_names[self.selected_xform])
+        self.message_line.post_line(line)
+    
+    def cycle_selected_xform(self, back=False):
+        xform = self.selected_xform
+        if back:
+            xform -= 1
+        else:
+            xform += 1
+        xform %= UV_FLIPY + 1
+        self.set_selected_xform(xform)
     
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames

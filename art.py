@@ -32,6 +32,15 @@ UV_FLIPX = 4
 UV_FLIPY = 5
 # flip X & Y is identical to rotate 180
 
+uv_names = {
+    UV_NORMAL: 'Normal',
+    UV_ROTATE90: 'Rotate 90',
+    UV_ROTATE180: 'Rotate 180',
+    UV_ROTATE270: 'Rotate 270',
+    UV_FLIPX: 'Flip X',
+    UV_FLIPY: 'Flip Y',
+}
+
 uv_types = {
     UV_NORMAL:    (0, 0, 1, 0, 0, 1, 1, 1),
     UV_ROTATE90:  (0, 1, 0, 0, 1, 1, 1, 0),

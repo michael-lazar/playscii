@@ -1,0 +1,15 @@
+// first line: source image (base filename + .png assumed)
+c64_petscii.png
+// second line: map dimensions
+16, 10
+ ABCDEFGHIJKLMNO
+PQRSTUVWXYZ[ ]  
+@!"#$%&'()*+,-./
+0123456789:;<=>?
+                
+                
+                
+                
+abcdefghijklmnop
+qrstuvwxyz
+// end
