@@ -120,10 +120,15 @@ class CharacterSetSwatch(UISwatch):
     def reset_loc(self):
         self.x = self.popup.x + self.popup.swatch_margin
         self.y = self.popup.y
-        self.y -= self.popup.art.quad_height * (self.popup.tab_height + 2)
+        self.y -= self.popup.art.quad_height * (self.popup.tab_height + 4)
         self.renderable.x, self.renderable.y = self.x, self.y
         self.grid.x, self.grid.y = self.x, self.y
         self.grid.y -= self.art.quad_height
+    
+    def set_xform(self, new_xform):
+        for y in range(self.art.height):
+            for x in range(self.art.width):
+                self.art.set_char_transform_at(0, 0, x, y, new_xform)
     
     def is_selection_index_valid(self, index):
         return index < self.art.charset.last_index

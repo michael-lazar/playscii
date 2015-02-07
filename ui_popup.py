@@ -4,6 +4,7 @@ from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_swatch import CharacterSetSwatch, PaletteSwatch
 from ui_colors import UIColors
 from renderable_line import LineRenderable, SelectionBoxRenderable
+from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
 
 TOOL_PANE_WIDTH = 10
 
@@ -21,17 +22,59 @@ class CharColorTabButton(UIButton):
     caption_justify = TEXT_CENTER
     caption = 'Chars/Colors'
 
+# charset view scale up/down buttons
+
 class CharSetScaleUpButton(UIButton):
     width, height = 3, 1
     x, y = -width, ToolTabButton.height + 1
     caption = '+'
     caption_justify = TEXT_CENTER
 
-class CharSetScaleDownButton(UIButton):
-    width, height = 3, 1
-    x, y = -width + CharSetScaleUpButton.x, ToolTabButton.height + 1
+class CharSetScaleDownButton(CharSetScaleUpButton):
+    x = -CharSetScaleUpButton.width + CharSetScaleUpButton.x
     caption = '-'
+
+# charset flip / rotate buttons
+
+class CharFlipNoButton(UIButton):
+    x = 3 + len('Flip:') + 1
+    y = CharSetScaleUpButton.y + 1
+    caption = 'None'
+    width = len(caption) + 2
     caption_justify = TEXT_CENTER
+
+class CharFlipXButton(CharFlipNoButton):
+    x = CharFlipNoButton.x + CharFlipNoButton.width + 1
+    width = 3
+    caption = 'X'
+
+class CharFlipYButton(CharFlipXButton):
+    x = CharFlipXButton.x + CharFlipXButton.width + 1
+    caption = 'Y'
+
+class CharRot0Button(UIButton):
+    x = 3 + len('Rotation:') + 1
+    y = CharFlipNoButton.y + 1
+    width = 3
+    caption = '0'
+    caption_justify = TEXT_CENTER
+
+class CharRot90Button(CharRot0Button):
+    x = CharRot0Button.x + CharRot0Button.width + 1
+    width = 4
+    caption = '90'
+
+class CharRot180Button(CharRot0Button):
+    x = CharRot90Button.x + CharRot90Button.width + 1
+    width = 5
+    caption = '180'
+
+class CharRot270Button(CharRot0Button):
+    x = CharRot180Button.x + CharRot180Button.width + 1
+    width = 5
+    caption = '270'
+
+# tool and tool settings buttons
 
 class ToolButton(UIButton):
     "a tool entry in the tool tab's left hand pane. populated from UI.tools"
@@ -79,14 +122,17 @@ class ToolPopup(UIElement):
     swatch_margin = 0.05
     fg_color = UIColors.black
     bg_color = UIColors.lightgrey
-    charset_label = 'Character Set:'
-    palette_label = 'Color Palette:'
+    highlight_color = UIColors.medgrey
+    charset_label = 'Set:'
+    palette_label = 'Palette:'
     tool_settings_label = 'Tool Settings:'
     brush_size_label = 'Brush size:'
     affects_heading_label = 'Affects:'
     affects_char_label = 'Character'
     affects_fg_label = 'Foreground Color'
     affects_bg_label = 'Background Color'
+    flip_label = 'Flip:'
+    rotation_label = 'Rotation:'
     # index of check mark character in UI charset
     check_char_index = 131
     # map classes to member names / callbacks
@@ -97,6 +143,13 @@ class ToolPopup(UIElement):
     char_color_tab_button_names = {
         CharSetScaleUpButton: 'scale_charset_up',
         CharSetScaleDownButton: 'scale_charset_down',
+        CharFlipNoButton: 'xform_normal',
+        CharFlipXButton: 'xform_flipX',
+        CharFlipYButton: 'xform_flipY',
+        CharRot0Button: 'xform_0',
+        CharRot90Button: 'xform_90',
+        CharRot180Button: 'xform_180',
+        CharRot270Button: 'xform_270'
     }
     tool_tab_button_names = {
         BrushSizeUpButton: 'brush_size_up',
@@ -138,6 +191,7 @@ class ToolPopup(UIElement):
         UIElement.__init__(self, ui)
         # set initial tab state
         self.char_color_tab_button_pressed()
+        self.xform_0_button.normal_bg_color = self.xform_normal_button.normal_bg_color = self.highlight_color
     
     def create_buttons_from_map(self, button_dict):
         buttons = []
@@ -210,6 +264,47 @@ class ToolPopup(UIElement):
     def rotate_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.rotate_tool)
     
+    def set_xform(self, new_xform):
+        "tells UI elements to respect new xform"
+        self.charset_swatch.set_xform(new_xform)
+        # light up button for current selected option
+        button_map = {
+            UV_NORMAL: self.xform_normal_button,
+            UV_ROTATE90: self.xform_90_button,
+            UV_ROTATE180: self.xform_180_button,
+            UV_ROTATE270: self.xform_270_button,
+            UV_FLIPX: self.xform_flipX_button,
+            UV_FLIPY: self.xform_flipY_button
+        }
+        for b in button_map:
+            if b == self.ui.selected_xform:
+                button_map[b].normal_bg_color = self.highlight_color
+            else:
+                button_map[b].normal_bg_color = self.bg_color
+        self.xform_0_button.normal_bg_color = self.xform_normal_button.normal_bg_color
+        self.draw_buttons()
+    
+    def xform_normal_button_pressed(self):
+        self.ui.set_selected_xform(UV_NORMAL)
+    
+    def xform_flipX_button_pressed(self):
+        self.ui.set_selected_xform(UV_FLIPX)
+    
+    def xform_flipY_button_pressed(self):
+        self.ui.set_selected_xform(UV_FLIPY)
+    
+    def xform_0_button_pressed(self):
+        self.ui.set_selected_xform(UV_NORMAL)
+    
+    def xform_90_button_pressed(self):
+        self.ui.set_selected_xform(UV_ROTATE90)
+    
+    def xform_180_button_pressed(self):
+        self.ui.set_selected_xform(UV_ROTATE180)
+    
+    def xform_270_button_pressed(self):
+        self.ui.set_selected_xform(UV_ROTATE270)
+    
     def draw_char_color_tab(self):
         "draw non-button bits of this tab"
         # charset renderable location will be set in update()
@@ -225,9 +320,17 @@ class ToolPopup(UIElement):
         charset_scale = '%.2fx' % self.charset_swatch.char_scale
         x = -self.scale_charset_up_button.width * 2
         self.art.write_string(0, 0, x, y, charset_scale, None, None, True)
+        # transform labels and buttons, eg
+        # Transform: [Normal] [Flip X] [Flip Y]
+        # Rotation: [ 0 ] [ 90] [180] [270]
+        x = 3
+        y += 1
+        self.art.write_string(0, 0, x, y, self.flip_label)
+        y += 1
+        self.art.write_string(0, 0, x, y, self.rotation_label)
         # palette label
         pal_caption_y = (cqh * charset.map_height) / self.art.quad_height
-        pal_caption_y += self.tab_height + 3
+        pal_caption_y += self.tab_height + 5
         label = '%s %s' % (self.palette_label, palette.name)
         self.art.write_string(0, 0, 2, int(pal_caption_y), label)
         # set button states so captions draw properly
@@ -304,7 +407,7 @@ class ToolPopup(UIElement):
         # tile height = height of charset + distance from top of popup
         self.tile_height = (cqh * charset.map_height) / UIArt.quad_height + margin
         # account for popup info lines etc: charset name + palette name + 1 padding each
-        extra_lines = 5
+        extra_lines = 7
         # account for size of palette + bottom margin
         palette_height = ((self.palette_swatch.art.height * self.palette_swatch.art.quad_height) + self.swatch_margin) / UIArt.quad_height
         self.tile_height += self.tab_height + palette_height + extra_lines

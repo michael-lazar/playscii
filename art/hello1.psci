@@ -1,6 +1,6 @@
 {
  "width": 8,
- "palette": "c64",
+ "palette": "c64_edscii",
  "frames": [
   {
    "delay": 0.1,
@@ -6869,5 +6869,5 @@
   4
  ],
  "height": 8,
- "charset": "c64"
+ "charset": "c64_edscii"
 }

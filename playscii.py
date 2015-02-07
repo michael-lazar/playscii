@@ -50,8 +50,8 @@ class Application:
     # force to run even if we can't get an OpenGL 2.1 context
     run_if_opengl_incompatible = False
     # starting document defaults
-    starting_charset = 'c64'
-    starting_palette = 'c64'
+    starting_charset = 'c64_petscii'
+    starting_palette = 'c64_original'
     starting_width, starting_height = 8, 8
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
@@ -420,13 +420,15 @@ class Application:
                     self.ui.selected_tool.decrease_brush_size()
                 elif event.key.keysym.sym == sdl2.SDLK_2:
                     self.ui.selected_tool.increase_brush_size()
-                # 3/4/5: set current tool affects char/fg/bg
-                elif event.key.keysym.sym == sdl2.SDLK_3:
+                # c/f/b/x: set current tool affects char/fg/bg/xform
+                elif event.key.keysym.sym == sdl2.SDLK_c:
                     self.ui.selected_tool.toggle_affects_char()
-                elif event.key.keysym.sym == sdl2.SDLK_4:
+                elif event.key.keysym.sym == sdl2.SDLK_f:
                     self.ui.selected_tool.toggle_affects_fg()
-                elif event.key.keysym.sym == sdl2.SDLK_5:
+                elif event.key.keysym.sym == sdl2.SDLK_b:
                     self.ui.selected_tool.toggle_affects_bg()
+                elif event.key.keysym.sym == sdl2.SDLK_x:
+                    self.ui.selected_tool.toggle_affects_xform()
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
                 elif event.key.keysym.sym == sdl2.SDLK_a:
@@ -438,22 +440,27 @@ class Application:
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.show()
-                # select next/previous char/fg/bg
-                elif event.key.keysym.sym == sdl2.SDLK_c:
+                # 3/4/5/6 select next/previous char/fg/bg/xform
+                elif event.key.keysym.sym == sdl2.SDLK_3:
                     if shift_pressed:
                         self.ui.select_char(self.ui.selected_char-1)
                     else:
                         self.ui.select_char(self.ui.selected_char+1)
-                elif event.key.keysym.sym == sdl2.SDLK_f:
+                elif event.key.keysym.sym == sdl2.SDLK_4:
                     if shift_pressed:
                         self.ui.select_fg(self.ui.selected_fg_color-1)
                     else:
                         self.ui.select_fg(self.ui.selected_fg_color+1)
-                elif event.key.keysym.sym == sdl2.SDLK_b:
+                elif event.key.keysym.sym == sdl2.SDLK_5:
                     if shift_pressed:
                         self.ui.select_bg(self.ui.selected_bg_color-1)
                     else:
                         self.ui.select_bg(self.ui.selected_bg_color+1)
+                elif event.key.keysym.sym == sdl2.SDLK_6:
+                    if shift_pressed:
+                        self.ui.cycle_selected_xform(True)
+                    else:
+                        self.ui.cycle_selected_xform()
                 elif event.key.keysym.sym == sdl2.SDLK_s:
                     # ctrl-S: save art
                     if ctrl_pressed:
