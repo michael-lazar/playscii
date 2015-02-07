@@ -181,9 +181,6 @@ class MessageLineUI(UIElement):
         UIElement.__init__(self, ui)
         # line we're currently displaying (even after fading out)
         self.line = ''
-        # self.line could be from log or elsewhere, remember last log line
-        # so we can determine when to update
-        self.last_log = ''
         self.last_post = self.ui.app.elapsed_time
         self.alpha = 1
     
@@ -204,10 +201,6 @@ class MessageLineUI(UIElement):
         self.last_post = self.ui.app.elapsed_time
     
     def update(self):
-        new_log = self.ui.app.log_lines[-1]
-        if self.last_log != new_log:
-            self.last_log = new_log
-            self.post_line(self.last_log)
         if self.ui.app.elapsed_time > self.last_post + (self.hold_time * 1000):
             if self.alpha >= self.fade_rate:
                 self.alpha -= self.fade_rate

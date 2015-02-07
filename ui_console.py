@@ -2,6 +2,7 @@ import sdl2
 from math import ceil
 
 from ui_element import UIElement
+from art import UV_FLIPY
 
 
 class ConsoleCommand:
@@ -77,6 +78,8 @@ class ConsoleUI(UIElement):
     bg_color_index = 7 # dark grey
     highlight_color = 6 # yellow
     prompt = '>'
+    # _ ish char
+    bottom_line_char_index = 76
     right_margin = 3
     # transient, but must be set here b/c UIElement.init calls reset_art
     current_line = ''
@@ -99,7 +102,7 @@ class ConsoleUI(UIElement):
         self.max_line_length = int(self.art.width) - self.right_margin
     
     def reset_art(self):
-        self.width = int(self.ui.width_tiles * self.ui.scale)
+        self.width = ceil(self.ui.width_tiles * self.ui.scale)
         # % of screen must take aspect into account
         inv_aspect = self.ui.app.window_height / self.ui.app.window_width
         self.height = int(self.ui.height_tiles * self.height_screen_pct * inv_aspect * self.ui.scale)
@@ -159,8 +162,8 @@ class ConsoleUI(UIElement):
     def clear(self):
         self.art.clear_frame_layer(0, 0, self.bg_color_index)
         # line -1 is always a line of ____________
-        text = '_' * self.width
-        self.art.write_string(0, 0, 0, -1, text, self.text_color)
+        for x in range(self.width):
+            self.art.set_tile_at(0, 0, x, -1, self.bottom_line_char_index, self.text_color, None, UV_FLIPY)
     
     def update_user_line(self):
         "draw current user input on second to last line, with >_ prompt"

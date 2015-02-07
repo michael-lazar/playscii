@@ -77,6 +77,9 @@ class Application:
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
         self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
+        # set ui None so other objects can check it None, eg load_art check
+        # for its active art on later runs
+        self.ui = None
         # force GL2.1 'core' before creating context
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, 2)
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, 1)
@@ -117,8 +120,6 @@ class Application:
         self.art_loaded, self.edit_renderables = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
-        # set ui None so load_art can check for its active art on later runs
-        self.ui = None
         self.load_art(art_filename)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
@@ -154,6 +155,8 @@ class Application:
         self.log_file.write('%s\n' % new_line)
         self.log_lines.append(new_line)
         print(new_line)
+        if self.ui:
+            self.ui.message_line.post_line(new_line)
     
     def new_art(self, filename):
         filename = filename or '%snew' % ART_DIR
@@ -451,9 +454,13 @@ class Application:
                         self.ui.select_bg(self.ui.selected_bg_color-1)
                     else:
                         self.ui.select_bg(self.ui.selected_bg_color+1)
-                # shift-S: swap fg/bg color
-                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_s:
-                    self.ui.swap_fg_bg_colors()
+                elif event.key.keysym.sym == sdl2.SDLK_s:
+                    # ctrl-S: save art
+                    if ctrl_pressed:
+                        self.ui.active_art.save_to_file()
+                    # shift-S: swap fg/bg color
+                    elif not shift_pressed:
+                        self.ui.swap_fg_bg_colors()
                 # shift-U: toggle UI visibility
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
                     self.ui.visible = not self.ui.visible

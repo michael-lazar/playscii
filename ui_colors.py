@@ -1,8 +1,8 @@
 
 class UIColors:
-    "color indices for UI (c64) palette"
-    white = 16
-    lightgrey = 8
-    medgrey = 15
-    darkgrey = 7
+    "color indices for UI (c64 original) palette"
+    white = 2
+    lightgrey = 16
+    medgrey = 13
+    darkgrey = 12
     black = 1
