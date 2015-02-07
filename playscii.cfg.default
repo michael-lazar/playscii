@@ -1,0 +1,33 @@
+# DEFAULT CONFIG FILE TEMPLATE, DO NOT MODIFY
+# playscii local config file
+
+# override class defaults here.
+# everything in this file must be a valid Python expression.
+# many lines are here for reference but commented out, uncomment to activate.
+
+Application.fullscreen = False
+Application.window_width, Application.window_height = 1024, 768
+
+# try it, you'll like it :]
+Application.capslock_is_ctrl = True
+
+Application.starting_charset = 'c64_petscii'
+Application.starting_palette = 'c64_original'
+
+Application.new_art_width, Application.new_art_height = 40, 25
+
+Camera.start_x, Camera.start_y = 20, -12
+Camera.start_zoom = 15
+
+#CharacterSetSwatch.char_scale = 3
+
+#UIRenderable.grain_strength = 0
+
+# CRT shader starts off
+#Framebuffer.start_crt_enabled = False
+
+# disable CRT shader entirely - use this if playscii starts up really slowly
+#Framebuffer.disable_crt = True
+
+# test pattern - changes random tiles each frame, uncomment for pretty tilenoise
+#Application.test_mutate_each_frame = True

@@ -36,6 +36,7 @@ from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable
 
 CONFIG_FILENAME = 'playscii.cfg'
+CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 
@@ -53,7 +54,7 @@ class Application:
     # starting document defaults
     starting_charset = 'c64_petscii'
     starting_palette = 'c64_original'
-    starting_width, starting_height = 8, 8
+    new_art_width, new_art_height = 8, 8
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
     bg_color = (0.1, 0.1, 0.1, 1)
@@ -163,7 +164,7 @@ class Application:
         filename = filename or '%snew' % ART_DIR
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
-        return Art(filename, self, charset, palette, self.starting_width, self.starting_height)
+        return Art(filename, self, charset, palette, self.new_art_width, self.new_art_height)
     
     def load_art(self, filename):
         """
@@ -181,9 +182,9 @@ class Application:
         art = None
         # use given path + file name even if it doesn't exist; use as new file's name
         if not os.path.exists(filename):
-            text = 'creating new document %s' % filename
+            text = 'Creating new document %s' % filename
             if orig_filename:
-                text = "couldn't find file %s, %s" % (orig_filename, text)
+                text = "Couldn't find file %s, %s" % (orig_filename, text)
             self.log(text)
             art = self.new_art(filename)
         else:
@@ -192,6 +193,7 @@ class Application:
                 if a.filename == filename:
                     self.log('Art file %s already loaded' % filename)
                     return
+            self.log('Loading file %s...' % filename)
             art = ArtFromDisk(filename, self)
             if not art or not art.valid:
                 art = ArtFromEDSCII(filename, self)
@@ -644,11 +646,6 @@ class Application:
         self.log_file.close()
 
 
-# load in config - may change above values and submodule class defaults
-# TODO: if doesn't exist, copy a new one from playscii.cfg.example
-if os.path.exists(CONFIG_FILENAME):
-    exec(open(CONFIG_FILENAME).read())
-
 if __name__ == "__main__":
     file_to_load = None
     # start log file even before Application has initialized so we can write to it
@@ -659,6 +656,21 @@ if __name__ == "__main__":
     log_file.write('%s\n' % line)
     log_lines.append(line)
     print(line)
+    # load in config - may change above values and submodule class defaults
+    if os.path.exists(CONFIG_FILENAME):
+        exec(open(CONFIG_FILENAME).read())
+    # if cfg file doesn't exist, copy a new one from playscii.cfg.default
+    else:
+        # snip first "this is a template" line
+        default_data = open(CONFIG_TEMPLATE_FILENAME).readlines()[1:]
+        new_cfg = open(CONFIG_FILENAME, 'w')
+        new_cfg.writelines(default_data)
+        new_cfg.close()
+        exec(''.join(default_data))
+        line = 'Created new config file %s' % CONFIG_FILENAME
+        log_file.write('%s\n' % line)
+        log_lines.append(line)
+        print(line)
     file_to_load = None
     if len(sys.argv) > 1:
         file_to_load = sys.argv[1]
