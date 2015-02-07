@@ -1,5 +1,5 @@
 // first line: source image (base filename + .png assumed)
-c64.png
+c64_edscii.png
 // second line: map dimensions
 16, 10
  !"#$%&'()*+,-./

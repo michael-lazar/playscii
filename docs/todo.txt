@@ -1,10 +1,12 @@
 TODO
 
-fix keyboard cursor move/paint: when tool updates, cursor jumps to mouse loc even if you haven't moved it in a while
+move c64 charset to c64_edscii, make petscii editor's arrangement the new default
 
-"output line", transparent line of text that flashes up recent console output a la doom pickup messages
-
-status bar: dim char/fg/bg label + swatch when toggled off
+text entry tool!
+- click/enter to start text entry at cursor location, remember entry start X,Y
+- if input character is in charset's map, write that index, move to next char (go to X,Y+1 if hitting end, bail if hitting last char in art)
+- ESC / arrow key / right click anywhere bails out of entry mode, adds command to undo buffer
+- click/enter also adds command to undo buffer, but keeps entry mode active
 
 expected edit behavior:
 don't allow FG paints on tiles with char 0
@@ -14,7 +16,8 @@ character swatch: extra line below charset name and scale, showing "flip: -/X/Y"
 - status bar shows selected xform to right of BG
 - need a better user-facing term than "xform"
 
-select tool: S, left click draws/adds to existing selection, right click / alt-left click subtracts from selection, ctrl-a selects all, ctrl-d selects none, ctrl-i inverts selection.  selection area outlined with a pulsing white LineRenderable.
+select tool
+- K, left click draws/adds to existing selection, right click / alt-left click subtracts from selection, ctrl-a selects all, ctrl-d selects none, ctrl-i inverts selection.  selection area outlined with a pulsing white LineRenderable.
 - refresh selection outline (once) each time a tile is added or removed from selection: iterate over all selected tiles, apply rules to draw lines at its borders, pass lines to line renderable
 - paint tool operations only affect selected tiles
 - selection follows changes of active layer

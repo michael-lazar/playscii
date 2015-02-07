@@ -19,7 +19,7 @@ class UI:
     # user-configured UI scale factor
     scale = 1.0
     charset_name = 'ui'
-    palette_name = 'c64'
+    palette_name = 'c64_original'
     # low-contrast background texture that distinguishes UI from flat color
     grain_texture = 'bgnoise_alpha.png'
     visible = True
@@ -108,7 +108,7 @@ class UI:
         # any new UI elements created should use new scale
         UIArt.quad_width = 2 / width * aspect
         UIArt.quad_height = 2 / height * aspect
-        self.width_tiles = width * inv_aspect / self.scale
+        self.width_tiles = width * (inv_aspect / self.scale)
         self.height_tiles = height / self.scale
         # tell elements to refresh
         self.set_elements_scale()
