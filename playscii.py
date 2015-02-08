@@ -431,7 +431,7 @@ class Application:
                     self.ui.selected_tool.toggle_affects_fg()
                 elif event.key.keysym.sym == sdl2.SDLK_b:
                     self.ui.selected_tool.toggle_affects_bg()
-                elif event.key.keysym.sym == sdl2.SDLK_x:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_x:
                     self.ui.selected_tool.toggle_affects_xform()
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
@@ -515,8 +515,8 @@ class Application:
                 # F12: screenshot
                 elif event.key.keysym.sym == sdl2.SDLK_F12:
                     self.screenshot()
-                # TEST: toggle artscript running
-                elif event.key.keysym.sym == sdl2.SDLK_m:
+                # TEST ctrl-m: toggle artscript running
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_m:
                     if self.ui.active_art.is_script_running('conway'):
                         self.ui.active_art.stop_script('conway')
                     else:
@@ -539,19 +539,19 @@ class Application:
                         self.camera.y_tilt = 2
                         self.log('Camera tilt engaged.')
                 # arrow keys move cursor
-                elif event.key.keysym.sym == sdl2.SDLK_UP:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
                     self.cursor.move(0, 1)
-                elif event.key.keysym.sym == sdl2.SDLK_DOWN:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
                     self.cursor.move(0, -1)
-                elif event.key.keysym.sym == sdl2.SDLK_LEFT:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
                     self.cursor.move(-1, 0)
-                elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
                     self.cursor.move(1, 0)
             elif event.type == sdl2.SDL_KEYUP:
                 # spacebar up: dismiss selector popup
                 if event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.hide()
-                elif event.key.keysym.sym == sdl2.SDLK_RETURN:
+                elif not alt_pressed and event.key.keysym.sym == sdl2.SDLK_RETURN:
                     if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
@@ -575,13 +575,13 @@ class Application:
                     self.ui.quick_grab()
         # directly query keys we don't want affected by OS key repeat delay
         if shift_pressed and not alt_pressed and not ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
-            if ks[sdl2.SDL_SCANCODE_W]:
+            if ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]:
                 self.camera.pan(0, 1)
-            if ks[sdl2.SDL_SCANCODE_S]:
+            if ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]:
                 self.camera.pan(0, -1)
-            if ks[sdl2.SDL_SCANCODE_A]:
+            if ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]:
                 self.camera.pan(-1, 0)
-            if ks[sdl2.SDL_SCANCODE_D]:
+            if ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]:
                 self.camera.pan(1, 0)
             if ks[sdl2.SDL_SCANCODE_X]:
                 self.camera.zoom(-1)

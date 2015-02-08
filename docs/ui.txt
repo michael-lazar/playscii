@@ -71,7 +71,7 @@ previous/next bg color
 
 file/meta/misc:
 undo/redo
-load
+load/open
 save [with current name | with name Z]
 new document [of size X by Y] [with name Z]
 convert raster image (to current document size/charset/palette)
