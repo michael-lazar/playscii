@@ -3,6 +3,7 @@ from math import ceil
 
 from ui_element import UIElement
 from art import UV_FLIPY
+from key_shifts import shift_map
 
 
 class ConsoleCommand:
@@ -275,7 +276,7 @@ class ConsoleUI(UIElement):
         if keystr.isalpha() and not shift_pressed:
             keystr = keystr.lower()
         elif not keystr.isalpha() and shift_pressed:
-            keystr = shifts[keystr]
+            keystr = shift_map[keystr]
         if len(self.current_line) < self.max_line_length:
             self.current_line += keystr
     
@@ -315,10 +316,3 @@ class ConsoleUI(UIElement):
 
 # delimiters - alt-backspace deletes to most recent one of these
 delimiters = [' ', '.', ')', ']', ',', '_']
-
-# MAYBE-TODO: find out if this breaks for non-US english KB layouts
-shifts = {
-    '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*',
-    '9': '(', '0': ')', '-': '_', '=': '+', '`': '~', '[': '{', ']': '}', '\\': '|',
-    ';': ':', "'": '"', ',': '<', '.': '>', '/': '?'
-}

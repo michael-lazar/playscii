@@ -16,6 +16,11 @@ class EditCommand:
         else:
             self.tile_commands += new_command_tiles[:]
     
+    def undo_commands_for_tile(self, frame, layer, x, y):
+        for tc in self.tile_commands:
+            if tc.frame == frame and tc.layer == layer and tc.x == x and tc.y == y:
+                tc.undo()
+    
     def undo(self):
         for tile_command in self.tile_commands:
             tile_command.undo()

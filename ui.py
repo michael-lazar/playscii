@@ -8,7 +8,7 @@ from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_colors import UIColors
-from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool
+from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
 
 UI_ASSET_DIR = 'ui/'
@@ -25,7 +25,7 @@ class UI:
     grain_texture = 'bgnoise_alpha.png'
     visible = True
     logg = False
-    tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool ]
+    tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool, TextTool ]
     tool_selected_log = 'tool selected'
     art_selected_log = 'Now editing'
     frame_selected_log = 'Now editing frame'

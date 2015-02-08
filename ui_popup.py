@@ -264,6 +264,9 @@ class ToolPopup(UIElement):
     def rotate_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.rotate_tool)
     
+    def text_tool_button_pressed(self):
+        self.ui.set_selected_tool(self.ui.text_tool)
+    
     def set_xform(self, new_xform):
         "tells UI elements to respect new xform"
         self.charset_swatch.set_xform(new_xform)

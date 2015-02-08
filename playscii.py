@@ -1,7 +1,5 @@
 import sys, os.path, time
 
-from random import random
-
 # obnoxious PyOpenGL workaround for py2exe
 import platform
 if platform.system() == 'Windows':
@@ -418,6 +416,9 @@ class Application:
                 # if console is up, pass input to it - keys above work regardless
                 elif self.ui.console.visible:
                     self.ui.console.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
+                # handle text input if text tool is active
+                elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
+                    self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym, shift_pressed, ctrl_pressed, alt_pressed)
                 # 1/2: decrease/increase current tool brush size
                 elif event.key.keysym.sym == sdl2.SDLK_1:
                     self.ui.selected_tool.decrease_brush_size()
@@ -440,6 +441,8 @@ class Application:
                     self.ui.set_selected_tool(self.ui.erase_tool)
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.ui.set_selected_tool(self.ui.rotate_tool)
+                elif event.key.keysym.sym == sdl2.SDLK_t:
+                    self.ui.set_selected_tool(self.ui.text_tool)
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.show()
@@ -501,9 +504,12 @@ class Application:
                     self.ui.redo()
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_z:
                     self.ui.undo()
-                # enter does Cursor.paint
+                # enter does Cursor.paint, or starts/ends text tool input
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
-                    self.cursor.start_paint()
+                    if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                        self.ui.text_tool.start_entry()
+                    else:
+                        self.cursor.start_paint()
                 # q does quick grab
                 elif event.key.keysym.sym == sdl2.SDLK_q:
                     self.ui.quick_grab()
@@ -547,7 +553,8 @@ class Application:
                 if event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.hide()
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
-                    self.cursor.finish_paint()
+                    if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                        self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
                     self.camera.zoom(-3)
@@ -556,15 +563,19 @@ class Application:
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    self.cursor.finish_paint()
+                    if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                        self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    self.cursor.start_paint()
+                    if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                        self.ui.text_tool.start_entry()
+                    else:
+                        self.cursor.start_paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
                     self.ui.quick_grab()
         # directly query keys we don't want affected by OS key repeat delay
-        if shift_pressed and not alt_pressed and not ctrl_pressed and not self.ui.console.visible:
+        if shift_pressed and not alt_pressed and not ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
             if ks[sdl2.SDL_SCANCODE_W]:
                 self.camera.pan(0, 1)
             if ks[sdl2.SDL_SCANCODE_S]:
