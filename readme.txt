@@ -21,7 +21,7 @@ If you double-click the Playscii executable or run it from the command line with
 
 == Controls ==
 
-Shift + W A S D: pan the view around
+Middle mouse drag / Shift + W A S D / Shift + arrow keys: pan the view around
 
 Mouse / arrow keys: move the cursor around
 
@@ -35,6 +35,8 @@ E: select Erase tool - erases character and foreground for tiles to selected bac
 
 R: select Rotate tool - painting tiles with this rotates them 90 degrees, multiple passes produce the 4 possible rotations.
 
+T: select Text tool - click on a tile and start typing in characters, arrow keys move cursor and enter skips to next line down.  Escape ends the edit.
+
 3/#: cycle the currently selected character forward or backward through the character set
 
 4/$: cycle the currently selected foreground color forward or backward through the palette
@@ -42,6 +44,8 @@ R: select Rotate tool - painting tiles with this rotates them 90 degrees, multip
 5/%: same as above but for the currently selected background color
 
 6/^: cycle through character transforms
+
+W: swap currently selected foreground and background colors
 
 C: toggle whether current tool affects characters or not
 

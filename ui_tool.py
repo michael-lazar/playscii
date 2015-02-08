@@ -198,6 +198,9 @@ class TextTool(UITool):
         self.start_x, self.start_y = int(new_x), int(new_y)
     
     def handle_keyboard_input(self, key, shift_pressed, ctrl_pressed, alt_pressed):
+        # for now, do nothing on ctrl/alt
+        if ctrl_pressed or alt_pressed:
+            return
         keystr = sdl2.SDL_GetKeyName(key).decode()
         art = self.ui.active_art
         frame, layer = self.ui.active_frame, self.ui.active_layer

@@ -1,5 +1,8 @@
 TODO
 
+option to make space toggle the popup on/off instead of hold
+popup discoverability - on first run, message about it?
+
 select tool
 - S key, left click draws/adds to existing selection, right click / alt-left click subtracts from selection, ctrl-a selects all, ctrl-d selects none, ctrl-i inverts selection.  selection area outlined with a pulsing white LineRenderable.
 - refresh selection outline (once) each time a tile is added or removed from selection: iterate over all selected tiles, apply rules to draw lines at its borders, pass lines to line renderable
@@ -19,11 +22,12 @@ PNG export:
 - aniGIF export for animations - lead: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
 
 main popup
+- hide settings (buttons & labels) for tools where they don't apply
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
 - arrow keys navigate pickers as well as mouse?
 -- how to resolve transitions between char and color swatches?
 
-ability to toggle between perspective and ortho views (steal unity's cool lerp?)
+O key: toggle between perspective and ortho views (steal unity's cool lerp)
 
 ability to "pin" popup so it stays on screen always
 
