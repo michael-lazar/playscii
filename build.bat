@@ -41,7 +41,7 @@ mkdir dist\ui
 copy /v ui\*.png dist\ui\
 copy readme.txt dist\
 copy license.txt dist\
-copy playscii.cfg dist\
+copy playscii.cfg.default dist\
 
 echo Done!
 pause
