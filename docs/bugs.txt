@@ -1,5 +1,7 @@
 bug list
 
+tile coords in status bar have negative Y only when text tool is active?!
+
 PNG export: layers that have too high a Z won't show up in export, special-case behavior for near/far Z in renderable export?
 
 little annoying cracks between quads - UV or vert/element error?

@@ -38,7 +38,7 @@ CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 
-VERSION = '0.3.1'
+VERSION = '0.3.2'
 
 class Application:
     
@@ -467,13 +467,12 @@ class Application:
                         self.ui.cycle_selected_xform(True)
                     else:
                         self.ui.cycle_selected_xform()
-                elif event.key.keysym.sym == sdl2.SDLK_s:
-                    # ctrl-S: save art
-                    if ctrl_pressed:
-                        self.ui.active_art.save_to_file()
-                    # shift-S: swap fg/bg color
-                    elif not shift_pressed:
-                        self.ui.swap_fg_bg_colors()
+                # w: swap fg/bg color
+                elif event.key.keysym.sym == sdl2.SDLK_w:
+                    self.ui.swap_fg_bg_colors()
+                # ctrl-S: save art
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_s:
+                    self.ui.active_art.save_to_file()
                 # shift-U: toggle UI visibility
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
                     self.ui.visible = not self.ui.visible
