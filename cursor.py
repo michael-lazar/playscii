@@ -128,9 +128,11 @@ class Cursor:
     def get_tile(self):
         # adjust for brush size
         size = self.app.ui.selected_tool.brush_size
-        size_offset = math.ceil(size / 2) - 1
-        x, y = int(self.x + size_offset), int(-self.y + size_offset)
-        return x, y
+        if size:
+            size_offset = math.ceil(size / 2) - 1
+            return int(self.x + size_offset), int(-self.y + size_offset)
+        else:
+            return self.x, self.y
     
     def get_tiles_under_brush(self, base_zero=False):
         """
@@ -200,7 +202,9 @@ class Cursor:
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
         if self.app.mouse_dx != 0 or self.app.mouse_dy != 0 or self.app.camera.moved_this_frame or self.app.ui.tool_settings_changed:
-            self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
+            # don't let mouse move cursor if text tool input is happening
+            if not self.app.ui.text_tool.input_active:
+                self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
             self.moved = True
         # bail if camera/mouse/keyboard move unchanged
         elif not self.moved:
@@ -212,11 +216,12 @@ class Cursor:
         self.x = math.floor(self.x / w) * w
         self.y = math.ceil(self.y / h) * h * char_aspect
         # adjust for brush size
-        size = self.app.ui.selected_tool.brush_size
-        self.scale_x = self.scale_y = size
-        size_offset = math.ceil(size / 2) - 1
-        self.x -= size_offset
-        self.y += size_offset
+        if self.app.ui.selected_tool.brush_size:
+            size = self.app.ui.selected_tool.brush_size
+            self.scale_x = self.scale_y = size
+            size_offset = math.ceil(size / 2) - 1
+            self.x -= size_offset
+            self.y += size_offset
         self.update_cursor_preview()
         if self.moved or self.x != self.last_x or self.y != self.last_y:
             self.entered_new_tile()

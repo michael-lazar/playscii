@@ -163,6 +163,7 @@ class StatusBarUI(UIElement):
         color = light
         if self.ui.app.cursor:
             tile_x, tile_y = self.ui.app.cursor.get_tile()
+            tile_y = int(tile_y)
             # user-facing coordinates are always base 1
             tile_x += 1
             tile_y += 1

@@ -1,6 +1,8 @@
+import sdl2
 
 from edit_command import EditCommandTile
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
+from key_shifts import shift_map
 
 class UITool:
     
@@ -11,10 +13,10 @@ class UITool:
     paint_while_dragging = True
     # show preview of paint result under cursor
     show_preview = True
+    brush_size = 1
     
     def __init__(self, ui):
         self.ui = ui
-        self.brush_size = 1
         self.affects_char = True
         self.affects_fg_color = True
         self.affects_bg_color = True
@@ -163,3 +165,88 @@ class GrabTool(UITool):
             self.ui.selected_bg_color = art.get_bg_color_index_at(frame, layer, x, y)
         for edit in self.ui.app.cursor.preview_edits:
             edit.apply()
+
+
+class TextTool(UITool):
+    
+    name = 'text'
+    button_caption = 'Text'
+    brush_size = None
+    show_preview = False
+    
+    def __init__(self, ui):
+        UITool.__init__(self, ui)
+        self.input_active = False
+        self.cursor = None
+    
+    def start_entry(self):
+        # TODO: call this instead of setting input_active directly
+        self.cursor = self.ui.app.cursor
+        self.input_active = True
+        self.reset_cursor_start(self.cursor.x, -self.cursor.y)
+        self.cursor.start_paint()
+        self.ui.message_line.post_line('Started text entry at %s, %s' % (self.start_x + 1, self.start_y + 1))
+    
+    def finish_entry(self):
+        self.input_active = False
+        self.ui.tool_settings_changed = True
+        x, y = int(self.cursor.x) + 1, int(-self.cursor.y) + 1
+        self.ui.message_line.post_line('Finished text entry at %s, %s' % (x, y))
+        self.cursor.finish_paint()
+    
+    def reset_cursor_start(self, new_x, new_y):
+        self.start_x, self.start_y = int(new_x), int(new_y)
+    
+    def handle_keyboard_input(self, key, shift_pressed, ctrl_pressed, alt_pressed):
+        keystr = sdl2.SDL_GetKeyName(key).decode()
+        art = self.ui.active_art
+        frame, layer = self.ui.active_frame, self.ui.active_layer
+        x, y = self.cursor.x, -self.cursor.y
+        if keystr == 'Return':
+            if self.cursor.y < art.width:
+                self.cursor.x = self.start_x
+                self.cursor.y -= 1
+        elif keystr == 'Backspace':
+            if self.cursor.x > self.start_x:
+                self.cursor.x -= 1
+            # undo command on previous tile
+            self.cursor.current_command.undo_commands_for_tile(frame, layer, x-1, y)
+        elif keystr == 'Space':
+            keystr = ' '
+        elif keystr == 'Up':
+            self.cursor.y += 1
+        elif keystr == 'Down':
+            self.cursor.y -= 1
+        elif keystr == 'Left':
+            self.cursor.x -= 1
+        elif keystr == 'Right':
+            self.cursor.x += 1
+        elif keystr == 'Escape':
+            self.finish_entry()
+            return
+        # ignore any other non-character keys
+        if len(keystr) > 1:
+            return
+        if keystr.isalpha() and not shift_pressed:
+            keystr = keystr.lower()
+        elif not keystr.isalpha() and shift_pressed:
+            keystr = shift_map.get(keystr, ' ')
+        # create tile command
+        new_tile_command = EditCommandTile(art)
+        new_tile_command.set_tile(frame, layer, x, y)
+        b_char, b_fg, b_bg, b_xform = art.get_tile_at(frame, layer, x, y)
+        new_tile_command.set_before(b_char, b_fg, b_bg, b_xform)
+        a_char = art.charset.get_char_index(keystr)
+        a_fg = self.ui.selected_fg_color if self.affects_fg_color else None
+        a_bg = self.ui.selected_bg_color if self.affects_bg_color else None
+        a_xform = self.ui.selected_xform if self.affects_xform else None
+        new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
+        # add command, apply immediately, and move cursor
+        self.cursor.current_command.add_command_tiles(new_tile_command)
+        new_tile_command.apply()
+        self.cursor.x += 1
+        if self.cursor.x >= self.ui.active_art.width:
+            self.cursor.x = self.start_x
+            self.cursor.y -= 1
+        if -self.cursor.y >= self.ui.active_art.height:
+            self.finish_entry()
