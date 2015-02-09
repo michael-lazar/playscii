@@ -10,6 +10,8 @@ class LineRenderable():
     frag_shader_source = 'lines_f.glsl'
     log_create_destroy = False
     line_width = 1
+    # items in vert array: 2 for XY-only renderables, 3 for ones that include Z
+    vert_items = 2
     
     def __init__(self, app, quad_size_ref):
         self.app = app
@@ -42,7 +44,7 @@ class LineRenderable():
         self.pos_attrib = self.shader.get_attrib_location('vertPosition')
         GL.glEnableVertexAttribArray(self.pos_attrib)
         offset = ctypes.c_void_p(0)
-        GL.glVertexAttribPointer(self.pos_attrib, 2,
+        GL.glVertexAttribPointer(self.pos_attrib, self.vert_items,
                                  GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         # vert colors

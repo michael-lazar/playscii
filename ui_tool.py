@@ -309,7 +309,6 @@ class SelectTool(UITool):
             for y in range(start_y, end_y):
                 for x in range(start_x, end_x):
                     self.current_drag.append((frame, layer, x, y))
-        #print(self.current_drag)
         # if selection or drag tiles have updated since last update,
         # tell our renderables to update
         if self.selected_tiles != self.last_selection:
