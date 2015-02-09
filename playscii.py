@@ -512,7 +512,8 @@ class Application:
                         self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
                         if self.ui.select_tool.selection_in_progress:
-                            self.ui.select_tool.finish_select()
+                            # pass in shift/alt for add/subtract
+                            self.ui.select_tool.finish_select(shift_pressed, ctrl_pressed)
                         else:
                             self.ui.select_tool.start_select()
                     else:
@@ -572,7 +573,7 @@ class Application:
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     if self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
-                        self.ui.select_tool.finish_select()
+                        self.ui.select_tool.finish_select(shift_pressed, ctrl_pressed)
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
