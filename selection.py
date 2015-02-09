@@ -5,72 +5,61 @@ from renderable_line import LineRenderable
 class SelectionRenderable(LineRenderable):
     
     color = (0.8, 0.8, 0.8, 1)
-    line_width = 3
+    line_width = 2
     x, y, z = 0, 0, 0
     # verts include Z for different layers - set 2 for a cool glitch :]
     vert_items = 3
     
     def build_geo(self):
+        # init empty arrays; geo is rebuilt every time selection changes
         self.vert_array = np.array([], dtype=np.float32)
         self.elem_array = np.array([], dtype=np.uint32)
         self.color_array = np.array([], dtype=np.float32)
     
-    def get_adjacent_tile(self, tiles, x, y, dir_x, dir_y):
-        # TODO: this search is crummy, make tiles a dict instead!
-        for tile in tiles:
-            if (tile[2] == x + dir_x) and (-tile[3] == y + dir_y):
-                return tile
-        return None
-    
-    def get_lines_for_tile(self, tiles, x, y):
-        """
-        use rules to detect if a tile is above, below,
-        to left or right of this one, draw lines accordingly
-        """
-        above = self.get_adjacent_tile(tiles, x, y, 0, -1)
-        below = self.get_adjacent_tile(tiles, x, y, 0, 1)
-        left = self.get_adjacent_tile(tiles, x, y, -1, 0)
-        right = self.get_adjacent_tile(tiles, x, y, 1, 0)
-        if not above:
-            # top line
-            pass
-        if not below:
-            # bottom line
-            pass
-        if not left:
-            # left line
-            pass
-        if not right:
-            # right line
-            pass
+    def get_adjacent_tile(self, tiles, frame, layer, x, y, dir_x, dir_y):
+        "returns True or False based on tile dict lookup relative to given tile"
+        return tiles.get((frame, layer, x + dir_x, y + dir_y), False)
     
     def rebuild_geo(self, tiles):
+        # array source lists of verts, elements, colors
         v, e, c = [], [], []
-        w, h = self.app.ui.active_art.width, self.app.ui.active_art.height
         index = 0
         for tile in tiles:
-            frame, layer, x, y = tile[0], tile[1], tile[2], -tile[3]
+            frame, layer, x, y = tile[0], tile[1], tile[2], tile[3]
+            # use rules to detect if a tile is above, below,
+            # to left or right of this one, draw lines accordingly
+            above = self.get_adjacent_tile(tiles, frame, layer, x, y, 0, -1)
+            below = self.get_adjacent_tile(tiles, frame, layer, x, y, 0, 1)
+            left = self.get_adjacent_tile(tiles, frame, layer, x, y, -1, 0)
+            right = self.get_adjacent_tile(tiles, frame, layer, x, y, 1, 0)
+            if not above and not below and not left and not right:
+                continue
             z = self.app.ui.active_art.layers_z[layer]
+            top_left =     (  x,   -y, z)
+            top_right =    (x+1,   -y, z)
+            bottom_right = (x+1, -y-1, z)
+            bottom_left =  (  x, -y-1, z)
+            def add_line(vert_a, vert_b, verts, elems, colors, element_index):
+                verts += [vert_a, vert_b]
+                elems += [element_index, element_index+1]
+                colors += self.color * 2
             # verts = corners
-            # top left
-            v += [(  x,   y, z)]
-            # top right
-            v += [(x+1,   y, z)]
-            # bottom right
-            v += [(x+1, y-1, z)]
-            # bottom left
-            v += [(  x, y-1, z)]
-            # elements = edges
-            # top
-            e += [index, index+1]
-            # right
-            e += [index+1, index+2]
-            # bottom
-            e += [index+2, index+3]
-            # left
-            e += [index+3, index]
-            c += self.color * 4
-            index += 4
+            if not above:
+                # top edge
+                add_line(top_left, top_right, v, e, c, index)
+                index += 2
+            if not below:
+                # bottom edge
+                add_line(bottom_left, bottom_right, v, e, c, index)
+                index += 2
+            if not left:
+                # left edge
+                add_line(top_left, bottom_left, v, e, c, index)
+                index += 2
+            if not right:
+                # right edge
+                add_line(top_right, bottom_right, v, e, c, index)
+                index += 2
         self.vert_array = np.array(v, dtype=np.float32)
         self.elem_array = np.array(e, dtype=np.uint32)
         self.color_array = np.array(c, dtype=np.float32)
