@@ -58,7 +58,8 @@ class UIElement:
     
     def draw_buttons(self):
         for button in self.buttons:
-            button.draw()
+            if button.visible:
+                button.draw()
     
     def hovered(self):
         self.log_event('hovered')
@@ -108,7 +109,7 @@ class UIElement:
         for b in self.buttons:
             # element.clicked might have been set it non-hoverable, acknowledge
             # its hoveredness here so it can unhover correctly
-            if (b.can_hover or b.state == 'clicked') and self.is_inside_button(mx, my, b):
+            if b.visible and (b.can_hover or b.state == 'clicked') and self.is_inside_button(mx, my, b):
                 self.hovered_buttons.append(b)
                 if not b in was_hovering:
                     b.hover()

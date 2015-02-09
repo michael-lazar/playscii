@@ -15,6 +15,9 @@ class UITool:
     # show preview of paint result under cursor
     show_preview = True
     brush_size = 1
+    # affects char/fg/bg/xform masks are relevant to how this tool works
+    # (false for eg Selection tool)
+    affects_masks = True
     
     def __init__(self, ui):
         self.ui = ui
@@ -202,6 +205,8 @@ class TextTool(UITool):
         # for now, do nothing on ctrl/alt
         if ctrl_pressed or alt_pressed:
             return
+        if self.ui.popup.visible:
+            return
         keystr = sdl2.SDL_GetKeyName(key).decode()
         art = self.ui.active_art
         frame, layer = self.ui.active_frame, self.ui.active_layer
@@ -261,12 +266,13 @@ class SelectTool(UITool):
     name = 'select'
     button_caption = 'Select'
     brush_size = None
+    affects_masks = False
     show_preview = False
     
     def __init__(self, ui):
         UITool.__init__(self, ui)
         self.selection_in_progress = False
-        # dict of all tiles (frame, layer, x, y) that have been selected
+        # dict of all tiles (x, y) that have been selected
         # (dict for fast random access in SelectionRenderable.get_adjacet_tile)
         self.selected_tiles, self.last_selection = {}, {}
         # dict of tiles being selected in a drag that's active right now
@@ -280,8 +286,6 @@ class SelectTool(UITool):
         self.selection_in_progress = True
         self.current_drag = {}
         x, y = self.ui.app.cursor.x, int(-self.ui.app.cursor.y)
-        frame, layer = self.ui.active_frame, self.ui.active_layer
-        #self.current_drag.append((frame, layer, x, y))
         self.drag_start_x, self.drag_start_y = x, y
         #print('started select drag at %s,%s' % (x, y))
     
@@ -306,7 +310,6 @@ class SelectTool(UITool):
         # context: cursor has already updated, UI.update calls this
         if self.selection_in_progress and self.ui.app.cursor.moved_this_frame():
             self.current_drag = {}
-            frame, layer = self.ui.active_frame, self.ui.active_layer
             start_x, end_x = self.drag_start_x, int(self.ui.app.cursor.x)
             start_y, end_y = self.drag_start_y, int(-self.ui.app.cursor.y)
             if start_x > end_x:
@@ -322,7 +325,7 @@ class SelectTool(UITool):
                 for x in range(start_x, end_x):
                     # never allow out-of-bounds tiles to be selected
                     if 0 <= x < w and 0 <= y < h:
-                        self.current_drag[(frame, layer, x, y)] = True
+                        self.current_drag[(x, y)] = True
         # if selection or drag tiles have updated since last update,
         # tell our renderables to update
         if self.selected_tiles != self.last_selection:

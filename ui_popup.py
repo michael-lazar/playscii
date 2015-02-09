@@ -108,6 +108,8 @@ class AffectFgToggleButton(AffectCharToggleButton):
 class AffectBgToggleButton(AffectCharToggleButton):
     y = AffectCharToggleButton.y + 2
 
+class AffectXformToggleButton(AffectCharToggleButton):
+    y = AffectCharToggleButton.y + 3
 
 TAB_TOOLS = 0
 TAB_CHAR_COLOR = 1
@@ -131,6 +133,7 @@ class ToolPopup(UIElement):
     affects_char_label = 'Character'
     affects_fg_label = 'Foreground Color'
     affects_bg_label = 'Background Color'
+    affects_xform_label = 'Rotation/Flip'
     flip_label = 'Flip:'
     rotation_label = 'Rotation:'
     # index of check mark character in UI charset
@@ -157,6 +160,7 @@ class ToolPopup(UIElement):
         AffectCharToggleButton: 'toggle_affect_char',
         AffectFgToggleButton: 'toggle_affect_fg',
         AffectBgToggleButton: 'toggle_affect_bg',
+        AffectXformToggleButton: 'toggle_affect_xform',
     }
     
     def __init__(self, ui):
@@ -251,6 +255,9 @@ class ToolPopup(UIElement):
     
     def toggle_affect_bg_button_pressed(self):
         self.ui.selected_tool.toggle_affects_bg()
+    
+    def toggle_affect_xform_button_pressed(self):
+        self.ui.selected_tool.toggle_affects_xform()
     
     def pencil_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.pencil_tool)
@@ -373,7 +380,7 @@ class ToolPopup(UIElement):
         self.art.write_string(0, 0, x, y, label)
         x += 1
         y += 2
-        # brush size
+        # brush size (if applicable)
         if self.ui.selected_tool.brush_size:
             self.brush_size_down_button.visible = True
             self.brush_size_up_button.visible = True
@@ -385,21 +392,37 @@ class ToolPopup(UIElement):
             self.brush_size_up_button.x = TOOL_PANE_WIDTH + len(label) + 3
             self.art.write_string(0, 0, x, y, label)
         else:
+            # if inapplicable, hide those controls
             self.brush_size_down_button.visible = False
             self.brush_size_up_button.visible = False
-        # affects char/fg/bg settings
-        y += 2
-        self.art.write_string(0, 0, x, y, self.affects_heading_label)
-        y += 1
-        # set affects-* button labels AND captions
-        def get_affects_char(affects):
-            return [0, self.check_char_index][affects]
-        w = self.toggle_affect_char_button.width
-        for label,toggle in [(self.affects_char_label, self.ui.selected_tool.affects_char), (self.affects_fg_label, self.ui.selected_tool.affects_fg_color), (self.affects_bg_label, self.ui.selected_tool.affects_bg_color)]:
-            self.art.write_string(0, 0, x+w+1, y, '%s' % label)
-            #self.art.set_tile_at(0, 0, x, y, get_affects_char(toggle), 4, 2)
-            self.art.set_char_index_at(0, 0, x+1, y, get_affects_char(toggle))
+        if self.ui.selected_tool.affects_masks:
+            # affects char/fg/bg settings
+            self.toggle_affect_char_button.visible = True
+            self.toggle_affect_fg_button.visible = True
+            self.toggle_affect_bg_button.visible = True
+            self.toggle_affect_xform_button.visible = True
+            y += 2
+            self.art.write_string(0, 0, x, y, self.affects_heading_label)
             y += 1
+            # set affects-* button labels AND captions
+            def get_affects_char(affects):
+                return [0, self.check_char_index][affects]
+            w = self.toggle_affect_char_button.width
+            label_toggle_pairs = []
+            label_toggle_pairs += [(self.affects_char_label, self.ui.selected_tool.affects_char)]
+            label_toggle_pairs += [(self.affects_fg_label, self.ui.selected_tool.affects_fg_color)]
+            label_toggle_pairs += [(self.affects_bg_label, self.ui.selected_tool.affects_bg_color)]
+            label_toggle_pairs += [(self.affects_xform_label, self.ui.selected_tool.affects_xform)]
+            for label,toggle in label_toggle_pairs:
+                self.art.write_string(0, 0, x+w+1, y, '%s' % label)
+                #self.art.set_tile_at(0, 0, x, y, get_affects_char(toggle), 4, 2)
+                self.art.set_char_index_at(0, 0, x+1, y, get_affects_char(toggle))
+                y += 1
+        else:
+            self.toggle_affect_char_button.visible = False
+            self.toggle_affect_fg_button.visible = False
+            self.toggle_affect_bg_button.visible = False
+            self.toggle_affect_xform_button.visible = False
     
     def reset_art(self):
         self.charset_swatch.reset_art()
@@ -433,6 +456,12 @@ class ToolPopup(UIElement):
             return
         self.visible = True
         self.reset_loc()
+    
+    def toggle(self):
+        if self.visible:
+            self.hide()
+        else:
+            self.show()
     
     def reset_loc(self):
         x, y = self.ui.get_screen_coords(self.ui.app.mouse_x, self.ui.app.mouse_y)
