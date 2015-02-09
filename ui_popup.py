@@ -3,7 +3,7 @@ from ui_element import UIElement, UIArt, UIRenderable
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_swatch import CharacterSetSwatch, PaletteSwatch
 from ui_colors import UIColors
-from renderable_line import LineRenderable, SelectionBoxRenderable
+from renderable_line import LineRenderable, SwatchSelectionBoxRenderable
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
 
 TOOL_PANE_WIDTH = 10
@@ -163,7 +163,7 @@ class ToolPopup(UIElement):
         self.ui = ui
         self.charset_swatch = CharacterSetSwatch(ui, self)
         self.palette_swatch = PaletteSwatch(ui, self)
-        self.cursor_box = SelectionBoxRenderable(ui.app, self.charset_swatch.art)
+        self.cursor_box = SwatchSelectionBoxRenderable(ui.app, self.charset_swatch.art)
         self.renderables = [self.cursor_box]
         # set by swatch.set_cursor_loc based on selection validity
         self.cursor_char = -1
@@ -266,6 +266,9 @@ class ToolPopup(UIElement):
     
     def text_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.text_tool)
+    
+    def select_tool_button_pressed(self):
+        self.ui.set_selected_tool(self.ui.select_tool)
     
     def set_xform(self, new_xform):
         "tells UI elements to respect new xform"

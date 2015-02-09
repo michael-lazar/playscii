@@ -3,6 +3,7 @@ import sdl2
 from edit_command import EditCommandTile
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
 from key_shifts import shift_map
+from selection import SelectionRenderable
 
 class UITool:
     
@@ -253,3 +254,75 @@ class TextTool(UITool):
             self.cursor.y -= 1
         if -self.cursor.y >= self.ui.active_art.height:
             self.finish_entry()
+
+
+class SelectTool(UITool):
+    
+    name = 'select'
+    button_caption = 'Select'
+    brush_size = None
+    show_preview = False
+    
+    def __init__(self, ui):
+        UITool.__init__(self, ui)
+        self.selection_in_progress = False
+        # list of all tiles (frame, layer, x, y) that have been selected
+        self.selected_tiles, self.last_selection = [], []
+        # list of tiles being selected in a drag that's active right now
+        self.current_drag, self.last_drag = [], []
+        self.drag_start_x, self.drag_start_y = -1, -1
+        # create selected tiles and current drag LineRenderables
+        self.selection_renderable = SelectionRenderable(self.ui.app, self.ui.active_art)
+        self.drag_renderable = SelectionRenderable(self.ui.app, self.ui.active_art)
+    
+    def start_select(self):
+        self.selection_in_progress = True
+        self.current_drag = []
+        x, y = self.ui.app.cursor.x, int(-self.ui.app.cursor.y)
+        frame, layer = self.ui.active_frame, self.ui.active_layer
+        #self.current_drag.append((frame, layer, x, y))
+        self.drag_start_x, self.drag_start_y = x, y
+        print('started select drag at %s,%s' % (x, y))
+    
+    def finish_select(self):
+        self.selection_in_progress = False
+        self.current_drag = []
+        x, y = self.ui.app.cursor.x, int(-self.ui.app.cursor.y)
+        print('finished select drag at %s,%s' % (x, y))
+    
+    def update(self):
+        # update drag based on cursor
+        # context: cursor has already updated, UI.update calls this
+        if self.selection_in_progress and self.ui.app.cursor.moved_this_frame():
+            self.current_drag = []
+            frame, layer = self.ui.active_frame, self.ui.active_layer
+            start_x, end_x = self.drag_start_x, int(self.ui.app.cursor.x)
+            start_y, end_y = self.drag_start_y, int(-self.ui.app.cursor.y)
+            if start_x > end_x:
+                swap = start_x
+                start_x = end_x
+                end_x = swap
+            if start_y > end_y:
+                swap = start_y
+                start_y = end_y
+                end_y = swap
+            for y in range(start_y, end_y):
+                for x in range(start_x, end_x):
+                    self.current_drag.append((frame, layer, x, y))
+        #print(self.current_drag)
+        # if selection or drag tiles have updated since last update,
+        # tell our renderables to update
+        if self.selected_tiles != self.last_selection:
+            self.select_renderable.rebuild_geo(self.selected_tiles)
+            self.select_renderable.rebind_buffers()
+        if self.current_drag != self.last_drag:
+            self.drag_renderable.rebuild_geo(self.current_drag)
+            self.drag_renderable.rebind_buffers()
+        self.last_selection = self.selected_tiles[:]
+        self.last_drag = self.current_drag[:]
+    
+    def render_selections(self, elapsed_time):
+        if len(self.selected_tiles) > 0:
+            self.select_renderable.render(elapsed_time)
+        if len(self.current_drag) > 0:
+            self.drag_renderable.render(elapsed_time)

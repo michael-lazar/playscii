@@ -195,6 +195,9 @@ class Cursor:
         self.app.ui.active_art.command_stack.commit_commands(self.current_command)
         self.current_command = None
     
+    def moved_this_frame(self):
+        return self.last_x != self.x or self.last_y != self.y
+    
     def update(self, elapsed_time):
         # save old positions before update
         self.last_x, self.last_y = self.x, self.y
@@ -208,7 +211,7 @@ class Cursor:
             self.moved = True
         # bail if camera/mouse/keyboard move unchanged
         elif not self.moved:
-           return 
+           return
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         char_aspect = w / h

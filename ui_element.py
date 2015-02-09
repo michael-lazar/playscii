@@ -174,7 +174,7 @@ class MessageLineUI(UIElement):
     snap_left = True
     # just info, don't bother with hover, click etc
     can_hover = False
-    hold_time = 1
+    default_hold_time = 1
     fade_rate = 0.025
     
     def __init__(self, ui):
@@ -182,6 +182,7 @@ class MessageLineUI(UIElement):
         # line we're currently displaying (even after fading out)
         self.line = ''
         self.last_post = self.ui.app.elapsed_time
+        self.hold_time = self.default_hold_time
         self.alpha = 1
     
     def reset_art(self):
@@ -192,7 +193,8 @@ class MessageLineUI(UIElement):
         self.y = 1- self.art.quad_height
         UIElement.reset_loc(self)
     
-    def post_line(self, new_line):
+    def post_line(self, new_line, hold_time=None):
+        self.hold_time = hold_time or self.default_hold_time
         "write a line to this element (without polluting console log with it)"
         self.line = new_line
         self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
