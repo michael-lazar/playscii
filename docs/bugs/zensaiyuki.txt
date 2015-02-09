@@ -1,0 +1,51 @@
+Playscii v0.3.1
+OpenGL detected: 4.1 INTEL-10.2.46
+GLSL detected: 4.10
+Vertex Array Object support found.
+creating new document art/new.psci
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/latebind.py", line 41, in __call__
+    return self._finalCall( *args, **named )
+TypeError: 'NoneType' object is not callable
+ 
+During handling of the above exception, another exception occurred:
+ 
+Traceback (most recent call last):
+  File "playscii.py", line 664, in <module>
+    app = Application(log_file, log_lines, file_to_load)
+  File "playscii.py", line 123, in __init__
+    self.load_art(art_filename)
+  File "playscii.py", line 187, in load_art
+    art = self.new_art(filename)
+  File "playscii.py", line 163, in new_art
+    charset = self.load_charset(self.starting_charset)
+  File "playscii.py", line 223, in load_charset
+    new_charset = CharacterSet(self, charset_to_load, log)
+  File "/Users/bretonslivka/Downloads/JPLeBreton-playscii-337ccff3951d/charset.py", line 74, in __init__
+    self.texture = Texture(img.tostring(), self.image_width, self.image_height)
+  File "/Users/bretonslivka/Downloads/JPLeBreton-playscii-337ccff3951d/texture.py", line 16, in __init__
+    self.gltex = GL.glGenTextures(1)
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/latebind.py", line 61, in __call__
+    return self.wrapperFunction( self.baseFunction, *args, **named )
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/GL/exceptional.py", line 178, in glGenTextures
+    baseFunction( count, textures)
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/latebind.py", line 45, in __call__
+    return self._finalCall( *args, **named )
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/wrapper.py", line 664, in wrapperCall
+    raise err
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/wrapper.py", line 657, in wrapperCall
+    result = wrappedOperation( *cArguments )
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/platform/baseplatform.py", line 402, in __call__
+    return self( *args, **named )
+  File "/usr/local/lib/python3.4/site-packages/OpenGL/error.py", line 232, in glCheckError
+    baseOperation = baseOperation,
+OpenGL.error.GLError: GLError(
+        err = 1282,
+        description = b'invalid operation',
+        baseOperation = glGenTextures,
+        pyArgs = (1, c_uint(1)),
+        cArgs = (1, <cparam 'P' (0x101e1dbc0)>),
+        cArguments = (1, <cparam 'P' (0x101e1dbc0)>)
+)
+zenpsycho:JPLeBreton-playscii-337ccff3951d bretonslivka$
+

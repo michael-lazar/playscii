@@ -133,6 +133,7 @@ class Application:
         self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         self.init_success = True
         self.log('init done.')
+        self.ui.message_line.post_line('Welcome to Playscii! Press SPACE to select characters and colors to paint.', 10)
     
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu or Windows,
@@ -441,8 +442,10 @@ class Application:
                     self.ui.set_selected_tool(self.ui.erase_tool)
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.ui.set_selected_tool(self.ui.rotate_tool)
-                elif event.key.keysym.sym == sdl2.SDLK_t:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     self.ui.set_selected_tool(self.ui.text_tool)
+                elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_s:
+                    self.ui.set_selected_tool(self.ui.select_tool)
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
                     self.ui.popup.show()
@@ -507,6 +510,11 @@ class Application:
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
                     if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
+                    elif self.ui.selected_tool is self.ui.select_tool:
+                        if self.ui.select_tool.selection_in_progress:
+                            self.ui.select_tool.finish_select()
+                        else:
+                            self.ui.select_tool.start_select()
                     else:
                         self.cursor.start_paint()
                 # q does quick grab
@@ -561,14 +569,21 @@ class Application:
                     self.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)
+                # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                    if self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
+                        self.ui.select_tool.finish_select()
+                    elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
+                # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
+                    elif self.ui.selected_tool is self.ui.select_tool:
+                        if not self.ui.select_tool.selection_in_progress:
+                            self.ui.select_tool.start_select()
                     else:
                         self.cursor.start_paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
@@ -625,8 +640,10 @@ class Application:
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         for r in self.edit_renderables:
             r.render(self.elapsed_time)
+        # draw selection grid, then selection, then cursor
         if self.grid.visible:
             self.grid.render(self.elapsed_time)
+        self.ui.select_tool.render_selections(self.elapsed_time)
         if not self.ui.popup.visible and not self.ui.console.visible:
             self.cursor.render(self.elapsed_time)
         # draw framebuffer to screen

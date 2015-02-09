@@ -2,7 +2,7 @@ import math, time
 import numpy as np
 
 from ui_element import UIElement, UIArt, UIRenderable
-from renderable_line import LineRenderable, SelectionBoxRenderable, UIRenderableX
+from renderable_line import LineRenderable, SwatchSelectionBoxRenderable, UIRenderableX
 
 class UISwatch(UIElement):
     
@@ -92,7 +92,7 @@ class CharacterSetSwatch(UISwatch):
     
     def reset(self):
         UISwatch.reset(self)
-        self.selection_box = SelectionBoxRenderable(self.ui.app, self.art)
+        self.selection_box = SwatchSelectionBoxRenderable(self.ui.app, self.art)
         self.grid = CharacterGridRenderable(self.ui.app, self.art)
         self.renderables += self.selection_box, self.grid
     
@@ -170,8 +170,8 @@ class PaletteSwatch(UISwatch):
     def reset(self):
         UISwatch.reset(self)
         self.transparent_x = UIRenderableX(self.ui.app, self.art)
-        self.fg_selection_box = SelectionBoxRenderable(self.ui.app, self.art)
-        self.bg_selection_box = SelectionBoxRenderable(self.ui.app, self.art)
+        self.fg_selection_box = SwatchSelectionBoxRenderable(self.ui.app, self.art)
+        self.bg_selection_box = SwatchSelectionBoxRenderable(self.ui.app, self.art)
         # F label for FG color selection
         self.f_art = ColorSelectionLabelArt(self.ui, 'F')
         # make character dark

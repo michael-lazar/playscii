@@ -138,7 +138,7 @@ class UIRenderableX(LineRenderable):
         self.color_array = np.array([self.color * 4], dtype=np.float32)
 
 
-class SelectionBoxRenderable(LineRenderable):
+class SwatchSelectionBoxRenderable(LineRenderable):
     
     "used for UI selection boxes etc"
     
