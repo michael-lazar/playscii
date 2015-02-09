@@ -31,3 +31,6 @@ Camera.start_zoom = 15
 
 # test pattern - changes random tiles each frame, uncomment for pretty tilenoise
 #Application.test_mutate_each_frame = True
+
+# press space to show/hide main popup rather than holding space
+#UI.popup_hold_to_show = False

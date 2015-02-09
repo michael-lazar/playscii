@@ -426,13 +426,13 @@ class Application:
                 elif event.key.keysym.sym == sdl2.SDLK_2:
                     self.ui.selected_tool.increase_brush_size()
                 # c/f/b/x: set current tool affects char/fg/bg/xform
-                elif event.key.keysym.sym == sdl2.SDLK_c:
+                elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_c:
                     self.ui.selected_tool.toggle_affects_char()
                 elif event.key.keysym.sym == sdl2.SDLK_f:
                     self.ui.selected_tool.toggle_affects_fg()
                 elif event.key.keysym.sym == sdl2.SDLK_b:
                     self.ui.selected_tool.toggle_affects_bg()
-                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_x:
+                elif not shift_pressed and not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_x:
                     self.ui.selected_tool.toggle_affects_xform()
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
@@ -446,9 +446,19 @@ class Application:
                     self.ui.set_selected_tool(self.ui.text_tool)
                 elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_s:
                     self.ui.set_selected_tool(self.ui.select_tool)
+                # ctrl-x/c/v: cut/copy/paste
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_x:
+                    self.ui.cut_selection()
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_c:
+                    self.ui.copy_selection()
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_v:
+                    self.ui.paste_selection()
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
-                    self.ui.popup.show()
+                    if self.ui.popup_hold_to_show:
+                        self.ui.popup.show()
+                    else:
+                        self.ui.popup.toggle()
                 # 3/4/5/6 select next/previous char/fg/bg/xform
                 elif event.key.keysym.sym == sdl2.SDLK_3:
                     if shift_pressed:
@@ -559,7 +569,9 @@ class Application:
             elif event.type == sdl2.SDL_KEYUP:
                 # spacebar up: dismiss selector popup
                 if event.key.keysym.sym == sdl2.SDLK_SPACE:
-                    self.ui.popup.hide()
+                    # ..but only for default hold-to-show setting
+                    if self.ui.popup_hold_to_show:
+                        self.ui.popup.hide()
                 elif not alt_pressed and event.key.keysym.sym == sdl2.SDLK_RETURN:
                     if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.cursor.finish_paint()

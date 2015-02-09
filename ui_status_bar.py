@@ -9,7 +9,7 @@ class StatusBarUI(UIElement):
     
     snap_bottom = True
     snap_left = True
-    dim_color = 7
+    dim_color = 12
     char_label = 'ch:'
     fg_label = 'fg:'
     bg_label = 'bg:'
@@ -45,7 +45,7 @@ class StatusBarUI(UIElement):
         self.bg_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.bg_renderable = UIRenderable(ui.app, self.bg_art)
         # "dimmed out" box
-        self.dim_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width + len(self.char_label), 1)
+        self.dim_art = UIArt(art_name, ui.app, ui.charset, ui.palette, self.swatch_width + len(self.char_label), 1)
         self.dim_renderable = UIRenderable(ui.app, self.dim_art)
         self.dim_renderable.alpha = 0.75
         # set some properties in bulk

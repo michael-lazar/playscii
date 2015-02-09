@@ -25,6 +25,7 @@ class UI:
     grain_texture = 'bgnoise_alpha.png'
     visible = True
     logg = False
+    popup_hold_to_show = True
     tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool ]
     tool_selected_log = 'tool selected'
     art_selected_log = 'Now editing'
@@ -220,8 +221,11 @@ class UI:
     
     def set_active_layer(self, new_layer):
         self.active_layer = min(max(0, new_layer), self.active_art.layers-1)
-        self.app.grid.z = self.active_art.layers_z[self.active_layer]
-        self.app.cursor.z = self.active_art.layers_z[self.active_layer]
+        z = self.active_art.layers_z[self.active_layer]
+        self.app.grid.z = z
+        self.select_tool.select_renderable.z = z
+        self.select_tool.drag_renderable.z = z
+        self.app.cursor.z = z
         self.app.update_window_title()
         self.tool_settings_changed = True
         self.message_line.post_line('%s %s' % (self.layer_selected_log, self.active_layer + 1))
@@ -251,6 +255,21 @@ class UI:
         self.selected_fg_color, self.selected_bg_color = bg, fg
         self.tool_settings_changed = True
         self.message_line.post_line(self.swap_color_log)
+    
+    def cut_selection(self):
+        # TODO: convert current selection tiles (active frame+layer) into
+        # EditCommandTiles for Cursor.preview_edits, switch to PasteTool.
+        # clear tiles in selection
+        pass
+    
+    def copy_selection(self):
+        # same as above, but don't clear tiles in selection
+        pass
+    
+    def paste_selection(self):
+        # TODO: treat Paste command very much like any other tool, commit
+        # cursor's preview edits to the undo stack
+        pass
     
     def get_screen_coords(self, window_x, window_y):
         x = (2 * window_x) / self.app.window_width - 1
