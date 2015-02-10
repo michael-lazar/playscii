@@ -1,10 +1,9 @@
 TODO
 
+Playscii dev update 11: https://www.youtube.com/watch?v=cQ6RR9vnVxY Select/cut/paste, rotate/flip characters.
+
 select tool
-- cut/copy-paste from layer A to B should work
 - identify and fix specific undo weirdness bugs
-- select tool should always show 1 tile cursor
-- hide cursor for paste tool
 
 mockup for menu bar, frame/layer matrix
 

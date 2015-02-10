@@ -365,7 +365,12 @@ class PasteTool(UITool):
         for tile_command in self.ui.clipboard:
             # deep copy of each clipboard command
             new_command = tile_command.copy()
+            # not much depends on EditCommand.art at the moment, set it just
+            # to be safe
+            # TODO: determine whether it makes sense to remove it entirely
+            new_command.art = art
             frame, layer, x, y = new_command.frame, new_command.layer, new_command.x, new_command.y
+            layer = self.ui.active_layer
             # offset cursor position, center paste on cursor
             x += self.ui.app.cursor.x - int(self.ui.clipboard_width / 2)
             y -= self.ui.app.cursor.y + int(self.ui.clipboard_height / 2)
