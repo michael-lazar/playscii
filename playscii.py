@@ -38,7 +38,7 @@ CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 
-VERSION = '0.3.2'
+VERSION = '0.3.4'
 
 class Application:
     

@@ -215,8 +215,8 @@ class TileRenderable:
     def get_scale(self):
         if not self.exporting:
             return (self.scale_x, self.scale_y, self.scale_z)
-        x = 2 / self.art.width
-        y = 2 / self.art.height
+        x = 2 / (self.art.width * self.art.quad_width)
+        y = 2 / (self.art.height * self.art.quad_height)
         return (x, y, 1)
     
     def render_for_export(self):

@@ -1,7 +1,5 @@
 TODO
 
-Playscii dev update 11: https://www.youtube.com/watch?v=cQ6RR9vnVxY Select/cut/paste, rotate/flip characters.
-
 select tool
 - identify and fix specific undo weirdness bugs
 
