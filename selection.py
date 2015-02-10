@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from renderable_line import LineRenderable
@@ -71,6 +72,7 @@ class SelectionRenderable(LineRenderable):
     def get_view_matrix(self):
         return self.app.camera.view_matrix
     
-    def render(self, elapsed_time):
-        LineRenderable.render(self, elapsed_time)
-        #print('hi')
+    def get_color(self, elapsed_time):
+        # pulse for visibility
+        a = 0.75 + (math.sin(elapsed_time / 100) / 2)
+        return (a, a, a, 1)

@@ -174,9 +174,12 @@ class Cursor:
         for edit in self.preview_edits:
             edit.undo()
         # rebuild list of cursor preview commands
-        self.preview_edits = self.app.ui.selected_tool.get_paint_commands()
-        for edit in self.preview_edits:
-            edit.apply()
+        if self.app.ui.selected_tool.show_preview:
+            self.preview_edits = self.app.ui.selected_tool.get_paint_commands()
+            for edit in self.preview_edits:
+                edit.apply()
+        else:
+            self.preview_edits = []
     
     def start_paint(self):
         if self.app.ui.popup.visible or self.app.ui.console.visible:

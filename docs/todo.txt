@@ -1,17 +1,10 @@
 TODO
 
 select tool
-- selected tiles and renderable are stored in select tool
--- two renderables: one for selected tiles, another for selection while dragging
-- left click draws/adds to existing selection
-- right click / alt-left click subtracts from selection
-- ctrl-a selects entire art, ctrl-d / ESC selects none, ctrl-i inverts selection
-- selection area outlined with a pulsing white LineRenderable
--- same with current drag area - some way to visually distinguish them when overlapping?
-- refresh selection outline (once) each time a tile is added or removed from selection: iterate over all selected tiles, apply rules to draw lines at its borders, pass lines to line renderable
-- paint tool operations only affect selected tiles
-- selection follows changes of active layer
-- ctrl-x ctrl-c ctrl-v work as expected.  del erases selected area to BG. ctrl-v creates a preview on cursor, a la edscii
+- cut/copy-paste from layer A to B should work
+- identify and fix specific undo weirdness bugs
+- select tool should always show 1 tile cursor
+- hide cursor for paste tool
 
 mockup for menu bar, frame/layer matrix
 

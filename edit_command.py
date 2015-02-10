@@ -32,6 +32,10 @@ class EditCommand:
 
 class EditCommandTile:
     
+    serialized_items = ['frame', 'layer', 'x', 'y',
+                        'b_char', 'b_fg', 'b_bg', 'b_xform',
+                        'a_char', 'a_fg', 'a_bg', 'a_xform']
+    
     def __init__(self, art):
         self.art = art
         self.creation_time = self.art.app.elapsed_time
@@ -43,13 +47,20 @@ class EditCommandTile:
         return s
     
     def __eq__(self, value):
-        items = ['frame', 'layer', 'x', 'y',
-                 'b_char', 'b_fg', 'b_bg', 'b_xform',
-                 'a_char', 'a_fg', 'a_bg', 'a_xform']
-        for item in items:
+        for item in self.serialized_items:
             if getattr(self, item) != getattr(value, item):
                 return False
         return True
+    
+    def copy(self):
+        "returns a deep copy of this tile command"
+        new_ect = EditCommandTile(self.art)
+        # TODO: old or new timestamp? does it matter?
+        new_ect.creation_time = self.art.app.elapsed_time
+        for item in self.serialized_items:
+            if hasattr(self, item):
+                setattr(new_ect, item, getattr(self, item))
+        return new_ect
     
     def set_tile(self, frame, layer, x, y):
         self.frame, self.layer = frame, layer

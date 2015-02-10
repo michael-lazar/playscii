@@ -99,6 +99,10 @@ class PencilTool(UITool):
             # don't allow painting out of bounds
             if not art.is_tile_inside(*tile):
                 continue
+            # if a selection is active, only paint inside it
+            if len(self.ui.select_tool.selected_tiles) > 0:
+                if not self.ui.select_tool.selected_tiles.get(tile, False):
+                    continue
             new_tile_command = EditCommandTile(art)
             new_tile_command.set_tile(frame, layer, *tile)
             b_char, b_fg, b_bg, b_xform = art.get_tile_at(frame, layer, *tile)
@@ -211,6 +215,7 @@ class TextTool(UITool):
         art = self.ui.active_art
         frame, layer = self.ui.active_frame, self.ui.active_layer
         x, y = self.cursor.x, -self.cursor.y
+        # TODO: if cursor isn't inside selection, bail early
         if keystr == 'Return':
             if self.cursor.y < art.width:
                 self.cursor.x = self.start_x
@@ -342,3 +347,42 @@ class SelectTool(UITool):
             self.select_renderable.render(elapsed_time)
         if len(self.current_drag) > 0:
             self.drag_renderable.render(elapsed_time)
+
+
+class PasteTool(UITool):
+    
+    name = 'paste'
+    button_caption = 'Paste'
+    brush_size = None
+    
+    def get_paint_commands(self):
+        # for each command in UI.clipboard, update edit command tile with
+        # set_before so we can hover/undo/redo properly
+        commands = []
+        # similar to PencilTool's get_paint_commands, but "tiles under brush"
+        # isn't as straightforward here
+        art = self.ui.active_art
+        for tile_command in self.ui.clipboard:
+            # deep copy of each clipboard command
+            new_command = tile_command.copy()
+            frame, layer, x, y = new_command.frame, new_command.layer, new_command.x, new_command.y
+            # offset cursor position, center paste on cursor
+            x += self.ui.app.cursor.x - int(self.ui.clipboard_width / 2)
+            y -= self.ui.app.cursor.y + int(self.ui.clipboard_height / 2)
+            if not (0 <= x < art.width and 0 <= y < art.height):
+                continue
+            # if a selection is active, only paint inside it
+            if len(self.ui.select_tool.selected_tiles) > 0:
+                if not self.ui.select_tool.selected_tiles.get((x, y), False):
+                    continue
+            b_char, b_fg, b_bg, b_xform = self.ui.active_art.get_tile_at(frame, layer, x, y)
+            new_command.set_before(b_char, b_fg, b_bg, b_xform)
+            new_command.set_tile(frame, layer, x, y)
+            # respect affects masks like other tools
+            a_char = new_command.a_char if self.affects_char else b_char
+            a_fg = new_command.a_fg if self.affects_fg_color else b_fg
+            a_bg = new_command.a_bg if self.affects_bg_color else b_bg
+            a_xform = new_command.a_xform if self.affects_xform else b_xform
+            new_command.set_after(a_char, a_fg, a_bg, a_xform)
+            commands.append(new_command)
+        return commands
