@@ -145,8 +145,14 @@ class UI:
         new_charset = self.active_art.charset
         new_palette = self.active_art.palette
         # change active frame and layer if new active art doesn't have that many
-        self.active_frame = min(self.active_frame, self.active_art.frames)
-        self.active_layer = min(self.active_layer, self.active_art.layers)
+        self.active_frame = min(self.active_frame, self.active_art.frames - 1)
+        self.active_layer = min(self.active_layer, self.active_art.layers - 1)
+        # make sure selection isn't out of bounds in new art
+        old_selection = self.select_tool.selected_tiles.copy()
+        for tile in old_selection:
+            x, y = tile[0], tile[1]
+            if x >= new_art.width or y >= new_art.height:
+                self.select_tool.selected_tiles.pop(tile, None)
         # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)

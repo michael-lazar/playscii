@@ -228,6 +228,8 @@ class Cursor:
             size_offset = math.ceil(size / 2) - 1
             self.x -= size_offset
             self.y += size_offset
+        else:
+            self.scale_x = self.scale_y = 1
         self.update_cursor_preview()
         if self.moved or self.x != self.last_x or self.y != self.last_y:
             self.entered_new_tile()
