@@ -277,6 +277,9 @@ class ToolPopup(UIElement):
     def select_tool_button_pressed(self):
         self.ui.set_selected_tool(self.ui.select_tool)
     
+    def paste_tool_button_pressed(self):
+        self.ui.set_selected_tool(self.ui.paste_tool)
+    
     def set_xform(self, new_xform):
         "tells UI elements to respect new xform"
         self.charset_swatch.set_xform(new_xform)

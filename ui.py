@@ -8,8 +8,9 @@ from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_colors import UIColors
-from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool
+from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
+from edit_command import EditCommand, EditCommandTile
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -26,7 +27,7 @@ class UI:
     visible = True
     logg = False
     popup_hold_to_show = True
-    tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool ]
+    tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool ]
     tool_selected_log = 'tool selected'
     art_selected_log = 'Now editing'
     frame_selected_log = 'Now editing frame'
@@ -75,6 +76,12 @@ class UI:
             # stick in a list for popup tool tab
             self.tools.append(new_tool)
         self.selected_tool = self.pencil_tool
+        # clipboard: list of EditCommandTiles, set by cut/copy, used by paste
+        self.clipboard = []
+        # track clipboard contents' size so we don't have to recompute it every
+        # cursor preview update
+        self.clipboard_width = 0
+        self.clipboard_height = 0
         # create elements
         self.elements = []
         self.hovered_elements = []
@@ -257,19 +264,79 @@ class UI:
         self.message_line.post_line(self.swap_color_log)
     
     def cut_selection(self):
-        # TODO: convert current selection tiles (active frame+layer) into
-        # EditCommandTiles for Cursor.preview_edits, switch to PasteTool.
-        # clear tiles in selection
-        pass
+        self.copy_selection()
+        self.erase_tiles_in_selection()
+    
+    def erase_tiles_in_selection(self):
+        # create and commit command group to clear all tiles in selection
+        frame, layer = self.active_frame, self.active_layer
+        new_command = EditCommand(self.active_art)
+        for tile in self.select_tool.selected_tiles:
+            new_tile_command = EditCommandTile(self.active_art)
+            new_tile_command.set_tile(frame, layer, *tile)
+            b_char, b_fg, b_bg, b_xform = self.active_art.get_tile_at(frame, layer, *tile)
+            new_tile_command.set_before(b_char, b_fg, b_bg, b_xform)
+            a_char = a_fg = 0
+            a_xform = UV_NORMAL
+            # clear to current BG
+            a_bg = self.selected_bg_color
+            new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
+            new_command.add_command_tiles(new_tile_command)
+        new_command.apply()
+        self.active_art.command_stack.commit_commands(new_command)
     
     def copy_selection(self):
-        # same as above, but don't clear tiles in selection
-        pass
+        # convert current selection tiles (active frame+layer) into
+        # EditCommandTiles for Cursor.preview_edits
+        # (via PasteTool get_paint_commands)
+        self.clipboard = []
+        frame, layer = self.active_frame, self.active_layer
+        min_x, min_y = 9999, 9999
+        max_x, max_y = -1, -1
+        for tile in self.select_tool.selected_tiles:
+            x, y = tile[0], tile[1]
+            if x < min_x:
+                min_x = x
+            elif x > max_x:
+                max_x = x
+            if y < min_y:
+                min_y = y
+            elif y > max_y:
+                max_y = y
+            art = self.active_art
+            new_tile_command = EditCommandTile(art)
+            new_tile_command.set_tile(frame, layer, x, y)
+            a_char, a_fg, a_bg, a_xform = art.get_tile_at(frame, layer, x, y)
+            # set data as "after" state, before will be set by cursor hover
+            new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
+            self.clipboard.append(new_tile_command)
+        # rebase tiles at top left corner of clipboard tiles
+        for tile_command in self.clipboard:
+            x = tile_command.x - min_x
+            y = tile_command.y - min_y
+            tile_command.set_tile(frame, layer, x, y)
+        self.clipboard_width = max_x - min_x
+        self.clipboard_height = max_y - min_y
+        # switch to PasteTool
+        self.set_selected_tool(self.paste_tool)
+        self.tool_settings_changed = True
     
-    def paste_selection(self):
-        # TODO: treat Paste command very much like any other tool, commit
-        # cursor's preview edits to the undo stack
-        pass
+    def select_none(self):
+        self.select_tool.selected_tiles = {}
+    
+    def select_all(self):
+        self.select_tool.selected_tiles = {}
+        for y in range(self.active_art.height):
+            for x in range(self.active_art.width):
+                self.select_tool.selected_tiles[(x, y)] = True
+    
+    def invert_selection(self):
+        old_selection = self.select_tool.selected_tiles.copy()
+        self.select_tool.selected_tiles = {}
+        for y in range(self.active_art.height):
+            for x in range(self.active_art.width):
+                if not old_selection.get((x, y), False):
+                    self.select_tool.selected_tiles[(x, y)] = True
     
     def get_screen_coords(self, window_x, window_y):
         x = (2 * window_x) / self.app.window_width - 1

@@ -436,7 +436,7 @@ class Application:
                     self.ui.selected_tool.toggle_affects_xform()
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
-                elif event.key.keysym.sym == sdl2.SDLK_a:
+                elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_a:
                     self.ui.set_selected_tool(self.ui.pencil_tool)
                 elif event.key.keysym.sym == sdl2.SDLK_e:
                     self.ui.set_selected_tool(self.ui.erase_tool)
@@ -451,8 +451,22 @@ class Application:
                     self.ui.cut_selection()
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_c:
                     self.ui.copy_selection()
-                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_v:
-                    self.ui.paste_selection()
+                # paste is a tool, like rubber stamp, not a command
+                elif event.key.keysym.sym == sdl2.SDLK_v:
+                    self.ui.set_selected_tool(self.ui.paste_tool)
+                # ctrl-d / ESC: clear selection
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_d:
+                    self.ui.select_none()
+                elif event.key.keysym.sym == sdl2.SDLK_ESCAPE:
+                    self.ui.select_none()
+                # ctrl-a: select all
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_a:
+                    self.ui.select_all()
+                # ctrl-i: invert selection
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_i:
+                    self.ui.invert_selection()
+                elif event.key.keysym.sym == sdl2.SDLK_DELETE:
+                    self.ui.erase_tiles_in_selection()
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
                     if self.ui.popup_hold_to_show:
