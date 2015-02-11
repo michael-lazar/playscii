@@ -27,6 +27,8 @@ class UITool:
         self.affects_xform = True
     
     def toggle_affects_char(self):
+        if not self.affects_masks:
+            return
         self.affects_char = not self.affects_char
         self.ui.tool_settings_changed = True
         line = self.button_caption + ' '
@@ -34,18 +36,24 @@ class UITool:
         self.ui.message_line.post_line(line)
     
     def toggle_affects_fg(self):
+        if not self.affects_masks:
+            return
         self.affects_fg_color = not self.affects_fg_color
         self.ui.tool_settings_changed = True
         line = '%s %s' % (self.button_caption, [self.ui.affects_fg_on_log, self.ui.affects_fg_off_log][self.affects_fg_color])
         self.ui.message_line.post_line(line)
     
     def toggle_affects_bg(self):
+        if not self.affects_masks:
+            return
         self.affects_bg_color = not self.affects_bg_color
         self.ui.tool_settings_changed = True
         line = '%s %s' % (self.button_caption, [self.ui.affects_bg_on_log, self.ui.affects_bg_off_log][self.affects_bg_color])
         self.ui.message_line.post_line(line)
     
     def toggle_affects_xform(self):
+        if not self.affects_masks:
+            return
         self.affects_xform = not self.affects_xform
         self.ui.tool_settings_changed = True
         line = '%s %s' % (self.button_caption, [self.ui.affects_xform_on_log, self.ui.affects_xform_off_log][self.affects_xform])
@@ -188,7 +196,6 @@ class TextTool(UITool):
         self.cursor = None
     
     def start_entry(self):
-        # TODO: call this instead of setting input_active directly
         self.cursor = self.ui.app.cursor
         self.input_active = True
         self.reset_cursor_start(self.cursor.x, -self.cursor.y)
@@ -355,6 +362,8 @@ class PasteTool(UITool):
     button_caption = 'Paste'
     brush_size = None
     
+    # TODO!: dragging large pastes around seems heck of slow, investigate
+    # why this function might be to blame and see if there's a fix!
     def get_paint_commands(self):
         # for each command in UI.clipboard, update edit command tile with
         # set_before so we can hover/undo/redo properly

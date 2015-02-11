@@ -126,6 +126,9 @@ class Application:
         self.cursor, self.grid = None, None
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded[0])
+        # set camera bounds based on art size
+        self.camera.max_x = self.ui.active_art.width
+        self.camera.min_y = -self.ui.active_art.height
         self.update_window_title()
         self.cursor = Cursor(self)
         self.grid = Grid(self, self.ui.active_art)
@@ -136,8 +139,7 @@ class Application:
         self.ui.message_line.post_line('Welcome to Playscii! Press SPACE to select characters and colors to paint.', 10)
     
     def set_icon(self):
-        # TODO: this doesn't seem to work in Ubuntu or Windows,
-        # what am i missing?
+        # TODO: this doesn't seem to work in Ubuntu, what am i missing?
         img = Image.open(LOGO_FILENAME).convert('RGBA')
         # does icon need to be a specific size?
         img = img.resize((32, 32), Image.ANTIALIAS)
@@ -436,7 +438,7 @@ class Application:
                     self.ui.selected_tool.toggle_affects_xform()
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_r:
                     self.fb.toggle_crt()
-                elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_a:
+                elif not ctrl_pressed and not shift_pressed and event.key.keysym.sym == sdl2.SDLK_a:
                     self.ui.set_selected_tool(self.ui.pencil_tool)
                 elif event.key.keysym.sym == sdl2.SDLK_e:
                     self.ui.set_selected_tool(self.ui.erase_tool)
@@ -444,7 +446,7 @@ class Application:
                     self.ui.set_selected_tool(self.ui.rotate_tool)
                 elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     self.ui.set_selected_tool(self.ui.text_tool)
-                elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_s:
+                elif not ctrl_pressed and not shift_pressed and event.key.keysym.sym == sdl2.SDLK_s:
                     self.ui.set_selected_tool(self.ui.select_tool)
                 # ctrl-x/c/v: cut/copy/paste
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_x:
@@ -495,7 +497,7 @@ class Application:
                     else:
                         self.ui.cycle_selected_xform()
                 # w: swap fg/bg color
-                elif event.key.keysym.sym == sdl2.SDLK_w:
+                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_w:
                     self.ui.swap_fg_bg_colors()
                 # ctrl-S: save art
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_s:
