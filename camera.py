@@ -26,10 +26,10 @@ class Camera:
     # kill velocity if below this
     min_velocity = 0.001
     # map extents
-    # TODO: leftover from u4mapvu, generate bounds according to art size
-    min_x,max_x = -50, 50
-    min_y,max_y = -50, 50
-    min_zoom,max_zoom = 2, 50
+    # starting values only, bounds are generated according to art size
+    min_x,max_x = 0, 50
+    min_y,max_y = -50, 0
+    min_zoom,max_zoom = 1, 100
     # matrices -> worldspace renderable vertex shader uniforms
     fov = 90
     near_z = 0.0001
