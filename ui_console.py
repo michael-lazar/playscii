@@ -25,6 +25,7 @@ class SaveCommand(ConsoleCommand):
         if len(args) > 0:
             art.set_filename(' '.join(args))
         art.save_to_file()
+        console.ui.app.update_window_title()
 
 
 class OpenCommand(ConsoleCommand):

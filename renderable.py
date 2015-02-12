@@ -249,18 +249,24 @@ class TileRenderable:
         GL.glUniform1f(self.char_uv_height_uniform, self.art.charset.v_height)
         GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
         GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
-        GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
-        GL.glUniform1f(self.alpha_uniform, self.alpha)
-        GL.glUniform3f(self.position_uniform, *self.get_loc())
-        GL.glUniform3f(self.scale_uniform, *self.get_scale())
         # camera uniforms
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE,
                               self.get_projection_matrix())
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE,
                               self.get_view_matrix())
+        # TODO renderer opti: all the above are probably true of all
+        # game mode renderables!
+        # ie you could set those then render all VAOs changing only the below
+        # uniforms and storing a glDrawElementsBaseVertex value for each layer
+        GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
+        GL.glUniform1f(self.alpha_uniform, self.alpha)
+        GL.glUniform3f(self.position_uniform, *self.get_loc())
+        GL.glUniform3f(self.scale_uniform, *self.get_scale())
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        # TODO renderer opti: use glDrawElementsBaseVertex w/ offset to draw
+        # separate layers?
         GL.glDrawElements(GL.GL_TRIANGLES, self.vert_count,
                           GL.GL_UNSIGNED_INT, self.art.elem_array)
         GL.glDisable(GL.GL_BLEND)

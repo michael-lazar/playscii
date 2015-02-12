@@ -37,6 +37,7 @@ CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
+SCREENSHOT_SUBDIR = 'screenshots'
 
 VERSION = '0.3.4'
 
@@ -289,6 +290,9 @@ class Application:
     
     def screenshot(self):
         "saves a date + time-stamped screenshot"
+        # create screenshot subdir if it doesn't exist
+        if not os.path.exists(SCREENSHOT_SUBDIR):
+            os.mkdir(SCREENSHOT_SUBDIR)
         timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
         output_filename = 'playscii_%s.png' % timestamp
         w, h = self.window_width, self.window_height
@@ -297,7 +301,7 @@ class Application:
         pixel_bytes = pixels.flatten().tobytes()
         img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        img.save(output_filename)
+        img.save('%s/%s' % (SCREENSHOT_SUBDIR, output_filename))
         self.log('Saved screenshot %s' % output_filename)
     
     def export_image(self, art):

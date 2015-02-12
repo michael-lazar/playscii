@@ -13,6 +13,8 @@ http://duriansoftware.com/joe/An-intro-to-modern-OpenGL.-Table-of-Contents.html
 
 http://sdl.beuc.net/sdl.wiki/SDL_Average_FPS_Measurement
 
+http://www.arcsynthesis.org/gltut/Positioning/Tut05%20Optimization%20Base%20Vertex.html - specifically, use of glDrawElementsBaseVertex to draw a single layer from a renderable
+
 
 Tool reference:
 

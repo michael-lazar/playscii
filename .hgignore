@@ -7,3 +7,5 @@ playscii.cfg
 ^art/.+\.png
 ^art/.+\.psci
 ^art/.+\.ed
+^art/.+\.jpg
+screenshots/*.*

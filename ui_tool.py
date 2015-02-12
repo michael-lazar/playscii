@@ -179,6 +179,8 @@ class GrabTool(UITool):
             self.ui.selected_fg_color = art.get_fg_color_index_at(frame, layer, x, y)
         if self.affects_bg_color:
             self.ui.selected_bg_color = art.get_bg_color_index_at(frame, layer, x, y)
+        if self.affects_xform:
+            self.ui.selected_xform = art.get_char_transform_at(frame, layer, x, y)
         for edit in self.ui.app.cursor.preview_edits:
             edit.apply()
 

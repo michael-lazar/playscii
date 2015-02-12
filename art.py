@@ -16,6 +16,7 @@ UV_STRIDE = 2 * 4
 
 DEFAULT_FRAME_DELAY = 0.1
 DEFAULT_LAYER_Z = 0
+DEFAULT_LAYER_Z_OFFSET = 0.5
 
 ART_DIR = 'art/'
 ART_FILE_EXTENSION = 'psci'
@@ -163,13 +164,17 @@ class Art:
         self.charset = new_charset
         self.geo_changed = True
     
-    def add_layer(self, z=DEFAULT_LAYER_Z):
+    def duplicate_layer(self, z=None):
+        z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
+        # TODO: provide layer to duplicate, right now only layer 0 works
         self.layers += 1
         self.layers_z.append(z)
         # simply add another layer to our 3D array
         new_tile_shape = (self.layers, self.height, self.width, 4)
         new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
         for frame in range(self.frames):
+            # by default, ndarray resize duplicates data - easiest way to add
+            # a blank layer is to do this then clear it
             self.chars[frame] = np.resize(self.chars[frame], new_tile_shape)
             self.fg_colors[frame] = np.resize(self.fg_colors[frame], new_tile_shape)
             self.bg_colors[frame] = np.resize(self.bg_colors[frame], new_tile_shape)
@@ -180,6 +185,13 @@ class Art:
             self.app.log('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
         self.geo_changed = True
+    
+    def add_layer(self, z=None):
+        # offset Z from last layer's Z if none given
+        z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
+        self.duplicate_layer(z)
+        for frame in range(self.frames):
+            self.clear_frame_layer(frame, self.layers-1, 0)
     
     def resize(self, new_width, new_height, new_bg=0):
         "resizes this Art to the given dimensions, cropping or expanding as needed"
@@ -212,10 +224,6 @@ class Art:
             self.fg_changed_frames.append(frame)
         if frame not in self.bg_changed_frames:
             self.bg_changed_frames.append(frame)
-    
-    def duplicate_layer(self, layer_index):
-        # TODO: duplicate by copying data from specified layer
-        pass
     
     def build_geo(self):
         "builds the vertex and element arrays used by all layers"
