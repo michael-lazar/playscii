@@ -1,9 +1,22 @@
 TODO
 
-select tool
-- identify and fix specific undo weirdness bugs
+identify and fix specific undo weirdness bugs
+
+update title bar when saving as a new file
 
 mockup for menu bar, frame/layer matrix
+
+game mode renderer feasibility/perf test:
+- get several (6?) arts loaded, spawn multiple renderables for each, have them all moving around, some animating, some with scripts running on them
+-- one large multi layer environment like piece
+-- one with a different character set?
+-- one "player" art w/ multiple layers controllable, ie alt-arrows move it, something else moves it in Z axis
+-- one script-driven art like a particle effect
+-- one "enemy" art w/ multiple frames
+- things to check:
+-- do overlapping, multi-layer arts sort correctly?
+-- how's perf?
+
 
 ---
 
@@ -15,10 +28,8 @@ PNG export:
 - aniGIF export for animations - lead: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
 
 main popup
-- hide settings (buttons & labels) for tools where they don't apply
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
 - ability to "pin" popup so it stays on screen always
-- option to make space toggle the popup on/off instead of hold
 - arrow keys navigate pickers as well as mouse?
 -- how to resolve transitions between char and color swatches?
 

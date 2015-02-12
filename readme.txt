@@ -37,6 +37,10 @@ R: select Rotate tool - painting tiles with this rotates them 90 degrees, multip
 
 T: select Text tool - click on a tile and start typing in characters, arrow keys move cursor and enter skips to next line down.  Escape ends the edit.
 
+S: select Select tool - click and drag to select tiles.  Cut and Copy operate on the selected area, and Paint/Erase/etc operations will only affect the selected area.
+
+V: select Paste tool - tiles previously Cut or Copied will appear on the brush as a stamp which you can paint with like any other tool.
+
 3/#: cycle the currently selected character forward or backward through the character set
 
 4/$: cycle the currently selected foreground color forward or backward through the palette
@@ -56,6 +60,16 @@ B: toggle whether current tool affects background color or not
 X: toggle whether current tool affects character transform or not
 
 Right mouse button / Q: "grab" the character and colors the from cursor's current tile, akin to the eyedropper tool in other paint programs
+
+Ctrl-X: Cut - deletes current selection contents and switches to Paste tool with those contents in the clipboard.
+
+Ctrl-C: Copy - same as Cut but doesn't delete the tiles selected
+
+ESC / Ctrl-D: clear current selection with no changes
+
+Ctrl-A: Select all
+
+Ctrl-I: Invert selection
 
 Shift-R: toggle CRT shader
 
