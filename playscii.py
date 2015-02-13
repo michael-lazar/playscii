@@ -119,6 +119,9 @@ class Application:
         self.sl = ShaderLord(self)
         self.camera = Camera(self)
         self.art_loaded, self.edit_renderables = [], []
+        # "game mode" renderables
+        self.game_renderables = []
+        self.game_mode = False
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
         self.load_art(art_filename)
@@ -345,6 +348,11 @@ class Application:
         img.save(output_filename)
         self.log('%s exported' % output_filename)
     
+    def game_test(self):
+        "render quality/perf test for 'game mode'"
+        art = ArtFromDisk('owell.ed', self)
+        r = TileRenderable(self, art)
+    
     def main_loop(self):
         while not self.should_quit:
             tick_time = sdl2.timer.SDL_GetTicks()
@@ -473,6 +481,9 @@ class Application:
                     self.ui.invert_selection()
                 elif event.key.keysym.sym == sdl2.SDLK_DELETE:
                     self.ui.erase_tiles_in_selection()
+                # ctrl-g: toggle game mode
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_g:
+                    self.game_mode = not self.game_mode
                 # spacebar: pop up tool / selector
                 elif event.key.keysym.sym == sdl2.SDLK_SPACE:
                     if self.ui.popup_hold_to_show:
@@ -510,7 +521,7 @@ class Application:
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_u:
                     self.ui.visible = not self.ui.visible
                 # G: toggle grid visibilty:
-                elif event.key.keysym.sym == sdl2.SDLK_g:
+                elif not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_g:
                     self.grid.visible = not self.grid.visible
                 # < > / , . rewind / advance current art's anim frame
                 elif event.key.keysym.sym == sdl2.SDLK_COMMA:
@@ -642,7 +653,7 @@ class Application:
     def update(self):
         for art in self.art_loaded:
             art.update()
-        for renderable in self.edit_renderables:
+        for renderable in self.edit_renderables + self.game_renderables:
             renderable.update()
         self.camera.update()
         if self.test_mutate_each_frame:
@@ -671,13 +682,16 @@ class Application:
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
         GL.glClearColor(*self.bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        for r in self.edit_renderables:
+        renderables_list = self.edit_renderables[:]
+        if self.game_mode:
+            renderables_list = self.game_renderables[:]
+        for r in renderables_list:
             r.render(self.elapsed_time)
         # draw selection grid, then selection, then cursor
-        if self.grid.visible:
+        if self.grid.visible and not self.game_mode:
             self.grid.render(self.elapsed_time)
         self.ui.select_tool.render_selections(self.elapsed_time)
-        if not self.ui.popup.visible and not self.ui.console.visible:
+        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode:
             self.cursor.render(self.elapsed_time)
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)

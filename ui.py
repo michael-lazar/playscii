@@ -407,4 +407,5 @@ class UI:
     def render(self, elapsed_time):
         for e in self.elements:
             if e.visible:
-                e.render(elapsed_time)
+                if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
+                    e.render(elapsed_time)

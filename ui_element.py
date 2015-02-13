@@ -17,6 +17,8 @@ class UIElement:
     renderables = None
     can_hover = True
     buttons = []
+    # renders in "game mode"
+    game_mode_visible = False
     
     def __init__(self, ui):
         self.ui = ui
@@ -150,6 +152,7 @@ class FPSCounterUI(UIElement):
     tile_width, tile_height = 12, 2
     snap_top = True
     snap_right = True
+    game_mode_visible = True
     
     def update(self):
         bg = 0
@@ -177,6 +180,7 @@ class MessageLineUI(UIElement):
     can_hover = False
     default_hold_time = 1
     fade_rate = 0.025
+    game_mode_visible = True
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)

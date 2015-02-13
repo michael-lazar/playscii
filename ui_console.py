@@ -83,6 +83,7 @@ class ConsoleUI(UIElement):
     right_margin = 3
     # transient, but must be set here b/c UIElement.init calls reset_art
     current_line = ''
+    game_mode_visible = True
     
     def __init__(self, ui):
         self.bg_color_index = ui.colors.darkgrey

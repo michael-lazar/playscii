@@ -381,6 +381,7 @@ class PasteTool(UITool):
             # TODO: determine whether it makes sense to remove it entirely
             new_command.art = art
             frame, layer, x, y = new_command.frame, new_command.layer, new_command.x, new_command.y
+            frame = self.ui.active_frame
             layer = self.ui.active_layer
             # offset cursor position, center paste on cursor
             x += self.ui.app.cursor.x - int(self.ui.clipboard_width / 2)
