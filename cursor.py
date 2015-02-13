@@ -194,6 +194,8 @@ class Cursor:
         if self.app.ui.popup.visible or self.app.ui.console.visible:
             return
         # push current command group onto undo stack
+        if not self.current_command:
+            return
         self.current_command.finish_time = self.app.elapsed_time
         self.app.ui.active_art.command_stack.commit_commands(self.current_command)
         self.current_command = None
