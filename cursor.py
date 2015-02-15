@@ -209,7 +209,8 @@ class Cursor:
         # pulse alpha and scale
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
-        if self.app.mouse_dx != 0 or self.app.mouse_dy != 0 or self.app.camera.moved_this_frame or self.app.ui.tool_settings_changed:
+        mouse_moved = self.app.mouse_dx != 0 or self.app.mouse_dy != 0
+        if mouse_moved or self.app.camera.moved_this_frame or self.app.ui.tool_settings_changed:
             # don't let mouse move cursor if text tool input is happening
             if not self.app.ui.text_tool.input_active:
                 self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)

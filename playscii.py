@@ -73,6 +73,8 @@ class Application:
         self.elapsed_time = 0
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
+        # last edit came from keyboard or mouse, used by cursor control logic
+        self.keyboard_editing = False
         sdl2.ext.init()
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
@@ -118,18 +120,18 @@ class Application:
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         self.camera = Camera(self)
-        self.art_loaded, self.edit_renderables = [], []
+        self.art_loaded_for_edit, self.edit_renderables = [], []
         # "game mode" renderables
-        self.game_renderables = []
+        self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
-        self.load_art(art_filename)
+        self.load_art(art_filename, self.art_loaded_for_edit)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
         self.cursor, self.grid = None, None
         # initialize UI with first art loaded active
-        self.ui = UI(self, self.art_loaded[0])
+        self.ui = UI(self, self.art_loaded_for_edit[0])
         # set camera bounds based on art size
         self.camera.max_x = self.ui.active_art.width
         self.camera.min_y = -self.ui.active_art.height
@@ -171,7 +173,7 @@ class Application:
         palette = self.load_palette(self.starting_palette)
         return Art(filename, self, charset, palette, self.new_art_width, self.new_art_height)
     
-    def load_art(self, filename):
+    def load_art(self, filename, art_list):
         """
         determine a viable filename and load it from disk;
         create new file if unsuccessful
@@ -193,7 +195,7 @@ class Application:
             self.log(text)
             art = self.new_art(filename)
         else:
-            for a in self.art_loaded:
+            for a in art_list:
                 # TODO: this check doesn't work on EDSCII imports b/c its name changes
                 if a.filename == filename:
                     self.log('Art file %s already loaded' % filename)
@@ -206,8 +208,8 @@ class Application:
             # TODO: this may be foolish, ensure this never overwrites user data
             if not art or not art.valid:
                 art = self.new_art(filename)
-        # add to list of arts loaded
-        self.art_loaded.insert(0, art)
+        # add to list of arts loaded (separate lists for edit mode vs game mode)
+        art_list.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)
         if self.ui:
@@ -216,7 +218,7 @@ class Application:
     def recover_edscii(self, filename, width_override):
         "recovers an incorrectly-saved EDSCII file using the given width"
         art = ArtFromEDSCII(filename, self, width_override)
-        self.art_loaded.insert(0, art)
+        self.art_loaded_for_edit.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)
         if self.ui:
@@ -348,10 +350,18 @@ class Application:
         img.save(output_filename)
         self.log('%s exported' % output_filename)
     
-    def game_test(self):
+    def game_mode_test(self):
         "render quality/perf test for 'game mode'"
-        art = ArtFromDisk('owell.ed', self)
-        r = TileRenderable(self, art)
+        # background w/ parallax layers
+        bg_art = ArtFromDisk('art/test_bg.psci', self)
+        bg_r = TileRenderable(self, bg_art)
+        enemy1_art = ArtFromDisk('art/owell.psci', self)
+        enemy1_r1 = TileRenderable(self, enemy1_art)
+        enemy1_r2 = TileRenderable(self, enemy1_art)
+        enemy1_r3 = TileRenderable(self, enemy1_art)
+        enemy1_r1.animating = enemy1_r2.animating = enemy1_r3.animating = True
+        self.art_loaded_for_game = [bg_art, enemy1_art]
+        self.game_renderables = [bg_r, enemy1_r1, enemy1_r2, enemy1_r3]
     
     def main_loop(self):
         while not self.should_quit:
@@ -391,6 +401,8 @@ class Application:
         mdx, mdy = ctypes.c_int(0), ctypes.c_int(0)
         sdl2.mouse.SDL_GetRelativeMouseState(mdx, mdy)
         self.mouse_dx, self.mouse_dy = int(mdx.value), int(mdy.value)
+        if self.mouse_dx != 0 or self.mouse_dy != 0:
+            self.keyboard_editing = False
         # get keyboard state so later we can directly query keys
         ks = sdl2.SDL_GetKeyboardState(None)
         # get modifier states
@@ -456,7 +468,7 @@ class Application:
                     self.ui.set_selected_tool(self.ui.erase_tool)
                 elif event.key.keysym.sym == sdl2.SDLK_r:
                     self.ui.set_selected_tool(self.ui.rotate_tool)
-                elif not shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
+                elif not shift_pressed and not ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     self.ui.set_selected_tool(self.ui.text_tool)
                 elif not ctrl_pressed and not shift_pressed and event.key.keysym.sym == sdl2.SDLK_s:
                     self.ui.set_selected_tool(self.ui.select_tool)
@@ -561,25 +573,29 @@ class Application:
                         self.cursor.start_paint()
                 # q does quick grab
                 elif event.key.keysym.sym == sdl2.SDLK_q:
+                    self.keyboard_editing = True
                     self.ui.quick_grab()
                 # F12: screenshot
                 elif event.key.keysym.sym == sdl2.SDLK_F12:
                     self.screenshot()
+                # TEST ctrl-T: run game mode test
+                elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_t:
+                    self.game_mode_test()
                 # TEST ctrl-m: toggle artscript running
                 elif ctrl_pressed and event.key.keysym.sym == sdl2.SDLK_m:
                     if self.ui.active_art.is_script_running('conway'):
                         self.ui.active_art.stop_script('conway')
                     else:
                         self.ui.active_art.run_script_every('conway', 0.05)
-                # TEST: alt + arrow keys [do something]
+                # TEST: alt + arrow keys control game mode test renderable
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
-                    pass
+                    self.game_renderables[1].y += 1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    pass
+                    self.game_renderables[1].y -= 1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    pass
+                    self.game_renderables[1].x -= 1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    pass
+                    self.game_renderables[1].x += 1
                 # TEST: shift-T toggles camera tilt
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     if self.camera.y_tilt == 2:
@@ -604,6 +620,7 @@ class Application:
                     if self.ui.popup_hold_to_show:
                         self.ui.popup.hide()
                 elif not alt_pressed and event.key.keysym.sym == sdl2.SDLK_RETURN:
+                    self.keyboard_editing = True
                     if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEWHEEL:
@@ -635,23 +652,23 @@ class Application:
         # directly query keys we don't want affected by OS key repeat delay
         if shift_pressed and not alt_pressed and not ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
             if ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]:
-                self.camera.pan(0, 1)
+                self.camera.pan(0, 1, True)
             if ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]:
-                self.camera.pan(0, -1)
+                self.camera.pan(0, -1, True)
             if ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]:
-                self.camera.pan(-1, 0)
+                self.camera.pan(-1, 0, True)
             if ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]:
-                self.camera.pan(1, 0)
+                self.camera.pan(1, 0, True)
             if ks[sdl2.SDL_SCANCODE_X]:
-                self.camera.zoom(-1)
+                self.camera.zoom(-1, True)
             if ks[sdl2.SDL_SCANCODE_Z]:
-                self.camera.zoom(1)
+                self.camera.zoom(1, True)
         if self.middle_mouse and (self.mouse_dx != 0 or self.mouse_dy != 0):
             self.camera.mouse_pan(self.mouse_dx, self.mouse_dy)
         sdl2.SDL_PumpEvents()
     
     def update(self):
-        for art in self.art_loaded:
+        for art in self.art_loaded_for_edit + self.art_loaded_for_game:
             art.update()
         for renderable in self.edit_renderables + self.game_renderables:
             renderable.update()

@@ -2,7 +2,7 @@ TODO
 
 identify and fix specific undo weirdness bugs
 
-update title bar when saving as a new file
+only reset cursor position based on mouse if mouse moves, ie not if tool settings change etc
 
 mockup for menu bar, frame/layer matrix
 
