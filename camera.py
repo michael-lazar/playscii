@@ -114,14 +114,19 @@ class Camera:
         m[3][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
         return m
     
-    def pan(self, dx, dy):
+    def pan(self, dx, dy, keyboard=False):
         # modify pan speed based on zoom according to a factor
         m = ((1 * self.pan_zoom_increase_factor) * self.z) / self.min_zoom
         self.vel_x += dx * self.pan_accel * m
         self.vel_y += dy * self.pan_accel * m
+        # for brevity, app passes in whether user appears to be keyboard editing
+        if keyboard:
+            self.app.keyboard_editing = True
     
-    def zoom(self, dz):
+    def zoom(self, dz, keyboard=False):
         self.vel_z += dz * self.zoom_accel
+        if keyboard:
+            self.app.keyboard_editing = True
     
     def window_resized(self):
         self.calc_projection_matrix()

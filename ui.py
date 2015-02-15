@@ -180,23 +180,23 @@ class UI:
         self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
     
     def previous_active_art(self):
-        "cycles to next art in app.art_loaded"
-        if len(self.app.art_loaded) == 1:
+        "cycles to next art in app.art_loaded_for_edit"
+        if len(self.app.art_loaded_for_edit) == 1:
             return
-        next_active_art = self.app.art_loaded.pop(-1)
-        self.app.art_loaded.insert(0, next_active_art)
+        next_active_art = self.app.art_loaded_for_edit.pop(-1)
+        self.app.art_loaded_for_edit.insert(0, next_active_art)
         next_active_renderable = self.app.edit_renderables.pop(-1)
         self.app.edit_renderables.insert(0, next_active_renderable)
-        self.set_active_art(self.app.art_loaded[0])
+        self.set_active_art(self.app.art_loaded_for_edit[0])
     
     def next_active_art(self):
-        if len(self.app.art_loaded) == 1:
+        if len(self.app.art_loaded_for_edit) == 1:
             return
-        last_active_art = self.app.art_loaded.pop(0)
-        self.app.art_loaded.append(last_active_art)
+        last_active_art = self.app.art_loaded_for_edit.pop(0)
+        self.app.art_loaded_for_edit.append(last_active_art)
         last_active_renderable = self.app.edit_renderables.pop(0)
         self.app.edit_renderables.append(last_active_renderable)
-        self.set_active_art(self.app.art_loaded[0])
+        self.set_active_art(self.app.art_loaded_for_edit[0])
     
     def set_selected_tool(self, new_tool):
         if new_tool == self.selected_tool:
