@@ -40,7 +40,7 @@ class Camera:
         self.x, self.y = self.start_x, self.start_y
         self.z = self.start_zoom
         self.vel_x, self.vel_y, self.vel_z = 0,0,0
-        self.moved_this_frame = False
+        self.mouse_panned, self.moved_this_frame = False, False
         self.calc_projection_matrix()
         self.calc_view_matrix()
     
@@ -140,11 +140,14 @@ class Camera:
     
     def mouse_pan(self, dx, dy):
         "pan view based on mouse delta"
+        if dx == 0 and dy == 0:
+            return
         m = ((1 * self.pan_zoom_increase_factor) * self.z) / self.min_zoom
         m /= self.max_zoom
         self.x -= dx / self.mouse_pan_rate * m
         self.y += dy / self.mouse_pan_rate * m
         self.vel_x = self.vel_y = 0
+        self.mouse_panned = True
     
     def update(self):
         # remember last position to see if it changed
@@ -175,4 +178,5 @@ class Camera:
         self.calc_view_matrix()
         if self.logg:
             self.app.log('camera x=%s, y=%s, z=%s' % (self.x, self.y, self.z))
-        self.moved_this_frame = self.x != self.last_x or self.y != self.last_y or self.z != self.last_z
+        self.moved_this_frame = self.mouse_panned or self.x != self.last_x or self.y != self.last_y or self.z != self.last_z
+        self.mouse_panned = False

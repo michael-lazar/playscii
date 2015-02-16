@@ -355,13 +355,26 @@ class Application:
         # background w/ parallax layers
         bg_art = ArtFromDisk('art/test_bg.psci', self)
         bg_r = TileRenderable(self, bg_art)
+        #player_art = ArtFromDisk('art/test_player.psci', self)
+        for art in self.art_loaded_for_edit:
+            if 'player' in art.filename:
+                player_art = art
+                break
+        #player_art = self.art_loaded_for_edit[2]
+        player_r = TileRenderable(self, player_art)
+        player_r.x, player_r.y = 1, -13
+        player_r.z = 3
         enemy1_art = ArtFromDisk('art/owell.psci', self)
         enemy1_r1 = TileRenderable(self, enemy1_art)
+        enemy1_r1.x, enemy1_r1.y = 3, -6
         enemy1_r2 = TileRenderable(self, enemy1_art)
+        enemy1_r2.x, enemy1_r2.y = 18, -8
         enemy1_r3 = TileRenderable(self, enemy1_art)
+        enemy1_r3.x, enemy1_r3.y = 23, -16
         enemy1_r1.animating = enemy1_r2.animating = enemy1_r3.animating = True
-        self.art_loaded_for_game = [bg_art, enemy1_art]
-        self.game_renderables = [bg_r, enemy1_r1, enemy1_r2, enemy1_r3]
+        self.art_loaded_for_game = [bg_art, player_art, enemy1_art]
+        #self.art_loaded_for_edit += [player_art]
+        self.game_renderables = [bg_r, player_r, enemy1_r1, enemy1_r2, enemy1_r3]
     
     def main_loop(self):
         while not self.should_quit:
@@ -693,6 +706,7 @@ class Application:
         if self.ui.visible:
             self.ui.update()
         self.grid.update()
+        self.cursor.end_update()
     
     def render(self):
         # draw main scene to framebuffer

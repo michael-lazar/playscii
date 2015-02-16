@@ -2,7 +2,12 @@ TODO
 
 identify and fix specific undo weirdness bugs
 
-only reset cursor position based on mouse if mouse moves, ie not if tool settings change etc
+update cursor preview after an undo
+
+don't select a character when pressing xform buttons in char swatch
+
+- arrow keys navigate pickers as well as mouse?
+-- how to resolve transitions between char and color swatches?
 
 mockup for menu bar, frame/layer matrix
 
@@ -30,8 +35,6 @@ PNG export:
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
 - ability to "pin" popup so it stays on screen always
-- arrow keys navigate pickers as well as mouse?
--- how to resolve transitions between char and color swatches?
 
 O key: toggle between perspective and ortho views (steal unity's cool lerp)
 

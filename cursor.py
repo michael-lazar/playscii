@@ -201,7 +201,7 @@ class Cursor:
         self.current_command = None
     
     def moved_this_frame(self):
-        return self.last_x != self.x or self.last_y != self.y
+        return self.moved or self.last_x != self.x or self.last_y != self.y
     
     def update(self, elapsed_time):
         # save old positions before update
@@ -210,32 +210,36 @@ class Cursor:
         self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
         #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
         mouse_moved = self.app.mouse_dx != 0 or self.app.mouse_dy != 0
-        if mouse_moved or self.app.camera.moved_this_frame or self.app.ui.tool_settings_changed:
+        # update cursor from mouse if: mouse moved, camera moved w/o keyboard
+        if mouse_moved or (not self.app.keyboard_editing and self.app.camera.moved_this_frame):
             # don't let mouse move cursor if text tool input is happening
             if not self.app.ui.text_tool.input_active:
                 self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
             self.moved = True
-        # bail if camera/mouse/keyboard move unchanged
-        elif not self.moved:
-           return
+        if not self.moved and not self.app.ui.tool_settings_changed:
+            return
         # snap to tile
         w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
         char_aspect = w / h
-        #inv_char_aspect = h / w
         self.x = math.floor(self.x / w) * w
         self.y = math.ceil(self.y / h) * h * char_aspect
         # adjust for brush size
         if self.app.ui.selected_tool.brush_size:
             size = self.app.ui.selected_tool.brush_size
             self.scale_x = self.scale_y = size
-            size_offset = math.ceil(size / 2) - 1
-            self.x -= size_offset
-            self.y += size_offset
+            # don't reposition on resize if keyboard navigating
+            if mouse_moved:
+                size_offset = math.ceil(size / 2) - 1
+                self.x -= size_offset
+                self.y += size_offset
         else:
             self.scale_x = self.scale_y = 1
         self.update_cursor_preview()
-        if self.moved or self.x != self.last_x or self.y != self.last_y:
+        if self.moved_this_frame():
             self.entered_new_tile()
+    
+    def end_update(self):
+        "called at the end of App.update"
         self.moved = False
     
     def entered_new_tile(self):
