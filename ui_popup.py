@@ -458,6 +458,8 @@ class ToolPopup(UIElement):
         if self.visible:
             return
         self.visible = True
+        # set cursor as starting point for keyboard navigation
+        self.charset_swatch.set_cursor_selection_index(self.ui.selected_char)
         self.reset_loc()
     
     def toggle(self):
@@ -506,11 +508,13 @@ class ToolPopup(UIElement):
     def update(self):
         UIElement.update(self)
         if self.active_tab == TAB_CHAR_COLOR:
-            if self in self.ui.hovered_elements:
+            # bail if mouse didn't move
+            mouse_moved = self.ui.app.mouse_dx != 0 or self.ui.app.mouse_dy != 0
+            if mouse_moved and self in self.ui.hovered_elements:
                 x, y = self.ui.get_screen_coords(self.ui.app.mouse_x, self.ui.app.mouse_y)
                 for e in [self.charset_swatch, self.palette_swatch]:
                     if e.is_inside(x, y):
-                        e.set_cursor_loc(self.cursor_box, x, y)
+                        e.set_cursor_loc_from_mouse(self.cursor_box, x, y)
                         break
             # note: self.cursor_box updates in charset_swatch.update
             self.charset_swatch.update()
@@ -519,8 +523,20 @@ class ToolPopup(UIElement):
             self.draw_tool_tab()
             self.draw_buttons()
     
+    def move_popup_cursor(self, dx, dy):
+        active_swatch = self.charset_swatch if self.cursor_char != -1 else self.palette_swatch
+        # TODO: can't handle cross-swatch navigation properly, restrict to chars
+        active_swatch = self.charset_swatch
+        active_swatch.move_cursor(self.cursor_box, dx, dy)
+    
+    def select_key_pressed(self, mod_pressed):
+        button = [1, 3][mod_pressed]
+        self.clicked(button)
+    
     def clicked(self, button):
-        UIElement.clicked(self, button)
+        handled = UIElement.clicked(self, button)
+        if handled:
+            return
         # if cursor is over a char or color, make it the ui's selected one
         if self.cursor_char != -1:
             self.ui.selected_char = self.cursor_char

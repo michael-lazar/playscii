@@ -147,6 +147,11 @@ class SwatchSelectionBoxRenderable(LineRenderable):
     color = (0.5, 0.5, 0.5, 1)
     line_width = 2
     
+    def __init__(self, app, quad_size_ref):
+        LineRenderable.__init__(self, app, quad_size_ref)
+        # track tile X and Y for cursor movement
+        self.tile_x, self.tile_y = 0,0
+    
     def get_color(self, elapsed_time):
         return self.color
     

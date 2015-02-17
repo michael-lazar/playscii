@@ -1,5 +1,7 @@
 bug list
 
+cursor preview commands "stick" and can't be undone if cursor is hovering tiles affected by a redo
+
 tile coords in status bar have negative Y only when text tool is active?!
 
 PNG export: layers that have too high a Z won't show up in export, special-case behavior for near/far Z in renderable export?

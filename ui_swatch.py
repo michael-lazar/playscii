@@ -36,15 +36,19 @@ class UISwatch(UIElement):
     def get_size(self):
         return 1, 1
     
-    def set_cursor_loc(self, cursor, mouse_x, mouse_y):
-        """
-        common, generalized code for both character and palette swatches:
-        set cursor's screen location, tile location, and quad size.
-        """
+    def set_cursor_loc_from_mouse(self, cursor, mouse_x, mouse_y):
         # get location within char map
         w, h = self.art.quad_width, self.art.quad_height
         tile_x = (mouse_x - self.x) / w
         tile_y = (mouse_y - self.y) / h
+        self.set_cursor_loc(cursor, tile_x, tile_y)
+    
+    def set_cursor_loc(self, cursor, tile_x, tile_y):
+        """
+        common, generalized code for both character and palette swatches:
+        set cursor's screen location, tile location, and quad size.
+        """
+        w, h = self.art.quad_width, self.art.quad_height
         # snap to tile
         tile_x = int(math.floor(tile_x / w) * w)
         tile_y = int(math.ceil(tile_y / h) * h)
@@ -59,7 +63,7 @@ class UISwatch(UIElement):
         # cool, set cursor location & size
         self.set_cursor_selection_index(tile_index)
         cursor.quad_size_ref = self.art
-        cursor.tile_x = cursor.tile_y = tile_x, tile_y
+        cursor.tile_x, cursor.tile_y = tile_x, tile_y
         cursor.x, cursor.y = x, y
     
     def is_selection_index_valid(self, index):
@@ -136,6 +140,25 @@ class CharacterSetSwatch(UISwatch):
     def set_cursor_selection_index(self, index):
         self.popup.cursor_char = index
         self.popup.cursor_color = -1
+    
+    def move_cursor(self, cursor, dx, dy):
+        "moves cursor by specified amount in selection grid"
+        # determine new cursor tile X/Y
+        tile_x = cursor.tile_x + dx
+        tile_y = cursor.tile_y + dy
+        tile_index = (abs(tile_y) * self.art.width) + tile_x
+        if tile_x < 0 or tile_x >= self.art.width:
+            return
+        elif tile_y > 0:
+            return
+        elif tile_y <= -self.art.height:
+            # TODO: handle "jump" to palette swatch, and back
+            #cursor.tile_y = 0
+            #self.popup.palette_swatch.move_cursor(cursor, 0, 0)
+            return
+        elif tile_index >= self.art.charset.last_index:
+            return
+        self.set_cursor_loc(cursor, tile_x, tile_y)
     
     def update(self):
         charset = self.ui.active_art.charset
@@ -231,6 +254,11 @@ class PaletteSwatch(UISwatch):
     def set_cursor_selection_index(self, index):
         self.popup.cursor_color = index
         self.popup.cursor_char = -1
+    
+    def move_cursor(self, cursor, dx, dy):
+        # similar enough to charset swatch's move_cursor, different enough to
+        # merit this small bit of duplicate code
+        pass
     
     def update(self):
         self.art.update()
