@@ -574,7 +574,10 @@ class Application:
                     self.ui.undo()
                 # enter does Cursor.paint, or starts/ends text tool input
                 elif event.key.keysym.sym == sdl2.SDLK_RETURN:
-                    if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                    if self.ui.popup.visible:
+                        # simulate left/right click in popup to select stuff
+                        self.ui.popup.select_key_pressed(shift_pressed)
+                    elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
                         if self.ui.select_tool.selection_in_progress:
@@ -609,6 +612,14 @@ class Application:
                     self.game_renderables[1].x -= 1
                 elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
                     self.game_renderables[1].x += 1
+                elif self.ui.popup.visible and event.key.keysym.sym == sdl2.SDLK_UP:
+                    self.ui.popup.move_popup_cursor(0, -1)
+                elif self.ui.popup.visible and event.key.keysym.sym == sdl2.SDLK_DOWN:
+                    self.ui.popup.move_popup_cursor(0, 1)
+                elif self.ui.popup.visible and event.key.keysym.sym == sdl2.SDLK_LEFT:
+                    self.ui.popup.move_popup_cursor(-1, 0)
+                elif self.ui.popup.visible and event.key.keysym.sym == sdl2.SDLK_RIGHT:
+                    self.ui.popup.move_popup_cursor(1, 0)
                 # TEST: shift-T toggles camera tilt
                 elif shift_pressed and event.key.keysym.sym == sdl2.SDLK_t:
                     if self.camera.y_tilt == 2:

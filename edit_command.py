@@ -115,13 +115,16 @@ class CommandStack:
         command = self.undo_commands.pop()
         command.undo()
         self.redo_commands.append(command)
+        self.art.app.cursor.update_cursor_preview()
     
     def redo(self):
         if len(self.redo_commands) == 0:
             return
         command = self.redo_commands.pop()
+        # FIXME: if cursor is over tile(s) touched by redo,
+        # preview commands "stick" and can't be undone
         command.apply()
-        self.undo_commands.append(command)
+        self.art.app.cursor.update_cursor_preview()
     
     def clear_redo(self):
         # TODO: when should this be invoked?
