@@ -13,7 +13,6 @@ game mode renderer feasibility/perf test:
 -- do overlapping, multi-layer arts sort correctly?
 -- how's perf?
 
-
 ---
 
 further work on existing features:
