@@ -546,10 +546,10 @@ class ToolPopup(UIElement):
             elif button == 3:
                 self.ui.selected_bg_color = self.cursor_color
     
-    def render(self, elapsed_time):
-        UIElement.render(self, elapsed_time)
+    def render(self):
+        UIElement.render(self)
         if self.active_tab == TAB_CHAR_COLOR:
-            self.charset_swatch.render(elapsed_time)
-            self.palette_swatch.render(elapsed_time)
+            self.charset_swatch.render()
+            self.palette_swatch.render()
             if self.cursor_char != -1 or self.cursor_color != -1:
-                self.cursor_box.render(elapsed_time)
+                self.cursor_box.render()

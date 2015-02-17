@@ -109,14 +109,14 @@ class LineRenderable():
         if self.log_create_destroy:
             self.app.log('destroyed: %s' % self)
     
-    def render(self, elapsed_time):
+    def render(self):
         GL.glUseProgram(self.shader.program)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.get_view_matrix())
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform2f(self.quad_size_uniform, *self.get_quad_size())
-        GL.glUniform4f(self.color_uniform, *self.get_color(elapsed_time))
+        GL.glUniform4f(self.color_uniform, *self.get_color(self.app.elapsed_time))
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

@@ -31,7 +31,7 @@ class SaveCommand(ConsoleCommand):
 class OpenCommand(ConsoleCommand):
     def execute(console, args):
         filename = ' '.join(args)
-        console.ui.app.load_art(filename, console.ui.app.art_loaded_for_edit)
+        console.ui.app.load_art_for_edit(filename)
 
 
 class LoadPaletteCommand(ConsoleCommand):

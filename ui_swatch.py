@@ -74,8 +74,8 @@ class UISwatch(UIElement):
         "another set_cursor_loc support method, overriden by subclasses"
         self.popup.blah = index
     
-    def render(self, elapsed_time):
-        self.renderable.render(elapsed_time)
+    def render(self):
+        self.renderable.render()
 
 
 class CharacterSetSwatch(UISwatch):
@@ -182,10 +182,10 @@ class CharacterSetSwatch(UISwatch):
         selection_y = (self.ui.selected_char - selection_x) / charset.map_width
         self.selection_box.y -= (selection_y + 1) * self.art.quad_height
     
-    def render(self, elapsed_time):
-        UISwatch.render(self, elapsed_time)
-        self.grid.render(elapsed_time)
-        self.selection_box.render(elapsed_time)
+    def render(self):
+        UISwatch.render(self)
+        self.grid.render()
+        self.selection_box.render()
 
 
 class PaletteSwatch(UISwatch):
@@ -295,13 +295,13 @@ class PaletteSwatch(UISwatch):
         self.b_renderable.x += x_offset
         self.b_renderable.y -= y_offset
     
-    def render(self, elapsed_time):
-        UISwatch.render(self, elapsed_time)
-        self.transparent_x.render(elapsed_time)
-        self.fg_selection_box.render(elapsed_time)
-        self.bg_selection_box.render(elapsed_time)
-        self.f_renderable.render(elapsed_time)
-        self.b_renderable.render(elapsed_time)
+    def render(self):
+        UISwatch.render(self)
+        self.transparent_x.render()
+        self.fg_selection_box.render()
+        self.bg_selection_box.render()
+        self.f_renderable.render()
+        self.b_renderable.render()
 
 
 class ColorSelectionLabelArt(UIArt):

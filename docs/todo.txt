@@ -1,17 +1,16 @@
 TODO
 
-mockup for menu bar, frame/layer matrix
-
 game mode renderer feasibility/perf test:
-- get several (6?) arts loaded, spawn multiple renderables for each, have them all moving around, some animating, some with scripts running on them
--- one large multi layer environment like piece
--- one with a different character set?
--- one "player" art w/ multiple layers controllable, ie alt-arrows move it, something else moves it in Z axis
--- one script-driven art like a particle effect
--- one "enemy" art w/ multiple frames
+- add scale to game object class
+- make enemy objects shift position randomly
+- make an object with a script running on its art
+- gameobject with a different character set?
+- add control to move player in Z
 - things to check:
 -- do overlapping, multi-layer arts sort correctly?
 -- how's perf?
+
+mockup for menu bar, frame/layer matrix
 
 ---
 

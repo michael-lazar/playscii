@@ -35,7 +35,7 @@ self.edit_bind_src = {
     'ctrl c'   : 'copy_selection',
     'v'        : 'select_paste_tool',
     'ctrl v'   : 'select_paste_tool',
-    'esc'      : 'select_none',
+    'escape'   : 'select_none',
     'ctrl d'   : 'select_none',
     'ctrl a'   : 'select_all',
     'ctrl i'   : 'select_invert',

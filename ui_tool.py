@@ -351,11 +351,11 @@ class SelectTool(UITool):
         self.last_selection = self.selected_tiles.copy()
         self.last_drag = self.current_drag.copy()
     
-    def render_selections(self, elapsed_time):
+    def render_selections(self):
         if len(self.selected_tiles) > 0:
-            self.select_renderable.render(elapsed_time)
+            self.select_renderable.render()
         if len(self.current_drag) > 0:
-            self.drag_renderable.render(elapsed_time)
+            self.drag_renderable.render()
 
 
 class PasteTool(UITool):
