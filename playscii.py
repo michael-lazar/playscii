@@ -29,7 +29,7 @@ from ui import UI
 from cursor import Cursor
 from grid import Grid
 from input_handler import InputLord
-from game_object import GameObject
+from game_object import GameObject, WobblyThing
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
@@ -375,17 +375,18 @@ class Application:
         bg.set_loc(0, 0, -3)
         self.player = GameObject(self, 'test_player')
         self.player.set_loc(1, -13)
-        enemy1 = GameObject(self, 'owell')
-        enemy1.set_loc(3, -6)
-        enemy2 = GameObject(self, 'owell')
-        enemy2.set_loc(18, -8)
-        enemy3 = GameObject(self, 'owell')
-        enemy3.set_loc(23, -16)
+        enemy1 = WobblyThing(self, 'owell')
+        enemy1.set_origin(3, -6)
+        enemy2 = WobblyThing(self, 'owell')
+        enemy2.set_origin(18, -8)
+        enemy3 = WobblyThing(self, 'owell')
+        enemy3.set_origin(23, -16)
         enemy1.start_animating()
         enemy2.start_animating()
         enemy3.start_animating()
-        self.camera.set_loc(self.player.x, self.player.y, self.camera.z)
-        self.camera.set_zoom(10)
+        px = self.player.x + self.player.art.width / 2
+        self.camera.set_loc(px, self.player.y, self.camera.z)
+        self.camera.set_zoom(20)
     
     def main_loop(self):
         while not self.should_quit:
@@ -447,9 +448,24 @@ class Application:
             self.grid.update()
             self.cursor.end_update()
     
+    class RenderItem:
+        "quickie class to debug render order"
+        def __init__(self, game_object, layer, layer_z):
+            self.game_object, self.layer, self.layer_z = game_object, layer, layer_z
+        def __str__(self):
+            return '%s layer %s z %s' % (self.game_object.art.filename, self.layer, self.layer_z)
+    
     def game_render(self):
+        # sort objects for drawing by each layer Z order
+        draw_order = []
         for game_object in self.game_objects:
-            game_object.render()
+            for i,z in enumerate(game_object.art.layers_z):
+                z += game_object.z
+                item = self.RenderItem(game_object, i, z)
+                draw_order.append(item)
+        draw_order.sort(key=lambda item: item.layer_z, reverse=False)
+        for item in draw_order:
+            item.game_object.render(item.layer)
     
     def render(self):
         # draw main scene to framebuffer

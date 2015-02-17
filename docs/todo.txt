@@ -4,6 +4,7 @@ game mode renderer feasibility/perf test:
 - add scale to game object class
 - make enemy objects shift position randomly
 - make an object with a script running on its art
+-- track a list of particles
 - gameobject with a different character set?
 - add control to move player in Z
 - things to check:
