@@ -125,8 +125,8 @@ class UIElement:
         # tiles might have just changed
         self.art.update()
     
-    def render(self, elapsed_time):
-        self.renderable.render(elapsed_time)
+    def render(self):
+        self.renderable.render()
     
     def destroy(self):
         for r in self.renderables:
@@ -219,7 +219,7 @@ class MessageLineUI(UIElement):
                 self.alpha = 0
         self.renderable.alpha = self.alpha
     
-    def render(self, elapsed_time):
+    def render(self):
         # TODO: draw if popup is visible but not obscuring message line?
         if not self.ui.popup.visible and not self.ui.console.visible:
-            UIElement.render(self, elapsed_time)
+            UIElement.render(self)

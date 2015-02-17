@@ -2,6 +2,8 @@ import ctypes, os
 import sdl2
 from sys import exit
 
+from ui import SCALE_INCREMENT
+
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
 
@@ -110,14 +112,15 @@ class InputLord:
                     if f:
                         f()
                 # TEST: alt + arrow keys control game mode test renderable
-                if alt_pressed and event.key.keysym.sym == sdl2.SDLK_UP:
-                    app.game_renderables[1].y += 1
-                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_DOWN:
-                    app.game_renderables[1].y -= 1
-                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    app.game_renderables[1].x -= 1
-                elif alt_pressed and event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    app.game_renderables[1].x += 1
+                if alt_pressed:
+                    if event.key.keysym.sym == sdl2.SDLK_UP:
+                        app.player.y += 1
+                    elif event.key.keysym.sym == sdl2.SDLK_DOWN:
+                        app.player.y -= 1
+                    elif event.key.keysym.sym == sdl2.SDLK_LEFT:
+                        app.player.x -= 1
+                    elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
+                        app.player.x += 1
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
@@ -287,7 +290,10 @@ class InputLord:
         self.ui.erase_tiles_in_selection()
     
     def BIND_toggle_game_mode(self):
-        self.app.game_mode = not self.app.game_mode
+        if not self.app.game_mode:
+            self.app.enter_game_mode()
+        else:
+            self.app.exit_game_mode()
     
     def BIND_toggle_picker(self):
         if self.ui.popup_hold_to_show:
@@ -367,6 +373,7 @@ class InputLord:
     
     def BIND_run_game_mode_test(self):
         self.app.game_mode_test()
+        self.app.enter_game_mode()
     
     def BIND_run_test_mutate(self):
         if self.ui.active_art.is_script_running('conway'):

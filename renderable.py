@@ -229,7 +229,7 @@ class TileRenderable:
         self.render(0)
         self.exporting = False
     
-    def render(self, elapsed_time):
+    def render(self):
         GL.glUseProgram(self.shader.program)
         # bind textures - character set, palette, UI grain
         GL.glActiveTexture(GL.GL_TEXTURE0)

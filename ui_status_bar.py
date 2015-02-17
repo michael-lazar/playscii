@@ -195,41 +195,41 @@ class StatusBarUI(UIElement):
         x -= len(frame)
         self.art.write_string(0, 0, x, 0, self.frame_label, dark, light, True)
     
-    def render(self, elapsed_time):
-        UIElement.render(self, elapsed_time)
+    def render(self):
+        UIElement.render(self)
         # draw wireframe red X /behind/ char if BG transparent
         if self.ui.selected_bg_color == 0:
             self.x_renderable.x = self.char_renderable.x
             self.x_renderable.y = self.char_renderable.y
-            self.x_renderable.render(elapsed_time)
-        self.char_renderable.render(elapsed_time)
-        self.fg_renderable.render(elapsed_time)
-        self.bg_renderable.render(elapsed_time)
+            self.x_renderable.render()
+        self.char_renderable.render()
+        self.fg_renderable.render()
+        self.bg_renderable.render()
         # draw red X for transparent FG or BG
         if self.ui.selected_fg_color == 0:
             self.x_renderable.x = self.fg_renderable.x
             self.x_renderable.y = self.fg_renderable.y
-            self.x_renderable.render(elapsed_time)
+            self.x_renderable.render()
         if self.ui.selected_bg_color == 0:
             self.x_renderable.x = self.bg_renderable.x
             self.x_renderable.y = self.bg_renderable.y
-            self.x_renderable.render(elapsed_time)
+            self.x_renderable.render()
         # dim out items if brush is set to not affect them
         self.dim_renderable.y = self.char_renderable.y
         if not self.ui.selected_tool.affects_char:
             self.dim_renderable.x = self.char_renderable.x - self.art.quad_width * len(self.char_label)
-            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.render()
         if not self.ui.selected_tool.affects_fg_color:
             self.dim_renderable.x = self.fg_renderable.x - self.art.quad_width * len(self.fg_label)
-            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.render()
         if not self.ui.selected_tool.affects_bg_color:
             self.dim_renderable.x = self.bg_renderable.x - self.art.quad_width * len(self.bg_label)
-            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.render()
         if not self.ui.selected_tool.affects_xform:
             # render dim renderable thrice to cover label and item
             self.dim_renderable.x = self.xform_label_x * self.art.quad_width - 1
-            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.render()
             self.dim_renderable.x = self.xform_selected_x * self.art.quad_width - 1
-            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.render()
             self.dim_renderable.x = (self.xform_selected_x + 6) * self.art.quad_width - 1
-            self.dim_renderable.render(elapsed_time)
+            self.dim_renderable.render()

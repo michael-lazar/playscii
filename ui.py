@@ -404,8 +404,8 @@ class UI:
             e.destroy()
         self.grain_texture.destroy()
     
-    def render(self, elapsed_time):
+    def render(self):
         for e in self.elements:
             if e.visible:
                 if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
-                    e.render(elapsed_time)
+                    e.render()

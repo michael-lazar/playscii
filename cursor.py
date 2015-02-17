@@ -248,7 +248,7 @@ class Cursor:
             self.current_command.add_command_tiles(self.preview_edits)
             self.preview_edits = []
     
-    def render(self, elapsed_time):
+    def render(self):
         GL.glUseProgram(self.shader.program)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.projection_matrix)
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.app.camera.view_matrix)

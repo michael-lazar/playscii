@@ -25,10 +25,11 @@ from art import Art, ArtFromDisk, ArtFromEDSCII
 from renderable import TileRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
-from ui import UI, SCALE_INCREMENT
+from ui import UI
 from cursor import Cursor
 from grid import Grid
-from input import InputLord
+from input_handler import InputLord
+from game_object import GameObject
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
@@ -125,9 +126,10 @@ class Application:
         # "game mode" renderables
         self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
+        self.game_objects = []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
-        self.load_art(art_filename, self.art_loaded_for_edit)
+        self.load_art_for_edit(art_filename)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
         self.cursor, self.grid = None, None
@@ -176,7 +178,7 @@ class Application:
         palette = self.load_palette(self.starting_palette)
         return Art(filename, self, charset, palette, self.new_art_width, self.new_art_height)
     
-    def load_art(self, filename, art_list):
+    def load_art(self, filename):
         """
         determine a viable filename and load it from disk;
         create new file if unsuccessful
@@ -198,11 +200,11 @@ class Application:
             self.log(text)
             art = self.new_art(filename)
         else:
-            for a in art_list:
+            for a in self.art_loaded_for_edit + self.art_loaded_for_game:
                 # TODO: this check doesn't work on EDSCII imports b/c its name changes
                 if a.filename == filename:
                     self.log('Art file %s already loaded' % filename)
-                    return
+                    return a
             self.log('Loading file %s...' % filename)
             art = ArtFromDisk(filename, self)
             if not art or not art.valid:
@@ -211,8 +213,11 @@ class Application:
             # TODO: this may be foolish, ensure this never overwrites user data
             if not art or not art.valid:
                 art = self.new_art(filename)
-        # add to list of arts loaded (separate lists for edit mode vs game mode)
-        art_list.insert(0, art)
+        return art
+    
+    def load_art_for_edit(self, filename):
+        art = self.load_art(filename)
+        self.art_loaded_for_edit.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)
         if self.ui:
@@ -353,31 +358,34 @@ class Application:
         img.save(output_filename)
         self.log('%s exported' % output_filename)
     
+    def enter_game_mode(self):
+        self.camera.min_x = -1000
+        self.camera.max_x = 1000
+        self.camera.min_y = -1000
+        self.camera.min_y = -1000
+        self.game_mode = True
+    
+    def exit_game_mode(self):
+        self.game_mode = False
+    
     def game_mode_test(self):
         "render quality/perf test for 'game mode'"
         # background w/ parallax layers
-        bg_art = ArtFromDisk('art/test_bg.psci', self)
-        bg_r = TileRenderable(self, bg_art)
-        #player_art = ArtFromDisk('art/test_player.psci', self)
-        for art in self.art_loaded_for_edit:
-            if 'player' in art.filename:
-                player_art = art
-                break
-        #player_art = self.art_loaded_for_edit[2]
-        player_r = TileRenderable(self, player_art)
-        player_r.x, player_r.y = 1, -13
-        player_r.z = 3
-        enemy1_art = ArtFromDisk('art/owell.psci', self)
-        enemy1_r1 = TileRenderable(self, enemy1_art)
-        enemy1_r1.x, enemy1_r1.y = 3, -6
-        enemy1_r2 = TileRenderable(self, enemy1_art)
-        enemy1_r2.x, enemy1_r2.y = 18, -8
-        enemy1_r3 = TileRenderable(self, enemy1_art)
-        enemy1_r3.x, enemy1_r3.y = 23, -16
-        enemy1_r1.animating = enemy1_r2.animating = enemy1_r3.animating = True
-        self.art_loaded_for_game = [bg_art, player_art, enemy1_art]
-        #self.art_loaded_for_edit += [player_art]
-        self.game_renderables = [bg_r, player_r, enemy1_r1, enemy1_r2, enemy1_r3]
+        bg = GameObject(self, 'test_bg')
+        bg.set_loc(0, 0, -3)
+        self.player = GameObject(self, 'test_player')
+        self.player.set_loc(1, -13)
+        enemy1 = GameObject(self, 'owell')
+        enemy1.set_loc(3, -6)
+        enemy2 = GameObject(self, 'owell')
+        enemy2.set_loc(18, -8)
+        enemy3 = GameObject(self, 'owell')
+        enemy3.set_loc(23, -16)
+        enemy1.start_animating()
+        enemy2.start_animating()
+        enemy3.start_animating()
+        self.camera.set_loc(self.player.x, self.player.y, self.camera.z)
+        self.camera.set_zoom(10)
     
     def main_loop(self):
         while not self.should_quit:
@@ -409,10 +417,12 @@ class Application:
         self.il.input()
     
     def update(self):
-        for art in self.art_loaded_for_edit + self.art_loaded_for_game:
+        for art in self.art_loaded_for_edit:
             art.update()
-        for renderable in self.edit_renderables + self.game_renderables:
+        for renderable in self.edit_renderables:
             renderable.update()
+        for game_object in self.game_objects:
+            game_object.update()
         self.camera.update()
         if self.test_mutate_each_frame:
             self.test_mutate_each_frame = False
@@ -429,35 +439,39 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        if not self.ui.popup.visible and not self.ui.console.visible:
+        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
-        self.grid.update()
-        self.cursor.end_update()
+        if not self.game_mode:
+            self.grid.update()
+            self.cursor.end_update()
+    
+    def game_render(self):
+        for game_object in self.game_objects:
+            game_object.render()
     
     def render(self):
         # draw main scene to framebuffer
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
         GL.glClearColor(*self.bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        renderables_list = self.edit_renderables[:]
         if self.game_mode:
-            renderables_list = self.game_renderables[:]
-        for r in renderables_list:
-            r.render(self.elapsed_time)
+            self.game_render()
+        else:
+            for r in self.edit_renderables:
+                r.render()
         # draw selection grid, then selection, then cursor
         if self.grid.visible and not self.game_mode:
-            self.grid.render(self.elapsed_time)
-        self.ui.select_tool.render_selections(self.elapsed_time)
+            self.grid.render()
+        self.ui.select_tool.render_selections()
         if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode:
-            self.cursor.render(self.elapsed_time)
+            self.cursor.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render(self.elapsed_time)
         if self.ui.visible:
-            self.ui.render(self.elapsed_time)
-        #self.ui.active_art.renderables[0].render_for_export()
+            self.ui.render()
         GL.glUseProgram(0)
         sdl2.SDL_GL_SwapWindow(self.window)
     
