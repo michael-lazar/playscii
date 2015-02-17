@@ -233,7 +233,12 @@ class ConsoleUI(UIElement):
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         "handles a key from Application.input"
         keystr = sdl2.SDL_GetKeyName(key).decode()
-        if keystr == 'Return':
+        # TODO: get console bound key from InputLord, detect that instead of
+        # hard-coded backquote
+        if keystr == '`':
+            self.toggle()
+            return
+        elif keystr == 'Return':
             line = '%s %s' % (self.prompt, self.current_line)
             self.ui.app.log(line)
             self.command_history.append(self.current_line)

@@ -4,6 +4,7 @@ __pycache__/*.*
 .idea/*.*
 console.log
 playscii.cfg
+binds.cfg
 ^art/.+\.png
 ^art/.+\.psci
 ^art/.+\.ed
