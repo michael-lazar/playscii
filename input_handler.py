@@ -121,6 +121,10 @@ class InputLord:
                         app.player.x -= 1
                     elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
                         app.player.x += 1
+                    elif event.key.keysym.sym == sdl2.SDLK_a:
+                        app.player.z += 1
+                    elif event.key.keysym.sym == sdl2.SDLK_z:
+                        app.player.z -= 1
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this

@@ -1,3 +1,4 @@
+import math
 
 from renderable import TileRenderable
 
@@ -31,5 +32,25 @@ class GameObject:
         self.x, self.y = x, y
         self.z = z or 0
     
-    def render(self):
-        self.renderable.render()
+    def render(self, layer):
+        #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
+        self.renderable.render(layer)
+
+
+class WobblyThing(GameObject):
+    
+    def __init__(self, app, art_filename):
+        GameObject.__init__(self, app, art_filename)
+        self.origin_x, self.origin_y, self.origin_z = self.x, self.y, self.z
+    
+    def set_origin(self, x, y, z=None):
+        self.origin_x, self.origin_y, self.origin_z = x, y, z or self.z
+    
+    def update(self):
+        x_off = math.sin(self.app.elapsed_time / 1000) * self.origin_x
+        y_off = math.sin(self.app.elapsed_time / 500) * self.origin_y
+        z_off = math.sin(self.app.elapsed_time / 750) * self.origin_z
+        self.x = self.origin_x + x_off
+        self.y = self.origin_y + y_off
+        self.z = self.origin_z + z_off
+        GameObject.update(self)

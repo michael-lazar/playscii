@@ -229,7 +229,7 @@ class TileRenderable:
         self.render(0)
         self.exporting = False
     
-    def render(self):
+    def render(self, layers=None):
         GL.glUseProgram(self.shader.program)
         # bind textures - character set, palette, UI grain
         GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -265,10 +265,31 @@ class TileRenderable:
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        # TODO renderer opti: use glDrawElementsBaseVertex w/ offset to draw
-        # separate layers?
-        GL.glDrawElements(GL.GL_TRIANGLES, self.vert_count,
-                          GL.GL_UNSIGNED_INT, self.art.elem_array)
+        # draw all specified layers if no list given
+        if not layers:
+            layers = range(self.art.layers)
+        # handle a single int param
+        elif type(layers) is int:
+            layers = [layers]
+        layer_size = len(self.art.elem_array) / self.art.layers
+        layer_size = int(layer_size)
+        #print('rendering layers %s of %s' % (layers, self.art.filename))
+        for i in layers:
+            layer_start = i * layer_size
+            layer_end = layer_start + layer_size
+            # TEST: for active art, dim all but active layer
+            if self.art is self.app.ui.active_art and i != self.app.ui.active_layer:
+                GL.glUniform1f(self.alpha_uniform, 0.25)
+            else:
+                GL.glUniform1f(self.alpha_uniform, self.alpha)
+            if self.art is self.app.ui.active_art:
+                print('layer %s start %s' % (i, layer_start))
+            #GL.glDrawRangeElements(GL.GL_TRIANGLES, layer_start, layer_end,
+            #                       layer_size, GL.GL_UNSIGNED_INT,
+            #                       self.art.elem_array)
+            GL.glDrawElementsBaseVertex(GL.GL_TRIANGLES, layer_size,
+                                        GL.GL_UNSIGNED_INT, self.art.elem_array,
+                                        layer_start)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
