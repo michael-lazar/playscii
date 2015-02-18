@@ -4,6 +4,11 @@ from OpenGL import GL
 from art import VERT_LENGTH
 from palette import MAX_COLORS
 
+# inactive layer alphas
+LAYER_VIS_FULL = 1
+LAYER_VIS_DIM = 0.25
+LAYER_VIS_NONE = 0
+
 class TileRenderable:
     
     # vertex shader: includes view projection matrix, XYZ camera uniforms
@@ -259,7 +264,7 @@ class TileRenderable:
         # ie you could set those then render all VAOs changing only the below
         # uniforms and storing a glDrawElementsBaseVertex value for each layer
         GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
-        GL.glUniform1f(self.alpha_uniform, self.alpha)
+        #GL.glUniform1f(self.alpha_uniform, self.alpha)
         GL.glUniform3f(self.position_uniform, *self.get_loc())
         GL.glUniform3f(self.scale_uniform, *self.get_scale())
         GL.glBindVertexArray(self.vao)
@@ -271,25 +276,17 @@ class TileRenderable:
         # handle a single int param
         elif type(layers) is int:
             layers = [layers]
-        layer_size = len(self.art.elem_array) / self.art.layers
-        layer_size = int(layer_size)
-        #print('rendering layers %s of %s' % (layers, self.art.filename))
+        layer_size = int(len(self.art.elem_array) / self.art.layers)
         for i in layers:
             layer_start = i * layer_size
             layer_end = layer_start + layer_size
             # TEST: for active art, dim all but active layer
-            if self.art is self.app.ui.active_art and i != self.app.ui.active_layer:
-                GL.glUniform1f(self.alpha_uniform, 0.25)
+            if not self.app.game_mode and self.art is self.app.ui.active_art and i != self.app.ui.active_layer:
+                GL.glUniform1f(self.alpha_uniform, self.alpha * self.app.inactive_layer_visibility)
             else:
                 GL.glUniform1f(self.alpha_uniform, self.alpha)
-            if self.art is self.app.ui.active_art:
-                print('layer %s start %s' % (i, layer_start))
-            #GL.glDrawRangeElements(GL.GL_TRIANGLES, layer_start, layer_end,
-            #                       layer_size, GL.GL_UNSIGNED_INT,
-            #                       self.art.elem_array)
-            GL.glDrawElementsBaseVertex(GL.GL_TRIANGLES, layer_size,
-                                        GL.GL_UNSIGNED_INT, self.art.elem_array,
-                                        layer_start)
+            GL.glDrawElements(GL.GL_TRIANGLES, layer_size, GL.GL_UNSIGNED_INT,
+                              self.art.elem_array[layer_start:])
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)

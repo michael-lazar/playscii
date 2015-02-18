@@ -65,4 +65,5 @@ self.edit_bind_src = {
     'down'     : 'arrow_down',
     'left'     : 'arrow_left',
     'right'    : 'arrow_right',
+	'l'        : 'cycle_inactive_layer_visibility',
 }

@@ -2,13 +2,10 @@ TODO
 
 game mode renderer feasibility/perf test:
 - add scale to game object class
-- make enemy objects shift position randomly
 - make an object with a script running on its art
--- track a list of particles
-- gameobject with a different character set?
-- add control to move player in Z
+-- track a list of particles, update em each frame
+-- DOS character set
 - things to check:
--- do overlapping, multi-layer arts sort correctly?
 -- how's perf?
 
 mockup for menu bar, frame/layer matrix
