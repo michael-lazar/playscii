@@ -3,6 +3,7 @@ import sdl2
 from sys import exit
 
 from ui import SCALE_INCREMENT
+from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -122,9 +123,9 @@ class InputLord:
                     elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
                         app.player.x += 1
                     elif event.key.keysym.sym == sdl2.SDLK_a:
-                        app.player.z += 1
+                        app.player.z += 0.5
                     elif event.key.keysym.sym == sdl2.SDLK_z:
-                        app.player.z -= 1
+                        app.player.z -= 0.5
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
@@ -352,10 +353,10 @@ class InputLord:
     def BIND_toggle_camera_tilt(self):
         if self.app.camera.y_tilt == 2:
             self.app.camera.y_tilt = 0
-            self.app.log('Camera tilt disengaged.')
+            self.message_line.post_line('Camera tilt disengaged.')
         else:
             self.app.camera.y_tilt = 2
-            self.app.log('Camera tilt engaged.')
+            self.message_line.post_line('Camera tilt engaged.')
     
     def BIND_select_or_paint(self):
         if self.ui.popup.visible:
@@ -408,3 +409,18 @@ class InputLord:
             self.ui.popup.move_popup_cursor(1, 0)
         else:
             self.app.cursor.move(1, 0)
+    
+    def BIND_cycle_inactive_layer_visibility(self):
+        if self.ui.active_art.layers == 1:
+            return
+        message_text = 'Non-active layers: '
+        if self.app.inactive_layer_visibility == LAYER_VIS_FULL:
+            self.app.inactive_layer_visibility = LAYER_VIS_DIM
+            message_text += 'dim'
+        elif self.app.inactive_layer_visibility == LAYER_VIS_DIM:
+            self.app.inactive_layer_visibility = LAYER_VIS_NONE
+            message_text += 'invisible'
+        else:
+            self.app.inactive_layer_visibility = LAYER_VIS_FULL
+            message_text += 'visible'
+        self.ui.message_line.post_line(message_text)

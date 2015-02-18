@@ -75,6 +75,7 @@ class Application:
         self.elapsed_time = 0
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
+        self.inactive_layer_visibility = 1
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
         sdl2.ext.init()
@@ -375,15 +376,12 @@ class Application:
         bg.set_loc(0, 0, -3)
         self.player = GameObject(self, 'test_player')
         self.player.set_loc(1, -13)
-        enemy1 = WobblyThing(self, 'owell')
-        enemy1.set_origin(3, -6)
-        enemy2 = WobblyThing(self, 'owell')
-        enemy2.set_origin(18, -8)
-        enemy3 = WobblyThing(self, 'owell')
-        enemy3.set_origin(23, -16)
-        enemy1.start_animating()
-        enemy2.start_animating()
-        enemy3.start_animating()
+        # spawn a bunch of enemies
+        from random import randint
+        for i in range(25):
+            enemy = WobblyThing(self, 'owell')
+            enemy.set_origin(randint(0, 30), randint(-30, 0), randint(-5, 5))
+            enemy.start_animating()
         px = self.player.x + self.player.art.width / 2
         self.camera.set_loc(px, self.player.y, self.camera.z)
         self.camera.set_zoom(20)
