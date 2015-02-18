@@ -171,9 +171,10 @@ class Camera:
         self.y += self.vel_y
         self.z += self.vel_z
         # keep within bounds
-        self.x = clamp(self.x, self.min_x, self.max_x)
-        self.y = clamp(self.y, self.min_y, self.max_y)
-        self.z = clamp(self.z, self.min_zoom, self.max_zoom)
+        if not self.app.game_mode:
+            self.x = clamp(self.x, self.min_x, self.max_x)
+            self.y = clamp(self.y, self.min_y, self.max_y)
+            self.z = clamp(self.z, self.min_zoom, self.max_zoom)
         # set view matrix from xyz
         self.calc_view_matrix()
         if self.logg:

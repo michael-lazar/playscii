@@ -265,7 +265,10 @@ class TextTool(UITool):
         a_xform = self.ui.selected_xform if self.affects_xform else None
         new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
         # add command, apply immediately, and move cursor
-        self.cursor.current_command.add_command_tiles(new_tile_command)
+        if self.cursor.current_command:
+            self.cursor.current_command.add_command_tiles(new_tile_command)
+        else:
+            self.ui.app.log('DEV WARNING: Cursor current command was expected')
         new_tile_command.apply()
         self.cursor.x += 1
         if self.cursor.x >= self.ui.active_art.width:
