@@ -2,6 +2,16 @@ TODO
 
 mockup for menu bar, frame/layer matrix
 
+MenuBar(UIElement), row of buttons that invoke the pulldown menu in different places
+- menu bar buttons -> show PulldownMenu at self.x,self.y+1, populate it with items from our menu item table
+
+PulldownMenu(UIElement), size and position are set by a menubar button, populated from its table.  menu items have a name, a keyboard shortcut, and an associated command.  some commands run something immediately, others invoke the DialogBox and wait for input.  hide and reset menubar button that invoked us if user clicks anywhere but here
+
+DialogBox(UIElement), prompts user for input in one or more fields, cancel button bails, confirm button runs command based on input, confirm button only active if current text field(s) input is valid, all other UI input is locked out.  created when invoked, set to ui's "active dialog box" var, destroyed on cancel/confirm.  (how to remember values?  set class properties for field defaults on confirm?)
+dialog box subclasses: title, confirm button label (verb, not just "ok") # and size of fields, field labels, "valid input" checker function, function to run once confirm is pressed.
+keys that work while focused: enter (confirm), tab (navigates between fields), backspace, alt-backspace, esc (cancel)
+make sure these can be invoked from anywhere, eg directly from keyboard shortcuts or other UI, not just pulldown menu items
+
 ---
 
 further work on existing features:
@@ -19,5 +29,7 @@ main popup
 O key: toggle between perspective and ortho views (steal unity's cool lerp)
 
 human-readable errors if charset/palette not found
+
+separate camera for game mode
 
 further-out UI stuff in docs/ui.txt

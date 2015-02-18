@@ -58,8 +58,8 @@ class WobblyThing(GameObject):
         self.x = self.origin_x + x_off
         self.y = self.origin_y + y_off
         self.z = self.origin_z + z_off
-        self.scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000)
-        self.scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000)
+        self.scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
+        self.scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
         GameObject.update(self)
 
 

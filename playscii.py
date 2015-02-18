@@ -136,8 +136,8 @@ class Application:
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded_for_edit[0])
         # set camera bounds based on art size
-        self.camera.max_x = self.ui.active_art.width
-        self.camera.min_y = -self.ui.active_art.height
+        self.camera.max_x = self.ui.active_art.width * self.ui.active_art.quad_width
+        self.camera.min_y = -self.ui.active_art.height * self.ui.active_art.quad_height
         self.update_window_title()
         self.cursor = Cursor(self)
         self.grid = Grid(self, self.ui.active_art)
@@ -361,10 +361,6 @@ class Application:
         self.log('%s exported' % output_filename)
     
     def enter_game_mode(self):
-        self.camera.min_x = -1000
-        self.camera.max_x = 1000
-        self.camera.min_y = -1000
-        self.camera.min_y = -1000
         self.game_mode = True
     
     def exit_game_mode(self):

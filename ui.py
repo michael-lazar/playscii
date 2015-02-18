@@ -154,8 +154,8 @@ class UI:
             if x >= new_art.width or y >= new_art.height:
                 self.select_tool.selected_tiles.pop(tile, None)
         # set camera bounds based on art size
-        self.app.camera.max_x = new_art.width
-        self.app.camera.min_y = -new_art.height
+        self.app.camera.max_x = new_art.width * new_art.quad_width
+        self.app.camera.min_y = -new_art.height * new_art.quad_height
         # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)

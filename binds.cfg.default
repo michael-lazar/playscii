@@ -25,7 +25,7 @@ self.edit_bind_src = {
     'f'        : 'toggle_affects_fg',
     'b'        : 'toggle_affects_bg',
     'x'        : 'toggle_affects_xform',
-    'ctrl r'   : 'toggle_crt',
+    'shift r'  : 'toggle_crt',
     'a'        : 'select_pencil_tool',
     'e'        : 'select_erase_tool',
     'r'        : 'select_rotate_tool',
