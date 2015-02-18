@@ -29,7 +29,6 @@ from ui import UI
 from cursor import Cursor
 from grid import Grid
 from input_handler import InputLord
-from game_object import GameObject, WobblyThing
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
@@ -204,7 +203,6 @@ class Application:
             for a in self.art_loaded_for_edit + self.art_loaded_for_game:
                 # TODO: this check doesn't work on EDSCII imports b/c its name changes
                 if a.filename == filename:
-                    self.log('Art file %s already loaded' % filename)
                     return a
             self.log('Loading file %s...' % filename)
             art = ArtFromDisk(filename, self)
@@ -218,6 +216,9 @@ class Application:
     
     def load_art_for_edit(self, filename):
         art = self.load_art(filename)
+        if art in self.art_loaded_for_edit:
+            self.ui.message_line.post_line('Art file %s already loaded' % filename)
+            return
         self.art_loaded_for_edit.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)
@@ -372,6 +373,7 @@ class Application:
     def game_mode_test(self):
         "render quality/perf test for 'game mode'"
         # background w/ parallax layers
+        from game_object import GameObject, WobblyThing, ParticleThing
         bg = GameObject(self, 'test_bg')
         bg.set_loc(0, 0, -3)
         self.player = GameObject(self, 'test_player')
@@ -382,6 +384,10 @@ class Application:
             enemy = WobblyThing(self, 'owell')
             enemy.set_origin(randint(0, 30), randint(-30, 0), randint(-5, 5))
             enemy.start_animating()
+        # particle thingy
+        smoke1 = ParticleThing(self)
+        smoke1.set_loc(25, -10)
+        # set camera
         px = self.player.x + self.player.art.width / 2
         self.camera.set_loc(px, self.player.y, self.camera.z)
         self.camera.set_zoom(20)

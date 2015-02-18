@@ -1,13 +1,5 @@
 TODO
 
-game mode renderer feasibility/perf test:
-- add scale to game object class
-- make an object with a script running on its art
--- track a list of particles, update em each frame
--- DOS character set
-- things to check:
--- how's perf?
-
 mockup for menu bar, frame/layer matrix
 
 ---
