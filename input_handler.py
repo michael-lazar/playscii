@@ -353,10 +353,10 @@ class InputLord:
     def BIND_toggle_camera_tilt(self):
         if self.app.camera.y_tilt == 2:
             self.app.camera.y_tilt = 0
-            self.message_line.post_line('Camera tilt disengaged.')
+            self.ui.message_line.post_line('Camera tilt disengaged.')
         else:
             self.app.camera.y_tilt = 2
-            self.message_line.post_line('Camera tilt engaged.')
+            self.ui.message_line.post_line('Camera tilt engaged.')
     
     def BIND_select_or_paint(self):
         if self.ui.popup.visible:
