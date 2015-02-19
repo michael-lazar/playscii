@@ -35,7 +35,7 @@ self.edit_bind_src = {
     'ctrl c'   : 'copy_selection',
     'v'        : 'select_paste_tool',
     'ctrl v'   : 'select_paste_tool',
-    'escape'   : 'select_none',
+    'escape'   : 'cancel',
     'ctrl d'   : 'select_none',
     'ctrl a'   : 'select_all',
     'ctrl i'   : 'select_invert',
@@ -65,5 +65,7 @@ self.edit_bind_src = {
     'down'     : 'arrow_down',
     'left'     : 'arrow_left',
     'right'    : 'arrow_right',
-	'l'        : 'cycle_inactive_layer_visibility',
+    'l'        : 'cycle_inactive_layer_visibility',
+    'alt f'    : 'open_file_menu',
+    'alt e'    : 'open_edit_menu',
 }

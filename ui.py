@@ -7,6 +7,8 @@ from ui_element import UIArt, FPSCounterUI, MessageLineUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
+from ui_menu_bar import MenuBar
+from ui_menu_pulldown import PulldownMenu
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
@@ -92,11 +94,15 @@ class UI:
         self.status_bar = StatusBarUI(self)
         self.popup = ToolPopup(self)
         self.message_line = MessageLineUI(self)
+        self.pulldown = PulldownMenu(self)
+        self.menu_bar = MenuBar(self)
         self.elements.append(fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.console)
         self.elements.append(self.popup)
         self.elements.append(self.message_line)
+        self.elements.append(self.pulldown)
+        self.elements.append(self.menu_bar)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')

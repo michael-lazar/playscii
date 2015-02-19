@@ -12,6 +12,9 @@ class UIElement:
     # size, in tiles
     tile_width, tile_height = 1, 1
     snap_top, snap_bottom, snap_left, snap_right = False, False, False, False
+    # location in tile coords; snap_* trumps these
+    tile_x, tile_y = 0, 0
+    # location in screen (GL) coords
     x, y = 0, 0
     visible = True
     renderables = None
@@ -97,10 +100,14 @@ class UIElement:
             self.y = 1
         elif self.snap_bottom:
             self.y = self.art.quad_height * self.tile_height - 1
+        elif self.tile_y:
+            self.y = 1 - (self.tile_y * self.art.quad_height)
         if self.snap_left:
             self.x = -1
         elif self.snap_right:
             self.x = 1 - (self.art.quad_width * self.tile_width)
+        elif self.tile_x:
+            self.x = -1 + (self.tile_x * self.art.quad_width)
         self.renderable.x, self.renderable.y = self.x, self.y
     
     def update(self):
@@ -153,8 +160,8 @@ class UIRenderable(TileRenderable):
 
 class FPSCounterUI(UIElement):
     
+    tile_y = 1
     tile_width, tile_height = 12, 2
-    snap_top = True
     snap_right = True
     game_mode_visible = True
     
@@ -179,6 +186,7 @@ class MessageLineUI(UIElement):
     
     "when console outputs something new, show last line here before fading out"
     
+    tile_y = 2
     snap_left = True
     # just info, don't bother with hover, click etc
     can_hover = False
