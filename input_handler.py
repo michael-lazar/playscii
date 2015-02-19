@@ -285,6 +285,16 @@ class InputLord:
     def BIND_select_none(self):
         self.ui.select_none()
     
+    def BIND_cancel(self):
+        # context-dependent:
+        # normal painting mode: cancel current selection
+        # menu bar active: bail out of current menu
+        # TODO: dialog box up: cancel current dialog
+        if self.ui.menu_bar.active_menu_name:
+            self.ui.menu_bar.close_active_menu()
+        else:
+            self.ui.select_none()
+    
     def BIND_select_all(self):
         self.ui.select_all()
     
@@ -424,3 +434,9 @@ class InputLord:
             self.app.inactive_layer_visibility = LAYER_VIS_FULL
             message_text += 'visible'
         self.ui.message_line.post_line(message_text)
+    
+    def BIND_open_file_menu(self):
+        self.ui.menu_bar.open_menu_by_name('file')
+    
+    def BIND_open_edit_menu(self):
+        self.ui.menu_bar.open_menu_by_name('edit')

@@ -33,3 +33,5 @@ human-readable errors if charset/palette not found
 separate camera for game mode
 
 further-out UI stuff in docs/ui.txt
+
+if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
