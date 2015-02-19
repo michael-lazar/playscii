@@ -10,6 +10,7 @@ class MenuButton(UIButton):
     # menu data is just a class w/ little more than a list of items, partly
     # so we don't have to list all the items here in a different module
     menu_data = None
+    # TODO: fg/bg colors for menu items
     
     def __init__(self, element):
         UIButton.__init__(self, element)
