@@ -1,5 +1,10 @@
 bug list
 
+set color OOB crash:
+1. open the File menu
+2. hover over an item in it eg Save As
+3. press alt-E
+
 cursor preview commands "stick" and can't be undone if cursor is hovering tiles affected by a redo
 
 tile coords in status bar have negative Y only when text tool is active?!

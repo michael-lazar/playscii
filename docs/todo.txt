@@ -2,10 +2,19 @@ TODO
 
 mockup for dialog box, frame/layer matrix
 
-- DialogBox(UIElement), prompts user for input in one or more fields, cancel button bails, confirm button runs command based on input, confirm button only active if current text field(s) input is valid, all other UI input is locked out.  created when invoked, set to ui's "active dialog box" var, destroyed on cancel/confirm.  (how to remember values?  set class properties for field defaults on confirm?)
-- dialog box subclasses for specific commands: title, confirm button label (verb, not just "ok") # and size of fields, field labels, "valid input" checker function, function to run once confirm is pressed.
-- keys that work while focused: enter (confirm), tab (navigates between fields), backspace, alt-backspace, esc (cancel)
-- make sure these can be invoked from anywhere, eg directly from keyboard shortcuts or other UI, not just pulldown menu items
+- confirm button only active if current text field(s) input is valid?
+-- dialog box subclasses: "valid input" checker function
+- how to remember values?  set class properties for field defaults on confirm?
+- keys that work while focused: tab (navigates between fields), alt-backspace
+
+quit:
+- "unsaved changes" bool for Art
+- if any open-for-edit art has unsaved changes, offer a "save unsaved changes before quit?" dialog
+- once all unsaved changes have been resolved, quit
+
+multi-field dialog example:
+- resize art: new width and height, X and Y origin
+- accept only numeric input
 
 ---
 

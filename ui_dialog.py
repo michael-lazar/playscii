@@ -18,7 +18,7 @@ class UIDialog(UIElement):
     
     tile_width, tile_height = 40, 8
     fg_color = UIColors.black
-    bg_color = UIColors.lightgrey
+    bg_color = UIColors.white
     title = 'Test Dialog Box'
     confirm_label = 'Confirm'
     cancel_label = 'Cancel'
