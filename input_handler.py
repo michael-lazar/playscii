@@ -4,7 +4,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import SaveAsDialog
+from ui_dialog import SaveAsDialog, QuitUnsavedChangesDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -86,15 +86,15 @@ class InputLord:
         # get keyboard state so later we can directly query keys
         ks = sdl2.SDL_GetKeyboardState(None)
         # get modifier states
-        shift_pressed, alt_pressed, ctrl_pressed = False, False, False
+        self.shift_pressed, self.alt_pressed, self.ctrl_pressed = False, False, False
         if ks[sdl2.SDL_SCANCODE_LSHIFT] or ks[sdl2.SDL_SCANCODE_RSHIFT]:
-            shift_pressed = True
+            self.shift_pressed = True
         if ks[sdl2.SDL_SCANCODE_LALT] or ks[sdl2.SDL_SCANCODE_RALT]:
-            alt_pressed = True
+            self.alt_pressed = True
         if ks[sdl2.SDL_SCANCODE_LCTRL] or ks[sdl2.SDL_SCANCODE_RCTRL]:
-            ctrl_pressed = True
+            self.ctrl_pressed = True
         if app.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
-            ctrl_pressed = True
+            self.ctrl_pressed = True
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
                 app.should_quit = True
@@ -104,20 +104,23 @@ class InputLord:
             elif event.type == sdl2.SDL_KEYDOWN:
                 # if console is up, pass input to it
                 if self.ui.console.visible:
-                    self.ui.console.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
+                    self.ui.console.handle_input(event.key.keysym.sym,
+                        self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                 # same with dialog box
                 elif self.ui.active_dialog:
-                    self.ui.active_dialog.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
+                    self.ui.active_dialog.handle_input(event.key.keysym.sym,
+                        self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                 # handle text input if text tool is active
                 elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
-                    self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym, shift_pressed, ctrl_pressed, alt_pressed)
+                    self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym,
+                        self.shift_pressed, self.ctrl_pressed, self.alt_pressed)
                 # see if there's a function for this bind and run it
                 else:
-                    f = self.get_bind_function(event, shift_pressed, alt_pressed, ctrl_pressed)
+                    f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                     if f:
                         f()
                 # TEST: alt + arrow keys control game mode test renderable
-                if alt_pressed:
+                if self.alt_pressed:
                     if event.key.keysym.sym == sdl2.SDLK_UP:
                         app.player.y += 1
                     elif event.key.keysym.sym == sdl2.SDLK_DOWN:
@@ -135,7 +138,7 @@ class InputLord:
             # elegant way than this
             elif event.type == sdl2.SDL_KEYUP:
                 # dismiss selector popup
-                f = self.get_bind_function(event, shift_pressed, alt_pressed, ctrl_pressed)
+                f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                 if f == self.BIND_toggle_picker:
                     # ..but only for default hold-to-show setting
                     if self.ui.popup_hold_to_show:
@@ -157,7 +160,7 @@ class InputLord:
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     if self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
-                        self.ui.select_tool.finish_select(shift_pressed, ctrl_pressed)
+                        self.ui.select_tool.finish_select(self.shift_pressed, self.ctrl_pressed)
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         app.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
@@ -179,7 +182,7 @@ class InputLord:
         # directly query keys we don't want affected by OS key repeat delay
         # TODO: these are hard-coded for the moment, think of a good way
         # to expose this functionality to the key bind system
-        if shift_pressed and not alt_pressed and not ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
+        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
             if ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]:
                 app.camera.pan(0, 1, True)
             if ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]:
@@ -202,6 +205,11 @@ class InputLord:
     # function names correspond with key values in binds.cfg
     
     def BIND_quit(self):
+        for art in self.app.art_loaded_for_edit:
+            if art.unsaved_changes:
+                self.ui.set_active_art(art)
+                self.ui.open_dialog(QuitUnsavedChangesDialog)
+                return
         self.app.should_quit = True
     
     def BIND_toggle_console(self):
@@ -378,13 +386,13 @@ class InputLord:
     def BIND_select_or_paint(self):
         if self.ui.popup.visible:
             # simulate left/right click in popup to select stuff
-            self.ui.popup.select_key_pressed(shift_pressed)
+            self.ui.popup.select_key_pressed(self.shift_pressed)
         elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
             self.ui.text_tool.start_entry()
         elif self.ui.selected_tool is self.ui.select_tool:
             if self.ui.select_tool.selection_in_progress:
                 # pass in shift/alt for add/subtract
-                self.ui.select_tool.finish_select(shift_pressed, ctrl_pressed)
+                self.ui.select_tool.finish_select(self.shift_pressed, self.ctrl_pressed)
             else:
                 self.ui.select_tool.start_select()
         else:
@@ -405,13 +413,13 @@ class InputLord:
     
     def BIND_arrow_up(self):
         if self.ui.popup.visible:
-            self.ui.popup.move_popup_cursor(0, -1)
+            self.ui.popup.move_popup_cursor(0, 1)
         else:
             self.app.cursor.move(0, 1)
     
     def BIND_arrow_down(self):
         if self.ui.popup.visible:
-            self.ui.popup.move_popup_cursor(0, 1)
+            self.ui.popup.move_popup_cursor(0, -1)
         else:
             self.app.cursor.move(0, -1)
     

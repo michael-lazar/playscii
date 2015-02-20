@@ -301,6 +301,7 @@ class UI:
             new_command.add_command_tiles(new_tile_command)
         new_command.apply()
         self.active_art.command_stack.commit_commands(new_command)
+        self.active_art.set_unsaved_changes(True)
     
     def copy_selection(self):
         # convert current selection tiles (active frame+layer) into
@@ -405,6 +406,7 @@ class UI:
         if self.app.cursor.current_command:
             self.app.cursor.finish_paint()
         self.active_art.command_stack.undo()
+        self.active_art.set_unsaved_changes(True)
     
     def redo(self):
         self.active_art.command_stack.redo()

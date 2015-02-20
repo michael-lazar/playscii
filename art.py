@@ -90,6 +90,7 @@ class Art:
         self.app = app
         self.charset, self.palette = charset, palette
         self.command_stack = CommandStack(self)
+        self.unsaved_changes = False
         self.width, self.height = width, height
         self.frames = 0
         # list of frame delays
@@ -390,7 +391,14 @@ class Art:
         # MAYBE-TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
+        self.set_unsaved_changes(False)
         self.app.log('saved %s to disk.' % self.filename)
+    
+    def set_unsaved_changes(self, new_status):
+        if new_status == self.unsaved_changes:
+            return
+        self.unsaved_changes = new_status
+        self.app.update_window_title()
     
     def set_filename(self, new_filename):
         # append extension if missing
@@ -542,9 +550,9 @@ class ArtFromDisk(Art):
             self.fg_colors.append(fg_colors)
             self.bg_colors.append(bg_colors)
             self.uv_mods.append(uvs)
-        # TODO: for hot-reload, app should pass in old renderables list
         self.renderables = []
         self.command_stack = CommandStack(self)
+        self.unsaved_changes = False
         # running scripts and timing info
         self.scripts = []
         self.script_rates = []
@@ -633,6 +641,7 @@ class ArtFromEDSCII(Art):
         self.fg_changed_frames, self.bg_changed_frames = [], []
         self.renderables = []
         self.command_stack = CommandStack(self)
+        self.unsaved_changes = False
         # running scripts and timing info
         self.scripts = []
         self.script_rates = []

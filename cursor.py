@@ -188,6 +188,7 @@ class Cursor:
         self.current_command = EditCommand(self.app.ui.active_art)
         self.current_command.add_command_tiles(self.preview_edits)
         self.preview_edits = []
+        self.app.ui.active_art.set_unsaved_changes(True)
     
     def finish_paint(self):
         "invoked by mouse button up and undo"
@@ -246,6 +247,7 @@ class Cursor:
         if self.current_command and self.app.ui.selected_tool.paint_while_dragging:
             # add new tile(s) to current command group
             self.current_command.add_command_tiles(self.preview_edits)
+            self.app.ui.active_art.set_unsaved_changes(True)
             self.preview_edits = []
     
     def render(self):
