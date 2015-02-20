@@ -271,6 +271,8 @@ class Application:
             full_filename = os.path.abspath(filename)
         else:
             full_filename = filename
+        if self.ui.active_art.unsaved_changes:
+            full_filename += '*'
         self.set_window_title(full_filename)
     
     def blank_screen(self):
