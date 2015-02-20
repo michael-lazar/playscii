@@ -460,6 +460,8 @@ class ToolPopup(UIElement):
         self.visible = True
         # set cursor as starting point for keyboard navigation
         self.charset_swatch.set_cursor_selection_index(self.ui.selected_char)
+        if self.ui.pulldown.visible:
+            self.ui.menu_bar.close_active_menu()
         self.reset_loc()
     
     def toggle(self):

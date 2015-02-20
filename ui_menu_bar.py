@@ -3,6 +3,7 @@ from math import ceil
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_menu_pulldown import FileMenuData, EditMenuData
+from ui_colors import UIColors
 
 class MenuButton(UIButton):
     caption = 'Base Class Menu Button'
@@ -10,7 +11,10 @@ class MenuButton(UIButton):
     # menu data is just a class w/ little more than a list of items, partly
     # so we don't have to list all the items here in a different module
     menu_data = None
-    # TODO: fg/bg colors for menu items
+    # styling
+    normal_bg_color = UIColors.white
+    hovered_bg_color = UIColors.lightgrey
+    dimmed_bg_color = UIColors.lightgrey
     
     def __init__(self, element):
         UIButton.__init__(self, element)
@@ -18,13 +22,14 @@ class MenuButton(UIButton):
     
     def open_pulldown(self):
         if self.element.active_menu_name == self.name:
+            self.element.close_active_menu()
             return
         # tell pulldown what's opening it, it can populate its items based on
         # our data
         self.pulldown.open_at(self)
         self.element.active_menu_name = self.name
-        # TODO: set button state to be clicked until clicked again or
-        # clicked away from
+        # set button state to be dimmed until menu is closed
+        self.dimmed = True
 
 
 # playscii logo button = normal UIButton, opens About screen directly
@@ -33,6 +38,9 @@ class PlaysciiMenuButton(UIButton):
     caption = '<3'
     caption_justify = TEXT_CENTER
     width = len(caption) + 2
+    normal_bg_color = UIColors.white
+    hovered_bg_color = UIColors.lightgrey
+    dimmed_bg_color = UIColors.lightgrey
 
 class FileMenuButton(MenuButton):
     name = 'file'
@@ -79,6 +87,11 @@ class MenuBar(UIElement):
         self.ui.message_line.post_line('<3')
     
     def close_active_menu(self):
+        # un-dim active menu button
+        for button in self.buttons:
+            if button.name == self.active_menu_name:
+                button.dimmed = False
+                button.set_state('normal')
         self.active_menu_name = None
         self.ui.pulldown.visible = False
     

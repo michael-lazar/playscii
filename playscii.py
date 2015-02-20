@@ -422,8 +422,9 @@ class Application:
             art.update()
         for renderable in self.edit_renderables:
             renderable.update()
-        for game_object in self.game_objects:
-            game_object.update()
+        if self.game_mode:
+            for game_object in self.game_objects:
+                game_object.update()
         self.camera.update()
         if self.test_mutate_each_frame:
             self.test_mutate_each_frame = False
@@ -440,7 +441,7 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode:
+        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
@@ -477,12 +478,12 @@ class Application:
         else:
             for r in self.edit_renderables:
                 r.render()
-        # draw selection grid, then selection, then cursor
-        if self.grid.visible and not self.game_mode:
-            self.grid.render()
-        self.ui.select_tool.render_selections()
-        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode:
-            self.cursor.render()
+            # draw selection grid, then selection, then cursor
+            if self.grid.visible:
+                self.grid.render()
+            self.ui.select_tool.render_selections()
+            if not self.ui.popup.visible and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name:
+                self.cursor.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render(self.elapsed_time)
