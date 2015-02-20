@@ -4,7 +4,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import SaveAsDialog, QuitUnsavedChangesDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -316,8 +316,8 @@ class InputLord:
     def BIND_select_invert(self):
         self.ui.invert_selection()
     
-    def BIND_erase_selection(self):
-        self.ui.erase_tiles_in_selection()
+    def BIND_erase_selection_or_art(self):
+        self.ui.erase_selection_or_art()
     
     def BIND_toggle_game_mode(self):
         if not self.app.game_mode:
@@ -455,6 +455,12 @@ class InputLord:
     
     def BIND_open_edit_menu(self):
         self.ui.menu_bar.open_menu_by_name('edit')
+    
+    def BIND_new_art(self):
+        self.ui.open_dialog(NewArtDialog)
+    
+    def BIND_open_art(self):
+        self.ui.open_dialog(OpenArtDialog)
     
     def BIND_save_art_as(self):
         self.ui.open_dialog(SaveAsDialog)

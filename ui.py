@@ -284,6 +284,13 @@ class UI:
         self.copy_selection()
         self.erase_tiles_in_selection()
     
+    def erase_selection_or_art(self):
+        if len(self.select_tool.selected_tiles) > 0:
+            self.erase_tiles_in_selection()
+        else:
+            self.active_art.clear_frame_layer(self.active_frame, self.active_layer,
+                                              bg_color=self.selected_bg_color)
+    
     def erase_tiles_in_selection(self):
         # create and commit command group to clear all tiles in selection
         frame, layer = self.active_frame, self.active_layer

@@ -7,14 +7,20 @@ mockup for dialog box, frame/layer matrix
 - how to remember values?  set class properties for field defaults on confirm?
 - keys that work while focused: tab (navigates between fields), alt-backspace
 
-quit:
-- "unsaved changes" bool for Art
-- if any open-for-edit art has unsaved changes, offer a "save unsaved changes before quit?" dialog
-- once all unsaved changes have been resolved, quit
+new art dialog:
+- name is only valid if there's not already an art loaded named that
+- only allow w/h between 1 and [reasonable max value, eg 10000?]
+
+close command (ctrl w):
+- pops up same unsaved changes dialog as quit
 
 multi-field dialog example:
 - resize art: new width and height, X and Y origin
 - accept only numeric input
+
+some way to allow arrow keys to navigate pulldown menu?
+- left/right: next/previous menu in menu bar (easy?)
+- up/down: simulate hover of next/previous item in pulldown (harder)
 
 ---
 

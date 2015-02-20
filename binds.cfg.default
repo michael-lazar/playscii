@@ -39,7 +39,7 @@ self.edit_bind_src = {
     'ctrl d'   : 'select_none',
     'ctrl a'   : 'select_all',
     'ctrl i'   : 'select_invert',
-    'del'      : 'erase_selection',
+    'del'      : 'erase_selection_or_art',
     'ctrl g'   : 'toggle_game_mode',
     'space'    : 'toggle_picker',
     'w'        : 'swap_fg_bg_colors',
@@ -69,6 +69,8 @@ self.edit_bind_src = {
     'alt f'    : 'open_file_menu',
     'alt e'    : 'open_edit_menu',
     # commands that don't have a shortcut still need to be declared
-    # bind strings preceded by a _ will be disregarded for display
+    # bind strings preceded by a _ will not be displayed
     '_saveas'  : 'save_art_as',
+	'ctrl o'   : 'open_art',
+	'ctrl n'   : 'new_art',
 }
