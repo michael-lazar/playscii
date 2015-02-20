@@ -14,13 +14,17 @@ class PulldownMenuItem:
     # bindable command we look up from InputLord to get binding text from
     command = 'test_command'
 
-# TODO: this needs to invoke a dialog box, wait til that's implemented
-#class FileOpenMenuItem(PulldownMenuItem):
-#    label = 'Open'
-#    command = 'open_art'
-
 class SeparatorMenuItem(PulldownMenuItem):
+    "menu separator, non-interactive and handled specially by menu drawing"
     pass
+
+class FileNewMenuItem(PulldownMenuItem):
+    label = 'New...'
+    command = 'new_art'
+
+class FileOpenMenuItem(PulldownMenuItem):
+    label = 'Open...'
+    command = 'open_art'
 
 class FileSaveMenuItem(PulldownMenuItem):
     label = 'Save'
@@ -50,16 +54,35 @@ class EditPasteMenuItem(PulldownMenuItem):
     label = 'Paste'
     command = 'select_paste_tool'
 
+class EditDeleteMenuItem(PulldownMenuItem):
+    label = 'Clear'
+    command = 'erase_selection_or_art'
+
+class EditSelectAllMenuItem(PulldownMenuItem):
+    label = 'Select All'
+    command = 'select_all'
+
+class EditSelectNoneMenuItem(PulldownMenuItem):
+    label = 'Select None'
+    command = 'select_none'
+
+class EditSelectInvertMenuItem(PulldownMenuItem):
+    label = 'Invert Selection'
+    command = 'select_invert'
+
 
 class PulldownMenuData:
     "data for pulldown menus, eg File, Edit, etc; mainly a list of menu items"
     items = []
 
 class FileMenuData(PulldownMenuData):
-    items = [FileSaveMenuItem, FileSaveAsMenuItem, FilePNGExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
+    items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
+             FilePNGExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
-    items = [EditCutMenuItem, EditCopyMenuItem, EditPasteMenuItem]
+    items = [EditCutMenuItem, EditCopyMenuItem, EditPasteMenuItem,
+             EditDeleteMenuItem, SeparatorMenuItem, EditSelectAllMenuItem,
+             EditSelectNoneMenuItem, EditSelectInvertMenuItem]
 
 
 class PulldownMenu(UIElement):

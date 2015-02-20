@@ -4,7 +4,7 @@ import sdl2
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
-from ui_console import SaveCommand
+from ui_console import OpenCommand, SaveCommand
 
 class ConfirmButton(UIButton):
     caption = 'Confirm'
@@ -32,13 +32,14 @@ class UIDialog(UIElement):
     other_button_visible = False
     titlebar_fg_color = UIColors.white
     titlebar_bg_color = UIColors.black
-    fields = 2
+    fields = 3
     field_width = 36
     field_fg_color = UIColors.black
     field_bg_color = UIColors.lightgrey
     field0_label = 'Field 1 label:'
     field1_label = 'Field 2 label:'
-    field0_width = field1_width = field_width
+    field2_label = 'Field 3 label:'
+    field0_width = field1_width = field2_width = field_width
     # allow subclasses to override confirm caption, eg Save
     confirm_caption = None
     other_caption = None
@@ -60,13 +61,21 @@ class UIDialog(UIElement):
         self.buttons = [self.confirm_button, self.other_button, self.cancel_button]
         self.field0_text = ''
         self.field1_text = ''
+        self.field2_text = ''
         # field cursor starts on
         self.active_field = 0
         UIElement.__init__(self, ui)
         self.ui.menu_bar.close_active_menu()
     
     def reset_art(self):
-        # TODO?: determine size based on contents
+        # determine size based on contents
+        # base height = 4, titlebar + padding + buttons + padding
+        self.tile_height = 4
+        # get_message splits into >1 line if too long
+        msg_lines = self.get_message() if self.message else []
+        self.tile_height += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
+        self.tile_height += 3 * self.fields
+        self.art.resize(self.tile_width, self.tile_height)
         # center in window
         qw, qh = self.art.quad_width, self.art.quad_height
         self.x = -(self.tile_width * qw) / 2
@@ -78,9 +87,9 @@ class UIDialog(UIElement):
         self.art.write_string(0, 0, 0, 0, s, self.titlebar_fg_color, self.titlebar_bg_color)
         # message
         if self.message:
-            msg = self.get_message()
-            # TODO: split over multiple lines if too long?
-            self.art.write_string(0, 0, 2, 2, msg)
+            y = 2
+            for i,line in enumerate(msg_lines):
+                self.art.write_string(0, 0, 2, y+i, line)
         # field caption(s)
         self.draw_fields()
         # position buttons
@@ -93,18 +102,26 @@ class UIDialog(UIElement):
             self.other_button.visible = True
         self.cancel_button.x = 2
         self.cancel_button.y = self.tile_height - 2
+        # draw buttons
         UIElement.reset_art(self)
     
+    def update(self):
+        # redraw fields every update for cursor blink
+        # (seems a waste, no real perf impact tho)
+        self.draw_fields(False)
+        UIElement.update(self)
+    
     def get_message(self):
-        return self.message
+        # TODO: split over multiple lines if too long
+        return [self.message]
     
     def draw_fields(self, draw_field_labels=True):
         start_y = 2
+        # add # of message lines
         if self.message:
-            # TODO: add # of message lines
-            start_y += 2
+            start_y += len(self.get_message()) + 1
         for i in range(self.fields):
-            y = (i * 2) + start_y
+            y = (i * 3) + start_y
             if draw_field_labels:
                 label = getattr(self, 'field%s_label' % i)
                 self.art.write_string(0, 0, 2, y, label, self.fg_color)
@@ -114,7 +131,10 @@ class UIDialog(UIElement):
             # draw cursor at end if this is the active field
             cursor = ''
             if i == self.active_field:
-                cursor = '_'
+                # blink cursor
+                blink_on = int(self.ui.app.elapsed_time / 250) % 2
+                if blink_on:
+                    cursor = '_'
             field_text = (field_text + cursor).ljust(field_width)
             self.art.write_string(0, 0, 2, y, field_text, self.field_fg_color, self.field_bg_color)
     
@@ -126,8 +146,12 @@ class UIDialog(UIElement):
         elif keystr == 'Escape':
             self.cancel_pressed()
         elif keystr == 'Tab':
-            # TODO: cycle through fields
-            pass
+            if self.fields == 0:
+                return
+            # cycle through fields
+            self.active_field += 1
+            self.active_field %= self.fields
+            return
         elif keystr == 'Backspace':
             if len(field_text) > 0:
                 field_text = field_text[:-1]
@@ -169,6 +193,45 @@ class UIDialog(UIElement):
         self.dismiss()
 
 
+class NewArtDialog(UIDialog):
+    
+    title = 'New art'
+    fields = 3
+    field0_label = 'Enter name of new art:'
+    field1_label = 'Width:'
+    field2_label = 'Height:'
+    confirm_caption = 'Create'
+    field0_width = 36
+    field1_width = field2_width = int(field0_width / 4)
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        # populate with good defaults
+        self.field0_text = 'new%s' % len(ui.app.art_loaded_for_edit)
+        self.field1_text = str(ui.app.new_art_width)
+        self.field2_text = str(ui.app.new_art_height)
+    
+    def confirm_pressed(self):
+        name = self.get_field_text(0)
+        w, h = int(self.get_field_text(1)), int(self.get_field_text(2))
+        self.ui.app.log('Created %s.psci with size %s x %s' % (name, w, h))
+        self.ui.app.new_art_for_edit(name, w, h)
+        self.dismiss()
+
+
+class OpenArtDialog(UIDialog):
+    
+    title = 'Open art'
+    fields = 1
+    field0_label = 'Enter name of art to open:'
+    confirm_caption = 'Open'
+    
+    def confirm_pressed(self):
+        # run console command for same code path
+        OpenCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+
 class SaveAsDialog(UIDialog):
     
     title = 'Save art'
@@ -177,7 +240,6 @@ class SaveAsDialog(UIDialog):
     confirm_caption = 'Save'
     
     def confirm_pressed(self):
-        # run console command
         SaveCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()
 
@@ -207,4 +269,4 @@ class QuitUnsavedChangesDialog(UIDialog):
     def get_message(self):
         # get base name (ie no dirs)
         filename = os.path.basename(self.ui.active_art.filename)
-        return self.message % filename
+        return [self.message % filename]

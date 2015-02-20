@@ -172,11 +172,15 @@ class Application:
         if self.ui:
             self.ui.message_line.post_line(new_line)
     
-    def new_art(self, filename):
-        filename = filename or '%snew' % ART_DIR
+    def new_art(self, filename, width=None, height=None):
+        width = width or self.new_art_width
+        height = height or self.new_art_height
+        filename = filename or 'new'
+        if not filename.startswith(ART_DIR):
+            filename = '%s%s' % (ART_DIR, filename)
         charset = self.load_charset(self.starting_charset)
         palette = self.load_palette(self.starting_palette)
-        return Art(filename, self, charset, palette, self.new_art_width, self.new_art_height)
+        return Art(filename, self, charset, palette, width, height)
     
     def load_art(self, filename):
         """
@@ -213,6 +217,14 @@ class Application:
             if not art or not art.valid:
                 art = self.new_art(filename)
         return art
+    
+    def new_art_for_edit(self, filename, width, height):
+        art = self.new_art(filename, width, height)
+        self.art_loaded_for_edit.insert(0, art)
+        renderable = TileRenderable(self, art)
+        self.edit_renderables.insert(0, renderable)
+        self.ui.set_active_art(art)
+        art.set_unsaved_changes(True)
     
     def load_art_for_edit(self, filename):
         art = self.load_art(filename)
