@@ -262,10 +262,8 @@ class TileRenderable:
         # TODO renderer opti: all the above are probably true of all
         # game mode renderables!
         # ie you could set those then render all VAOs changing only the below
-        # uniforms and storing a glDrawElementsBaseVertex value for each layer
+        # uniforms
         GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
-        #GL.glUniform1f(self.alpha_uniform, self.alpha)
-        GL.glUniform3f(self.position_uniform, *self.get_loc())
         GL.glUniform3f(self.scale_uniform, *self.get_scale())
         GL.glBindVertexArray(self.vao)
         GL.glEnable(GL.GL_BLEND)
@@ -285,6 +283,11 @@ class TileRenderable:
                 GL.glUniform1f(self.alpha_uniform, self.alpha * self.app.inactive_layer_visibility)
             else:
                 GL.glUniform1f(self.alpha_uniform, self.alpha)
+            # use position offset instead of baked-in Z for layers - this
+            # way a layer's Z can change w/o rebuilding its vert array
+            x, y, z = self.get_loc()
+            z += self.art.layers_z[i]
+            GL.glUniform3f(self.position_uniform, x, y, z)
             GL.glDrawElements(GL.GL_TRIANGLES, layer_size, GL.GL_UNSIGNED_INT,
                               self.art.elem_array[layer_start:])
         GL.glDisable(GL.GL_BLEND)

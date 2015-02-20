@@ -248,11 +248,11 @@ class Art:
                     x1,y1 = right_x, top_y
                     x2,y2 = left_x, bottom_y
                     x3,y3 = right_x, bottom_y
-                    z = self.layers_z[layer]
-                    verts = [x0, y0, z]
-                    verts += [x1, y1, z]
-                    verts += [x2, y2, z]
-                    verts += [x3, y3, z]
+                    # Z of all layers is 0, layer Z set in shader
+                    verts = [x0, y0, 0]
+                    verts += [x1, y1, 0]
+                    verts += [x2, y2, 0]
+                    verts += [x3, y3, 0]
                     self.vert_array[layer][tile_y][tile_x] = verts
                     # vertex elements
                     elements = [vert_index, vert_index+1, vert_index+2]
