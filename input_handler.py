@@ -4,6 +4,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
+from ui_dialog import SaveAsDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -104,6 +105,9 @@ class InputLord:
                 # if console is up, pass input to it
                 if self.ui.console.visible:
                     self.ui.console.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
+                # same with dialog box
+                elif self.ui.active_dialog:
+                    self.ui.active_dialog.handle_input(event.key.keysym.sym, shift_pressed, alt_pressed, ctrl_pressed)
                 # handle text input if text tool is active
                 elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
                     self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym, shift_pressed, ctrl_pressed, alt_pressed)
@@ -158,6 +162,9 @@ class InputLord:
                         app.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 self.ui.clicked(event.button.button)
+                # don't register edit commands if a menu is up
+                if self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                    return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
@@ -440,3 +447,6 @@ class InputLord:
     
     def BIND_open_edit_menu(self):
         self.ui.menu_bar.open_menu_by_name('edit')
+    
+    def BIND_save_art_as(self):
+        self.ui.open_dialog(SaveAsDialog)

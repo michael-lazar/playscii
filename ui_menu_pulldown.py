@@ -26,6 +26,10 @@ class FileSaveMenuItem(PulldownMenuItem):
     label = 'Save'
     command = 'save_art'
 
+class FileSaveAsMenuItem(PulldownMenuItem):
+    label = 'Save As...'
+    command = 'save_art_as'
+
 class FilePNGExportMenuItem(PulldownMenuItem):
     label = 'Export PNG'
     command = 'export_image'
@@ -52,7 +56,7 @@ class PulldownMenuData:
     items = []
 
 class FileMenuData(PulldownMenuData):
-    items = [FileSaveMenuItem, FilePNGExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
+    items = [FileSaveMenuItem, FileSaveAsMenuItem, FilePNGExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
     items = [EditCutMenuItem, EditCopyMenuItem, EditPasteMenuItem]
@@ -166,7 +170,9 @@ class PulldownMenu(UIElement):
                 if bind_tuple[3]:
                     # TODO: cmd vs ctrl for mac vs non
                     shortcut += 'C-'
-                shortcut += bind_tuple[0]
+                # bind strings that start with _ will be disregarded
+                if not (bind_tuple[0].startswith('_') and len(bind_tuple[0]) > 1):
+                    shortcut += bind_tuple[0]
                 return shortcut, command_function
         self.ui.app.log('Shortcut/command not found: %s' % menu_item.command)
         return '', null
