@@ -51,6 +51,8 @@ class UI:
         self.active_art = active_art
         self.active_frame = 0
         self.active_layer = 0
+        # dialog box set here
+        self.active_dialog = None
         # easy color index lookups
         self.colors = UIColors()
         # for UI, view /and/ projection matrix are identity
@@ -406,6 +408,11 @@ class UI:
     
     def redo(self):
         self.active_art.command_stack.redo()
+    
+    def open_dialog(self, box_class):
+        dialog = box_class(self)
+        self.active_dialog = dialog
+        self.elements.append(dialog)
     
     def destroy(self):
         for e in self.elements:

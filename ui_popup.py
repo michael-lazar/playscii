@@ -457,6 +457,8 @@ class ToolPopup(UIElement):
         # if already visible, bail - key repeat probably triggered this
         if self.visible:
             return
+        if self.ui.active_dialog:
+            return
         self.visible = True
         # set cursor as starting point for keyboard navigation
         self.charset_swatch.set_cursor_selection_index(self.ui.selected_char)

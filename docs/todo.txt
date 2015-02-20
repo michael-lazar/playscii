@@ -2,10 +2,10 @@ TODO
 
 mockup for dialog box, frame/layer matrix
 
-DialogBox(UIElement), prompts user for input in one or more fields, cancel button bails, confirm button runs command based on input, confirm button only active if current text field(s) input is valid, all other UI input is locked out.  created when invoked, set to ui's "active dialog box" var, destroyed on cancel/confirm.  (how to remember values?  set class properties for field defaults on confirm?)
-dialog box subclasses for specific commands: title, confirm button label (verb, not just "ok") # and size of fields, field labels, "valid input" checker function, function to run once confirm is pressed.
-keys that work while focused: enter (confirm), tab (navigates between fields), backspace, alt-backspace, esc (cancel)
-make sure these can be invoked from anywhere, eg directly from keyboard shortcuts or other UI, not just pulldown menu items
+- DialogBox(UIElement), prompts user for input in one or more fields, cancel button bails, confirm button runs command based on input, confirm button only active if current text field(s) input is valid, all other UI input is locked out.  created when invoked, set to ui's "active dialog box" var, destroyed on cancel/confirm.  (how to remember values?  set class properties for field defaults on confirm?)
+- dialog box subclasses for specific commands: title, confirm button label (verb, not just "ok") # and size of fields, field labels, "valid input" checker function, function to run once confirm is pressed.
+- keys that work while focused: enter (confirm), tab (navigates between fields), backspace, alt-backspace, esc (cancel)
+- make sure these can be invoked from anywhere, eg directly from keyboard shortcuts or other UI, not just pulldown menu items
 
 ---
 

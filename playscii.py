@@ -40,7 +40,7 @@ LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
 
-VERSION = '0.3.4'
+VERSION = '0.4.0'
 
 class Application:
     
@@ -441,7 +441,7 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name:
+        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
@@ -482,7 +482,7 @@ class Application:
             if self.grid.visible:
                 self.grid.render()
             self.ui.select_tool.render_selections()
-            if not self.ui.popup.visible and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name:
+            if not self.ui.popup.visible and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
                 self.cursor.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
