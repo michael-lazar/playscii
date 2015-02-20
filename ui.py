@@ -385,6 +385,8 @@ class UI:
     def clicked(self, button):
         for e in self.hovered_elements:
             e.clicked(button)
+        if self.pulldown.visible and not self.pulldown in self.hovered_elements and not self.menu_bar in self.hovered_elements:
+            self.menu_bar.close_active_menu()
     
     def unclicked(self, button):
         for e in self.hovered_elements:
