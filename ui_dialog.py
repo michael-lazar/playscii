@@ -170,12 +170,15 @@ class UIDialog(UIElement):
             if self.fields == 0:
                 return
             # cycle through fields
-            self.active_field += 1
+            if shift_pressed:
+                self.active_field -= 1
+            else:
+                self.active_field += 1
             self.active_field %= self.fields
             return
         elif keystr == 'Backspace':
             if len(field_text) > 0:
-                field_text = field_text[:-1]
+                field_text = '' if alt_pressed else field_text[:-1]
         elif keystr == 'Space':
             field_text += ' '
         elif len(keystr) > 1:
