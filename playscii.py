@@ -77,6 +77,7 @@ class Application:
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         self.inactive_layer_visibility = 1
+        self.version = VERSION
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
         sdl2.ext.init()

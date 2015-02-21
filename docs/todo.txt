@@ -1,18 +1,17 @@
 TODO
 
 menu:
-- about/credits screen
-- art: next/previous art, crop to selection, resize, [list of loaded art]
+- art: crop to selection, resize, [list of loaded art]
 - frame: add to end/insert/duplicate/remove/change order/change delay
 - layer: add/duplicate/remove/change current Z, same functionality as the pane described above
-- tool: list of tools, active one is checked
-- help: help screen, readme, website?
+- help: launch website?
 
 - remember previous dialog values?  set class properties for field defaults on confirm?
-- a way to grey out pulldown menu items when they aren't valid? (eg save when no art loaded)
 - some way to allow arrow keys to navigate pulldown menu?
 -- left/right: next/previous menu in menu bar (easy?)
 -- up/down: simulate hover of next/previous item in pulldown (harder)
+
+- full about/credits
 
 mockup for frame/layer matrix
 

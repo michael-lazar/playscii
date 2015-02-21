@@ -68,10 +68,18 @@ self.edit_bind_src = {
     'l'        : 'cycle_inactive_layer_visibility',
     'alt f'    : 'open_file_menu',
     'alt e'    : 'open_edit_menu',
+    'alt t'    : 'open_tool_menu',
+    'alt a'    : 'open_art_menu',
+    'alt r'    : 'open_frame_menu',
+    'alt l'    : 'open_layer_menu',
+    'alt h'    : 'open_help_menu',
     'ctrl o'   : 'open_art',
     'ctrl n'   : 'new_art',
     'ctrl w'   : 'close_art',
+    'f1'       : 'open_help_screen',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'  : 'save_art_as',
+    '_grab'    : 'select_grab_tool',
+    '_readme'  : 'open_readme',
 }

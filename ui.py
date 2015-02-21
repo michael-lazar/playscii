@@ -97,6 +97,7 @@ class UI:
         self.popup = ToolPopup(self)
         self.message_line = MessageLineUI(self)
         self.pulldown = PulldownMenu(self)
+        self.menu_bar = None
         self.menu_bar = MenuBar(self)
         self.elements.append(fps_counter)
         self.elements.append(self.status_bar)
@@ -213,6 +214,9 @@ class UI:
         self.selected_tool = new_tool
         self.popup.reset_art()
         self.tool_settings_changed = True
+        # close menu if we selected tool from it
+        if self.menu_bar.active_menu_name:
+            self.menu_bar.close_active_menu()
         self.message_line.post_line('%s %s' % (self.selected_tool.button_caption, self.tool_selected_log))
     
     def set_selected_xform(self, new_xform):
@@ -255,12 +259,16 @@ class UI:
         self.message_line.post_line('%s %s' % (self.layer_selected_log, self.active_layer + 1))
     
     def select_char(self, new_char_index):
+        if not self.active_art:
+            return
         # wrap at last valid index
         self.selected_char = new_char_index % self.active_art.charset.last_index
         self.tool_settings_changed = True
     
     def select_color(self, new_color_index, fg):
         "common code for select_fg/bg"
+        if not self.active_art:
+            return
         new_color_index %= len(self.active_art.palette.colors)
         if fg:
             self.selected_fg_color = new_color_index

@@ -4,7 +4,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, HelpScreenDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -120,7 +120,7 @@ class InputLord:
                     if f:
                         f()
                 # TEST: alt + arrow keys control game mode test renderable
-                if self.alt_pressed:
+                if self.app.game_mode and self.alt_pressed:
                     if event.key.keysym.sym == sdl2.SDLK_UP:
                         app.player.y += 1
                     elif event.key.keysym.sym == sdl2.SDLK_DOWN:
@@ -218,6 +218,8 @@ class InputLord:
         self.ui.console.toggle()
     
     def BIND_export_image(self):
+        if not self.ui.active_art:
+            return
         self.app.export_image(self.ui.active_art)
     
     def BIND_decrease_ui_scale(self):
@@ -284,6 +286,9 @@ class InputLord:
     def BIND_select_rotate_tool(self):
         self.ui.set_selected_tool(self.ui.rotate_tool)
     
+    def BIND_select_grab_tool(self):
+        self.ui.set_selected_tool(self.ui.grab_tool)
+    
     def BIND_select_text_tool(self):
         self.ui.set_selected_tool(self.ui.text_tool)
     
@@ -339,7 +344,8 @@ class InputLord:
         self.ui.swap_fg_bg_colors()
     
     def BIND_save_art(self):
-        self.ui.active_art.save_to_file()
+        if self.ui.active_art:
+            self.ui.active_art.save_to_file()
     
     def BIND_toggle_ui_visibility(self):
         self.ui.visible = not self.ui.visible
@@ -442,6 +448,8 @@ class InputLord:
             self.app.cursor.move(1, 0)
     
     def BIND_cycle_inactive_layer_visibility(self):
+        if not self.ui.active_art:
+            return
         if self.ui.active_art.layers == 1:
             return
         message_text = 'Non-active layers: '
@@ -462,6 +470,21 @@ class InputLord:
     def BIND_open_edit_menu(self):
         self.ui.menu_bar.open_menu_by_name('edit')
     
+    def BIND_open_tool_menu(self):
+        self.ui.menu_bar.open_menu_by_name('tool')
+    
+    def BIND_open_art_menu(self):
+        self.ui.menu_bar.open_menu_by_name('art')
+    
+    def BIND_open_frame_menu(self):
+        self.ui.menu_bar.open_menu_by_name('frame')
+    
+    def BIND_open_layer_menu(self):
+        self.ui.menu_bar.open_menu_by_name('layer')
+    
+    def BIND_open_help_menu(self):
+        self.ui.menu_bar.open_menu_by_name('help')
+    
     def BIND_new_art(self):
         self.ui.open_dialog(NewArtDialog)
     
@@ -469,6 +492,8 @@ class InputLord:
         self.ui.open_dialog(OpenArtDialog)
     
     def BIND_save_art_as(self):
+        if not self.ui.active_art:
+            return
         self.ui.open_dialog(SaveAsDialog)
     
     def BIND_close_art(self):
@@ -478,3 +503,9 @@ class InputLord:
             self.ui.open_dialog(CloseUnsavedChangesDialog)
             return
         self.app.close_art(self.ui.active_art)
+    
+    def BIND_open_help_screen(self):
+        self.ui.open_dialog(HelpScreenDialog)
+    
+    def BIND_open_readme(self):
+        os.system('./readme.txt')
