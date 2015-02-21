@@ -3,92 +3,11 @@ from ui_element import UIElement
 from ui_button import UIButton
 from ui_colors import UIColors
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
+from ui_menu_pulldown_item import PulldownMenuData, SeparatorMenuItem
 
-#
-# specific pulldown menu items, eg File > Save, Edit > Copy
-#
-
-class PulldownMenuItem:
-    # label that displays for this item
-    label = 'Test Menu Item'
-    # bindable command we look up from InputLord to get binding text from
-    command = 'test_command'
-
-class SeparatorMenuItem(PulldownMenuItem):
-    "menu separator, non-interactive and handled specially by menu drawing"
-    pass
-
-class FileNewMenuItem(PulldownMenuItem):
-    label = 'New...'
-    command = 'new_art'
-
-class FileOpenMenuItem(PulldownMenuItem):
-    label = 'Open...'
-    command = 'open_art'
-
-class FileSaveMenuItem(PulldownMenuItem):
-    label = 'Save'
-    command = 'save_art'
-
-class FileSaveAsMenuItem(PulldownMenuItem):
-    label = 'Save As...'
-    command = 'save_art_as'
-
-class FileCloseMenuItem(PulldownMenuItem):
-    label = 'Close'
-    command = 'close_art'
-
-class FilePNGExportMenuItem(PulldownMenuItem):
-    label = 'Export PNG'
-    command = 'export_image'
-
-class FileQuitMenuItem(PulldownMenuItem):
-    label = 'Quit'
-    command = 'quit'
-
-class EditCutMenuItem(PulldownMenuItem):
-    label = 'Cut'
-    command = 'cut_selection'
-
-class EditCopyMenuItem(PulldownMenuItem):
-    label = 'Copy'
-    command = 'copy_selection'
-
-class EditPasteMenuItem(PulldownMenuItem):
-    label = 'Paste'
-    command = 'select_paste_tool'
-
-class EditDeleteMenuItem(PulldownMenuItem):
-    label = 'Clear'
-    command = 'erase_selection_or_art'
-
-class EditSelectAllMenuItem(PulldownMenuItem):
-    label = 'Select All'
-    command = 'select_all'
-
-class EditSelectNoneMenuItem(PulldownMenuItem):
-    label = 'Select None'
-    command = 'select_none'
-
-class EditSelectInvertMenuItem(PulldownMenuItem):
-    label = 'Invert Selection'
-    command = 'select_invert'
-
-
-class PulldownMenuData:
-    "data for pulldown menus, eg File, Edit, etc; mainly a list of menu items"
-    items = []
-
-class FileMenuData(PulldownMenuData):
-    items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
-             FileCloseMenuItem, FilePNGExportMenuItem, SeparatorMenuItem,
-             FileQuitMenuItem]
-
-class EditMenuData(PulldownMenuData):
-    items = [EditCutMenuItem, EditCopyMenuItem, EditPasteMenuItem,
-             EditDeleteMenuItem, SeparatorMenuItem, EditSelectAllMenuItem,
-             EditSelectNoneMenuItem, EditSelectInvertMenuItem]
-
+class MenuItemButton(UIButton):
+    dimmed_fg_color = UIColors.medgrey
+    dimmed_bg_color = UIColors.lightgrey
 
 class PulldownMenu(UIElement):
     
@@ -101,6 +20,7 @@ class PulldownMenu(UIElement):
     border_corner_char = 77
     border_horizontal_line_char = 78
     border_vertical_line_char = 79
+    mark_char = 131
     
     def open_at(self, menu_button):
         # set X and Y based on calling menu button's location
@@ -134,7 +54,7 @@ class PulldownMenu(UIElement):
                 for x in range(1, self.tile_width - 1):
                     self.art.set_tile_at(0, 0, x, i+1, self.border_horizontal_line_char, self.border_color)
                 continue
-            button = UIButton(self)
+            button = MenuItemButton(self)
             full_label = item.label
             full_label += shortcuts[i].rjust(self.tile_width - 2 - len(item.label))
             button.caption = full_label
@@ -142,10 +62,19 @@ class PulldownMenu(UIElement):
             button.x = 1
             button.y = i+1
             button.callback = callbacks[i]
+            # dim items that aren't applicable to current app state
+            if item.should_dim(self.ui.app):
+                button.set_state('dimmed')
+                button.can_hover = False
             self.buttons.append(button)
         # set our X and Y, draw buttons, etc
         self.reset_loc()
         self.reset_art()
+        # if this menu has special logic for marking items, use it
+        if not menu_button.menu_data.should_mark_item is PulldownMenuData.should_mark_item:
+            for i,item in enumerate(menu_button.menu_data.items):
+                if menu_button.menu_data.should_mark_item(item, self.ui):
+                    self.art.set_char_index_at(0, 0, 1, i+1, self.mark_char)
         self.visible = True
     
     def draw_border(self, menu_button):

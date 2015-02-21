@@ -74,7 +74,8 @@ class UIDialog(UIElement):
         # field cursor starts on
         self.active_field = 0
         UIElement.__init__(self, ui)
-        self.ui.menu_bar.close_active_menu()
+        if self.ui.menu_bar and self.ui.menu_bar.active_menu_name:
+            self.ui.menu_bar.close_active_menu()
     
     def reset_art(self):
         # determine size based on contents
@@ -132,8 +133,10 @@ class UIDialog(UIElement):
         UIElement.update(self)
     
     def get_message(self):
+        # if a triple quoted string, split line breaks
+        msg = self.message.strip().split('\n')
         # TODO: split over multiple lines if too long
-        return [self.message]
+        return msg
     
     def draw_fields(self, draw_field_labels=True):
         start_y = 2
@@ -218,7 +221,6 @@ class UIDialog(UIElement):
         self.ui.elements.remove(self)
     
     def confirm_pressed(self):
-        # TODO: prevent from being pressed if field contents aren't valid
         # subclasses do more here :]
         self.dismiss()
     
@@ -227,6 +229,24 @@ class UIDialog(UIElement):
     
     def other_pressed(self):
         self.dismiss()
+
+
+class AboutDialog(UIDialog):
+    title = 'Playscii'
+    # TODO: full credits + patron thanks
+    # (read from a separate file?)
+    message = """
+    by JP LeBreton (c) 2014-2015\n
+    Thank you, patrons!
+    """
+    fields = 0
+    confirm_caption = ' <3 '
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        self.title += ' %s' % ui.app.version
+        self.cancel_button.visible = False
+        self.reset_art()
 
 
 class NewArtDialog(UIDialog):
@@ -337,3 +357,8 @@ class CloseUnsavedChangesDialog(QuitUnsavedChangesDialog):
         self.ui.active_art.unsaved_changes = False
         self.dismiss()
         self.ui.app.il.BIND_close_art()
+
+
+class HelpScreenDialog(AboutDialog):
+    message = 'Help is on the way! \n :/'
+    confirm_caption = 'Done'

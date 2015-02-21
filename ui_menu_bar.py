@@ -2,7 +2,8 @@ from math import ceil
 
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
-from ui_menu_pulldown import FileMenuData, EditMenuData
+from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ArtMenuData, FrameMenuData, LayerMenuData, HelpMenuData
+from ui_dialog import AboutDialog
 from ui_colors import UIColors
 
 class MenuButton(UIButton):
@@ -38,23 +39,44 @@ class PlaysciiMenuButton(UIButton):
     caption = '<3'
     caption_justify = TEXT_CENTER
     width = len(caption) + 2
-    normal_bg_color = UIColors.white
-    hovered_bg_color = UIColors.lightgrey
-    dimmed_bg_color = UIColors.lightgrey
+    normal_bg_color = MenuButton.normal_bg_color
+    hovered_bg_color = MenuButton.hovered_bg_color
+    dimmed_bg_color = MenuButton.dimmed_bg_color
 
 class FileMenuButton(MenuButton):
     name = 'file'
     caption = 'File'
-    width = len(caption) + 2
-    x = PlaysciiMenuButton.width + 2
     menu_data = FileMenuData
 
 class EditMenuButton(MenuButton):
     name = 'edit'
     caption = 'Edit'
-    width = len(caption) + 2
-    x = FileMenuButton.x + FileMenuButton.width + 2
     menu_data = EditMenuData
+
+class ToolMenuButton(MenuButton):
+    name = 'tool'
+    caption = 'Tool'
+    menu_data = ToolMenuData
+
+class ArtMenuButton(MenuButton):
+    name = 'art'
+    caption = 'Art'
+    menu_data = ArtMenuData
+
+class FrameMenuButton(MenuButton):
+    name = 'frame'
+    caption = 'Frame'
+    menu_data = FrameMenuData
+
+class LayerMenuButton(MenuButton):
+    name = 'layer'
+    caption = 'Layer'
+    menu_data = LayerMenuData
+
+class HelpMenuButton(MenuButton):
+    name = 'help'
+    caption = 'Help'
+    menu_data = HelpMenuData
 
 
 class MenuBar(UIElement):
@@ -63,28 +85,34 @@ class MenuBar(UIElement):
     
     snap_top = True
     snap_left = True
-    button_classes = [FileMenuButton, EditMenuButton]
+    button_classes = [FileMenuButton, EditMenuButton, ToolMenuButton, ArtMenuButton,
+                      FrameMenuButton, LayerMenuButton, HelpMenuButton]
+    # empty tiles between each button
+    button_padding = 1
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
         self.active_menu_name = None
         self.buttons = []
+        x = PlaysciiMenuButton.width + self.button_padding
         for button_class in self.button_classes:
             button = button_class(self)
+            button.width = len(button.caption) + 2
+            button.x = x
+            x += button.width + self.button_padding
             setattr(self, '%s_button' % button.name, button)
             # NOTE: callback already defined in MenuButton class,
             # menu data for pulldown with set in MenuButton subclass
             button.pulldown = self.ui.pulldown
             self.buttons.append(button)
         playscii_button = PlaysciiMenuButton(self)
-        playscii_button.callback = self.open_about()
+        playscii_button.callback = self.open_about
         # implement Playscii logo menu as a normal UIButton that opens
         # the About screen directly
         self.buttons.append(playscii_button)
     
     def open_about(self):
-        # TODO: about screen based on dialog box
-        self.ui.message_line.post_line('<3')
+        self.ui.open_dialog(AboutDialog)
     
     def close_active_menu(self):
         # un-dim active menu button
