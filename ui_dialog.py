@@ -6,10 +6,15 @@ from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
 from ui_console import OpenCommand, SaveCommand
 
+from art import ART_DIR, ART_FILE_EXTENSION
+from key_shifts import shift_map
+
 class ConfirmButton(UIButton):
     caption = 'Confirm'
     caption_justify = TEXT_CENTER
     width = len(caption) + 2
+    dimmed_fg_color = UIColors.lightgrey
+    dimmed_bg_color = UIColors.white
 
 class CancelButton(ConfirmButton):
     caption = 'Cancel'
@@ -39,6 +44,10 @@ class UIDialog(UIElement):
     field0_label = 'Field 1 label:'
     field1_label = 'Field 2 label:'
     field2_label = 'Field 3 label:'
+    # field types - filters text input handling
+    field0_type = str
+    field1_type = int
+    field2_type = int
     field0_width = field1_width = field2_width = field_width
     # allow subclasses to override confirm caption, eg Save
     confirm_caption = None
@@ -109,6 +118,17 @@ class UIDialog(UIElement):
         # redraw fields every update for cursor blink
         # (seems a waste, no real perf impact tho)
         self.draw_fields(False)
+        # don't allow confirmation if all field input isn't valid
+        valid, reason = self.is_input_valid()
+        if valid:
+            if self.confirm_button.state == 'dimmed':
+                self.confirm_button.set_state('normal')
+        else:
+            # display reason
+            # TODO: somewhere better to show this than message line?
+            self.ui.message_line.post_line(reason)
+            if self.confirm_button.state != 'dimmed':
+                self.confirm_button.set_state('dimmed')
         UIElement.update(self)
     
     def get_message(self):
@@ -141,6 +161,7 @@ class UIDialog(UIElement):
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
         field_text = self.get_field_text(self.active_field)
+        field_type = getattr(self, 'field%s_type' % self.active_field)
         if keystr == 'Return':
             self.confirm_pressed()
         elif keystr == 'Escape':
@@ -160,12 +181,24 @@ class UIDialog(UIElement):
         elif len(keystr) > 1:
             return
         else:
-            if not shift_pressed:
-                keystr = keystr.lower()
+            if field_type is str:
+                if not shift_pressed:
+                    keystr = keystr.lower()
+                if not keystr.isalpha() and shift_pressed:
+                    keystr = shift_map[keystr]
+            elif field_type is int and not keystr.isdigit():
+                return
+            # this doesn't guard against things like 0.00.001
+            elif field_type is float and not keystr.isdigit() and keystr != '.':
+                return
             field_text += keystr
         if len(field_text) < self.get_field_width(self.active_field):
             self.set_field_text(self.active_field, field_text)
         self.draw_fields(False)
+    
+    def is_input_valid(self):
+        "subclasses that want to filter input put logic here"
+        return True, None
     
     def get_field_width(self, field_number):
         return getattr(self, 'field%s_width' % field_number)
@@ -203,6 +236,9 @@ class NewArtDialog(UIDialog):
     confirm_caption = 'Create'
     field0_width = 36
     field1_width = field2_width = int(field0_width / 4)
+    file_exists_error = 'File by that name already exists.'
+    invalid_width_error = 'Invalid width.'
+    invalid_height_error = 'Invalid height.'
     
     def __init__(self, ui):
         UIDialog.__init__(self, ui)
@@ -210,6 +246,21 @@ class NewArtDialog(UIDialog):
         self.field0_text = 'new%s' % len(ui.app.art_loaded_for_edit)
         self.field1_text = str(ui.app.new_art_width)
         self.field2_text = str(ui.app.new_art_height)
+    
+    def is_input_valid(self):
+        "file can't already exist, dimensions must be >0 and <= max"
+        if os.path.exists('%s%s.%s' % (ART_DIR, self.field0_text, ART_FILE_EXTENSION)):
+            return False, self.file_exists_error
+        if not self.is_valid_dimension(self.field1_text, self.ui.app.max_art_width):
+            return False, self.invalid_width_error
+        if not self.is_valid_dimension(self.field2_text, self.ui.app.max_art_height):
+            return False, self.invalid_height_error
+        return True, None
+    
+    def is_valid_dimension(self, dimension, max_dimension):
+        try: dimension = int(dimension)
+        except: return False
+        return 0 < dimension <= max_dimension
     
     def confirm_pressed(self):
         name = self.get_field_text(0)
@@ -270,3 +321,16 @@ class QuitUnsavedChangesDialog(UIDialog):
         # get base name (ie no dirs)
         filename = os.path.basename(self.ui.active_art.filename)
         return [self.message % filename]
+
+
+class CloseUnsavedChangesDialog(QuitUnsavedChangesDialog):
+    
+    def confirm_pressed(self):
+        SaveCommand.execute(self.ui.console, [])
+        self.dismiss()
+        self.ui.app.il.BIND_close_art()
+    
+    def other_pressed(self):
+        self.ui.active_art.unsaved_changes = False
+        self.dismiss()
+        self.ui.app.il.BIND_close_art()

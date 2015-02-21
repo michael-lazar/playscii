@@ -4,7 +4,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -170,6 +170,8 @@ class InputLord:
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
+                    if not self.ui.active_art:
+                        return
                     if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
@@ -326,6 +328,8 @@ class InputLord:
             self.app.exit_game_mode()
     
     def BIND_toggle_picker(self):
+        if not self.ui.active_art:
+            return
         if self.ui.popup_hold_to_show:
             self.ui.popup.show()
         else:
@@ -384,6 +388,8 @@ class InputLord:
             self.ui.message_line.post_line('Camera tilt engaged.')
     
     def BIND_select_or_paint(self):
+        if not self.ui.active_art:
+            return
         if self.ui.popup.visible:
             # simulate left/right click in popup to select stuff
             self.ui.popup.select_key_pressed(self.shift_pressed)
@@ -464,3 +470,11 @@ class InputLord:
     
     def BIND_save_art_as(self):
         self.ui.open_dialog(SaveAsDialog)
+    
+    def BIND_close_art(self):
+        if not self.ui.active_art:
+            return
+        if self.ui.active_art.unsaved_changes:
+            self.ui.open_dialog(CloseUnsavedChangesDialog)
+            return
+        self.app.close_art(self.ui.active_art)

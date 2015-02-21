@@ -323,6 +323,8 @@ class SelectTool(UITool):
         #print('finished select drag at %s,%s' % (x, y))
     
     def update(self):
+        if not self.ui.active_art:
+            return
         # update drag based on cursor
         # context: cursor has already updated, UI.update calls this
         if self.selection_in_progress and self.ui.app.cursor.moved_this_frame():

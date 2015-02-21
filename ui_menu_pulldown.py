@@ -34,6 +34,10 @@ class FileSaveAsMenuItem(PulldownMenuItem):
     label = 'Save As...'
     command = 'save_art_as'
 
+class FileCloseMenuItem(PulldownMenuItem):
+    label = 'Close'
+    command = 'close_art'
+
 class FilePNGExportMenuItem(PulldownMenuItem):
     label = 'Export PNG'
     command = 'export_image'
@@ -77,7 +81,8 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
-             FilePNGExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
+             FileCloseMenuItem, FilePNGExportMenuItem, SeparatorMenuItem,
+             FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
     items = [EditCutMenuItem, EditCopyMenuItem, EditPasteMenuItem,

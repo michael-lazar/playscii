@@ -68,9 +68,10 @@ self.edit_bind_src = {
     'l'        : 'cycle_inactive_layer_visibility',
     'alt f'    : 'open_file_menu',
     'alt e'    : 'open_edit_menu',
+    'ctrl o'   : 'open_art',
+    'ctrl n'   : 'new_art',
+    'ctrl w'   : 'close_art',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'  : 'save_art_as',
-	'ctrl o'   : 'open_art',
-	'ctrl n'   : 'new_art',
 }

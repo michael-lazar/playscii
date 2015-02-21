@@ -161,7 +161,7 @@ class StatusBarUI(UIElement):
         # tile
         tile = 'X/Y'
         color = light
-        if self.ui.app.cursor:
+        if self.ui.app.cursor and art:
             tile_x, tile_y = self.ui.app.cursor.get_tile()
             tile_y = int(tile_y)
             # user-facing coordinates are always base 1
@@ -179,8 +179,7 @@ class StatusBarUI(UIElement):
         self.art.write_string(0, 0, x, 0, self.tile_label, dark, light, True)
         x += -padding - len(self.tile_label)
         # layer
-        if art:
-            layers = art.layers
+        layers = art.layers if art else 0
         layer = '%s/%s' % (self.ui.active_layer + 1, layers)
         self.art.write_string(0, 0, x, 0, layer, light, dark, True)
         x -= len(layer)
