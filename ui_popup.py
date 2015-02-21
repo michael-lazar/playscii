@@ -511,6 +511,8 @@ class ToolPopup(UIElement):
     
     def update(self):
         UIElement.update(self)
+        if not self.ui.active_art:
+            return
         if self.active_tab == TAB_CHAR_COLOR:
             # bail if mouse didn't move
             mouse_moved = self.ui.app.mouse_dx != 0 or self.ui.app.mouse_dy != 0

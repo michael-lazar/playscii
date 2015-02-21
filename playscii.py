@@ -55,6 +55,8 @@ class Application:
     starting_charset = 'c64_petscii'
     starting_palette = 'c64_original'
     new_art_width, new_art_height = 8, 8
+    # arbitrary size cap, but something bigger = probably a bad idea
+    max_art_width, max_art_height = 9999, 9999
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
     bg_color = (0.1, 0.1, 0.1, 1)
@@ -237,6 +239,19 @@ class Application:
         if self.ui:
             self.ui.set_active_art(art)
     
+    def close_art(self, art):
+        if not art in self.art_loaded_for_edit:
+            return
+        self.art_loaded_for_edit.remove(art)
+        for r in art.renderables:
+            self.edit_renderables.remove(r)
+        if art is self.ui.active_art:
+            self.ui.active_art = None
+        self.log('Unloaded %s' % art.filename)
+        if len(self.art_loaded_for_edit) > 0:
+            self.ui.set_active_art(self.art_loaded_for_edit[0])
+        self.update_window_title()
+    
     def recover_edscii(self, filename, width_override):
         "recovers an incorrectly-saved EDSCII file using the given width"
         art = ArtFromEDSCII(filename, self, width_override)
@@ -272,11 +287,17 @@ class Application:
             # if init failed (eg bad filename) return something safe
             return self.ui.active_art.palette
     
-    def set_window_title(self, text):
-        new_title = bytes('%s - %s' % (self.base_title, text), 'utf-8')
+    def set_window_title(self, text=None):
+        new_title = self.base_title
+        if text:
+            new_title += ' - %s' % text
+        new_title = bytes(new_title, 'utf-8')
         sdl2.SDL_SetWindowTitle(self.window, new_title)
     
     def update_window_title(self):
+        if not self.ui.active_art:
+            self.set_window_title()
+            return
         # display current active document's name and info
         filename = self.ui.active_art.filename
         if filename and os.path.exists(filename):
@@ -455,7 +476,7 @@ class Application:
         if self.auto_save:
             art.save_to_file()
             self.auto_save = False
-        if not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
+        if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
             self.ui.update()
@@ -493,10 +514,10 @@ class Application:
             for r in self.edit_renderables:
                 r.render()
             # draw selection grid, then selection, then cursor
-            if self.grid.visible:
+            if self.grid.visible and self.ui.active_art:
                 self.grid.render()
             self.ui.select_tool.render_selections()
-            if not self.ui.popup.visible and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
+            if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
                 self.cursor.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
