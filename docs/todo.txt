@@ -2,7 +2,6 @@ TODO
 
 menu:
 - art:
--- crop to selection
 -- resize
 -- [list of loaded art]
 - frame:
