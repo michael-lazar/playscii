@@ -5,6 +5,7 @@ from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ArtMenuData, FrameMenuData, LayerMenuData, HelpMenuData
 from ui_dialog import AboutDialog
 from ui_colors import UIColors
+from renderable_sprite import UISpriteRenderable
 
 class MenuButton(UIButton):
     caption = 'Base Class Menu Button'
@@ -36,7 +37,7 @@ class MenuButton(UIButton):
 # playscii logo button = normal UIButton, opens About screen directly
 class PlaysciiMenuButton(UIButton):
     name = 'playscii'
-    caption = '<3'
+    caption = '  '
     caption_justify = TEXT_CENTER
     width = len(caption) + 2
     normal_bg_color = MenuButton.normal_bg_color
@@ -91,6 +92,8 @@ class MenuBar(UIElement):
     button_padding = 1
     
     def __init__(self, ui):
+        # bitmap icon for about menu button
+        self.playscii_sprite = UISpriteRenderable(ui.app)
         UIElement.__init__(self, ui)
         self.active_menu_name = None
         self.buttons = []
@@ -110,6 +113,14 @@ class MenuBar(UIElement):
         # implement Playscii logo menu as a normal UIButton that opens
         # the About screen directly
         self.buttons.append(playscii_button)
+        self.reset_icon()
+    
+    def reset_icon(self):
+        inv_aspect = self.ui.app.window_height / self.ui.app.window_width
+        self.playscii_sprite.scale_x = self.art.quad_height * inv_aspect
+        self.playscii_sprite.scale_y = self.art.quad_height
+        self.playscii_sprite.x = -1 + self.art.quad_width
+        self.playscii_sprite.y = 1 - self.art.quad_height
     
     def open_about(self):
         self.ui.open_dialog(AboutDialog)
@@ -138,3 +149,12 @@ class MenuBar(UIElement):
         self.art.clear_frame_layer(0, 0, bg, fg)
         # draw buttons, etc
         UIElement.reset_art(self)
+        self.reset_icon()
+    
+    def render(self):
+        UIElement.render(self)
+        self.playscii_sprite.render()
+    
+    def destroy(self):
+        UIElement.destroy(self)
+        self.playscii_sprite.destroy()
