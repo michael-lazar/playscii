@@ -71,6 +71,7 @@ class UIDialog(UIElement):
         self.field0_text = ''
         self.field1_text = ''
         self.field2_text = ''
+        self.field3_text = ''
         # field cursor starts on
         self.active_field = 0
         UIElement.__init__(self, ui)
@@ -362,3 +363,54 @@ class CloseUnsavedChangesDialog(QuitUnsavedChangesDialog):
 class HelpScreenDialog(AboutDialog):
     message = 'Help is on the way! \n :/'
     confirm_caption = 'Done'
+
+
+class ResizeArtDialog(UIDialog):
+    
+    title = 'Resize art'
+    fields = 4
+    field0_label = 'New Width:'
+    field1_label = 'New Height:'
+    field2_label = 'Crop Start X:'
+    field3_label = 'Crop Start Y:'
+    field0_type = int
+    field1_type = int
+    field2_type = int
+    field3_type = int
+    confirm_caption = 'Resize'
+    # TODO: warning about how this can't be undone at the moment!
+    field0_width = field1_width = field2_width = field3_width = int(36 / 4)
+    invalid_width_error = 'Invalid width.'
+    invalid_height_error = 'Invalid height.'
+    invalid_start_error = 'Invalid crop origin.'
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        # populate with good defaults
+        self.field0_text = str(ui.active_art.width)
+        self.field1_text = str(ui.active_art.height)
+        self.field2_text = '0'
+        self.field3_text = '0'
+    
+    def is_input_valid(self):
+        "file can't already exist, dimensions must be >0 and <= max"
+        if not self.is_valid_dimension(self.field0_text, self.ui.app.max_art_width):
+            return False, self.invalid_width_error
+        if not self.is_valid_dimension(self.field1_text, self.ui.app.max_art_height):
+            return False, self.invalid_height_error
+        if not 0 <= int(self.field2_text) < self.ui.active_art.width:
+            return False, self.invalid_start_error
+        if not 0 <= int(self.field3_text) < self.ui.active_art.height:
+            return False, self.invalid_start_error
+        return True, None
+    
+    def is_valid_dimension(self, dimension, max_dimension):
+        try: dimension = int(dimension)
+        except: return False
+        return 0 < dimension <= max_dimension
+    
+    def confirm_pressed(self):
+        w, h = int(self.get_field_text(0)), int(self.get_field_text(1))
+        start_x, start_y = int(self.get_field_text(2)), int(self.get_field_text(3))
+        self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y)
+        self.dismiss()

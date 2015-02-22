@@ -149,6 +149,16 @@ class ArtNextMenuItem(PulldownMenuItem):
     def should_dim(app):
         return len(app.art_loaded_for_edit) < 2
 
+class ArtCropToSelectionMenuItem(PulldownMenuItem):
+    label = 'Crop to selection'
+    command = 'crop_to_selection'
+    def should_dim(app):
+        return len(app.ui.select_tool.selected_tiles) == 0
+
+class ArtResizeMenuItem(PulldownMenuItem):
+    label = 'Resize...'
+    command = 'resize_art'
+
 class FramePreviousMenuItem(PulldownMenuItem):
     label = 'Previous frame'
     command = 'previous_frame'
@@ -213,7 +223,8 @@ class ToolMenuData(PulldownMenuData):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 class ArtMenuData(PulldownMenuData):
-    items = [ArtPreviousMenuItem, ArtNextMenuItem]
+    items = [ArtPreviousMenuItem, ArtNextMenuItem, ArtResizeMenuItem,
+             ArtCropToSelectionMenuItem]
 
 class FrameMenuData(PulldownMenuData):
     items = [FramePreviousMenuItem, FrameNextMenuItem]

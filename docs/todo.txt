@@ -1,9 +1,22 @@
 TODO
 
 menu:
-- art: crop to selection, resize, [list of loaded art]
-- frame: add to end/insert/duplicate/remove/change order/change delay
-- layer: add/duplicate/remove/change current Z, same functionality as the pane described above
+- art:
+-- crop to selection
+-- resize
+-- [list of loaded art]
+- frame:
+-- add frame to end
+-- insert after frame #
+-- duplicate #
+-- delete current frame
+-- change order (what does dialog for this look like?)
+-- change current delay
+- layer:
+-- add layer to end
+-- duplicate #
+-- remove current layer
+-- change current layer's Z
 - help: launch website?
 
 - remember previous dialog values?  set class properties for field defaults on confirm?

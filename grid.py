@@ -55,6 +55,13 @@ class Grid(LineRenderable):
         self.x = -self.art_margin
         self.y = self.art_margin
     
+    def reset(self):
+        "macro for convenience - rescale, reposition, update renderable"
+        self.quad_size_ref = self.app.ui.active_art
+        self.build_geo()
+        self.reset_loc()
+        self.rebind_buffers()
+    
     def update(self):
         pass
     

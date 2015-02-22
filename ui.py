@@ -163,8 +163,7 @@ class UI:
             if x >= new_art.width or y >= new_art.height:
                 self.select_tool.selected_tiles.pop(tile, None)
         # set camera bounds based on art size
-        self.app.camera.max_x = new_art.width * new_art.quad_width
-        self.app.camera.min_y = -new_art.height * new_art.quad_height
+        self.app.camera.set_limits_for_art(new_art)
         # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)
@@ -181,10 +180,7 @@ class UI:
             x += (r.art.width + margin) * r.art.quad_width
             y -= (r.art.height + margin) * r.art.quad_height
         # now that renderables are moved, rescale/reposition grid
-        self.app.grid.quad_size_ref = self.active_art
-        self.app.grid.build_geo()
-        self.app.grid.reset_loc()
-        self.app.grid.rebind_buffers()
+        self.app.grid.reset()
         self.app.update_window_title()
         self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
     
@@ -353,6 +349,46 @@ class UI:
         # switch to PasteTool
         self.set_selected_tool(self.paste_tool)
         self.tool_settings_changed = True
+    
+    def crop_to_selection(self, art):
+        # ignore non-rectangular selection features, use top left and bottom
+        # right corners
+        min_x, max_x = 99999, -1
+        min_y, max_y = 99999, -1
+        for tile in self.select_tool.selected_tiles:
+            x, y = tile[0], tile[1]
+            if x < min_x:
+                min_x = x
+            elif x > max_x:
+                max_x = x
+            if y < min_y:
+                min_y = y
+            elif y > max_y:
+                max_y = y
+        w = max_x - min_x + 1
+        h = max_y - min_y + 1
+        art.resize2(w, h, min_x, min_y)
+        self.app.log('Resized %s to %s x %s' % (art.filename, w, h))
+        art.set_unsaved_changes(True)
+        # clear selection to avoid having tiles we know are OoB selected
+        self.select_tool.selected_tiles = {}
+        self.adjust_for_art_resize(art)
+    
+    def adjust_for_art_resize(self, art):
+        # update grid, camera, cursor
+        if art is self.active_art:
+            self.app.camera.set_limits_for_art(art)
+            self.app.camera.center_camera_for_art(art)
+            self.app.grid.reset()
+            if self.app.cursor.x > art.width:
+               self.app.cursor.x = art.width
+            if self.app.cursor.y > art.height:
+               self.app.cursor.y = art.height
+            self.app.cursor.moved = True
+    
+    def resize_art(self, art, new_width, new_height, origin_x, origin_y):
+        art.resize2(new_width, new_height, origin_x, origin_y)
+        self.adjust_for_art_resize(art)
     
     def select_none(self):
         self.select_tool.selected_tiles = {}
