@@ -4,7 +4,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, HelpScreenDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, HelpScreenDialog, ResizeArtDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -20,7 +20,12 @@ class InputLord:
         # exec results in edit_binds, a dict whose keys are keys+mods
         # and whose values are bound functions
         self.edit_bind_src = None
-        if os.path.exists(BINDS_FILENAME):
+        # bad probs if a command isn't in binds.cfg, so just blow it away
+        # if the template is newer than it
+        # TODO: better solution is find any binds in template but not binds.cfg
+        # and add em
+        binds_outdated = os.path.getmtime(BINDS_FILENAME) < os.path.getmtime(BINDS_TEMPLATE_FILENAME)
+        if not binds_outdated and os.path.exists(BINDS_FILENAME):
             exec(open(BINDS_FILENAME).read())
         else:
             default_data = open(BINDS_TEMPLATE_FILENAME).readlines()[1:]
@@ -509,3 +514,9 @@ class InputLord:
     
     def BIND_open_readme(self):
         os.system('./readme.txt')
+    
+    def BIND_crop_to_selection(self):
+        self.ui.crop_to_selection(self.ui.active_art)
+    
+    def BIND_resize_art(self):
+        self.ui.open_dialog(ResizeArtDialog)

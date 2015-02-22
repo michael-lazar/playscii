@@ -194,8 +194,11 @@ class Art:
         for frame in range(self.frames):
             self.clear_frame_layer(frame, self.layers-1, 0)
     
-    def resize(self, new_width, new_height, new_bg=0):
-        "resizes this Art to the given dimensions, cropping or expanding as needed"
+    def resize(self, new_width, new_height, bg_color=0):
+        """
+        resizes this Art to the given dimensions from origin (0,0),
+        cropping or expanding as needed
+        """
         self.width, self.height = new_width, new_height
         new_shape = (self.layers, self.height, self.width, 4)
         new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
@@ -208,6 +211,23 @@ class Art:
         for i in range(self.frames): self.uv_changed_frames.append(i)
         # TODO: use specified background color for newly created tiles?
         self.geo_changed = True
+    
+    def resize2(self, new_width, new_height, resize_origin_x=0, resize_origin_y=0):
+        # TODO: is new_width or new_height larger than current dimension? if so
+        # use np.resize after crop
+        self.width, self.height = new_width, new_height
+        x0, y0 = resize_origin_x, resize_origin_y
+        x1, y1 = x0 + new_width, y0 + new_height
+        for frame in range(self.frames):
+            for array in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods]:
+                array[frame] = array[frame].take(range(x0, x1), axis=2)
+                array[frame] = array[frame].take(range(y0, y1), axis=1)
+        # tell all frames they've changed, rebind buffers
+        self.geo_changed = True
+        for frame in range(self.frames):
+            for l in [self.char_changed_frames, self.fg_changed_frames,
+                      self.bg_changed_frames, self.uv_changed_frames]:
+                l.append(frame)
     
     def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
         "clears given layer of given frame to transparent BG + no characters"
