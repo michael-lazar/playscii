@@ -194,34 +194,48 @@ class Art:
         for frame in range(self.frames):
             self.clear_frame_layer(frame, self.layers-1, 0)
     
-    def resize(self, new_width, new_height, bg_color=0):
-        """
-        resizes this Art to the given dimensions from origin (0,0),
-        cropping or expanding as needed
-        """
-        self.width, self.height = new_width, new_height
-        new_shape = (self.layers, self.height, self.width, 4)
-        new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
-        for frame in range(self.frames):
-            self.chars[frame] = np.resize(self.chars[frame], new_shape)
-            self.fg_colors[frame] = np.resize(self.fg_colors[frame], new_shape)
-            self.bg_colors[frame] = np.resize(self.bg_colors[frame], new_shape)
-            self.uv_mods[frame] = np.resize(self.uv_mods[frame], new_uv_shape)
-        # adding a layer changes all frames' UV data
-        for i in range(self.frames): self.uv_changed_frames.append(i)
-        # TODO: use specified background color for newly created tiles?
-        self.geo_changed = True
-    
-    def resize2(self, new_width, new_height, resize_origin_x=0, resize_origin_y=0):
-        # TODO: is new_width or new_height larger than current dimension? if so
-        # use np.resize after crop
-        self.width, self.height = new_width, new_height
-        x0, y0 = resize_origin_x, resize_origin_y
+    def crop(self, new_width, new_height, origin_x=0, origin_y=0):
+        x0, y0 = origin_x, origin_y
         x1, y1 = x0 + new_width, y0 + new_height
         for frame in range(self.frames):
-            for array in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods]:
+            for array in [self.chars, self.fg_colors,
+                          self.bg_colors, self.uv_mods]:
                 array[frame] = array[frame].take(range(x0, x1), axis=2)
                 array[frame] = array[frame].take(range(y0, y1), axis=1)
+    
+    def expand(self, new_width, new_height):
+        x_add = new_width - self.width
+        y_add = new_height - self.height
+        def expand_array(array, fill_value, stride):
+            # add columns (increasing width)
+            if x_add > 0:
+                add_shape = (self.layers, self.height, x_add, stride)
+                add = np.full(add_shape, fill_value, dtype=np.float32)
+                array = np.append(array, add, 2)
+            # add rows (increasing height)
+            if y_add > 0:
+                add_shape = (self.layers, y_add, new_width, stride)
+                add = np.full(add_shape, fill_value, dtype=np.float32)
+                array = np.append(array, add, 1)
+            # can't modify array in-place (why ?)
+            return array
+        #print('adding %s to X dimension, %s to Y' % (x_add, y_add))
+        for frame in range(self.frames):
+            self.chars[frame] = expand_array(self.chars[frame], 0, 4)
+            fg, bg = 0, 0
+            if self.app.ui:
+                fg = self.app.ui.selected_fg_color
+                bg = self.app.ui.selected_bg_color
+            self.fg_colors[frame] = expand_array(self.fg_colors[frame], fg, 4)
+            self.bg_colors[frame] = expand_array(self.bg_colors[frame], bg, 4)
+            self.uv_mods[frame] = expand_array(self.uv_mods[frame], UV_NORMAL, UV_STRIDE)
+    
+    def resize(self, new_width, new_height, origin_x=0, origin_y=0):
+        if new_width < self.width or new_height < self.height:
+            self.crop(new_width, new_height, origin_x, origin_y)
+        if new_width > self.width or new_height > self.height:
+            self.expand(new_width, new_height)
+        self.width, self.height = new_width, new_height
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True
         for frame in range(self.frames):

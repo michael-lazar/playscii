@@ -367,7 +367,7 @@ class UI:
                 max_y = y
         w = max_x - min_x + 1
         h = max_y - min_y + 1
-        art.resize2(w, h, min_x, min_y)
+        art.resize(w, h, min_x, min_y)
         self.app.log('Resized %s to %s x %s' % (art.filename, w, h))
         art.set_unsaved_changes(True)
         # clear selection to avoid having tiles we know are OoB selected
@@ -387,7 +387,7 @@ class UI:
             self.app.cursor.moved = True
     
     def resize_art(self, art, new_width, new_height, origin_x, origin_y):
-        art.resize2(new_width, new_height, origin_x, origin_y)
+        art.resize(new_width, new_height, origin_x, origin_y)
         self.adjust_for_art_resize(art)
     
     def select_none(self):
