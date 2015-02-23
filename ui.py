@@ -33,7 +33,7 @@ class UI:
     tool_selected_log = 'tool selected'
     art_selected_log = 'Now editing'
     frame_selected_log = 'Now editing frame'
-    layer_selected_log = 'Now editing layer'
+    layer_selected_log = 'Now editing layer: %s'
     swap_color_log = 'Swapped FG/BG colors'
     affects_char_on_log = 'will affect characters'
     affects_char_off_log = 'will not affect characters'
@@ -262,7 +262,8 @@ class UI:
         self.app.cursor.z = z
         self.app.update_window_title()
         self.tool_settings_changed = True
-        self.message_line.post_line('%s %s' % (self.layer_selected_log, self.active_layer + 1))
+        layer_name = self.active_art.layer_names[self.active_layer]
+        self.message_line.post_line(self.layer_selected_log % layer_name)
     
     def select_char(self, new_char_index):
         if not self.active_art:

@@ -67,7 +67,7 @@ class PulldownMenu(UIElement):
             button.x = 1
             button.y = i+1
             button.callback = callbacks[i]
-            if item.cb_arg:
+            if item.cb_arg is not None:
                 button.cb_arg = item.cb_arg
             # dim items that aren't applicable to current app state
             if item.should_dim(self.ui.app):

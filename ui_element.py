@@ -81,7 +81,7 @@ class UIElement:
             if b.can_click:
                 b.click()
                 if b.callback:
-                    if b.cb_arg:
+                    if b.cb_arg is not None:
                         b.callback(b.cb_arg)
                     else:
                         b.callback()

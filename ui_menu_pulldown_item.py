@@ -173,6 +173,12 @@ class FrameNextMenuItem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
+class FrameTogglePlaybackMenuItem(PulldownMenuItem):
+    label = 'Play/pause animation'
+    command = 'toggle_anim_playback'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+
 class LayerPreviousMenuItem(PulldownMenuItem):
     label = 'Previous layer'
     command = 'previous_layer'
@@ -229,6 +235,7 @@ class ToolMenuData(PulldownMenuData):
     def should_mark_item(item, ui):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
+
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeMenuItem, ArtCropToSelectionMenuItem, SeparatorMenuItem,
              ArtPreviousMenuItem, ArtNextMenuItem, SeparatorMenuItem]
@@ -241,8 +248,8 @@ class ArtMenuData(PulldownMenuData):
         "turn each loaded art into a menu item"
         items = []
         for art in app.art_loaded_for_edit:
-            class TempMenuItemClass(PulldownMenuItem):
-                pass
+            # class just being used to store data, no need to spawn it
+            class TempMenuItemClass(PulldownMenuItem): pass
             item = TempMenuItemClass
             # leave spaces for mark
             item.label = '  %s' % art.filename
@@ -254,11 +261,32 @@ class ArtMenuData(PulldownMenuData):
         items.sort(key=lambda item: item.time_loaded)
         return items
 
+
 class FrameMenuData(PulldownMenuData):
-    items = [FramePreviousMenuItem, FrameNextMenuItem]
+    items = [FramePreviousMenuItem, FrameNextMenuItem,
+             FrameTogglePlaybackMenuItem]
+
 
 class LayerMenuData(PulldownMenuData):
-    items = [LayerPreviousMenuItem, LayerNextMenuItem]
+    
+    items = [LayerPreviousMenuItem, LayerNextMenuItem, SeparatorMenuItem]
+    
+    def should_mark_item(item, ui):
+        "show checkmark for active art"
+        return ui.active_layer == item.cb_arg
+    
+    def get_items(app):
+        "turn each layer into a menu item"
+        items = []
+        for i,layer_name in enumerate(app.ui.active_art.layer_names):
+            class TempMenuItemClass(PulldownMenuItem): pass
+            item = TempMenuItemClass
+            # leave spaces for mark
+            item.label = '  %s' % layer_name
+            item.command = 'layer_switch_to'
+            item.cb_arg = i
+            items.append(item)
+        return items
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem]
