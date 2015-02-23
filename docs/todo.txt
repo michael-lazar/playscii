@@ -2,7 +2,6 @@ TODO
 
 menu:
 - frame:
--- play/pause animation
 -- add frame to end
 -- insert after frame #
 -- duplicate #
@@ -10,11 +9,13 @@ menu:
 -- change order (what does dialog for this look like?)
 -- change current delay
 - layer:
--- add layer to end
--- duplicate #
--- remove current layer
--- change current layer's Z
--- list of layers w/ names
+-- change inactive layer display: two items, each with a mark?
+-- sort layer list based on Z, not creation order - show Z on right edge?
+-- rename current layer: dialog for name
+-- add layer to end: dialog for name
+-- duplicate layer #: dialog for # and name of new layer
+-- remove active layer
+-- change active layer's Z
 - help: launch website?
 
 - remember previous dialog values?  set class properties for field defaults on confirm?
