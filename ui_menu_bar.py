@@ -3,7 +3,7 @@ from math import ceil
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ArtMenuData, FrameMenuData, LayerMenuData, HelpMenuData
-from ui_dialog import AboutDialog
+from ui_info_dialog import AboutDialog
 from ui_colors import UIColors
 from renderable_sprite import UISpriteRenderable
 

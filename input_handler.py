@@ -1,10 +1,12 @@
 import ctypes, os
 import sdl2
+import webbrowser
 from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, HelpScreenDialog, ResizeArtDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog
+from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -523,6 +525,9 @@ class InputLord:
     
     def BIND_open_readme(self):
         os.system('./readme.txt')
+    
+    def BIND_open_website(self):
+        webbrowser.open('http://vectorpoem.com/playscii')
     
     def BIND_crop_to_selection(self):
         self.ui.crop_to_selection(self.ui.active_art)
