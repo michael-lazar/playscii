@@ -79,9 +79,12 @@ self.edit_bind_src = {
     'f1'       : 'open_help_screen',
     'ctrl k'   : 'crop_to_selection',
     'ctrl r'   : 'resize_art',
+    'ctrl l'   : 'add_layer',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'  : 'save_art_as',
     '_grab'    : 'select_grab_tool',
     '_readme'  : 'open_readme',
+    '_switch_art' : 'art_switch_to',
+    '_switch_layer' : 'layer_switch_to',
 }

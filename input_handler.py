@@ -365,20 +365,29 @@ class InputLord:
         self.ui.set_active_frame(self.ui.active_frame + 1)
     
     def BIND_toggle_anim_playback(self):
+        animating = False
         for r in self.ui.active_art.renderables:
             r.animating = not r.animating
+            animating = r.animating
+        # restore to active frame if stopping
+        if not animating:
+            r.set_frame(self.ui.active_frame)
     
     def BIND_previous_layer(self):
         self.ui.set_active_layer(self.ui.active_layer - 1)
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_next_layer(self):
         self.ui.set_active_layer(self.ui.active_layer + 1)
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_art(self):
         self.ui.previous_active_art()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_next_art(self):
         self.ui.next_active_art()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_undo(self):
         self.ui.undo()
@@ -520,3 +529,11 @@ class InputLord:
     
     def BIND_resize_art(self):
         self.ui.open_dialog(ResizeArtDialog)
+    
+    def BIND_art_switch_to(self, art_filename):
+        self.ui.set_active_art_by_filename(art_filename)
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_layer_switch_to(self, layer_number):
+        self.ui.set_active_layer(layer_number)
+        self.ui.menu_bar.refresh_active_menu()
