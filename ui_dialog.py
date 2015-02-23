@@ -52,6 +52,7 @@ class UIDialog(UIElement):
     # allow subclasses to override confirm caption, eg Save
     confirm_caption = None
     other_caption = None
+    cancel_caption = None
     
     def __init__(self, ui):
         self.confirm_button = ConfirmButton(self)
@@ -64,6 +65,9 @@ class UIDialog(UIElement):
             self.other_button.caption = self.other_caption
             self.other_button.width = len(self.other_caption) + 2
         self.cancel_button = CancelButton(self)
+        if self.cancel_caption:
+            self.cancel_button.caption = self.cancel_caption
+            self.cancel_button.width = len(self.cancel_caption) + 2
         self.confirm_button.callback = self.confirm_pressed
         self.other_button.callback = self.other_pressed
         self.cancel_button.callback = self.cancel_pressed
@@ -78,19 +82,20 @@ class UIDialog(UIElement):
         if self.ui.menu_bar and self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
     
-    def reset_art(self):
-        # determine size based on contents
-        # base height = 4, titlebar + padding + buttons + padding
-        self.tile_height = 4
+    def reset_art(self, resize=True):
         # get_message splits into >1 line if too long
         msg_lines = self.get_message() if self.message else []
-        self.tile_height += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
-        self.tile_height += 3 * self.fields
-        self.art.resize(self.tile_width, self.tile_height)
-        # center in window
-        qw, qh = self.art.quad_width, self.art.quad_height
-        self.x = -(self.tile_width * qw) / 2
-        self.y = (self.tile_height * qh) / 2
+        if resize:
+            # determine size based on contents
+            # base height = 4, titlebar + padding + buttons + padding
+            self.tile_height = 4
+            self.tile_height += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
+            self.tile_height += 3 * self.fields
+            self.art.resize(self.tile_width, self.tile_height)
+            # center in window
+            qw, qh = self.art.quad_width, self.art.quad_height
+            self.x = -(self.tile_width * qw) / 2
+            self.y = (self.tile_height * qh) / 2
         # draw window
         self.art.clear_frame_layer(0, 0, self.bg_color, self.fg_color)
         s = ' ' + self.title.ljust(self.tile_width - 1)
@@ -232,24 +237,6 @@ class UIDialog(UIElement):
         self.dismiss()
 
 
-class AboutDialog(UIDialog):
-    title = 'Playscii'
-    # TODO: full credits + patron thanks
-    # (read from a separate file?)
-    message = """
-    by JP LeBreton (c) 2014-2015\n
-    Thank you, patrons!
-    """
-    fields = 0
-    confirm_caption = ' <3 '
-    
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        self.title += ' %s' % ui.app.version
-        self.cancel_button.visible = False
-        self.reset_art()
-
-
 class NewArtDialog(UIDialog):
     
     title = 'New art'
@@ -358,11 +345,6 @@ class CloseUnsavedChangesDialog(QuitUnsavedChangesDialog):
         self.ui.active_art.unsaved_changes = False
         self.dismiss()
         self.ui.app.il.BIND_close_art()
-
-
-class HelpScreenDialog(AboutDialog):
-    message = 'Help is on the way! \n :/'
-    confirm_caption = 'Done'
 
 
 class ResizeArtDialog(UIDialog):

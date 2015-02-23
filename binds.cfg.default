@@ -87,4 +87,5 @@ self.edit_bind_src = {
     '_readme'  : 'open_readme',
     '_switch_art' : 'art_switch_to',
     '_switch_layer' : 'layer_switch_to',
+    '_website' : 'open_website',
 }

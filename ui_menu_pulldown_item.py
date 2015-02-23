@@ -204,6 +204,12 @@ class HelpReadmeMenuItem(PulldownMenuItem):
     def should_dim(app):
         return False
 
+class HelpWebsiteMenuItem(PulldownMenuItem):
+    label = 'Playscii website'
+    command = 'open_website'
+    def should_dim(app):
+        return False
+
 class PulldownMenuData:
     "data for pulldown menus, eg File, Edit, etc; mainly a list of menu items"
     items = []
@@ -289,4 +295,4 @@ class LayerMenuData(PulldownMenuData):
         return items
 
 class HelpMenuData(PulldownMenuData):
-    items = [HelpScreenMenuItem, HelpReadmeMenuItem]
+    items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]
