@@ -207,15 +207,18 @@ class Art:
                 if crop_y:
                     array[frame] = array[frame].take(range(y0, y1), axis=1)
     
-    def expand(self, new_width, new_height, origin_x=0, origin_y=0):
-        # TODO: crash on opening Art menu after opening another (larger?) menu
-        x_add = new_width - self.width# + origin_x
-        y_add = new_height - self.height# + origin_y
-        print('adding %s to X dimension, %s to Y' % (x_add, y_add))
+    def expand(self, new_width, new_height):
+        x_add = new_width - self.width
+        y_add = new_height - self.height
+        #print('%s expand: %sw + %s = %s, %sh + %s = %s' % (self.filename,
+        #    self.width, x_add, new_width, self.height, y_add, new_height))
         def expand_array(array, fill_value, stride):
             # add columns (increasing width)
             if x_add > 0:
-                add_shape = (self.layers, self.height, x_add, stride)
+                # before height has changed, take care not to append
+                # incorrectly sized columns
+                h = new_height if new_height < self.height else self.height
+                add_shape = (self.layers, h, x_add, stride)
                 add = np.full(add_shape, fill_value, dtype=np.float32)
                 array = np.append(array, add, 2)
             # add rows (increasing height)
@@ -239,7 +242,7 @@ class Art:
         if new_width < self.width or new_height < self.height:
             self.crop(new_width, new_height, origin_x, origin_y)
         if new_width > self.width or new_height > self.height:
-            self.expand(new_width, new_height, origin_x, origin_y)
+            self.expand(new_width, new_height)
         self.width, self.height = new_width, new_height
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True

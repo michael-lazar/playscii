@@ -398,8 +398,12 @@ class ResizeArtDialog(UIDialog):
             return False, self.invalid_width_error
         if not self.is_valid_dimension(self.field1_text, self.ui.app.max_art_height):
             return False, self.invalid_height_error
+        try: int(self.field2_text)
+        except: return False, self.invalid_start_error
         if not 0 <= int(self.field2_text) < self.ui.active_art.width:
             return False, self.invalid_start_error
+        try: int(self.field3_text)
+        except: return False, self.invalid_start_error
         if not 0 <= int(self.field3_text) < self.ui.active_art.height:
             return False, self.invalid_start_error
         return True, None
