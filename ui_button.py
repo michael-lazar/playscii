@@ -33,6 +33,8 @@ class UIButton:
     can_hover = True
     can_click = True
     visible = True
+    # weird (gross?) thing: other code can stash an argument to callback here
+    cb_arg = None
     
     def __init__(self, element, starting_state=None):
         self.element = element

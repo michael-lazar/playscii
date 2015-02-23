@@ -84,4 +84,5 @@ self.edit_bind_src = {
     '_saveas'  : 'save_art_as',
     '_grab'    : 'select_grab_tool',
     '_readme'  : 'open_readme',
+    '_switch_art' : 'art_switch_to',
 }

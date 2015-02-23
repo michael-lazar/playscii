@@ -184,6 +184,16 @@ class UI:
         self.app.update_window_title()
         self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
     
+    def set_active_art_by_filename(self, art_filename):
+        for i,art in enumerate(self.app.art_loaded_for_edit):
+            if art_filename == art.filename:
+                break
+        new_active_art = self.app.art_loaded_for_edit.pop(i)
+        self.app.art_loaded_for_edit.insert(0, new_active_art)
+        new_active_renderable = self.app.edit_renderables.pop(i)
+        self.app.edit_renderables.insert(0, new_active_renderable)
+        self.set_active_art(new_active_art)
+    
     def previous_active_art(self):
         "cycles to next art in app.art_loaded_for_edit"
         if len(self.app.art_loaded_for_edit) == 1:

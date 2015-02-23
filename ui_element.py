@@ -81,7 +81,10 @@ class UIElement:
             if b.can_click:
                 b.click()
                 if b.callback:
-                    b.callback()
+                    if b.cb_arg:
+                        b.callback(b.cb_arg)
+                    else:
+                        b.callback()
                     handled = True
         return handled
     
