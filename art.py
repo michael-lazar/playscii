@@ -96,12 +96,13 @@ class Art:
         # list of frame delays
         self.frame_delays = []
         self.layers = 1
-        # list of layer Z values
+        # lists of layer Z values and names
         self.layers_z = [DEFAULT_LAYER_Z]
+        self.layer_names = ['Layer 1']
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
         # add one frame to start
-        self.add_frame()
+        self.add_frame_to_end()
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
@@ -130,20 +131,32 @@ class Art:
             self.app.log('  frames: %s' % self.frames)
             self.app.log('  layers: %s' % self.layers)
     
-    def add_frame(self, delay=DEFAULT_FRAME_DELAY):
-        "adds a blank frame to end of frame sequence"
+    def insert_frame_before_index(self, index, delay=DEFAULT_FRAME_DELAY):
+        "adds a blank frame at the specified index (len+1 to add to end)"
         self.frames += 1
-        self.frame_delays.append(delay)
+        self.frame_delays.insert(index, delay)
         tiles = self.layers * self.width * self.height
         shape = (self.layers, self.height, self.width, 4)
-        blank_array = np.zeros(shape, dtype=np.float32)
-        self.chars.append(blank_array)
-        self.fg_colors.append(blank_array.copy())
-        self.bg_colors.append(blank_array.copy())
+        fg, bg = 0, 0
+        if self.app.ui:
+            fg = self.app.ui.selected_fg_color
+            bg = self.app.ui.selected_bg_color
+        new_char = np.zeros(shape, dtype=np.float32)
+        new_fg = np.full(shape, fg, dtype=np.float32)
+        new_bg = np.full(shape, bg, dtype=np.float32)
+        self.chars.insert(index, new_char)
+        self.fg_colors.insert(index, new_fg)
+        self.bg_colors.insert(index, new_bg)
         # UV init is more complex than just all zeroes
-        self.uv_mods.append(self.new_uv_layers(self.layers))
+        self.uv_mods.insert(index, self.new_uv_layers(self.layers))
+        # all but lowest layer = transparent
+        for l in range(1, self.layers):
+            self.clear_frame_layer(index, l, 0, fg)
         if self.log_size_changes:
             self.app.log('frame %s added with %s layers' % (self.frames-1, self.layers))
+    
+    def add_frame_to_end(self, delay=DEFAULT_FRAME_DELAY):
+        self.insert_frame_before_index(self.frames, delay)
     
     def duplicate_frame(self, frame_index):
         "adds a duplicate of specified frame to end of frame sequence"
@@ -165,11 +178,15 @@ class Art:
         self.charset = new_charset
         self.geo_changed = True
     
-    def duplicate_layer(self, z=None):
+    def duplicate_layer(self, z=None, copy=True):
         z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
         # TODO: provide layer to duplicate, right now only layer 0 works
         self.layers += 1
         self.layers_z.append(z)
+        new_layer_name = 'Copy of %s' % self.layer_names[-1]
+        if not copy:
+            new_layer_name = 'Layer %s' % self.layers
+        self.layer_names.append(new_layer_name)
         # simply add another layer to our 3D array
         new_tile_shape = (self.layers, self.height, self.width, 4)
         new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
@@ -190,7 +207,7 @@ class Art:
     def add_layer(self, z=None):
         # offset Z from last layer's Z if none given
         z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
-        self.duplicate_layer(z)
+        self.duplicate_layer(z, False)
         for frame in range(self.frames):
             self.clear_frame_layer(frame, self.layers-1, 0)
     
@@ -416,6 +433,7 @@ class Art:
             layers = []
             for layer_index in range(self.layers):
                 layer = { 'z': self.layers_z[layer_index] }
+                layer['name'] = self.layer_names[layer_index]
                 tiles = []
                 for y in range(self.height):
                     for x in range(self.width):
@@ -562,8 +580,11 @@ class ArtFromDisk(Art):
         self.layers = len(frames[0]['layers'])
         # get layer z depths from first frame's data
         self.layers_z = []
-        for layer in frames[0]['layers']:
+        self.layer_names = []
+        for i,layer in enumerate(frames[0]['layers']):
             self.layers_z.append(layer['z'])
+            layer_num = str(i + 1)
+            self.layer_names.append(layer.get('name', 'Layer %s' % layer_num))
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
         # lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
@@ -644,6 +665,7 @@ class ArtFromEDSCII(Art):
         self.frame_delays = [DEFAULT_FRAME_DELAY]
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
+        self.layer_names = ['Layer 1']
         shape = (self.layers, self.height, self.width, 4)
         chars = np.zeros(shape, dtype=np.float32)
         fg_colors = chars.copy()
