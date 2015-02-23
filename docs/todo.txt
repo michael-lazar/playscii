@@ -2,6 +2,7 @@ TODO
 
 menu:
 - frame:
+-- play/pause animation
 -- add frame to end
 -- insert after frame #
 -- duplicate #
@@ -13,6 +14,7 @@ menu:
 -- duplicate #
 -- remove current layer
 -- change current layer's Z
+-- list of layers w/ names
 - help: launch website?
 
 - remember previous dialog values?  set class properties for field defaults on confirm?

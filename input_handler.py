@@ -375,9 +375,11 @@ class InputLord:
     
     def BIND_previous_layer(self):
         self.ui.set_active_layer(self.ui.active_layer - 1)
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_next_layer(self):
         self.ui.set_active_layer(self.ui.active_layer + 1)
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_art(self):
         self.ui.previous_active_art()
@@ -530,4 +532,8 @@ class InputLord:
     
     def BIND_art_switch_to(self, art_filename):
         self.ui.set_active_art_by_filename(art_filename)
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_layer_switch_to(self, layer_number):
+        self.ui.set_active_layer(layer_number)
         self.ui.menu_bar.refresh_active_menu()

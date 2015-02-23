@@ -96,8 +96,9 @@ class Art:
         # list of frame delays
         self.frame_delays = []
         self.layers = 1
-        # list of layer Z values
+        # lists of layer Z values and names
         self.layers_z = [DEFAULT_LAYER_Z]
+        self.layer_names = ['Layer 1']
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
         # add one frame to start
@@ -170,6 +171,7 @@ class Art:
         # TODO: provide layer to duplicate, right now only layer 0 works
         self.layers += 1
         self.layers_z.append(z)
+        self.layer_names.append('Copy of %s' % self.layer_names[-1])
         # simply add another layer to our 3D array
         new_tile_shape = (self.layers, self.height, self.width, 4)
         new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
@@ -207,15 +209,18 @@ class Art:
                 if crop_y:
                     array[frame] = array[frame].take(range(y0, y1), axis=1)
     
-    def expand(self, new_width, new_height, origin_x=0, origin_y=0):
-        # TODO: crash on opening Art menu after opening another (larger?) menu
-        x_add = new_width - self.width# + origin_x
-        y_add = new_height - self.height# + origin_y
-        print('adding %s to X dimension, %s to Y' % (x_add, y_add))
+    def expand(self, new_width, new_height):
+        x_add = new_width - self.width
+        y_add = new_height - self.height
+        #print('%s expand: %sw + %s = %s, %sh + %s = %s' % (self.filename,
+        #    self.width, x_add, new_width, self.height, y_add, new_height))
         def expand_array(array, fill_value, stride):
             # add columns (increasing width)
             if x_add > 0:
-                add_shape = (self.layers, self.height, x_add, stride)
+                # before height has changed, take care not to append
+                # incorrectly sized columns
+                h = new_height if new_height < self.height else self.height
+                add_shape = (self.layers, h, x_add, stride)
                 add = np.full(add_shape, fill_value, dtype=np.float32)
                 array = np.append(array, add, 2)
             # add rows (increasing height)
@@ -239,7 +244,7 @@ class Art:
         if new_width < self.width or new_height < self.height:
             self.crop(new_width, new_height, origin_x, origin_y)
         if new_width > self.width or new_height > self.height:
-            self.expand(new_width, new_height, origin_x, origin_y)
+            self.expand(new_width, new_height)
         self.width, self.height = new_width, new_height
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True
@@ -413,6 +418,7 @@ class Art:
             layers = []
             for layer_index in range(self.layers):
                 layer = { 'z': self.layers_z[layer_index] }
+                layer['name'] = self.layer_names[layer_index]
                 tiles = []
                 for y in range(self.height):
                     for x in range(self.width):
@@ -559,8 +565,11 @@ class ArtFromDisk(Art):
         self.layers = len(frames[0]['layers'])
         # get layer z depths from first frame's data
         self.layers_z = []
-        for layer in frames[0]['layers']:
+        self.layer_names = []
+        for i,layer in enumerate(frames[0]['layers']):
             self.layers_z.append(layer['z'])
+            layer_num = str(i + 1)
+            self.layer_names.append(layer.get('name', 'Layer %s' % layer_num))
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
         # lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
@@ -641,6 +650,7 @@ class ArtFromEDSCII(Art):
         self.frame_delays = [DEFAULT_FRAME_DELAY]
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
+        self.layer_names = ['Layer 1']
         shape = (self.layers, self.height, self.width, 4)
         chars = np.zeros(shape, dtype=np.float32)
         fg_colors = chars.copy()
