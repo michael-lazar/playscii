@@ -197,15 +197,21 @@ class Art:
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
         x0, y0 = origin_x, origin_y
         x1, y1 = x0 + new_width, y0 + new_height
+        crop_x = new_width < self.width
+        crop_y = new_height < self.height
         for frame in range(self.frames):
             for array in [self.chars, self.fg_colors,
                           self.bg_colors, self.uv_mods]:
-                array[frame] = array[frame].take(range(x0, x1), axis=2)
-                array[frame] = array[frame].take(range(y0, y1), axis=1)
+                if crop_x:
+                    array[frame] = array[frame].take(range(x0, x1), axis=2)
+                if crop_y:
+                    array[frame] = array[frame].take(range(y0, y1), axis=1)
     
-    def expand(self, new_width, new_height):
-        x_add = new_width - self.width
-        y_add = new_height - self.height
+    def expand(self, new_width, new_height, origin_x=0, origin_y=0):
+        # TODO: crash on opening Art menu after opening another (larger?) menu
+        x_add = new_width - self.width# + origin_x
+        y_add = new_height - self.height# + origin_y
+        print('adding %s to X dimension, %s to Y' % (x_add, y_add))
         def expand_array(array, fill_value, stride):
             # add columns (increasing width)
             if x_add > 0:
@@ -217,9 +223,8 @@ class Art:
                 add_shape = (self.layers, y_add, new_width, stride)
                 add = np.full(add_shape, fill_value, dtype=np.float32)
                 array = np.append(array, add, 1)
-            # can't modify array in-place (why ?)
+            # can't modify passed array in-place
             return array
-        #print('adding %s to X dimension, %s to Y' % (x_add, y_add))
         for frame in range(self.frames):
             self.chars[frame] = expand_array(self.chars[frame], 0, 4)
             fg, bg = 0, 0
@@ -234,7 +239,7 @@ class Art:
         if new_width < self.width or new_height < self.height:
             self.crop(new_width, new_height, origin_x, origin_y)
         if new_width > self.width or new_height > self.height:
-            self.expand(new_width, new_height)
+            self.expand(new_width, new_height, origin_x, origin_y)
         self.width, self.height = new_width, new_height
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True
