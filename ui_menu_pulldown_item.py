@@ -10,6 +10,8 @@ class PulldownMenuItem:
     label = 'Test Menu Item'
     # bindable command we look up from InputLord to get binding text from
     command = 'test_command'
+    # if not None, passed to button's cb_arg
+    cb_arg = None
     def should_dim(app):
         "returns True if this item should be dimmed based on current application state"
         # so many commands are inapplicable with no active art, default to dimming an
@@ -202,6 +204,12 @@ class PulldownMenuData:
     def should_mark_item(item, ui):
         "returns True if this item should be marked, subclasses have custom logic here"
         return False
+    def get_items(app):
+        """
+        returns a list of items generated from app state, used for
+        dynamically-generated items
+        """
+        return []
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
@@ -217,14 +225,34 @@ class EditMenuData(PulldownMenuData):
 class ToolMenuData(PulldownMenuData):
     items = [ToolPaintMenuItem, ToolEraseMenuItem, ToolRotateMenuItem, ToolGrabMenuItem,
              ToolTextMenuItem, ToolSelectMenuItem, ToolPasteMenuItem]
-    # TODO: notion of "item list generator", function of custom logic that adds to /
-    # replaces predefined item list
+    # TODO: generate list from UI.tools instead of manually specified MenuItems
     def should_mark_item(item, ui):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 class ArtMenuData(PulldownMenuData):
-    items = [ArtPreviousMenuItem, ArtNextMenuItem, ArtResizeMenuItem,
-             ArtCropToSelectionMenuItem]
+    items = [ArtResizeMenuItem, ArtCropToSelectionMenuItem, SeparatorMenuItem,
+             ArtPreviousMenuItem, ArtNextMenuItem, SeparatorMenuItem]
+    
+    def should_mark_item(item, ui):
+        "show checkmark for active art"
+        return ui.active_art.filename == item.cb_arg
+    
+    def get_items(app):
+        "turn each loaded art into a menu item"
+        items = []
+        for art in app.art_loaded_for_edit:
+            class TempMenuItemClass(PulldownMenuItem):
+                pass
+            item = TempMenuItemClass
+            # leave spaces for mark
+            item.label = '  %s' % art.filename
+            item.command = 'art_switch_to'
+            item.cb_arg = art.filename
+            # order list by art's time loaded
+            item.time_loaded = art.time_loaded
+            items.append(item)
+        items.sort(key=lambda item: item.time_loaded)
+        return items
 
 class FrameMenuData(PulldownMenuData):
     items = [FramePreviousMenuItem, FrameNextMenuItem]

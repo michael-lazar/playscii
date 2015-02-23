@@ -1,9 +1,6 @@
 TODO
 
 menu:
-- art:
--- resize
--- [list of loaded art]
 - frame:
 -- add frame to end
 -- insert after frame #

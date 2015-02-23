@@ -94,6 +94,10 @@ class Application:
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
                                   video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
+        # report OS, version, CPU
+        self.log('OS: %s' % platform.platform())
+        self.log('CPU: %s' % platform.processor())
+        self.log('Python: %s' % ' '.join(sys.version.split('\n')))
         # report GL version, vendor, GLSL version etc
         # try single-argument GL2.0 version first
         gl_ver = GL.glGetString(GL.GL_VERSION)
@@ -219,6 +223,8 @@ class Application:
             # TODO: this may be foolish, ensure this never overwrites user data
             if not art or not art.valid:
                 art = self.new_art(filename)
+        # remember time loaded for UI list sorting
+        art.time_loaded = time.time()
         return art
     
     def new_art_for_edit(self, filename, width, height):

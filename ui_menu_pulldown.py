@@ -31,7 +31,12 @@ class PulldownMenu(UIElement):
         # save shortcuts as we got through
         shortcuts = []
         callbacks = []
-        for item in menu_button.menu_data.items:
+        # if menu data has an item generator, use it to add to the existing list
+        # copy list from class though; this function will run many times
+        items = menu_button.menu_data.items[:]
+        if menu_button.menu_data.get_items is not PulldownMenuData.get_items:
+            items += menu_button.menu_data.get_items(self.ui.app)
+        for item in items:
             shortcut,command = self.get_shortcut(item)
             shortcuts.append(shortcut)
             callbacks.append(command)
@@ -40,7 +45,7 @@ class PulldownMenu(UIElement):
             item_width += len(shortcut)
             if item_width > self.tile_width:
                 self.tile_width = item_width
-        self.tile_height = len(menu_button.menu_data.items) + 2
+        self.tile_height = len(items) + 2
         self.art.resize(self.tile_width, self.tile_height)
         # draw
         fg = self.ui.colors.black
@@ -48,7 +53,7 @@ class PulldownMenu(UIElement):
         self.draw_border(menu_button)
         # create as many buttons as needed, set their sizes, captions, callbacks
         self.buttons = []
-        for i,item in enumerate(menu_button.menu_data.items):
+        for i,item in enumerate(items):
             # skip button creation for separators, just draw a line
             if item is SeparatorMenuItem:
                 for x in range(1, self.tile_width - 1):
@@ -62,6 +67,8 @@ class PulldownMenu(UIElement):
             button.x = 1
             button.y = i+1
             button.callback = callbacks[i]
+            if item.cb_arg:
+                button.cb_arg = item.cb_arg
             # dim items that aren't applicable to current app state
             if item.should_dim(self.ui.app):
                 button.set_state('dimmed')
@@ -72,7 +79,7 @@ class PulldownMenu(UIElement):
         self.reset_art()
         # if this menu has special logic for marking items, use it
         if not menu_button.menu_data.should_mark_item is PulldownMenuData.should_mark_item:
-            for i,item in enumerate(menu_button.menu_data.items):
+            for i,item in enumerate(items):
                 if menu_button.menu_data.should_mark_item(item, self.ui):
                     self.art.set_char_index_at(0, 0, 1, i+1, self.mark_char)
         self.visible = True
