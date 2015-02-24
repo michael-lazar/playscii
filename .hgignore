@@ -10,3 +10,4 @@ binds.cfg
 ^art/.+\.ed
 ^art/.+\.jpg
 screenshots/*.*
+ignore/*
