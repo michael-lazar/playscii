@@ -6,7 +6,7 @@ from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
 from ui_console import OpenCommand, SaveCommand
 
-from art import ART_DIR, ART_FILE_EXTENSION
+from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY
 from key_shifts import shift_map
 
 class ConfirmButton(UIButton):
@@ -401,6 +401,106 @@ class ResizeArtDialog(UIDialog):
         self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y)
         self.dismiss()
 
+
+#
+# layer menu dialogs
+#
+
+class AddFrameDialog(UIDialog):
+    
+    title = 'Add new frame'
+    fields = 2
+    field0_type = int
+    field0_label = 'Index to add frame before:'
+    field1_type = float
+    field1_label = 'Hold time (in seconds) for new frame:'
+    confirm_caption = 'Add'
+    invalid_index_error = 'Invalid index. (1-%s allowed)'
+    invalid_delay_error = 'Invalid hold time.'
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        self.field0_text = str(ui.active_art.frames + 1)
+        self.field1_text = str(DEFAULT_FRAME_DELAY)
+    
+    def is_valid_frame_index(self, index):
+        try: index = int(index)
+        except: return False
+        if 1 > index or index > self.ui.active_art.frames + 1:
+            return False
+        return True
+    
+    def is_valid_frame_delay(self, delay):
+        try: delay = float(delay)
+        except: return False
+        return delay > 0
+    
+    def is_input_valid(self):
+        if not self.is_valid_frame_index(self.field0_text):
+            return False, self.invalid_index_error % str(self.ui.active_art.frames + 1)
+        if not self.is_valid_frame_delay(self.field1_text):
+            return False, self.invalid_delay_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        index = int(self.get_field_text(0))
+        delay = float(self.get_field_text(1))
+        self.ui.active_art.insert_frame_before_index(index - 1, delay)
+        self.dismiss()
+
+class DuplicateFrameDialog(AddFrameDialog):
+    title = 'Duplicate frame'
+    confirm_caption = 'Duplicate'
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        index = int(self.get_field_text(0))
+        delay = float(self.get_field_text(1))
+        self.ui.active_art.duplicate_frame(self.ui.active_frame, index, delay)
+        self.dismiss()
+
+class FrameDelayDialog(AddFrameDialog):
+    
+    fields = 1
+    field0_type = float
+    field0_label = 'New hold time (in seconds) for frame:'
+    confirm_caption = 'Set'
+    
+    def __init__(self, ui):
+        AddFrameDialog.__init__(self, ui)
+        self.field0_text = str(DEFAULT_FRAME_DELAY)
+    
+    def is_input_valid(self):
+        if not self.is_valid_frame_delay(self.field0_text):
+            return False, self.invalid_delay_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        delay = float(self.get_field_text(0))
+        self.ui.active_art.frame_delays[self.ui.active_frame] = delay
+        self.dismiss()
+
+class FrameIndexDialog(AddFrameDialog):
+    fields = 1
+    field0_type = int
+    field0_label = 'Move this frame before index:'
+    confirm_caption = 'Set'
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        # set new frame index (effectively moving it in the sequence)
+        dest_index = int(self.get_field_text(0))
+        self.ui.active_art.move_frame_to_index(self.ui.active_frame, dest_index)
+        self.dismiss()
+
+
+#
+# layer menu dialogs
+#
 
 class SetLayerNameDialog(UIDialog):
     

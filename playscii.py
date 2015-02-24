@@ -40,7 +40,7 @@ LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
 
-VERSION = '0.4.0'
+VERSION = '0.4.1'
 
 class Application:
     
@@ -410,6 +410,7 @@ class Application:
     
     def game_mode_test(self):
         "render quality/perf test for 'game mode'"
+        # TODO: move this to a "game script" in games/, see TODOs
         # background w/ parallax layers
         from game_object import GameObject, WobblyThing, ParticleThing
         bg = GameObject(self, 'test_bg')

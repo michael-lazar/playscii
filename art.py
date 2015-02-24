@@ -101,11 +101,11 @@ class Art:
         self.layer_names = ['Layer 1']
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
-        # add one frame to start
-        self.add_frame_to_end()
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
+        # add one frame to start
+        self.add_frame_to_end(DEFAULT_FRAME_DELAY, False)
         # clear our single layer to a sensible BG color
         self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
         # support non-square characters:
@@ -131,7 +131,7 @@ class Art:
             self.app.log('  frames: %s' % self.frames)
             self.app.log('  layers: %s' % self.layers)
     
-    def insert_frame_before_index(self, index, delay=DEFAULT_FRAME_DELAY):
+    def insert_frame_before_index(self, index, delay=DEFAULT_FRAME_DELAY, log=True):
         "adds a blank frame at the specified index (len+1 to add to end)"
         self.frames += 1
         self.frame_delays.insert(index, delay)
@@ -152,24 +152,47 @@ class Art:
         # all but lowest layer = transparent
         for l in range(1, self.layers):
             self.clear_frame_layer(index, l, 0, fg)
-        if self.log_size_changes:
-            self.app.log('frame %s added with %s layers' % (self.frames-1, self.layers))
+        self.mark_all_frames_changed()
+        if log:
+            self.app.log('Created new frame at index %s' % str(index))
     
-    def add_frame_to_end(self, delay=DEFAULT_FRAME_DELAY):
-        self.insert_frame_before_index(self.frames, delay)
+    def add_frame_to_end(self, delay=DEFAULT_FRAME_DELAY, log=True):
+        self.insert_frame_before_index(self.frames, delay, log)
     
-    def duplicate_frame(self, frame_index):
-        "adds a duplicate of specified frame to end of frame sequence"
+    def duplicate_frame(self, src_frame_index, dest_frame_index=None, delay=None):
+        "creates a duplicate of given frame at given index"
+        # stick new frame at end if no destination index given
+        dest_frame_index = dest_frame_index or self.frames
+        # copy source frame's delay if none given
+        delay = delay or self.frame_delays[src_frame_index]
         self.frames += 1
-        # copy source frame's delay
-        self.frame_delays.append(self.frame_delays[frame_index])
-        # copy frame's char/color arrays
-        self.chars.append(self.chars[frame_index].copy())
-        self.uv_mods.append(self.uv_mods[frame_index].copy())
-        self.fg_colors.append(self.fg_colors[frame_index].copy())
-        self.bg_colors.append(self.bg_colors[frame_index].copy())
-        if self.log_size_changes:
-            self.app.log('duplicated frame %s as frame %s' % (frame_index, self.frames-1))
+        self.frame_delays.insert(dest_frame_index, delay)
+        # copy source frame's char/color arrays
+        self.chars.insert(dest_frame_index, self.chars[src_frame_index].copy())
+        self.uv_mods.insert(dest_frame_index, self.uv_mods[src_frame_index].copy())
+        self.fg_colors.insert(dest_frame_index, self.fg_colors[src_frame_index].copy())
+        self.bg_colors.insert(dest_frame_index, self.bg_colors[src_frame_index].copy())
+        self.mark_all_frames_changed()
+        self.app.log('Duplicated frame %s at frame %s' % (src_frame_index+1, dest_frame_index))
+    
+    def delete_frame_at(self, index):
+        self.chars.pop(index)
+        self.fg_colors.pop(index)
+        self.bg_colors.pop(index)
+        self.uv_mods.pop(index)
+        self.frames -= 1
+        self.mark_all_frames_changed()
+    
+    def move_frame_to_index(self, src_index, dest_index):
+        char_data = self.chars.pop(src_index)
+        fg_data = self.fg_colors.pop(src_index)
+        bg_data = self.bg_colors.pop(src_index)
+        uv_data = self.uv_mods.pop(src_index)
+        self.chars.insert(dest_index, char_data)
+        self.fg_colors.insert(dest_index, fg_data)
+        self.bg_colors.insert(dest_index, bg_data)
+        self.uv_mods.insert(dest_index, uv_data)
+        self.mark_all_frames_changed()
     
     def set_charset(self, new_charset):
         if self.recalc_quad_height:
@@ -255,6 +278,12 @@ class Art:
             self.bg_colors[frame] = expand_array(self.bg_colors[frame], bg, 4)
             self.uv_mods[frame] = expand_array(self.uv_mods[frame], UV_NORMAL, UV_STRIDE)
     
+    def mark_all_frames_changed(self):
+        for frame in range(self.frames):
+            for l in [self.char_changed_frames, self.fg_changed_frames,
+                      self.bg_changed_frames, self.uv_changed_frames]:
+                l.append(frame)
+    
     def resize(self, new_width, new_height, origin_x=0, origin_y=0):
         if new_width < self.width or new_height < self.height:
             self.crop(new_width, new_height, origin_x, origin_y)
@@ -263,10 +292,7 @@ class Art:
         self.width, self.height = new_width, new_height
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True
-        for frame in range(self.frames):
-            for l in [self.char_changed_frames, self.fg_changed_frames,
-                      self.bg_changed_frames, self.uv_changed_frames]:
-                l.append(frame)
+        self.mark_all_frames_changed()
     
     def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
         "clears given layer of given frame to transparent BG + no characters"

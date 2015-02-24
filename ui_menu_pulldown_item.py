@@ -186,13 +186,36 @@ class FrameTogglePlaybackMenuItem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
+class FrameAddFrameMenuItem(PulldownMenuItem):
+    label = 'Add frame...'
+    command = 'add_frame'
+
+class FrameDuplicateFrameMenuItem(PulldownMenuItem):
+    label = 'Duplicate this frame...'
+    command = 'duplicate_frame'
+
+class FrameChangeDelayMenuItem(PulldownMenuItem):
+    label = "Change this frame's hold time..."
+    command = 'change_frame_delay'
+
+class FrameChangeIndexMenuItem(PulldownMenuItem):
+    label = "Change this frame's index..."
+    command = 'change_frame_index'
+
+class FrameDeleteFrameMenuItem(PulldownMenuItem):
+    label = 'Delete this frame'
+    command = 'delete_frame'
+    def should_dim(app):
+        # don't delete last frame
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+
 class LayerSetNameMenuItem(PulldownMenuItem):
-    label = 'Change layer name...'
-    command = 'change_current_layer_name'
+    label = "Change this layer's name..."
+    command = 'change_layer_name'
 
 class LayerSetZMenuItem(PulldownMenuItem):
-    label = 'Change layer Z-depth...'
-    command = 'change_current_layer_z'
+    label = "Change this layer's Z-depth..."
+    command = 'change_layer_z'
 
 class LayerSetInactiveVizMenuItem(PulldownMenuItem):
     label = 'blah'
@@ -299,7 +322,10 @@ class ArtMenuData(PulldownMenuData):
 
 class FrameMenuData(PulldownMenuData):
     items = [FramePreviousMenuItem, FrameNextMenuItem,
-             FrameTogglePlaybackMenuItem]
+             FrameTogglePlaybackMenuItem, SeparatorMenuItem,
+             FrameAddFrameMenuItem, FrameDuplicateFrameMenuItem,
+             FrameChangeDelayMenuItem, FrameChangeIndexMenuItem,
+             FrameDeleteFrameMenuItem]
 
 
 class LayerMenuData(PulldownMenuData):
