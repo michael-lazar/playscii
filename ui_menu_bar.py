@@ -23,9 +23,13 @@ class MenuButton(UIButton):
         self.callback = self.open_pulldown
     
     def open_pulldown(self):
+        # if clicking the same button twice, close it
         if self.element.active_menu_name == self.name:
             self.element.close_active_menu()
             return
+        # close any existing menu before opening new one
+        if self.element.active_menu_name:
+            self.element.close_active_menu()
         # tell pulldown what's opening it, it can populate its items based on
         # our data
         self.pulldown.open_at(self)

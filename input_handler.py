@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, SetLayerNameDialog, SetLayerZDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, SetLayerNameDialog, SetLayerZDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 
 BINDS_FILENAME = 'binds.cfg'
@@ -318,7 +318,6 @@ class InputLord:
         # context-dependent:
         # normal painting mode: cancel current selection
         # menu bar active: bail out of current menu
-        # TODO: dialog box up: cancel current dialog
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
         else:
@@ -540,12 +539,27 @@ class InputLord:
         self.ui.set_active_art_by_filename(art_filename)
         self.ui.menu_bar.refresh_active_menu()
     
+    def BIND_add_frame(self):
+        self.ui.open_dialog(AddFrameDialog)
+    
+    def BIND_duplicate_frame(self):
+        self.ui.open_dialog(DuplicateFrameDialog)
+    
+    def BIND_change_frame_delay(self):
+        self.ui.open_dialog(FrameDelayDialog)
+    
+    def BIND_delete_frame(self):
+        self.ui.active_art.delete_frame_at(self.ui.active_frame)
+    
+    def BIND_change_frame_index(self):
+        self.ui.open_dialog(FrameIndexDialog)
+    
     def BIND_layer_switch_to(self, layer_number):
         self.ui.set_active_layer(layer_number)
         self.ui.menu_bar.refresh_active_menu()
     
-    def BIND_change_current_layer_name(self):
+    def BIND_change_layer_name(self):
         self.ui.open_dialog(SetLayerNameDialog)
     
-    def BIND_change_current_layer_z(self):
+    def BIND_change_layer_z(self):
         self.ui.open_dialog(SetLayerZDialog)
