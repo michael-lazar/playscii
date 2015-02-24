@@ -1,6 +1,6 @@
 @echo off
 set ZIP_EXE="c:\Program Files\7-Zip\7z.exe"
-del build.zip
+del playscii_build.zip
 REM ignore pycache dirs
 dir /s/b dist\*__pycache__ > cachedirs
 REM rename dist\ dir to the top level dir we want in the archive
