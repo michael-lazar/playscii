@@ -26,7 +26,7 @@ class InputLord:
         # if the template is newer than it
         # TODO: better solution is find any binds in template but not binds.cfg
         # and add em
-        binds_outdated = os.path.getmtime(BINDS_FILENAME) < os.path.getmtime(BINDS_TEMPLATE_FILENAME)
+        binds_outdated = not os.path.exists(BINDS_FILENAME) or os.path.getmtime(BINDS_FILENAME) < os.path.getmtime(BINDS_TEMPLATE_FILENAME)
         if not binds_outdated and os.path.exists(BINDS_FILENAME):
             exec(open(BINDS_FILENAME).read())
         else:
