@@ -16,7 +16,6 @@ menu:
 -- duplicate layer #: dialog for # and name of new layer
 -- remove active layer
 -- change active layer's Z
-- help: launch website?
 
 
 - keyboard shortcut for dialog 3rd buttons, eg "don't save"

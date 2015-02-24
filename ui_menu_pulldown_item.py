@@ -1,4 +1,6 @@
 
+from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
+
 from ui_tool import PencilTool, EraseTool, RotateTool, GrabTool, TextTool, SelectTool, PasteTool
 
 #
@@ -12,11 +14,16 @@ class PulldownMenuItem:
     command = 'test_command'
     # if not None, passed to button's cb_arg
     cb_arg = None
+    # if True, pulldown button creation process won't auto-pad
+    no_pad = False
     def should_dim(app):
         "returns True if this item should be dimmed based on current application state"
         # so many commands are inapplicable with no active art, default to dimming an
         # item if this is the case
         return app.ui.active_art is None
+    def get_label(app):
+        "returns custom generated label based on app state"
+        return None
 
 class SeparatorMenuItem(PulldownMenuItem):
     "menu separator, non-interactive and handled specially by menu drawing"
@@ -179,6 +186,28 @@ class FrameTogglePlaybackMenuItem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
+class LayerSetNameMenuItem(PulldownMenuItem):
+    label = 'Change layer name...'
+    command = 'change_current_layer_name'
+
+class LayerSetZMenuItem(PulldownMenuItem):
+    label = 'Change layer Z-depth...'
+    command = 'change_current_layer_z'
+
+class LayerSetInactiveVizMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'cycle_inactive_layer_visibility'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.layers < 2
+    def get_label(app):
+        l = 'Inactive layers: '
+        if app.inactive_layer_visibility == LAYER_VIS_FULL:
+            return l + 'Visible'
+        elif app.inactive_layer_visibility == LAYER_VIS_DIM:
+            return l + 'Dim'
+        elif app.inactive_layer_visibility == LAYER_VIS_NONE:
+            return l + 'Invisible'
+
 class LayerPreviousMenuItem(PulldownMenuItem):
     label = 'Previous layer'
     command = 'previous_layer'
@@ -275,7 +304,9 @@ class FrameMenuData(PulldownMenuData):
 
 class LayerMenuData(PulldownMenuData):
     
-    items = [LayerPreviousMenuItem, LayerNextMenuItem, SeparatorMenuItem]
+    items = [LayerSetNameMenuItem, LayerSetZMenuItem, LayerSetInactiveVizMenuItem,
+             SeparatorMenuItem, LayerPreviousMenuItem, LayerNextMenuItem,
+             SeparatorMenuItem]
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
@@ -284,11 +315,30 @@ class LayerMenuData(PulldownMenuData):
     def get_items(app):
         "turn each layer into a menu item"
         items = []
+        # first determine longest line to set width of items
+        longest_line = 0
+        for layer_name in app.ui.active_art.layer_names:
+            if len(layer_name) > longest_line:
+                longest_line = len(layer_name)
+        # check non-generated menu items too
+        for item in LayerMenuData.items:
+            if len(item.label) + 1 > longest_line:
+                longest_line = len(item.label) + 1
+        # cap at max allowed line length
+        longest_line = min(longest_line, 50)
         for i,layer_name in enumerate(app.ui.active_art.layer_names):
             class TempMenuItemClass(PulldownMenuItem): pass
             item = TempMenuItemClass
             # leave spaces for mark
             item.label = '  %s' % layer_name
+            # pad, put Z depth on far right
+            item.label = item.label.ljust(longest_line)
+            # trim to keep below a max length
+            item.label = item.label[:longest_line]
+            # spaces between layer name and z depth
+            item.label += 'z:%.2f' % app.ui.active_art.layers_z[i]
+            # tell PulldownMenu's button creation process not to auto-pad
+            item.no_pad = True
             item.command = 'layer_switch_to'
             item.cb_arg = i
             items.append(item)

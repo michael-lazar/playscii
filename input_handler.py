@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, SetLayerNameDialog, SetLayerZDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 
 BINDS_FILENAME = 'binds.cfg'
@@ -479,6 +479,7 @@ class InputLord:
             self.app.inactive_layer_visibility = LAYER_VIS_FULL
             message_text += 'visible'
         self.ui.message_line.post_line(message_text)
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_open_file_menu(self):
         self.ui.menu_bar.open_menu_by_name('file')
@@ -542,3 +543,9 @@ class InputLord:
     def BIND_layer_switch_to(self, layer_number):
         self.ui.set_active_layer(layer_number)
         self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_change_current_layer_name(self):
+        self.ui.open_dialog(SetLayerNameDialog)
+    
+    def BIND_change_current_layer_z(self):
+        self.ui.open_dialog(SetLayerZDialog)

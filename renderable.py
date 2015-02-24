@@ -270,7 +270,9 @@ class TileRenderable:
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         # draw all specified layers if no list given
         if not layers:
-            layers = range(self.art.layers)
+            # sort layers in Z depth
+            layers = list(range(self.art.layers))
+            layers.sort(key=lambda i: self.art.layers_z[i], reverse=False)
         # handle a single int param
         elif type(layers) is int:
             layers = [layers]
