@@ -22,7 +22,7 @@ class PagedInfoDialog(UIDialog):
         self.reset_art()
     
     def update(self):
-        # disable prev/next buttons if we're at either end of the 
+        # disable prev/next buttons if we're at either end of the page list
         if self.page == 0:
             self.confirm_button.can_hover = True
             self.confirm_button.set_state('normal')
@@ -41,6 +41,8 @@ class PagedInfoDialog(UIDialog):
             self.other_pressed()
         elif keystr == 'Right':
             self.confirm_pressed()
+        elif keystr == 'Escape':
+            self.cancel_pressed()
     
     def get_message(self):
         return self.message[self.page].strip().split('\n')

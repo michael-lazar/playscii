@@ -201,7 +201,7 @@ class UIDialog(UIElement):
             elif field_type is int and not keystr.isdigit():
                 return
             # this doesn't guard against things like 0.00.001
-            elif field_type is float and not keystr.isdigit() and keystr != '.':
+            elif field_type is float and not keystr.isdigit() and keystr != '.' and keystr != '-':
                 return
             field_text += keystr
         if len(field_text) < self.get_field_width(self.active_field):
@@ -399,4 +399,61 @@ class ResizeArtDialog(UIDialog):
         w, h = int(self.get_field_text(0)), int(self.get_field_text(1))
         start_x, start_y = int(self.get_field_text(2)), int(self.get_field_text(3))
         self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y)
+        self.dismiss()
+
+
+class SetLayerNameDialog(UIDialog):
+    
+    title = 'Set current layer name'
+    fields = 1
+    field0_type = str
+    field0_label = 'Enter new name for layer:'
+    confirm_caption = 'Rename'
+    name_exists_error = 'Layer by that name already exists.'
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        # populate with existing name
+        self.field0_text = ui.active_art.layer_names[ui.active_layer]
+    
+    def is_input_valid(self):
+        for i,layer_name in enumerate(self.ui.active_art.layer_names):
+            if i == self.ui.active_layer:
+                continue
+            if layer_name == self.get_field_text(0):
+                return False, self.name_exists_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        new_name = self.get_field_text(0)
+        self.ui.active_art.layer_names[self.ui.active_layer] = new_name
+        self.dismiss()
+
+
+class SetLayerZDialog(UIDialog):
+    title = 'Set current layer Z-depth'
+    fields = 1
+    field0_type = float
+    field0_label = 'Enter Z-depth for layer:'
+    confirm_caption = 'Set'
+    invalid_z_error = 'Invalid number.'
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        # populate with existing z
+        self.field0_text = str(ui.active_art.layers_z[ui.active_layer])
+    
+    def is_input_valid(self):
+        try: z = float(self.get_field_text(0))
+        except: return False, self.invalid_z_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        new_z = float(self.get_field_text(0))
+        self.ui.active_art.layers_z[self.ui.active_layer] = new_z
+        self.ui.app.grid.reset()
         self.dismiss()

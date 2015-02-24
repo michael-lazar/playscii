@@ -3,7 +3,7 @@ from ui_element import UIElement
 from ui_button import UIButton
 from ui_colors import UIColors
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
-from ui_menu_pulldown_item import PulldownMenuData, SeparatorMenuItem
+from ui_menu_pulldown_item import PulldownMenuItem, PulldownMenuData, SeparatorMenuItem
 
 class MenuItemButton(UIButton):
     dimmed_fg_color = UIColors.medgrey
@@ -40,9 +40,17 @@ class PulldownMenu(UIElement):
             shortcut,command = self.get_shortcut(item)
             shortcuts.append(shortcut)
             callbacks.append(command)
+            # get label, static or dynamic
+            label = item.label
+            if item.get_label is not PulldownMenuItem.get_label:
+                label = item.get_label(self.ui.app)
+            # item might have already calculated padding, ie from get_items
+            if item.no_pad:
+                item_width = len(label) + 2
             # get full width of item, label shortcut and some padding
-            item_width = len(item.label) + self.label_shortcut_padding
-            item_width += len(shortcut)
+            else:
+                item_width = len(label) + self.label_shortcut_padding
+                item_width += len(shortcut)
             if item_width > self.tile_width:
                 self.tile_width = item_width
         self.tile_height = len(items) + 2
@@ -61,7 +69,11 @@ class PulldownMenu(UIElement):
                 continue
             button = MenuItemButton(self)
             full_label = item.label
-            full_label += shortcuts[i].rjust(self.tile_width - 2 - len(item.label))
+            if item.get_label is not PulldownMenuItem.get_label:
+                # trim output
+                full_label = item.get_label(self.ui.app)
+            if not item.no_pad:
+                full_label += shortcuts[i].rjust(self.tile_width - 2 - len(full_label))
             button.caption = full_label
             button.width = len(full_label)
             button.x = 1
