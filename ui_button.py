@@ -33,6 +33,8 @@ class UIButton:
     can_hover = True
     can_click = True
     visible = True
+    # if true, this button is invisible and used for special trickery
+    never_draw = False
     # weird (gross?) thing: other code can stash an argument to callback here
     cb_arg = None
     
@@ -58,6 +60,8 @@ class UIButton:
         return fg, bg
     
     def set_state_colors(self):
+        if self.never_draw:
+            return
         # set colors for entire button area based on current state
         if self.dimmed and self.state == 'normal':
             self.state = 'dimmed'
@@ -105,6 +109,8 @@ class UIButton:
         self.element.art.write_string(0, 0, self.x, y, text, None)
     
     def draw(self):
+        if self.never_draw:
+            return
         self.set_state_colors()
         if self.should_draw_caption and self.caption != '':
             self.draw_caption()
