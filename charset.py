@@ -15,7 +15,9 @@ class CharacterSet:
         self.app = app
         self.name = os.path.basename(src_filename)
         self.name = os.path.splitext(self.name)[0]
-        char_data_filename = CHARSET_DIR + src_filename + '.%s' % CHARSET_FILE_EXTENSION
+        char_data_filename = CHARSET_DIR + src_filename
+        if not os.path.exists(char_data_filename):
+            char_data_filename += '.%s' % CHARSET_FILE_EXTENSION
         if not os.path.exists(char_data_filename):
             self.app.log("Couldn't find character set data file %s" % char_data_filename)
             return

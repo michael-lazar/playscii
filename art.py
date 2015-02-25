@@ -268,11 +268,20 @@ class Art:
         pass
     
     def set_charset(self, new_charset):
+        if new_charset is self.charset:
+            return
         if self.recalc_quad_height:
             self.quad_width = 1
             self.quad_height = 1 * (self.charset.char_height / self.charset.char_width)
         self.charset = new_charset
+        self.set_unsaved_changes(True)
         self.geo_changed = True
+    
+    def set_palette(self, new_palette):
+        if new_palette is self.palette:
+            return
+        self.palette = new_palette
+        self.set_unsaved_changes(True)
     
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
         x0, y0 = origin_x, origin_y

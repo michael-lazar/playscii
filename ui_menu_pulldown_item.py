@@ -255,6 +255,14 @@ class LayerNextMenuItem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.layers < 2
 
+class ChooseCharSetMenuItem(PulldownMenuItem):
+    label = 'Choose character set...'
+    command = 'choose_charset'
+
+class ChoosePaletteMenuItem(PulldownMenuItem):
+    label = 'Choose palette...'
+    command = 'choose_palette'
+
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help...'
     command = 'open_help_screen'
@@ -382,6 +390,9 @@ class LayerMenuData(PulldownMenuData):
             item.cb_arg = i
             items.append(item)
         return items
+
+class CharColorMenuData(PulldownMenuData):
+    items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

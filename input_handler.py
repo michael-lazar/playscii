@@ -7,6 +7,7 @@ from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
 from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
+from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -515,6 +516,9 @@ class InputLord:
     def BIND_open_layer_menu(self):
         self.ui.menu_bar.open_menu_by_name('layer')
     
+    def BIND_open_char_color_menu(self):
+        self.ui.menu_bar.open_menu_by_name('char_color')
+    
     def BIND_open_help_menu(self):
         self.ui.menu_bar.open_menu_by_name('help')
     
@@ -589,3 +593,9 @@ class InputLord:
     
     def BIND_delete_layer(self):
         self.ui.active_art.delete_layer(self.ui.active_layer)
+    
+    def BIND_choose_charset(self):
+        self.ui.open_dialog(CharSetChooserDialog)
+    
+    def BIND_choose_palette(self):
+        self.ui.open_dialog(PaletteChooserDialog)

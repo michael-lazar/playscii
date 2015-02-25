@@ -72,6 +72,7 @@ self.edit_bind_src = {
     'alt a'    : 'open_art_menu',
     'alt r'    : 'open_frame_menu',
     'alt l'    : 'open_layer_menu',
+    'alt c'    : 'open_char_color_menu',
     'alt h'    : 'open_help_menu',
     'ctrl o'   : 'open_art',
     'ctrl n'   : 'new_art',
@@ -81,6 +82,8 @@ self.edit_bind_src = {
     'ctrl r'   : 'resize_art',
     'ctrl f'   : 'add_frame',
     'ctrl l'   : 'add_layer',
+    'ctrl h'   : 'choose_charset',
+    'ctrl p'   : 'choose_palette',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'       : 'save_art_as',
