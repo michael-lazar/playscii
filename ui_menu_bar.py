@@ -148,6 +148,28 @@ class MenuBar(UIElement):
             if button.name == menu_name:
                 button.callback()
     
+    def open_menu_by_index(self, index):
+        if index > len(self.buttons) - 1:
+            return
+        # don't navigate to the about menu
+        # (does this mean it's not accessible via kb-only? probably, that's fine)
+        if self.buttons[index].name == 'playscii':
+            return
+        self.buttons[index].callback()
+    
+    def get_menu_index(self, menu_name):
+        for i,button in enumerate(self.buttons):
+            if button.name == self.active_menu_name:
+                return i
+    
+    def next_menu(self):
+        i = self.get_menu_index(self.active_menu_name)
+        self.open_menu_by_index(i + 1)
+    
+    def previous_menu(self):
+        i = self.get_menu_index(self.active_menu_name)
+        self.open_menu_by_index(i - 1)
+    
     def reset_art(self):
         self.tile_width = ceil(self.ui.width_tiles * self.ui.scale)
         # must resize here, as window width will vary

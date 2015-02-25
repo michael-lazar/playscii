@@ -8,6 +8,14 @@ from ui_menu_pulldown_item import PulldownMenuItem, PulldownMenuData, SeparatorM
 class MenuItemButton(UIButton):
     dimmed_fg_color = UIColors.medgrey
     dimmed_bg_color = UIColors.lightgrey
+    def hover(self):
+        UIButton.hover(self)
+        # keyboard nav if hovering with mouse
+        for i,button in enumerate(self.element.buttons):
+            if button is self:
+                self.element.keyboard_nav_index = i
+                self.element.update_keyboard_hover()
+                break
 
 class PulldownMenu(UIElement):
     
@@ -94,6 +102,9 @@ class PulldownMenu(UIElement):
             for i,item in enumerate(items):
                 if menu_button.menu_data.should_mark_item(item, self.ui):
                     self.art.set_char_index_at(0, 0, 1, i+1, self.mark_char)
+        # reset keyboard nav state for popups
+        self.keyboard_nav_index = 0
+        self.keyboard_navigate(0)
         self.visible = True
     
     def draw_border(self, menu_button):
@@ -152,3 +163,30 @@ class PulldownMenu(UIElement):
                 return shortcut, command_function
         self.ui.app.log('Shortcut/command not found: %s' % menu_item.command)
         return '', null
+    
+    def keyboard_navigate(self, move_dir):
+        old_idx = self.keyboard_nav_index
+        new_idx = self.keyboard_nav_index + move_dir
+        if new_idx < 0 or new_idx > len(self.buttons) - 1:
+            return
+        else:
+            self.keyboard_nav_index += move_dir
+        while 0 <= self.keyboard_nav_index + move_dir < len(self.buttons) and self.buttons[self.keyboard_nav_index].state == 'dimmed':
+            # move_dir might be zero, give it a direction to avoid infinite loop
+            # if menu item 0 is dimmed
+            self.keyboard_nav_index += move_dir or 1
+        self.update_keyboard_hover()
+    
+    def update_keyboard_hover(self):
+        for i,button in enumerate(self.buttons):
+            if self.keyboard_nav_index == i:
+                button.set_state('hovered')
+            elif button.state != 'dimmed':
+                button.set_state('normal')
+    
+    def keyboard_select_item(self):
+        button = self.buttons[self.keyboard_nav_index]
+        if button.cb_arg:
+            button.callback(button.cb_arg)
+        else:
+            button.callback()

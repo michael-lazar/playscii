@@ -411,6 +411,9 @@ class InputLord:
             self.ui.message_line.post_line('Camera tilt engaged.')
     
     def BIND_select_or_paint(self):
+        # select menu item if navigating pulldown
+        if self.ui.menu_bar.active_menu_name:
+            self.ui.pulldown.keyboard_select_item()
         if not self.ui.active_art:
             return
         if self.ui.popup.visible:
@@ -443,24 +446,33 @@ class InputLord:
     def BIND_arrow_up(self):
         if self.ui.popup.visible:
             self.ui.popup.move_popup_cursor(0, 1)
+        elif self.ui.menu_bar.active_menu_name:
+            self.ui.pulldown.keyboard_navigate(-1)
         else:
             self.app.cursor.move(0, 1)
     
     def BIND_arrow_down(self):
         if self.ui.popup.visible:
             self.ui.popup.move_popup_cursor(0, -1)
+        elif self.ui.menu_bar.active_menu_name:
+            self.ui.pulldown.keyboard_navigate(1)
         else:
             self.app.cursor.move(0, -1)
     
     def BIND_arrow_left(self):
         if self.ui.popup.visible:
             self.ui.popup.move_popup_cursor(-1, 0)
+        # navigate menu bar
+        elif self.ui.menu_bar.active_menu_name:
+            self.ui.menu_bar.previous_menu()
         else:
             self.app.cursor.move(-1, 0)
     
     def BIND_arrow_right(self):
         if self.ui.popup.visible:
             self.ui.popup.move_popup_cursor(1, 0)
+        elif self.ui.menu_bar.active_menu_name:
+            self.ui.menu_bar.next_menu()
         else:
             self.app.cursor.move(1, 0)
     

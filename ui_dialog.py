@@ -56,18 +56,16 @@ class UIDialog(UIElement):
     
     def __init__(self, ui):
         self.confirm_button = ConfirmButton(self)
-        # handle confirm caption override
-        if self.confirm_caption and self.confirm_button.caption != self.confirm_caption:
-            self.confirm_button.caption = self.confirm_caption
-            self.confirm_button.width = len(self.confirm_caption) + 2
         self.other_button = OtherButton(self)
-        if self.other_caption and self.other_button.caption != self.other_caption:
-            self.other_button.caption = self.other_caption
-            self.other_button.width = len(self.other_caption) + 2
         self.cancel_button = CancelButton(self)
-        if self.cancel_caption:
-            self.cancel_button.caption = self.cancel_caption
-            self.cancel_button.width = len(self.cancel_caption) + 2
+        # handle caption overrides
+        def caption_override(button, alt_caption):
+            if alt_caption and button.caption != alt_caption:
+                button.caption = alt_caption
+                button.width = len(alt_caption) + 2
+        caption_override(self.confirm_button, self.confirm_caption)
+        caption_override(self.other_button, self.other_caption)
+        caption_override(self.cancel_button, self.cancel_caption)
         self.confirm_button.callback = self.confirm_pressed
         self.other_button.callback = self.other_pressed
         self.cancel_button.callback = self.cancel_pressed

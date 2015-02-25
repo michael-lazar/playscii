@@ -14,6 +14,7 @@ menu:
 - some way to allow arrow keys to navigate pulldown menu?
 -- left/right: next/previous menu in menu bar (easy?)
 -- up/down: simulate hover of next/previous item in pulldown (harder)
+
 - clickable dialog fields - when clicked skip cursor focus to it
 - click-drag to move dialogs by menubar?
 
