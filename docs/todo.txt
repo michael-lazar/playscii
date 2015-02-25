@@ -2,19 +2,13 @@ TODO
 
 menu:
 - layer:
--- add new layer... (dialog: name, z depth)
--- duplicate current layer... (dialog: name of new layer, z depth)
--- delete current layer
+-- UI works, finish underlying functionality for add/duplicate/delete layer
 - char/color:
 -- load charset
 -- load palette
 -- both use "picker" interface: left pane showing names, right pane with preview (appropriately scaled sprite renderable)
 
 - keyboard shortcut for dialog 3rd buttons, eg "don't save"
-- some way to allow arrow keys to navigate pulldown menu?
--- left/right: next/previous menu in menu bar (easy?)
--- up/down: simulate hover of next/previous item in pulldown (harder)
-
 - clickable dialog fields - when clicked skip cursor focus to it
 - click-drag to move dialogs by menubar?
 

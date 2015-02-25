@@ -23,6 +23,9 @@ class MenuButton(UIButton):
         self.callback = self.open_pulldown
     
     def open_pulldown(self):
+        # don't open menus if a dialog is up
+        if self.element.ui.active_dialog:
+            return
         # if clicking the same button twice, close it
         if self.element.active_menu_name == self.name:
             self.element.close_active_menu()

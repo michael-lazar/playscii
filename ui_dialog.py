@@ -26,6 +26,7 @@ class OtherButton(ConfirmButton):
     width = len(caption) + 2
     visible = False
 
+
 class UIDialog(UIElement):
     
     tile_width, tile_height = 40, 8
@@ -39,8 +40,10 @@ class UIDialog(UIElement):
     titlebar_bg_color = UIColors.black
     fields = 3
     field_width = 36
-    field_fg_color = UIColors.black
-    field_bg_color = UIColors.lightgrey
+    active_field_fg_color = UIColors.white
+    active_field_bg_color = UIColors.darkgrey
+    inactive_field_fg_color = UIColors.black
+    inactive_field_bg_color = UIColors.lightgrey
     field0_label = 'Field 1 label:'
     field1_label = 'Field 2 label:'
     field2_label = 'Field 3 label:'
@@ -116,8 +119,24 @@ class UIDialog(UIElement):
             self.other_button.visible = True
         self.cancel_button.x = 2
         self.cancel_button.y = self.tile_height - 2
+        # create field buttons so you can click em
+        for i in range(self.fields):
+            field_button = DialogFieldButton(self)
+            field_button.field_number = i
+            field_button.width = self.get_field_width(i)
+            y = self.get_field_y(i) + 1
+            field_button.x = 2
+            field_button.y = y
+            field_button.never_draw = True
+            self.buttons.append(field_button)
         # draw buttons
         UIElement.reset_art(self)
+    
+    def update_drag(self, mouse_dx, mouse_dy):
+        win_w, win_h = self.ui.app.window_width, self.ui.app.window_height
+        self.x += (mouse_dx / win_w) * 2
+        self.y -= (mouse_dy / win_h) * 2
+        self.renderable.x, self.renderable.y = self.x, self.y
     
     def update(self):
         # redraw fields every update for cursor blink
@@ -142,13 +161,17 @@ class UIDialog(UIElement):
         # TODO: split over multiple lines if too long
         return msg
     
-    def draw_fields(self, draw_field_labels=True):
+    def get_field_y(self, field_index):
+        "returns a Y value for where the given field (caption) should start"
         start_y = 2
         # add # of message lines
         if self.message:
             start_y += len(self.get_message()) + 1
+        return (field_index * 3) + start_y
+    
+    def draw_fields(self, draw_field_labels=True):
         for i in range(self.fields):
-            y = (i * 3) + start_y
+            y = self.get_field_y(i)
             if draw_field_labels:
                 label = getattr(self, 'field%s_label' % i)
                 self.art.write_string(0, 0, 2, y, label, self.fg_color)
@@ -157,13 +180,15 @@ class UIDialog(UIElement):
             field_text = self.get_field_text(i)
             # draw cursor at end if this is the active field
             cursor = ''
+            fg, bg = self.inactive_field_fg_color, self.inactive_field_bg_color
             if i == self.active_field:
+                fg, bg = self.active_field_fg_color, self.active_field_bg_color
                 # blink cursor
                 blink_on = int(self.ui.app.elapsed_time / 250) % 2
                 if blink_on:
                     cursor = '_'
             field_text = (field_text + cursor).ljust(field_width)
-            self.art.write_string(0, 0, 2, y, field_text, self.field_fg_color, self.field_bg_color)
+            self.art.write_string(0, 0, 2, y, field_text, fg, bg)
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
@@ -233,6 +258,20 @@ class UIDialog(UIElement):
     
     def other_pressed(self):
         self.dismiss()
+
+
+class DialogFieldButton(UIButton):
+    
+    "invisible button that provides clickability for input fields"
+    
+    caption = ''
+    # set by dialog constructor
+    field_number = 0
+    never_draw = True
+    
+    def click(self):
+        UIButton.click(self)
+        self.element.active_field = self.field_number
 
 
 class NewArtDialog(UIDialog):

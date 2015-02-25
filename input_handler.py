@@ -90,6 +90,9 @@ class InputLord:
         app.mouse_dx, app.mouse_dy = int(mdx.value), int(mdy.value)
         if app.mouse_dx != 0 or app.mouse_dy != 0:
             app.keyboard_editing = False
+            # dragging a dialog?
+            if app.left_mouse and self.ui.active_dialog in self.ui.hovered_elements:
+                self.ui.active_dialog.update_drag(app.mouse_dx, app.mouse_dy)
         # get keyboard state so later we can directly query keys
         ks = sdl2.SDL_GetKeyboardState(None)
         # get modifier states
