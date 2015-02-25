@@ -497,7 +497,6 @@ class ToolPopup(UIElement):
         self.ui.status_bar.set_active_charset(new_charset)
         self.charset_swatch.reset()
         self.reset_art()
-        self.ui.active_art.set_charset(new_charset)
     
     def set_active_palette(self, new_palette):
         self.charset_swatch.art.palette = new_palette

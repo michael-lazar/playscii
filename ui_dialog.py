@@ -83,15 +83,19 @@ class UIDialog(UIElement):
         if self.ui.menu_bar and self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
     
+    def get_height(self, msg_lines):
+        "determine size based on contents (subclasses can use custom logic)"
+        # base height = 4, titlebar + padding + buttons + padding
+        h = 4
+        h += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
+        h += 3 * self.fields
+        return h
+    
     def reset_art(self, resize=True):
         # get_message splits into >1 line if too long
         msg_lines = self.get_message() if self.message else []
         if resize:
-            # determine size based on contents
-            # base height = 4, titlebar + padding + buttons + padding
-            self.tile_height = 4
-            self.tile_height += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
-            self.tile_height += 3 * self.fields
+            self.tile_height = self.get_height(msg_lines)
             self.art.resize(self.tile_width, self.tile_height)
             # center in window
             qw, qh = self.art.quad_width, self.art.quad_height
@@ -194,6 +198,10 @@ class UIDialog(UIElement):
         keystr = sdl2.SDL_GetKeyName(key).decode()
         field_text = self.get_field_text(self.active_field)
         field_type = getattr(self, 'field%s_type' % self.active_field)
+        # special case: shortcut 'D' for 3rd button if no field input
+        if self.fields == 0 and keystr.lower() == 'd':
+            self.other_pressed()
+            return
         if keystr == 'Return':
             self.confirm_pressed()
         elif keystr == 'Escape':

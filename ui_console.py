@@ -38,7 +38,7 @@ class LoadPaletteCommand(ConsoleCommand):
     def execute(console, args):
         filename = ' '.join(args)
         palette = console.ui.app.load_palette(filename)
-        console.ui.active_art.palette = palette
+        console.ui.active_art.set_palette(palette)
         console.ui.popup.set_active_palette(palette)
 
 
@@ -46,7 +46,7 @@ class LoadCharSetCommand(ConsoleCommand):
     def execute(console, args):
         filename = ' '.join(args)
         charset = console.ui.app.load_charset(filename)
-        console.ui.active_art.charset = charset
+        console.ui.active_art.set_charset(charset)
         console.ui.popup.set_active_charset(charset)
 
 

@@ -15,14 +15,14 @@ class SpriteRenderable:
     texture_filename = 'ui/icon.png'
     alpha = 1
     
-    def __init__(self, app):
+    def __init__(self, app, texture_filename=None):
         self.app = app
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
-        img = Image.open(self.texture_filename)
+        img = Image.open(texture_filename or self.texture_filename)
         img = img.convert('RGBA')
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         w, h = img.size
