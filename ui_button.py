@@ -61,6 +61,9 @@ class UIButton:
         # set colors for entire button area based on current state
         if self.dimmed and self.state == 'normal':
             self.state = 'dimmed'
+        # just bail if we're trying to draw something out of bounds
+        if self.x + self.width > self.element.art.width:
+            return
         fg, bg = self.get_state_colors(self.state)
         for y in range(self.height):
             for x in range(self.width):
@@ -95,6 +98,9 @@ class UIButton:
             text = text.center(self.width)
         elif self.caption_justify == TEXT_RIGHT:
             text = text.rjust(self.width)
+        # just bail if we're trying to draw something out of bounds
+        if self.x + len(text) > self.element.art.width:
+            return
         # leave FG color None; should already have been set
         self.element.art.write_string(0, 0, self.x, y, text, None)
     

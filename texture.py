@@ -6,7 +6,8 @@ class Texture:
     # TODO: move texture data init to a set method to make hot reload trivial(?)
     
     mag_filter = GL.GL_NEAREST
-    min_filter = GL.GL_NEAREST_MIPMAP_NEAREST
+    min_filter = GL.GL_NEAREST
+    #min_filter = GL.GL_NEAREST_MIPMAP_NEAREST
     wrap = GL.GL_CLAMP_TO_EDGE
     packing = GL.GL_UNPACK_ALIGNMENT
     

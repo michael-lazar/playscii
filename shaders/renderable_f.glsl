@@ -19,7 +19,9 @@ out vec4 outColor;
 
 void main()
 {
-	outColor = texture2D(charset, texCoords);
+	// add tiny offsets to UVs to account for sampling imprecision
+	vec2 nudge = vec2(0.000001, 0.000001);
+	outColor = texture2D(charset, texCoords + nudge);
 	// look up fg/bg colors from palette texture
 	vec2 colorUV = vec2(0.0, 0.0);
 	// offset U coord slightly so we're not sampling from pixel boundary

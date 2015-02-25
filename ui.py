@@ -135,7 +135,7 @@ class UI:
         # tell elements to refresh
         self.set_elements_scale()
         if self.scale != old_scale:
-            self.app.log('UI scale is now %s (%.3f x %.3f)' % (self.scale, self.width_tiles, self.height_tiles))
+            self.message_line.post_line('UI scale is now %s (%.3f x %.3f)' % (self.scale, self.width_tiles, self.height_tiles))
     
     def set_elements_scale(self):
         for e in self.elements:

@@ -1,16 +1,14 @@
 TODO
 
 menu:
-- frame:
--- add new frame... (index to add before, hold time (before showing next frame))
--- duplicate current frame... (hold time)
--- change current frame hold time... (hold time)
--- delete current frame
--- change current frame order... (what does dialog for this look like?)
 - layer:
 -- add new layer... (dialog: name, index to add before, z depth)
 -- duplicate current layer... (dialog: name of new layer, z depth)
 -- delete current layer
+- char/color:
+-- load charset
+-- load palette
+-- both use "picker" interface: left pane showing names, right pane with preview (appropriately scaled sprite renderable)
 
 - keyboard shortcut for dialog 3rd buttons, eg "don't save"
 - some way to allow arrow keys to navigate pulldown menu?
