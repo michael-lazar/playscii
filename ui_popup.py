@@ -444,7 +444,7 @@ class ToolPopup(UIElement):
         palette_height = ((self.palette_swatch.art.height * self.palette_swatch.art.quad_height) + self.swatch_margin) / UIArt.quad_height
         self.tile_height += self.tab_height + palette_height + extra_lines
         if old_width != self.tile_width or old_height != self.tile_height:
-            self.art.resize(int(self.tile_width), int(self.tile_height), self.bg_color)
+            self.art.resize(int(self.tile_width), int(self.tile_height))
         # panel text - position different elements based on selected tab
         if self.active_tab == TAB_CHAR_COLOR:
             self.draw_char_color_tab()

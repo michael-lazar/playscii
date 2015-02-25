@@ -214,11 +214,13 @@ class MessageLineUI(UIElement):
         UIElement.reset_loc(self)
     
     def post_line(self, new_line, hold_time=None):
+        "write a line to this element (ie so as not to spam console log)"
         self.hold_time = hold_time or self.default_hold_time
-        "write a line to this element (without polluting console log with it)"
-        self.line = new_line
+        start_x = 1
+        # trim to screen width
+        self.line = new_line[:self.tile_width-start_x]
         self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
-        self.art.write_string(0, 0, 1, 0, self.line)
+        self.art.write_string(0, 0, start_x, 0, self.line)
         self.alpha = 1
         self.last_post = self.ui.app.elapsed_time
     

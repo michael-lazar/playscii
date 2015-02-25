@@ -83,6 +83,9 @@ class StatusBarUI(UIElement):
     def rewrite_art(self):
         bg = self.ui.colors.white
         self.art.clear_frame_layer(0, 0, bg)
+        # if user is making window reeeeally skinny, bail
+        if self.tile_width < self.left_items_width:
+            return
         self.write_left_elements()
         # only draw right side info if the window is wide enough
         if self.art.width > self.left_items_width + self.right_items_width:

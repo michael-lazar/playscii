@@ -234,7 +234,9 @@ class InputLord:
             self.ui.set_scale(self.ui.scale - SCALE_INCREMENT)
     
     def BIND_increase_ui_scale(self):
-        self.ui.set_scale(self.ui.scale + SCALE_INCREMENT)
+        # cap UI scale at 2
+        if self.ui.scale + SCALE_INCREMENT < 2.0:
+            self.ui.set_scale(self.ui.scale + SCALE_INCREMENT)
     
     def BIND_toggle_fullscreen(self):
         self.app.toggle_fullscreen()
