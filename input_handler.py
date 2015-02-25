@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, SetLayerNameDialog, SetLayerZDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 
 BINDS_FILENAME = 'binds.cfg'
@@ -556,6 +556,12 @@ class InputLord:
     def BIND_change_frame_index(self):
         self.ui.open_dialog(FrameIndexDialog)
     
+    def BIND_add_layer(self):
+        self.ui.open_dialog(AddLayerDialog)
+    
+    def BIND_duplicate_layer(self):
+        self.ui.open_dialog(DuplicateLayerDialog)
+    
     def BIND_layer_switch_to(self, layer_number):
         self.ui.set_active_layer(layer_number)
         self.ui.menu_bar.refresh_active_menu()
@@ -565,3 +571,6 @@ class InputLord:
     
     def BIND_change_layer_z(self):
         self.ui.open_dialog(SetLayerZDialog)
+    
+    def BIND_delete_layer(self):
+        self.ui.active_art.delete_layer(self.ui.active_layer)

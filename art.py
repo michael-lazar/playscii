@@ -194,22 +194,40 @@ class Art:
         self.uv_mods.insert(dest_index, uv_data)
         self.mark_all_frames_changed()
     
-    def set_charset(self, new_charset):
-        if self.recalc_quad_height:
-            self.quad_width = 1
-            self.quad_height = 1 * (self.charset.char_height / self.charset.char_width)
-        self.charset = new_charset
-        self.geo_changed = True
-    
-    def duplicate_layer(self, z=None, copy=True):
+    def add_layer(self, z=None, name=None):
+        # offset Z from last layer's Z if none given
         z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
-        # TODO: provide layer to duplicate, right now only layer 0 works
+        # index isn't user-facing, z is what matters
+        index = self.layers - 1
+        self.duplicate_layer(index, z, name)
+        for frame in range(self.frames):
+            self.clear_frame_layer(frame, self.layers-1, 0)
+    
+    def duplicate_layer(self, src_index, z=None, new_name=None):
+        for frame in range(self.frames):
+            for array in [self.chars[frame], self.fg_colors[frame],
+                          self.bg_colors[frame], self.uv_mods[frame]]:
+                shape = (1, self.height, self.width, 4)
+                if array is self.chars[frame]:
+                    print('chars')
+                elif array is self.fg_colors[frame]:
+                    print('fg')
+                elif array is self.bg_colors[frame]:
+                    print('bg')
+                elif array is self.uv_mods[frame]:
+                    print('uv')
+                    shape = (1, self.height, self.width, UV_STRIDE)
+                # WIP: this crashes ATM, fix soon
+                src_data = array[src_index]
+                #src_data = np.zeros(shape, dtype=np.float32)
+                print(len(src_data))
+                array = np.append(array, src_data, 0)
         self.layers += 1
+        z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
         self.layers_z.append(z)
-        new_layer_name = 'Copy of %s' % self.layer_names[-1]
-        if not copy:
-            new_layer_name = 'Layer %s' % self.layers
-        self.layer_names.append(new_layer_name)
+        new_name = new_name or 'Copy of %s' % self.layer_names[src_index]
+        self.layer_names.append(new_name)
+        """
         # simply add another layer to our 3D array
         new_tile_shape = (self.layers, self.height, self.width, 4)
         new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
@@ -222,17 +240,39 @@ class Art:
             self.uv_mods[frame] = np.resize(self.uv_mods[frame], new_uv_shape)
         # adding a layer changes all frames' UV data
         for i in range(self.frames): self.uv_changed_frames.append(i)
+        """
         if self.log_size_changes:
             self.app.log('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
         self.geo_changed = True
     
-    def add_layer(self, z=None):
-        # offset Z from last layer's Z if none given
-        z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
-        self.duplicate_layer(z, False)
-        for frame in range(self.frames):
-            self.clear_frame_layer(frame, self.layers-1, 0)
+    def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
+        "clears given layer of given frame to transparent BG + no characters"
+        # "clear" UVs to UV_NORMAL
+        for y in range(self.height):
+            for x in range(self.width):
+                self.uv_mods[frame][layer][y][x] = uv_types[UV_NORMAL]
+                self.chars[frame][layer][y][x] = 0
+                self.fg_colors[frame][layer][y][x] = fg_color or 0
+                self.bg_colors[frame][layer][y][x] = bg_color
+        # tell this frame to update
+        if frame not in self.char_changed_frames:
+            self.char_changed_frames.append(frame)
+        if frame not in self.fg_changed_frames:
+            self.fg_changed_frames.append(frame)
+        if frame not in self.bg_changed_frames:
+            self.bg_changed_frames.append(frame)
+    
+    def delete_layer(self, index):
+        # TODO: delete layer
+        pass
+    
+    def set_charset(self, new_charset):
+        if self.recalc_quad_height:
+            self.quad_width = 1
+            self.quad_height = 1 * (self.charset.char_height / self.charset.char_width)
+        self.charset = new_charset
+        self.geo_changed = True
     
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
         x0, y0 = origin_x, origin_y
@@ -293,23 +333,6 @@ class Art:
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True
         self.mark_all_frames_changed()
-    
-    def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
-        "clears given layer of given frame to transparent BG + no characters"
-        # "clear" UVs to UV_NORMAL
-        for y in range(self.height):
-            for x in range(self.width):
-                self.uv_mods[frame][layer][y][x] = uv_types[UV_NORMAL]
-                self.chars[frame][layer][y][x] = 0
-                self.fg_colors[frame][layer][y][x] = fg_color or 0
-                self.bg_colors[frame][layer][y][x] = bg_color
-        # tell this frame to update
-        if frame not in self.char_changed_frames:
-            self.char_changed_frames.append(frame)
-        if frame not in self.fg_changed_frames:
-            self.fg_changed_frames.append(frame)
-        if frame not in self.bg_changed_frames:
-            self.bg_changed_frames.append(frame)
     
     def build_geo(self):
         "builds the vertex and element arrays used by all layers"

@@ -209,6 +209,14 @@ class FrameDeleteFrameMenuItem(PulldownMenuItem):
         # don't delete last frame
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
+class LayerAddMenuItem(PulldownMenuItem):
+    label = "Add layer..."
+    command = 'add_layer'
+
+class LayerDuplicateMenuItem(PulldownMenuItem):
+    label = "Duplicate this layer..."
+    command = 'duplicate_layer'
+
 class LayerSetNameMenuItem(PulldownMenuItem):
     label = "Change this layer's name..."
     command = 'change_layer_name'
@@ -216,6 +224,10 @@ class LayerSetNameMenuItem(PulldownMenuItem):
 class LayerSetZMenuItem(PulldownMenuItem):
     label = "Change this layer's Z-depth..."
     command = 'change_layer_z'
+
+class LayerDeleteMenuItem(PulldownMenuItem):
+    label = "Delete this layer"
+    command = 'delete_layer'
 
 class LayerSetInactiveVizMenuItem(PulldownMenuItem):
     label = 'blah'
@@ -330,9 +342,10 @@ class FrameMenuData(PulldownMenuData):
 
 class LayerMenuData(PulldownMenuData):
     
-    items = [LayerSetNameMenuItem, LayerSetZMenuItem, LayerSetInactiveVizMenuItem,
-             SeparatorMenuItem, LayerPreviousMenuItem, LayerNextMenuItem,
-             SeparatorMenuItem]
+    items = [LayerAddMenuItem, LayerDuplicateMenuItem, LayerSetNameMenuItem,
+             LayerSetZMenuItem, LayerDeleteMenuItem, SeparatorMenuItem,
+             LayerSetInactiveVizMenuItem, LayerPreviousMenuItem,
+             LayerNextMenuItem, SeparatorMenuItem]
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
