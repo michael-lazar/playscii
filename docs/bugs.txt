@@ -1,25 +1,17 @@
 bug list
 
-set color OOB crash:
-1. open the File menu
-2. hover over an item in it eg Save As
-3. press alt-E
-
-cursor preview commands "stick" and can't be undone if cursor is hovering tiles affected by a redo
+some cursor preview commands "stick" and can't be undone if cursor is hovering tiles affected by a redo
 
 tile coords in status bar have negative Y only when text tool is active?!
 
 PNG export: layers that have too high a Z won't show up in export, special-case behavior for near/far Z in renderable export?
-
-little annoying cracks between quads - UV or vert/element error?
-possible lead: http://gamedev.stackexchange.com/questions/76230/how-to-remove-seams-from-a-tile-map-in-3d
 
 rewrite Cursor.screen_to_world to produce same results as gluUnProject:
 https://www.opengl.org/wiki/GluProject_and_gluUnProject_code
 https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
 
 
-low priority:
+lower priority:
 
 problem discovered during 2015-01-04~06:
 GLSL really can't handle int/uint attributes!  charIndex looks fine in numpy int32 array data but comes into GLSL totally screwy.  works fine when the array and attribute are floats instead.  bug for PyOpenGL devs?

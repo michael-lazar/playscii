@@ -6,7 +6,7 @@ from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
 from ui_console import OpenCommand, SaveCommand
 
-from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY
+from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from key_shifts import shift_map
 
 class ConfirmButton(UIButton):
@@ -502,27 +502,69 @@ class FrameIndexDialog(AddFrameDialog):
 # layer menu dialogs
 #
 
-class SetLayerNameDialog(UIDialog):
+class AddLayerDialog(UIDialog):
     
-    title = 'Set current layer name'
-    fields = 1
+    title = 'Add new layer'
+    fields = 2
     field0_type = str
-    field0_label = 'Enter new name for layer:'
-    confirm_caption = 'Rename'
+    field0_label = 'Enter name for new layer:'
+    field1_type = float
+    field1_label = 'Enter Z-depth for new layer:'
+    confirm_caption = 'Add'
     name_exists_error = 'Layer by that name already exists.'
+    invalid_z_error = 'Invalid number.'
     
     def __init__(self, ui):
         UIDialog.__init__(self, ui)
-        # populate with existing name
-        self.field0_text = ui.active_art.layer_names[ui.active_layer]
+        self.field0_text = 'Layer %s' % str(ui.active_art.layers + 1)
+        z = ui.active_art.layers_z[ui.active_layer] + DEFAULT_LAYER_Z_OFFSET
+        self.field1_text = str(z)
+    
+    def is_valid_layer_name(self, name, exclude_active_layer=False):
+        for i,layer_name in enumerate(self.ui.active_art.layer_names):
+            if exclude_active_layer and i == self.ui.active_layer:
+                continue
+            if layer_name == name:
+                return False
+        return True
     
     def is_input_valid(self):
-        for i,layer_name in enumerate(self.ui.active_art.layer_names):
-            if i == self.ui.active_layer:
-                continue
-            if layer_name == self.get_field_text(0):
-                return False, self.name_exists_error
+        valid_name = self.is_valid_layer_name(self.get_field_text(0))
+        if not valid_name:
+            return False, self.name_exists_error
+        try: z = float(self.get_field_text(1))
+        except: return False, self.invalid_z_error
         return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        name = self.get_field_text(0)
+        z = float(self.get_field_text(1))
+        self.ui.active_art.add_layer(z, name)
+        self.dismiss()
+
+
+class DuplicateLayerDialog(AddLayerDialog):
+    title = 'Duplicate layer'
+    confirm_caption = 'Duplicate'
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        name = self.get_field_text(0)
+        z = float(self.get_field_text(1))
+        self.ui.active_art.duplicate_layer(self.ui.active_layer, z, name)
+        self.dismiss()
+
+
+class SetLayerNameDialog(AddLayerDialog):
+    
+    title = 'Set layer name'
+    fields = 1
+    field0_type = str
+    field0_label = 'Enter new name for this layer:'
+    confirm_caption = 'Rename'
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
@@ -533,7 +575,7 @@ class SetLayerNameDialog(UIDialog):
 
 
 class SetLayerZDialog(UIDialog):
-    title = 'Set current layer Z-depth'
+    title = 'Set layer Z-depth'
     fields = 1
     field0_type = float
     field0_label = 'Enter Z-depth for layer:'

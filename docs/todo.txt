@@ -2,7 +2,7 @@ TODO
 
 menu:
 - layer:
--- add new layer... (dialog: name, index to add before, z depth)
+-- add new layer... (dialog: name, z depth)
 -- duplicate current layer... (dialog: name of new layer, z depth)
 -- delete current layer
 - char/color:
@@ -14,8 +14,13 @@ menu:
 - some way to allow arrow keys to navigate pulldown menu?
 -- left/right: next/previous menu in menu bar (easy?)
 -- up/down: simulate hover of next/previous item in pulldown (harder)
+- clickable dialog fields - when clicked skip cursor focus to it
+- click-drag to move dialogs by menubar?
 
 - full about/credits
+
+- resizing art creates bg color on all layers; all but "base" layer should be transparent
+-- what is "base" layer though?
 
 mockup for frame/layer matrix
 
