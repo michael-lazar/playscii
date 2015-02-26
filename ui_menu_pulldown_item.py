@@ -312,6 +312,8 @@ class ArtMenuData(PulldownMenuData):
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
+        if ui.active_art is None:
+            return False
         return ui.active_art.filename == item.cb_arg
     
     def get_items(app):
@@ -354,6 +356,8 @@ class LayerMenuData(PulldownMenuData):
     def get_items(app):
         "turn each layer into a menu item"
         items = []
+        if app.ui.active_art is None:
+            return items
         # first determine longest line to set width of items
         longest_line = 0
         for layer_name in app.ui.active_art.layer_names:
