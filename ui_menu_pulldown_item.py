@@ -354,7 +354,7 @@ class LayerMenuData(PulldownMenuData):
         return ui.active_layer == item.cb_arg
     
     def get_items(app):
-        "turn each layer into a menu item"
+        "turn each test into a menu item"
         items = []
         if app.ui.active_art is None:
             return items
