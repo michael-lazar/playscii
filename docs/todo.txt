@@ -1,25 +1,27 @@
 TODO
 
-menu:
-- layer:
--- UI works, finish underlying functionality for add/duplicate/delete layer
-- char/color:
--- make charset and palette lines in popup clickable buttons that (close popup &) take you to their respective pickers
-- chooser fixes:
--- off-by-one errors clicking certain items
--- crashes clicking or arrow-navigating items near end of list
--- titlebar text doesn't show up (is cut off behind a certain X?)
+for 0.4.1:
 
-onion skinning!
+layers:
+- menu item UI works, finish underlying functionality for add/duplicate/delete layer
+- resizing art creates bg color on all layers; all but "base" layer should be transparent... what is "base" layer though?
+chooser fixes:
+- off-by-one errors clicking certain items
+- crashes clicking or arrow-navigating items near end of list
+- titlebar text doesn't show up (is cut off behind a certain X?)
+
+---
+
+for 0.5.0:
+
+onion skinning:
 - O toggles
 - create two (or N) extra renderables of active art, render them before rest of scene
-
-- full about/credits
-
-- resizing art creates bg color on all layers; all but "base" layer should be transparent
--- what is "base" layer though?
+- user control for: [show only next frames, only previous frames, both], # of frames to show, max skin opacity?
 
 mockup for frame/layer matrix
+
+- full about/credits (comprehensive way to get patron names / opt-outs?)
 
 games/ dir, contains art and "game scripts". playscii can be launched with "-game [gamename]" arg to launch straight into a game.  eventually, framework for hot-reloaded object system grows from this
 
