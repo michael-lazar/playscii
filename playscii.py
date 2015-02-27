@@ -272,7 +272,7 @@ class Application:
         "creates and returns a character set with the given name"
         # already loaded?
         for charset in self.charsets:
-            if charset_to_load == charset.name:
+            if charset.filename == charset_to_load:
                 return charset
         new_charset = CharacterSet(self, charset_to_load, log)
         if new_charset.init_success:
@@ -284,7 +284,7 @@ class Application:
     
     def load_palette(self, palette_to_load, log=True):
         for palette in self.palettes:
-            if palette.name == palette_to_load:
+            if palette.filename == palette_to_load:
                 return palette
         new_palette = Palette(self, palette_to_load, log)
         if new_palette.init_success:
