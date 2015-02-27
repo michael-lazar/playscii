@@ -12,18 +12,22 @@ class Palette:
     def __init__(self, app, src_filename, log):
         self.init_success = False
         self.app = app
-        self.name = os.path.basename(src_filename)
-        self.name = os.path.splitext(self.name)[0]
-        pal_filename = PALETTE_DIR + src_filename
+        self.filename = src_filename
+        if not os.path.exists(self.filename) or os.path.isdir(self.filename):
+            self.filename = PALETTE_DIR + self.filename
         # auto-guess filename, but assume PNG
-        if not os.path.exists(pal_filename):
-            pal_filename += '.png'
-            if not os.path.exists(pal_filename):
-                self.app.log("Couldn't find palette image file %s" % pal_filename)
-                return
-        src_img = Image.open(pal_filename)
+        if not os.path.exists(self.filename):
+            self.filename += '.png'
+        if not os.path.exists(self.filename):
+            self.app.log("Couldn't find palette image file %s" % self.filename)
+            return
+        self.name = os.path.basename(self.filename)
+        self.name = os.path.splitext(self.name)[0]
+        src_img = Image.open(self.filename)
         src_img = src_img.convert('RGBA')
         width, height = src_img.size
+        # store texture for chooser preview etc
+        self.src_texture = Texture(src_img.tostring(), width, height)
         # scan image L->R T->B for unique colors, store em as tuples
         # color 0 is always fully transparent
         self.colors = [(0, 0, 0, 0)]
@@ -33,6 +37,9 @@ class Palette:
         self.lightest_index, self.darkest_index = 0, 0
         for y in range(height):
             for x in range(width):
+                # bail if we've now read max colors
+                if len(self.colors) >= MAX_COLORS:
+                    break
                 color = src_img.getpixel((x, y))
                 if not color in self.colors:
                     self.colors.append(color)
@@ -54,7 +61,7 @@ class Palette:
         #img.save('palette.png')
         self.texture = Texture(img.tostring(), MAX_COLORS, 1)
         if log:
-            self.app.log("loaded palette '%s' from %s:" % (self.name, pal_filename))
+            self.app.log("loaded palette '%s' from %s:" % (self.name, self.filename))
             self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
             self.app.log('  darkest color index: %s' % self.darkest_index)
             self.app.log('  lightest color index: %s' % self.lightest_index)

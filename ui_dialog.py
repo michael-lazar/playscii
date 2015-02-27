@@ -202,6 +202,9 @@ class UIDialog(UIElement):
         if self.fields == 0 and keystr.lower() == 'd':
             self.other_pressed()
             return
+        if keystr == '`' and not shift_pressed:
+            self.ui.console.toggle()
+            return
         if keystr == 'Return':
             self.confirm_pressed()
         elif keystr == 'Escape':

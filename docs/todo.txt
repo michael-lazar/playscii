@@ -4,12 +4,14 @@ menu:
 - layer:
 -- UI works, finish underlying functionality for add/duplicate/delete layer
 - char/color:
--- load charset
--- load palette
--- both use "picker" interface: left pane showing names, right pane with preview (appropriately scaled sprite renderable)
+-- make thumbnail preview show up properly
+-- select should select the item and show preview, not instantly set the active art's char/pal
+-- up/down arrows navigate selected item too
 -- make charset and palette lines in popup clickable buttons that (close popup &) take you to their respective pickers
 
-- keyboard shortcut for dialog 3rd buttons, eg "don't save"
+onion skinning!
+- O toggles
+- create two (or N) extra renderables of active art, render them before rest of scene
 
 - full about/credits
 

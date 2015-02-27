@@ -101,11 +101,12 @@ class UI:
         self.menu_bar = MenuBar(self)
         self.elements.append(fps_counter)
         self.elements.append(self.status_bar)
-        self.elements.append(self.console)
         self.elements.append(self.popup)
         self.elements.append(self.message_line)
         self.elements.append(self.pulldown)
         self.elements.append(self.menu_bar)
+        # add console last so it draws last
+        self.elements.append(self.console)
         # grain texture
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')
@@ -476,7 +477,8 @@ class UI:
     def open_dialog(self, box_class):
         dialog = box_class(self)
         self.active_dialog = dialog
-        self.elements.append(dialog)
+        # insert dialog at index 0 so it draws first instead of last
+        self.elements.insert(0, dialog)
     
     def destroy(self):
         for e in self.elements:

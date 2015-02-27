@@ -37,6 +37,7 @@ class OpenCommand(ConsoleCommand):
 class LoadPaletteCommand(ConsoleCommand):
     def execute(console, args):
         filename = ' '.join(args)
+        # load AND set
         palette = console.ui.app.load_palette(filename)
         console.ui.active_art.set_palette(palette)
         console.ui.popup.set_active_palette(palette)

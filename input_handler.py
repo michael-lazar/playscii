@@ -163,9 +163,12 @@ class InputLord:
             #
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
-                    app.camera.zoom(-3)
+                    if not self.ui.active_dialog:
+                        app.camera.zoom(-3)
+                    # TODO: use wheel to scroll chooser dialogs?
                 elif event.wheel.y < 0:
-                    app.camera.zoom(3)
+                    if not self.ui.active_dialog:
+                        app.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)
                 # LMB up: finish paint for most tools, end select drag

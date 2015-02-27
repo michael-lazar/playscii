@@ -37,6 +37,8 @@ class UIButton:
     never_draw = False
     # weird (gross?) thing: other code can stash an argument to callback here
     cb_arg = None
+    # if true, clear all characters before painting a new caption
+    clear_before_caption_draw = False
     
     def __init__(self, element, starting_state=None):
         self.element = element
@@ -105,6 +107,10 @@ class UIButton:
         # just bail if we're trying to draw something out of bounds
         if self.x + len(text) > self.element.art.width:
             return
+        if self.clear_before_caption_draw:
+            for ty in range(self.height):
+                for tx in range(self.width):
+                    self.element.art.set_char_index_at(0, 0, tx, ty, 0)
         # leave FG color None; should already have been set
         self.element.art.write_string(0, 0, self.x, y, text, None)
     

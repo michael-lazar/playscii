@@ -13,15 +13,18 @@ class CharacterSet:
     def __init__(self, app, src_filename, log):
         self.init_success = False
         self.app = app
-        self.name = os.path.basename(src_filename)
-        self.name = os.path.splitext(self.name)[0]
-        char_data_filename = CHARSET_DIR + src_filename
-        if not os.path.exists(char_data_filename):
-            char_data_filename += '.%s' % CHARSET_FILE_EXTENSION
-        if not os.path.exists(char_data_filename):
-            self.app.log("Couldn't find character set data file %s" % char_data_filename)
+        self.filename = src_filename
+        # small chance we have a filename that == a dir name, eg "ui"
+        if not os.path.exists(self.filename) or os.path.isdir(self.filename):
+            self.filename = CHARSET_DIR + self.filename
+        if not os.path.exists(self.filename):
+            self.filename += '.%s' % CHARSET_FILE_EXTENSION
+        if not os.path.exists(self.filename):
+            self.app.log("Couldn't find character set data file %s" % self.filename)
             return
-        char_data_src = open(char_data_filename).readlines()
+        self.name = os.path.basename(self.filename)
+        self.name = os.path.splitext(self.name)[0]
+        char_data_src = open(self.filename).readlines()
         # allow comments: discard any line in char data starting with //
         # (make sure this doesn't muck up legit mapping data)
         char_data = []
@@ -37,7 +40,7 @@ class CharacterSet:
                 image_filename += '.png'
                 if not os.path.exists(image_filename):
                     # if no image found, try name of data file w/ png extension
-                    image_filename = char_data_filename.replace('.%s' % CHARSET_FILE_EXTENSION, '.png')
+                    image_filename = self.filename.replace('.%s' % CHARSET_FILE_EXTENSION, '.png')
                 if not os.path.exists(image_filename):
                     self.app.log("Couldn't find character set image file %s" % image_filename)
                     return
@@ -81,7 +84,7 @@ class CharacterSet:
         self.v_height = self.char_height / self.image_height
         # report
         if log:
-            self.app.log("loaded charmap '%s' from %s:" % (self.name, char_data_filename))
+            self.app.log("loaded charmap '%s' from %s:" % (self.name, self.filename))
             self.app.log('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
             self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
             self.app.log('  char map width/height is %s x %s' % (self.map_width, self.map_height))

@@ -14,6 +14,8 @@ class SpriteRenderable:
     frag_shader_source = 'sprite_f.glsl'
     texture_filename = 'ui/icon.png'
     alpha = 1
+    blend = True
+    flip_y = True
     
     def __init__(self, app, texture_filename=None):
         self.app = app
@@ -24,7 +26,8 @@ class SpriteRenderable:
         GL.glBindVertexArray(self.vao)
         img = Image.open(texture_filename or self.texture_filename)
         img = img.convert('RGBA')
-        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        if self.flip_y:
+            img = img.transpose(Image.FLIP_TOP_BOTTOM)
         w, h = img.size
         self.texture = Texture(img.tostring(), w, h)
         self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
@@ -68,10 +71,12 @@ class SpriteRenderable:
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform1f(self.alpha_uniform, self.alpha)
         GL.glBindVertexArray(self.vao)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+        if self.blend:
+            GL.glEnable(GL.GL_BLEND)
+            GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, self.vert_count)
-        GL.glDisable(GL.GL_BLEND)
+        if self.blend:
+            GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
 
