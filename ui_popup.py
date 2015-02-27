@@ -5,6 +5,7 @@ from ui_swatch import CharacterSetSwatch, PaletteSwatch
 from ui_colors import UIColors
 from renderable_line import LineRenderable, SwatchSelectionBoxRenderable
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
+from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
 TOOL_PANE_WIDTH = 10
 
@@ -36,7 +37,11 @@ class CharSetScaleDownButton(CharSetScaleUpButton):
 
 # charset flip / rotate buttons
 
-class CharFlipNoButton(UIButton):
+class CharXformButton(UIButton):
+    hovered_fg_color = UIColors.white
+    hovered_bg_color = UIColors.medgrey
+
+class CharFlipNoButton(CharXformButton):
     x = 3 + len('Flip:') + 1
     y = CharSetScaleUpButton.y + 1
     caption = 'None'
@@ -52,7 +57,7 @@ class CharFlipYButton(CharFlipXButton):
     x = CharFlipXButton.x + CharFlipXButton.width + 1
     caption = 'Y'
 
-class CharRot0Button(UIButton):
+class CharRot0Button(CharXformButton):
     x = 3 + len('Rotation:') + 1
     y = CharFlipNoButton.y + 1
     width = 3
@@ -111,6 +116,20 @@ class AffectBgToggleButton(AffectCharToggleButton):
 class AffectXformToggleButton(AffectCharToggleButton):
     y = AffectCharToggleButton.y + 3
 
+# charset / palette chooser buttons
+
+class CharSetChooserButton(UIButton):
+    caption = 'Set:'
+    x = 1
+    normal_fg_color = UIColors.black
+    normal_bg_color = UIColors.white
+    hovered_fg_color = UIColors.white
+    hovered_bg_color = UIColors.medgrey
+
+class PaletteChooserButton(CharSetChooserButton):
+    caption = 'Palette:'
+
+
 TAB_TOOLS = 0
 TAB_CHAR_COLOR = 1
 
@@ -124,9 +143,7 @@ class ToolPopup(UIElement):
     swatch_margin = 0.05
     fg_color = UIColors.black
     bg_color = UIColors.lightgrey
-    highlight_color = UIColors.medgrey
-    charset_label = 'Set:'
-    palette_label = 'Palette:'
+    highlight_color = UIColors.white
     tool_settings_label = 'Tool Settings:'
     brush_size_label = 'Brush size:'
     affects_heading_label = 'Affects:'
@@ -146,13 +163,15 @@ class ToolPopup(UIElement):
     char_color_tab_button_names = {
         CharSetScaleUpButton: 'scale_charset_up',
         CharSetScaleDownButton: 'scale_charset_down',
+        CharSetChooserButton: 'choose_charset',
         CharFlipNoButton: 'xform_normal',
         CharFlipXButton: 'xform_flipX',
         CharFlipYButton: 'xform_flipY',
         CharRot0Button: 'xform_0',
         CharRot90Button: 'xform_90',
         CharRot180Button: 'xform_180',
-        CharRot270Button: 'xform_270'
+        CharRot270Button: 'xform_270',
+        PaletteChooserButton: 'choose_palette',
     }
     tool_tab_button_names = {
         BrushSizeUpButton: 'brush_size_up',
@@ -321,17 +340,26 @@ class ToolPopup(UIElement):
     def xform_270_button_pressed(self):
         self.ui.set_selected_xform(UV_ROTATE270)
     
+    def choose_charset_button_pressed(self):
+        self.hide()
+        self.ui.open_dialog(CharSetChooserDialog)
+    
+    def choose_palette_button_pressed(self):
+        self.hide()
+        self.ui.open_dialog(PaletteChooserDialog)
+    
     def draw_char_color_tab(self):
         "draw non-button bits of this tab"
         # charset renderable location will be set in update()
-        # charset label
         charset = self.ui.active_art.charset
         palette = self.ui.active_art.palette
         cqw, cqh = self.charset_swatch.art.quad_width, self.charset_swatch.art.quad_height
         self.art.clear_frame_layer(0, 0, self.bg_color, self.fg_color)
+        # position & caption charset button
         y = self.tab_height + 1
-        label = '%s %s' % (self.charset_label, charset.name)
-        self.art.write_string(0, 0, 2, y, label)
+        self.choose_charset_button.y = y
+        self.choose_charset_button.caption = ' %s %s ' % (CharSetChooserButton.caption, charset.name)
+        self.choose_charset_button.width = len(self.choose_charset_button.caption)
         # charset scale
         charset_scale = '%.2fx' % self.charset_swatch.char_scale
         x = -self.scale_charset_up_button.width * 2
@@ -344,11 +372,12 @@ class ToolPopup(UIElement):
         self.art.write_string(0, 0, x, y, self.flip_label)
         y += 1
         self.art.write_string(0, 0, x, y, self.rotation_label)
-        # palette label
+        # position & caption palette button
         pal_caption_y = (cqh * charset.map_height) / self.art.quad_height
         pal_caption_y += self.tab_height + 5
-        label = '%s %s' % (self.palette_label, palette.name)
-        self.art.write_string(0, 0, 2, int(pal_caption_y), label)
+        self.choose_palette_button.y = pal_caption_y
+        self.choose_palette_button.caption = ' %s %s ' % (PaletteChooserButton.caption, palette.name)
+        self.choose_palette_button.width = len(self.choose_palette_button.caption)
         # set button states so captions draw properly
         tab_width = int(self.tile_width / 2)
         self.tool_tab_button.width = tab_width

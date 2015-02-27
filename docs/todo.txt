@@ -4,10 +4,11 @@ menu:
 - layer:
 -- UI works, finish underlying functionality for add/duplicate/delete layer
 - char/color:
--- make thumbnail preview show up properly
--- select should select the item and show preview, not instantly set the active art's char/pal
--- up/down arrows navigate selected item too
 -- make charset and palette lines in popup clickable buttons that (close popup &) take you to their respective pickers
+- chooser fixes:
+-- off-by-one errors clicking certain items
+-- crashes clicking or arrow-navigating items near end of list
+-- titlebar text doesn't show up (is cut off behind a certain X?)
 
 onion skinning!
 - O toggles
