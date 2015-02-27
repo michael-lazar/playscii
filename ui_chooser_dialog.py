@@ -332,9 +332,7 @@ class CharSetChooserDialog(ChooserDialog):
         return lines
     
     def get_initial_selection(self):
-        print('active:\n%s: %s' % (self.ui.active_art.charset.name, self.ui.active_art.charset))
         for item in self.items:
-            print('%s: %s' % (item.label, item.data))
             if item.data is self.ui.active_art.charset:
                 return item.index
         print("couldn't find initial selection for %s, returning 0" % self.__class__.__name__)
