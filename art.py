@@ -199,52 +199,31 @@ class Art:
         z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
         # index isn't user-facing, z is what matters
         index = self.layers - 1
+        # duplicate_layer increases self.layers by 1
         self.duplicate_layer(index, z, name)
         for frame in range(self.frames):
             self.clear_frame_layer(frame, self.layers-1, 0)
     
     def duplicate_layer(self, src_index, z=None, new_name=None):
+        def duplicate_layer_array(array):
+            src_data = np.array([array[src_index]])
+            return np.append(array, src_data, 0)
         for frame in range(self.frames):
-            for array in [self.chars[frame], self.fg_colors[frame],
-                          self.bg_colors[frame], self.uv_mods[frame]]:
-                shape = (1, self.height, self.width, 4)
-                if array is self.chars[frame]:
-                    print('chars')
-                elif array is self.fg_colors[frame]:
-                    print('fg')
-                elif array is self.bg_colors[frame]:
-                    print('bg')
-                elif array is self.uv_mods[frame]:
-                    print('uv')
-                    shape = (1, self.height, self.width, UV_STRIDE)
-                # WIP: this crashes ATM, fix soon
-                src_data = array[src_index]
-                #src_data = np.zeros(shape, dtype=np.float32)
-                print(len(src_data))
-                array = np.append(array, src_data, 0)
+            self.chars[frame] = duplicate_layer_array(self.chars[frame])
+            self.fg_colors[frame] = duplicate_layer_array(self.fg_colors[frame])
+            self.bg_colors[frame] = duplicate_layer_array(self.bg_colors[frame])
+            self.uv_mods[frame] = duplicate_layer_array(self.uv_mods[frame])
         self.layers += 1
         z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
         self.layers_z.append(z)
         new_name = new_name or 'Copy of %s' % self.layer_names[src_index]
         self.layer_names.append(new_name)
-        """
-        # simply add another layer to our 3D array
-        new_tile_shape = (self.layers, self.height, self.width, 4)
-        new_uv_shape = (self.layers, self.height, self.width, UV_STRIDE)
-        for frame in range(self.frames):
-            # by default, ndarray resize duplicates data - easiest way to add
-            # a blank layer is to do this then clear it
-            self.chars[frame] = np.resize(self.chars[frame], new_tile_shape)
-            self.fg_colors[frame] = np.resize(self.fg_colors[frame], new_tile_shape)
-            self.bg_colors[frame] = np.resize(self.bg_colors[frame], new_tile_shape)
-            self.uv_mods[frame] = np.resize(self.uv_mods[frame], new_uv_shape)
-        # adding a layer changes all frames' UV data
-        for i in range(self.frames): self.uv_changed_frames.append(i)
-        """
-        if self.log_size_changes:
-            self.app.log('added layer %s' % (self.layers))
         # rebuild geo with added verts for new layer
         self.geo_changed = True
+        # set new layer as active
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_layer(self.layers - 1)
+        self.app.log('Added new layer %s' % new_name)
     
     def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
         "clears given layer of given frame to transparent BG + no characters"
@@ -264,8 +243,19 @@ class Art:
             self.bg_changed_frames.append(frame)
     
     def delete_layer(self, index):
-        # TODO: delete layer
-        pass
+        "deletes layer at given index"
+        for frame in range(self.frames):
+            self.chars[frame] = np.delete(self.chars[frame], index, 0)
+            self.fg_colors[frame] = np.delete(self.fg_colors[frame], index, 0)
+            self.bg_colors[frame] = np.delete(self.bg_colors[frame], index, 0)
+            self.uv_mods[frame] = np.delete(self.uv_mods[frame], index, 0)
+        self.layers_z.pop(index)
+        self.layer_names.pop(index)
+        self.layers -= 1
+        self.geo_changed = True
+        self.mark_all_frames_changed()
+        if self.app.ui.active_layer > self.layers - 1:
+            self.app.ui.set_active_layer(self.layers - 1)
     
     def set_charset(self, new_charset):
         if new_charset is self.charset:
@@ -322,7 +312,9 @@ class Art:
             fg, bg = 0, 0
             if self.app.ui:
                 fg = self.app.ui.selected_fg_color
-                bg = self.app.ui.selected_bg_color
+                # blank background for all new tiles
+                # (this might be annoying, just trying it out for a while)
+                #bg = self.app.ui.selected_bg_color
             self.fg_colors[frame] = expand_array(self.fg_colors[frame], fg, 4)
             self.bg_colors[frame] = expand_array(self.bg_colors[frame], bg, 4)
             self.uv_mods[frame] = expand_array(self.uv_mods[frame], UV_NORMAL, UV_STRIDE)
