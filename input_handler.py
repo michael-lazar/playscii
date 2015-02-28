@@ -163,11 +163,17 @@ class InputLord:
             #
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 if event.wheel.y > 0:
-                    if not self.ui.active_dialog:
+                    # use wheel to scroll chooser dialogs
+                    if self.ui.active_dialog:
+                        # TODO: look up "up arrow" bind instead? how to get
+                        # an SDL keycode from that?
+                        self.ui.active_dialog.handle_input(sdl2.SDLK_UP, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    else:
                         app.camera.zoom(-3)
-                    # TODO: use wheel to scroll chooser dialogs?
                 elif event.wheel.y < 0:
-                    if not self.ui.active_dialog:
+                    if self.ui.active_dialog:
+                        self.ui.active_dialog.handle_input(sdl2.SDLK_DOWN, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    else:
                         app.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 self.ui.unclicked(event.button.button)

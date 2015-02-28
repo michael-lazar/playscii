@@ -27,11 +27,9 @@ class ChooserItemButton(UIButton):
         if not self.item_data:
             return
         # set item selected and refresh preview
-        self.element.selected_item_index = self.item_data.index# - self.element.scroll_index
+        self.element.selected_item_index = self.item_data.index
         #print('picked %s' % self.element.selected_item_index)
-        self.element.reset_buttons()
         self.element.reset_art(False)
-        self.element.set_preview()
         self.element.position_preview()
 
 
@@ -56,7 +54,6 @@ class ScrollArrowButton(UIButton):
             self.element.scroll_index -= 1
         elif not self.up and self.element.scroll_index < max_scroll:
             self.element.scroll_index += 1
-        self.element.reset_buttons()
         self.element.reset_art(False)
         self.element.set_preview()
         self.element.position_preview()
@@ -86,9 +83,11 @@ class ChooserDialog(UIDialog):
         self.ui = ui
         self.items = self.get_items()
         self.selected_item_index = self.get_initial_selection()
+        # start scroll index higher if initial selection would be offscreen
         self.scroll_index = 0
-        # for convenience, create another list where first item button
-        # starts at 0
+        if self.selected_item_index >= self.items_in_view:
+            self.scroll_index = self.selected_item_index - self.items_in_view + 1
+        # for convenience, create another list where 1st item button starts at 0
         self.item_buttons = []
         self.up_arrow_button, self.down_arrow_button = None, None
         # marker for preview drawing
@@ -97,15 +96,12 @@ class ChooserDialog(UIDialog):
         UIDialog.__init__(self, ui)
         # UIDialog/UIElement initializes self.buttons, create item buttons after
         self.init_buttons()
-        self.reset_buttons()
-        #self.draw_buttons()
-        self.reset_art()
+        self.reset_art(False)
         # preview SpriteRenderable (loaded on item change?)
         self.preview_renderable = SpriteRenderable(ui.app)
         # don't blend preview images, eg charsets
         self.preview_renderable.blend = False
         # offset into items list view provided by buttons starts from
-        self.set_preview()
         self.position_preview()
     
     def init_buttons(self):
@@ -125,21 +121,19 @@ class ChooserDialog(UIDialog):
         self.down_arrow_button.up = False
         self.buttons += [self.up_arrow_button, self.down_arrow_button]
     
-    def get_selected_item(self):
-        return self.item_buttons[self.selected_item_index].item_data
+    def get_selected_data(self):
+        return self.items[self.selected_item_index].data
     
     def get_initial_selection(self):
+        # subclasses return index of initial selection
         return 0
     
     def set_preview(self):
-        "subclasses do stuff here to get something on the preview"
-        pass
-    
-    def select_item(self, item_button):
+        # subclasses do stuff here to get something on the preview
         pass
     
     def get_items(self):
-        "subclasses generate lists of items here"
+        # subclasses generate lists of items here
         items = []
         for i in range(10):
             item = ChooserItem()
@@ -148,7 +142,8 @@ class ChooserDialog(UIDialog):
             items.append(item)
         return items
     
-    def position_preview(self):
+    def position_preview(self, reset=True):
+        if reset: self.set_preview()
         qw, qh = self.art.quad_width, self.art.quad_height
         # determine x position, then width as (dialog width - x)
         x = (ChooserItemButton.width + self.item_start_x + 3) * qw
@@ -187,7 +182,7 @@ class ChooserDialog(UIDialog):
             button.item_data = item
             button.never_draw = False
             # highlight selected item
-            if i == self.selected_item_index:
+            if i == self.selected_item_index - self.scroll_index:
                 button.normal_fg_color = UIButton.clicked_fg_color
                 button.normal_bg_color = UIButton.clicked_bg_color
                 button.can_hover = False
@@ -222,7 +217,7 @@ class ChooserDialog(UIDialog):
             y += 1
         self.description_end_y = y
     
-    def reset_art(self, resize=False):
+    def reset_art(self, resize=True):
         self.reset_buttons()
         # UIDialog does: clear window, draw titlebar and confirm/cancel buttons
         # doesn't: draw message or fields
@@ -243,26 +238,30 @@ class ChooserDialog(UIDialog):
     def update_drag(self, mouse_dx, mouse_dy):
         UIDialog.update_drag(self, mouse_dx, mouse_dy)
         # update thumbnail renderable's position too
-        self.position_preview()
+        self.position_preview(False)
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
         # up/down keys navigate list
         old_idx, old_scroll = self.selected_item_index, self.scroll_index
         if keystr == 'Up':
-            if self.selected_item_index > 0:
+            if self.selected_item_index == 0:
+                pass
+            elif self.selected_item_index == self.scroll_index:
                 self.selected_item_index -= 1
-            elif self.scroll_index > 0:
                 self.scroll_index -= 1
+            else:
+                self.selected_item_index -= 1
         elif keystr == 'Down':
-            if self.selected_item_index < self.items_in_view - 1:
-                self.selected_item_index += 1
-            elif self.scroll_index < len(self.items) - self.items_in_view:
+            if self.selected_item_index == len(self.items) - 1:
+                pass
+            elif self.selected_item_index - self.scroll_index == self.items_in_view - 1:
                 self.scroll_index += 1
+                self.selected_item_index += 1
+            else:
+                self.selected_item_index += 1
         if old_idx != self.selected_item_index or old_scroll != self.scroll_index:
-            self.reset_buttons()
             self.reset_art(False)
-            self.set_preview()
             self.position_preview()
         UIDialog.handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed)
     
@@ -276,7 +275,7 @@ class PaletteChooserDialog(ChooserDialog):
     message = 'Available palettes:'
     
     def get_selected_description_lines(self):
-        item = self.get_selected_item().data
+        item = self.get_selected_data()
         # display source filename and # of unique colors
         lines = [item.filename]
         lines += ['Unique colors: %s' % str(len(item.colors) - 1)]
@@ -289,7 +288,7 @@ class PaletteChooserDialog(ChooserDialog):
         return 0
     
     def set_preview(self):
-        pal = self.items[self.selected_item_index + self.scroll_index].data
+        pal = self.get_selected_data()
         self.preview_renderable.texture = pal.src_texture
     
     def get_items(self):
@@ -315,7 +314,7 @@ class PaletteChooserDialog(ChooserDialog):
         return items
     
     def confirm_pressed(self):
-        new_pal = self.items[self.selected_item_index + self.scroll_index].data
+        new_pal = self.get_selected_data()
         self.ui.active_art.set_palette(new_pal)
         self.ui.popup.set_active_palette(new_pal)
 
@@ -326,7 +325,7 @@ class CharSetChooserDialog(ChooserDialog):
     flip_preview_y = False
     
     def get_selected_description_lines(self):
-        item = self.get_selected_item().data
+        item = self.get_selected_data()
         lines = [item.filename]
         lines += ['Characters: %s' % str(item.last_index)]
         return lines
@@ -339,7 +338,7 @@ class CharSetChooserDialog(ChooserDialog):
         return 0
     
     def set_preview(self):
-        charset = self.items[self.selected_item_index + self.scroll_index].data
+        charset = self.get_selected_data()
         self.preview_renderable.texture = charset.texture
     
     def get_items(self):
@@ -364,6 +363,6 @@ class CharSetChooserDialog(ChooserDialog):
         return items
     
     def confirm_pressed(self):
-        new_set = self.items[self.selected_item_index + self.scroll_index].data
+        new_set = self.get_selected_data()
         self.ui.active_art.set_charset(new_set)
         self.ui.popup.set_active_charset(new_set)
