@@ -1,17 +1,5 @@
 TODO
 
-for 0.4.1:
-
-layers:
-- menu item UI works, finish underlying functionality for add/duplicate/delete layer
-- resizing art creates bg color on all layers; all but "base" layer should be transparent... what is "base" layer though?
-chooser fixes:
-- off-by-one errors clicking certain items
-- crashes clicking or arrow-navigating items near end of list
-- titlebar text doesn't show up (is cut off behind a certain X?)
-
----
-
 for 0.5.0:
 
 onion skinning:

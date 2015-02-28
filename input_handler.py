@@ -602,6 +602,7 @@ class InputLord:
     
     def BIND_delete_layer(self):
         self.ui.active_art.delete_layer(self.ui.active_layer)
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_choose_charset(self):
         self.ui.open_dialog(CharSetChooserDialog)
