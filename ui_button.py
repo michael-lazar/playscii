@@ -110,7 +110,7 @@ class UIButton:
         if self.clear_before_caption_draw:
             for ty in range(self.height):
                 for tx in range(self.width):
-                    self.element.art.set_char_index_at(0, 0, tx, ty, 0)
+                    self.element.art.set_char_index_at(0, 0, self.x+tx, y+ty, 0)
         # leave FG color None; should already have been set
         self.element.art.write_string(0, 0, self.x, y, text, None)
     

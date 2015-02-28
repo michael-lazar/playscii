@@ -365,6 +365,8 @@ class UI:
     def crop_to_selection(self, art):
         # ignore non-rectangular selection features, use top left and bottom
         # right corners
+        if len(self.select_tool.selected_tiles) == 0:
+            return
         min_x, max_x = 99999, -1
         min_y, max_y = 99999, -1
         for tile in self.select_tool.selected_tiles:
