@@ -1,6 +1,13 @@
 possibly-helpful links
 
 
+parallelization:
+
+https://docs.python.org/3/library/multiprocessing.html
+
+https://timothyawiseman.wordpress.com/2012/12/21/a-really-simple-multiprocessing-python-example/
+
+
 SDL/OpenGL resources:
 
 http://docs.gl
