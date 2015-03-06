@@ -84,6 +84,7 @@ self.edit_bind_src = {
     'ctrl l'   : 'add_layer',
     'ctrl h'   : 'choose_charset',
     'ctrl p'   : 'choose_palette',
+    'o'        : 'toggle_onion_visibility',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'       : 'save_art_as',

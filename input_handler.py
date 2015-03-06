@@ -609,3 +609,6 @@ class InputLord:
     
     def BIND_choose_palette(self):
         self.ui.open_dialog(PaletteChooserDialog)
+    
+    def BIND_toggle_onion_visibility(self):
+        self.app.onion_frames_visible = not self.app.onion_frames_visible
