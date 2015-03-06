@@ -42,6 +42,8 @@ SCREENSHOT_SUBDIR = 'screenshots'
 
 VERSION = '0.4.1'
 
+MAX_ONION_FRAMES = 3
+
 class Application:
     
     window_width, window_height = 800, 600
@@ -134,6 +136,10 @@ class Application:
         self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
         self.game_objects = []
+        # onion skin renderables
+        self.onion_frames_visible = False
+        self.onion_show_frames_behind = self.onion_show_frames_ahead = MAX_ONION_FRAMES
+        self.onion_renderables_prev, self.onion_renderables_next = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
         self.load_art_for_edit(art_filename)
@@ -142,6 +148,13 @@ class Application:
         self.cursor, self.grid = None, None
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded_for_edit[0])
+        # init onion skin
+        for i in range(self.onion_show_frames_behind):
+            renderable = TileRenderable(self, self.ui.active_art)
+            self.onion_renderables_prev.append(renderable)
+        for i in range(self.onion_show_frames_ahead):
+            renderable = TileRenderable(self, self.ui.active_art)
+            self.onion_renderables_next.append(renderable)
         # set camera bounds based on art size
         self.camera.max_x = self.ui.active_art.width * self.ui.active_art.quad_width
         self.camera.min_y = -self.ui.active_art.height * self.ui.active_art.quad_height
@@ -521,6 +534,11 @@ class Application:
         else:
             for r in self.edit_renderables:
                 r.render()
+            if self.onion_frames_visible:
+                for i in range(self.onion_show_frames_behind):
+                    self.onion_renderables_prev[i].render()
+                for i in range(self.onion_show_frames_ahead):
+                    self.onion_renderables_next[i].render()
             # draw selection grid, then selection, then cursor
             if self.grid.visible and self.ui.active_art:
                 self.grid.render()

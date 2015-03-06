@@ -186,6 +186,16 @@ class FrameTogglePlaybackMenuItem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
+class FrameToggleOnionMenuitem(PulldownMenuItem):
+    label = 'blah'
+    command = 'toggle_onion_visibility'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        l = 'Onion skin frames: '
+        l += ['Hidden', 'Visible'][app.onion_frames_visible]
+        return l
+
 class FrameAddFrameMenuItem(PulldownMenuItem):
     label = 'Add frame...'
     command = 'add_frame'
@@ -342,7 +352,8 @@ class ArtMenuData(PulldownMenuData):
 
 class FrameMenuData(PulldownMenuData):
     items = [FramePreviousMenuItem, FrameNextMenuItem,
-             FrameTogglePlaybackMenuItem, SeparatorMenuItem,
+             FrameTogglePlaybackMenuItem, FrameToggleOnionMenuitem,
+             SeparatorMenuItem,
              FrameAddFrameMenuItem, FrameDuplicateFrameMenuItem,
              FrameChangeDelayMenuItem, FrameChangeIndexMenuItem,
              FrameDeleteFrameMenuItem]

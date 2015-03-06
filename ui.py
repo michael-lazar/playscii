@@ -168,6 +168,7 @@ class UI:
         # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)
+        self.reset_onion_frames()
         # reposition all art renderables and change their opacity
         x, y, margin = 0, 0, self.app.grid.art_margin
         for r in self.app.edit_renderables:
@@ -242,6 +243,26 @@ class UI:
         xform %= UV_FLIPY + 1
         self.set_selected_xform(xform)
     
+    def reset_onion_frames(self, new_art=None):
+        new_art = new_art or self.active_art
+        # set onion renderables to correct frames
+        # TODO: scale back if fewer than MAX_ONION_FRAMES in either direction
+        alpha = 1
+        for i,r in enumerate(self.app.onion_renderables_prev):
+            if new_art is not r.art:
+                r.set_art(new_art)
+            r.set_frame(self.active_frame - (self.app.onion_show_frames_behind - i))
+            # each successive onion layer is dimmer
+            alpha /= 2
+            r.alpha = alpha
+        alpha = 1
+        for i,r in enumerate(self.app.onion_renderables_next):
+            if new_art is not r.art:
+                r.set_art(new_art)
+            r.set_frame(self.active_frame + i + 1)
+            alpha /= 2
+            r.alpha = alpha
+    
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames
         # bail if frame is still the same, eg we only have 1 frame
@@ -251,6 +272,7 @@ class UI:
         # update active art's renderables
         for r in self.active_art.renderables:
             r.set_frame(self.active_frame)
+        self.reset_onion_frames()
         self.tool_settings_changed = True
         self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_frame + 1))
     

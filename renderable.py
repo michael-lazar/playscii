@@ -145,6 +145,12 @@ class TileRenderable:
         if self.log_animation:
             self.app.log('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
+    def set_art(self, new_art):
+        if self.art:
+            self.art.renderables.remove(self)
+        self.art = new_art
+        self.art.renderables.append(self)
+    
     def move_to(self, x, y, z, travel_time=None):
         # for fixed travel time, set move rate accordingly
         if travel_time:
