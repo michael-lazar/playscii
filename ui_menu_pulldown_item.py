@@ -59,6 +59,12 @@ class FileCloseMenuItem(PulldownMenuItem):
     def should_dim(app):
         return app.ui.active_art is None
 
+class FileImportImageMenuItem(PulldownMenuItem):
+    label = 'Import Image...'
+    command = 'import_image'
+    def should_dim(app):
+        return app.ui.active_art is None
+
 class FilePNGExportMenuItem(PulldownMenuItem):
     label = 'Export PNG'
     command = 'export_image'
@@ -307,8 +313,8 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
-             FileCloseMenuItem, FilePNGExportMenuItem, SeparatorMenuItem,
-             FileQuitMenuItem]
+             FileCloseMenuItem, FileImportImageMenuItem, FilePNGExportMenuItem,
+             SeparatorMenuItem, FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
     items = [EditUndoMenuItem, EditRedoMenuItem, SeparatorMenuItem,

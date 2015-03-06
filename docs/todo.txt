@@ -15,6 +15,19 @@ games/ dir, contains art and "game scripts". playscii can be launched with "-gam
 
 ---
 
+image conversion
+
+create SpriteRenderable to show source image while conversion happens
+Image.resize - shortest dimension fits within current art
+#Image.convert(mode='P', matrix=RGB, dither=FLOYDSTEINBERG, palette=ADAPTIVE, colors=16)
+Image.quantize(colors=256, None, None, palette=palette)
+from stackoverflow:
+ pal_image= Image.new("P", (1,1))
+ pal_image.putpalette( (0,0,0, 0,255,0, 255,0,0, 255,255,0) + (0,0,0)*252)
+ return image.convert("RGB").quantize(palette=pal_image)
+
+---
+
 further work on existing features:
 
 PNG export:

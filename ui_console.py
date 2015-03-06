@@ -5,6 +5,8 @@ from ui_element import UIElement
 from art import UV_FLIPY
 from key_shifts import shift_map
 
+from image_convert import convert_image
+
 
 class ConsoleCommand:
     "parent class for console commands"
@@ -56,6 +58,12 @@ class ImageExportCommand(ConsoleCommand):
         console.ui.app.export_image(console.ui.active_art)
 
 
+class ConvertImageCommand(ConsoleCommand):
+    def execute(console, args):
+        image_filename = ' '.join(args)
+        convert_image(console.ui.app, image_filename)
+
+
 # map strings to command classes for ConsoleUI.parse
 commands = {
     'exit': QuitCommand,
@@ -64,7 +72,8 @@ commands = {
     'open': OpenCommand,
     'char': LoadCharSetCommand,
     'pal': LoadPaletteCommand,
-    'export': ImageExportCommand
+    'export': ImageExportCommand,
+    'conv': ConvertImageCommand
 }
 
 
