@@ -7,6 +7,7 @@
 self.edit_bind_src = {
     'ctrl q'   : 'quit',
     '`'        : 'toggle_console',
+    'ctrl m'   : 'import_image',
     'ctrl e'   : 'export_image',
     'ctrl -'   : 'decrease_ui_scale',
     'ctrl ='   : 'increase_ui_scale',
@@ -60,7 +61,7 @@ self.edit_bind_src = {
     'return'   : 'select_or_paint',
     'f12'      : 'screenshot',
     'ctrl t'   : 'run_game_mode_test',
-    'ctrl m'   : 'run_test_mutate',
+    'ctrl shift m'   : 'run_test_mutate',
     'up'       : 'arrow_up',
     'down'     : 'arrow_down',
     'left'     : 'arrow_left',

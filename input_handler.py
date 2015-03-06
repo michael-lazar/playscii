@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ImportImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
@@ -236,6 +236,9 @@ class InputLord:
     
     def BIND_toggle_console(self):
         self.ui.console.toggle()
+    
+    def BIND_import_image(self):
+        self.ui.open_dialog(ImportImageDialog)
     
     def BIND_export_image(self):
         if not self.ui.active_art:

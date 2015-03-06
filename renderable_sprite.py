@@ -17,19 +17,21 @@ class SpriteRenderable:
     blend = True
     flip_y = True
     
-    def __init__(self, app, texture_filename=None):
+    def __init__(self, app, texture_filename=None, image_data=None):
         self.app = app
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
-        img = Image.open(texture_filename or self.texture_filename)
-        img = img.convert('RGBA')
+        # support loading texture from file or from provided data
+        if not image_data:
+            image_data = Image.open(texture_filename or self.texture_filename)
+        image_data = image_data.convert('RGBA')
         if self.flip_y:
-            img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        w, h = img.size
-        self.texture = Texture(img.tostring(), w, h)
+            image_data = image_data.transpose(Image.FLIP_TOP_BOTTOM)
+        w, h = image_data.size
+        self.texture = Texture(image_data.tostring(), w, h)
         self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
         self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
         self.view_matrix_uniform = self.shader.get_uniform_location('view')
@@ -88,3 +90,12 @@ class UISpriteRenderable(SpriteRenderable):
     
     def get_view_matrix(self):
         return self.app.ui.view_matrix
+
+
+class ImagePreviewRenderable(SpriteRenderable):
+    
+    def get_projection_matrix(self):
+        return self.app.camera.projection_matrix
+    
+    def get_view_matrix(self):
+        return self.app.camera.view_matrix

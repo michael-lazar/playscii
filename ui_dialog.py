@@ -4,7 +4,7 @@ import sdl2
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
-from ui_console import OpenCommand, SaveCommand
+from ui_console import OpenCommand, SaveCommand, ConvertImageCommand
 
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from key_shifts import shift_map
@@ -351,6 +351,18 @@ class SaveAsDialog(UIDialog):
     
     def confirm_pressed(self):
         SaveCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+
+class ImportImageDialog(UIDialog):
+    
+    title = 'Import raster image'
+    field0_label = 'Enter name of image to open:'
+    fields = 1
+    confirm_caption = 'Import'
+    
+    def confirm_pressed(self):
+        ConvertImageCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()
 
 

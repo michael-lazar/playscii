@@ -77,6 +77,8 @@ class CharacterSet:
                     # MAYBE-TODO: does keeping non-alpha color improve sampling?
                     img.putpixel((x, y), (color[0], color[1], color[2], 0))
         self.texture = Texture(img.tostring(), self.image_width, self.image_height)
+        # save image data for later, eg image conversion
+        self.image_data = img
         # store character dimensions and UV size
         self.char_width = int(self.image_width / self.map_width)
         self.char_height = int(self.image_height / self.map_height)
