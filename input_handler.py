@@ -336,6 +336,9 @@ class InputLord:
         # context-dependent:
         # normal painting mode: cancel current selection
         # menu bar active: bail out of current menu
+        # either way: bail on image conversion if it's happening
+        if self.app.converter:
+            self.app.converter.finished()
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
         else:
