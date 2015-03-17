@@ -132,7 +132,7 @@ class Application:
         self.sl = ShaderLord(self)
         self.camera = Camera(self)
         self.art_loaded_for_edit, self.edit_renderables = [], []
-        self.convert_renderable = None
+        self.converter = None
         # "game mode" renderables
         self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
@@ -479,6 +479,8 @@ class Application:
             art.update()
         for renderable in self.edit_renderables:
             renderable.update()
+        if self.converter:
+            self.converter.update()
         if self.game_mode:
             for game_object in self.game_objects:
                 game_object.update()
@@ -533,8 +535,8 @@ class Application:
         if self.game_mode:
             self.game_render()
         else:
-            if self.convert_renderable:
-                self.convert_renderable.render()
+            if self.converter:
+                self.converter.preview_sprite.render()
             for r in self.edit_renderables:
                 r.render()
             if self.onion_frames_visible:
