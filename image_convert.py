@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageStat
 
 from renderable_sprite import ImagePreviewRenderable
-
+from lab_color import rgb_to_lab, lab_color_diff
 
 class ImageConverter:
     
@@ -39,14 +39,14 @@ class ImageConverter:
         # while we're iterating through palette, build table of color diffs
         unique_colors = len(self.art.palette.colors)
         self.color_diffs = np.zeros((unique_colors, unique_colors), dtype=np.uint32)
-        for i,c in enumerate(self.art.palette.colors):
+        for i,color in enumerate(self.art.palette.colors):
             # skip alpha
-            for channel in c[:-1]:
+            for channel in color[:-1]:
                 colors.append(channel)
-            for j,co in enumerate(self.art.palette.colors):
-                # TODO: L*a*b color space conversion?
-                diff = abs(c[0] - co[0]) + abs(c[1] - co[1]) + abs(c[2] - co[2]) + abs(c[3] - co[3])
-                self.color_diffs[i][j] = abs(diff)
+            for j,other_color in enumerate(self.art.palette.colors):
+                #self.color_diffs[i][j] = self.get_rgb_color_diff(color, other_color)
+                # L*a*b color space conversion for greater accuracy
+                self.color_diffs[i][j] = self.get_lab_color_diff(color, other_color)
         # PIL will fill out <256 color palettes with bogus values :/
         while len(colors) < 256 * 3:
             for i in range(3):
@@ -60,7 +60,7 @@ class ImageConverter:
         # convert charmap to 1-bit color for fast value swaps during
         # block comparison
         self.char_img = self.art.charset.image_data.copy().convert('RGB')
-        #self.char_img = self.char_img.transpose(Image.FLIP_TOP_BOTTOM)
+        self.char_img = self.char_img.transpose(Image.FLIP_TOP_BOTTOM)
         bw_pal_img = Image.new("P", (1, 1))
         bw_pal = [0, 0, 0, 255, 255, 255]
         while len(bw_pal) < 256 * 3:
@@ -68,7 +68,7 @@ class ImageConverter:
         bw_pal_img.putpalette(tuple(bw_pal))
         self.char_img = self.char_img.quantize(palette=bw_pal_img)
         self.char_array = np.fromstring(self.char_img.tostring(), dtype=np.uint8)
-        self.char_array = np.reshape(self.char_array, (self.art.charset.image_width, self.art.charset.image_height))
+        self.char_array = np.reshape(self.char_array, (self.art.charset.image_height, self.art.charset.image_width))
         # create, size and position image preview
         self.preview_sprite = ImagePreviewRenderable(self.app, None, self.src_img.convert('RGB'))
         self.preview_sprite.y = -self.art.height * self.art.quad_height
@@ -79,6 +79,18 @@ class ImageConverter:
         self.art.clear_frame_layer(self.app.ui.active_frame, self.app.ui.active_layer, 0)
         # block indices
         self.x, self.y = 0, 0
+    
+    def get_rgb_color_diff(self, color1, color2):
+        r = abs(color1[0] - color2[0])
+        g = abs(color1[1] - color2[1])
+        b = abs(color1[2] - color2[2])
+        a = abs(color1[3] - color2[3])
+        return abs(r + g + b + a)
+    
+    def get_lab_color_diff(self, color1, color2):
+        l1, a1, b1 = rgb_to_lab(*color1[:3])
+        l2, a2, b2 = rgb_to_lab(*color2[:3])
+        return lab_color_diff(l1, a1, b1, l2, a2, b2)
     
     def update(self):
         for i in range(self.tiles_per_tick):
@@ -127,35 +139,52 @@ class ImageConverter:
         best_diff = 9999999999999
         best_fg, best_bg = 0, 0
         for bg,fg in combos:
-            #print('trying fg %s bg %s' % (fg, bg))
+            #print('trying fg/bg %s/%s for block:' % (fg, bg))
+            #self.print_block(src_block, fg, bg)
+            #print('=======================')
+            char_array = self.char_array.copy()
+            char_array[char_array == 0] = bg
+            char_array[char_array == 1] = fg
             for char_y in range(self.art.charset.map_height):
                 for char_x in range(self.art.charset.map_width):
                     x0, y0 = char_x * self.char_w, char_y * self.char_h
                     x1, y1 = x0 + self.char_w, y0 + self.char_h
-                    #char_block = self.char_array[y0:y1, x0:x1]
-                    char_block = self.char_array[x0:x1, y0:y1]
-                    char_block[char_block == 0] = bg
-                    char_block[char_block == 1] = fg
-                    #print('src: %s' % src_block)
-                    #print('char: %s' % char_block)
+                    char_block = char_array[y0:y1, x0:x1]
                     diff = self.get_block_diff(src_block, char_block)
                     if diff < best_diff:
                         best_diff = diff
-                        # TODO: charset image was flipped, reverse?
                         best_char = char_index
                         best_fg, best_bg = fg, bg
+                        #print('%s is new best char index, diff %s:' % (char_index, diff))
+                        #self.print_block(char_block, fg, bg)
                     char_index += 1
         # return best (least different to source block) char/fg/bg found
         return (best_char, best_fg, best_bg)
     
+    def print_block(self, block, fg, bg):
+        w, h = block.shape
+        s = ''
+        for y in range(h):
+            for x in range(w):
+                if block[y][x] == fg:
+                    s += '#'
+                else:
+                    s += '.'
+            s += '\n'
+        print(s)
+    
     def get_block_diff(self, block1, block2):
         diff = 0
+        diff_array = np.zeros((self.char_h, self.char_w), dtype=np.uint32)
+        # TODO: build a numpy array of difference values, sum() it
         for y in range(self.char_h):
             for x in range(self.char_w):
                 color1 = block1[y][x]
                 color2 = block2[y][x]
-                diff += self.color_diffs[color1][color2]
-        return diff
+                diff_array[y][x] = self.color_diffs[color1][color2]
+                #diff += self.color_diffs[color1][color2]
+        #return diff
+        return diff_array.sum()
     
     def finished(self):
         time_taken = time.time() - self.start_time
