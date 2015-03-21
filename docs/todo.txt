@@ -13,6 +13,9 @@ mockup for frame/layer matrix
 
 games/ dir, contains art and "game scripts". playscii can be launched with "-game [gamename]" arg to launch straight into a game.  eventually, framework for hot-reloaded object system grows from this
 
+possible lead on OSX GL crash:
+https://twitter.com/dphrygian/status/578758728570142720
+
 ---
 
 further work on existing features:
