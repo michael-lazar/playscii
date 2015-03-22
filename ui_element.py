@@ -174,9 +174,9 @@ class FPSCounterUI(UIElement):
         color = self.ui.colors.white
         # yellow or red if framerate dips
         if self.ui.app.fps < 30:
-            color = 6
+            color = 8
         if self.ui.app.fps < 10:
-            color = 2
+            color = 3
         text = '%.1f fps' % self.ui.app.fps
         x = self.tile_width - 1
         self.art.write_string(0, 0, x, 0, text, color, None, True)
