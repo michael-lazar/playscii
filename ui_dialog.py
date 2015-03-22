@@ -357,7 +357,7 @@ class SaveAsDialog(UIDialog):
 class ImportImageDialog(UIDialog):
     
     title = 'Import raster image'
-    field0_label = 'Enter name of image to open:'
+    field0_label = 'Enter name of image to convert:'
     fields = 1
     confirm_caption = 'Import'
     

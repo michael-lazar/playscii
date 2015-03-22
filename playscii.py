@@ -40,7 +40,7 @@ LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
 
-VERSION = '0.4.1'
+VERSION = '0.5.0'
 
 MAX_ONION_FRAMES = 3
 
