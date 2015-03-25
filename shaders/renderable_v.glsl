@@ -1,4 +1,4 @@
-#version 130
+#version 150
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -10,11 +10,11 @@ uniform int charMapHeight;
 uniform float charUVWidth;
 uniform float charUVHeight;
 
-attribute vec3 vertPosition;
-attribute float charIndex;
-attribute vec2 uvMod;
-attribute float fgColorIndex;
-attribute float bgColorIndex;
+in vec3 vertPosition;
+in float charIndex;
+in vec2 uvMod;
+in float fgColorIndex;
+in float bgColorIndex;
 
 out vec2 texCoords;
 out float theFgColorIndex;

@@ -1,4 +1,4 @@
-#version 130
+#version 150
 
 uniform sampler2D texture0;
 uniform float alpha;
@@ -9,6 +9,6 @@ out vec4 outColor;
 
 void main()
 {
-	outColor = texture2D(texture0, theCoords);
+	outColor = texture(texture0, theCoords);
 	outColor.a *= alpha;
 }
