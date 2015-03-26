@@ -279,6 +279,10 @@ class ChoosePaletteMenuItem(PulldownMenuItem):
     label = 'Choose palette...'
     command = 'choose_palette'
 
+class PaletteFromFileMenuItem(PulldownMenuItem):
+    label = 'Palette from file...'
+    command = 'palette_from_file'
+
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help...'
     command = 'open_help_screen'
@@ -336,7 +340,7 @@ class ArtMenuData(PulldownMenuData):
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
-        return ui.active_art.filename == item.cb_arg
+        return ui.active_art and ui.active_art.filename == item.cb_arg
     
     def get_items(app):
         "turn each loaded art into a menu item"
@@ -379,6 +383,8 @@ class LayerMenuData(PulldownMenuData):
     def get_items(app):
         "turn each layer into a menu item"
         items = []
+        if not app.ui.active_art:
+            return items
         # first determine longest line to set width of items
         longest_line = 0
         for layer_name in app.ui.active_art.layer_names:
@@ -409,7 +415,7 @@ class LayerMenuData(PulldownMenuData):
         return items
 
 class CharColorMenuData(PulldownMenuData):
-    items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem]
+    items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

@@ -13,12 +13,13 @@ mockup for frame/layer matrix
 
 games/ dir, contains art and "game scripts". playscii can be launched with "-game [gamename]" arg to launch straight into a game.  eventually, framework for hot-reloaded object system grows from this
 
-possible lead on OSX GL crash:
-https://twitter.com/dphrygian/status/578758728570142720
+OSX glGenTextures crash: happens when SDL 2D renderer has been created
 
 ---
 
 further work on existing features:
+
+menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
 PNG export:
 - CRT off/on affects PNG output, according to a scale factor.
@@ -39,3 +40,6 @@ separate camera for game mode
 further-out UI stuff in docs/ui.txt
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+
+image import:
+- faster faster
