@@ -1,4 +1,4 @@
-import os.path
+import os.path, math
 from random import randint
 from PIL import Image
 
@@ -67,6 +67,52 @@ class Palette:
             self.app.log('  lightest color index: %s' % self.lightest_index)
         self.init_success = True
     
+    def export_as_image(self):
+        #width = math.floor(math.sqrt(len(self.colors) - 1))
+        width = min(16, len(self.colors) - 1)
+        #width = min(math.sqrt(len(self.colors)), math.sqrt(MAX_COLORS + 1))
+        height = math.floor((len(self.colors) - 1) / width)
+        block_size = 8
+        # new PIL image, blank (0 alpha) pixels
+        img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        # set each pixel from color list (minus first, transparent color)
+        color_index = 1
+        for y in range(height):
+            for x in range(width):
+                if color_index > len(self.colors) - 1:
+                    break
+                img.putpixel((x, y), self.colors[color_index])
+                color_index += 1
+        # scale up
+        img = img.resize((width * block_size, height * block_size),
+                         resample=Image.NEAREST)
+        # write to file
+        img_filename = PALETTE_DIR + self.name + '.png'
+        img.save(img_filename)
+    
     def get_random_color_index(self):
         # exclude transparent first index
         return randint(1, len(self.colors))
+
+
+class PaletteFromFile(Palette):
+    
+    def __init__(self, app, src_filename, palette_filename, colors=256):
+        self.init_success = False
+        # dither source image, re-save it, use that as the source for a palette
+        if not os.path.exists(src_filename):
+            app.log("Couldn't find palette source image file %s" % src_filename)
+            return
+        src_img = Image.open(src_filename)
+        # method:
+        src_img = src_img.convert('P', None, Image.FLOYDSTEINBERG, Image.ADAPTIVE, colors)
+        src_img = src_img.convert('RGBA')
+        # write converted source image w/ same name as final palette image
+        if not palette_filename.lower().endswith('.png'):
+            palette_filename += '.png'
+        if not palette_filename.startswith(PALETTE_DIR):
+            palette_filename = '%s%s' % (PALETTE_DIR, palette_filename)
+        src_img.save(palette_filename)
+        # create the actual palette and export it as an image
+        Palette.__init__(self, app, palette_filename, True)
+        self.export_as_image()

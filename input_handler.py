@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ImportImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ImportImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
@@ -338,7 +338,7 @@ class InputLord:
         # menu bar active: bail out of current menu
         # either way: bail on image conversion if it's happening
         if self.app.converter:
-            self.app.converter.finished()
+            self.app.converter.finished(True)
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
         else:
@@ -615,6 +615,9 @@ class InputLord:
     
     def BIND_choose_palette(self):
         self.ui.open_dialog(PaletteChooserDialog)
+    
+    def BIND_palette_from_file(self):
+        self.ui.open_dialog(PaletteFromFileDialog)
     
     def BIND_toggle_onion_visibility(self):
         self.app.onion_frames_visible = not self.app.onion_frames_visible

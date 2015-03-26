@@ -6,6 +6,7 @@ from art import UV_FLIPY
 from key_shifts import shift_map
 
 from image_convert import ImageConverter
+from palette import PaletteFromFile
 
 
 class ConsoleCommand:
@@ -64,6 +65,18 @@ class ConvertImageCommand(ConsoleCommand):
         ImageConverter(console.ui.app, image_filename, console.ui.active_art)
 
 
+class PaletteFromImageCommand(ConsoleCommand):
+    def execute(console, args):
+        src_filename = ' '.join(args)
+        new_pal = PaletteFromFile(console.ui.app, src_filename, src_filename)
+        if not new_pal.init_success:
+            return
+        #console.ui.app.load_palette(new_pal.filename)
+        console.ui.app.palettes.append(new_pal)
+        console.ui.active_art.set_palette(new_pal)
+        console.ui.popup.set_active_palette(new_pal)
+
+
 # map strings to command classes for ConsoleUI.parse
 commands = {
     'exit': QuitCommand,
@@ -73,7 +86,8 @@ commands = {
     'char': LoadCharSetCommand,
     'pal': LoadPaletteCommand,
     'export': ImageExportCommand,
-    'conv': ConvertImageCommand
+    'conv': ConvertImageCommand,
+    'getpal': PaletteFromImageCommand,
 }
 
 
