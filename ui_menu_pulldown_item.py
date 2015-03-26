@@ -279,6 +279,10 @@ class ChoosePaletteMenuItem(PulldownMenuItem):
     label = 'Choose palette...'
     command = 'choose_palette'
 
+class PaletteFromFileMenuItem(PulldownMenuItem):
+    label = 'Palette from file...'
+    command = 'palette_from_file'
+
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help...'
     command = 'open_help_screen'
