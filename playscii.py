@@ -33,6 +33,7 @@ from input_handler import InputLord
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable
+from image_convert import ImageConverter
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
@@ -69,6 +70,8 @@ class Application:
     test_life_each_frame = False
     test_art = False
     auto_save = False
+    # show dev-only log messages
+    show_dev_log = False
     
     def __init__(self, log_file, log_lines, art_filename):
         self.init_success = False
@@ -193,6 +196,10 @@ class Application:
         if self.ui:
             self.ui.message_line.post_line(new_line)
     
+    def dev_log(self, new_line):
+        if self.show_dev_log:
+            self.log(new_line)
+    
     def new_art(self, filename, width=None, height=None):
         width = width or self.new_art_width
         height = height or self.new_art_height
@@ -265,7 +272,8 @@ class Application:
             return
         self.art_loaded_for_edit.remove(art)
         for r in art.renderables:
-            self.edit_renderables.remove(r)
+            if r in self.edit_renderables:
+                self.edit_renderables.remove(r)
         if art is self.ui.active_art:
             self.ui.active_art = None
         self.log('Unloaded %s' % art.filename)
@@ -383,10 +391,6 @@ class Application:
         # TODO: if CRT is on, use that shader for output w/ a scale factor!
         scale = 2 if self.fb.crt and not self.fb.disable_crt else 1
         # create render target
-        #export_fb = Framebuffer(self, w * scale, h * scale)
-        #GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, export_fb.framebuffer)
-        #GL.glClearColor(*self.bg_color)
-        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         framebuffer = GL.glGenFramebuffers(1)
         render_buffer = GL.glGenRenderbuffers(1)
         GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, render_buffer)

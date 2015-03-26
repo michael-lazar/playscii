@@ -10,9 +10,17 @@ from lab_color import rgb_to_lab, lab_color_diff
 """
 notes
 
+- generate a table of image sum vectors for every char/fg/bg combination in the charset + palette
+- find the closest vector from this table for each source block
+-- if it's a table, how to index?
+
 - build dict of char index frequency, run each new source block comparison in order from most to least used (so far) characters.
 -- takes same amount of time to try all characters, only helps if diffs use a "good-enough" threshold
 -- threshold guesses: 0 = perfect, 600 = reasonable, 1000 = poor, 1500 crummy
+
+"8088 corruption explained" talk:
+https://www.youtube.com/watch?v=L6CkYou6hYU
+- downsample each block bilinearly, divide each into 4x4 cells, then compare them with similarly bilinearly-downsampled char blocks
 """
 
 class ImageConverter:
@@ -21,7 +29,7 @@ class ImageConverter:
     lab_color_comparison = True
     
     def __init__(self, app, image_filename, art):
-        image_filename = image_filename or 'bird.jpg' ### TEST ###
+        image_filename = image_filename or 'a.png' ### TEST ###
         if not os.path.exists(image_filename):
             app.log("Couldn't find image file %s" % image_filename)
             return
@@ -47,7 +55,8 @@ class ImageConverter:
         unique_colors = len(self.art.palette.colors)
         self.color_diffs = np.zeros((unique_colors, unique_colors), dtype=np.float32)
         # option: L*a*b color space conversion for greater accuracy
-        get_color_diff = self.get_lab_color_diff if self.lab_color_comparison else self.get_lab_color_diff
+        get_color_diff = self.get_lab_color_diff if self.lab_color_comparison else self.get_rgb_color_diff
+        #get_color_diff = self.get_nonlinear_rgb_color_diff
         for i,color in enumerate(self.art.palette.colors):
             # skip alpha
             for channel in color[:-1]:
@@ -93,6 +102,9 @@ class ImageConverter:
                 x0, y0 = char_x * self.char_w, char_y * self.char_h
                 x1, y1 = x0 + self.char_w, y0 + self.char_h
                 self.char_blocks.append((x0, y0, x1, y1))
+                # characters might end mid-row, bail if so
+                if len(self.char_blocks) > self.art.charset.last_index:
+                    break
     
     def get_rgb_color_diff(self, color1, color2):
         r = abs(color1[0] - color2[0])
@@ -105,6 +117,14 @@ class ImageConverter:
         l1, a1, b1 = rgb_to_lab(*color1[:3])
         l2, a2, b2 = rgb_to_lab(*color2[:3])
         return lab_color_diff(l1, a1, b1, l2, a2, b2)
+    
+    def get_nonlinear_rgb_color_diff(self, color1, color2):
+        # from http://www.compuphase.com/cmetric.htm
+        rmean = int((color1[0] + color2[0]) / 2)
+        r = color1[0] - color2[0]
+        g = color1[1] - color2[1]
+        b = color1[2] - color2[2]
+        return math.sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))
     
     def update(self):
         for i in range(self.tiles_per_tick):
@@ -145,11 +165,12 @@ class ImageConverter:
                     continue
                 combos.append((color1, color2))
         # compare all combos + chars w/ source block
-        char_index = 0
         best_char = 0
         best_diff = 9999999999999
         best_fg, best_bg = 0, 0
         for bg,fg in combos:
+            # reset char index before each run through charset
+            char_index = 0
             char_array = self.char_array.copy()
             # replace 1-bit color of char image with fg and bg colors
             char_array[char_array == 0] = bg

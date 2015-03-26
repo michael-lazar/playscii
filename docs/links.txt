@@ -8,6 +8,23 @@ https://docs.python.org/3/library/multiprocessing.html
 https://timothyawiseman.wordpress.com/2012/12/21/a-really-simple-multiprocessing-python-example/
 
 
+image conversion:
+
+http://sol.gfxile.net/textfx
+
+https://www.youtube.com/watch?v=L6CkYou6hYU
+
+https://www.youtube.com/watch?v=Iqxfdw-k1OU
+
+http://www.compuphase.com/cmetric.htm - "nonlinear RGB", faster (than Lab) color space conversion
+
+http://www.syntacticbayleaves.com/2008/12/03/determining-image-similarity/
+
+http://www.guguncube.com/1656/python-image-similarity-comparison-using-several-techniques
+
+
+
+
 SDL/OpenGL resources:
 
 http://docs.gl
@@ -21,6 +38,8 @@ http://duriansoftware.com/joe/An-intro-to-modern-OpenGL.-Table-of-Contents.html
 http://sdl.beuc.net/sdl.wiki/SDL_Average_FPS_Measurement
 
 http://www.arcsynthesis.org/gltut/Positioning/Tut05%20Optimization%20Base%20Vertex.html - specifically, use of glDrawElementsBaseVertex to draw a single layer from a renderable
+
+https://developer.apple.com/opengl/capabilities/index.html - GL feature/version support on OSX
 
 
 Tool reference:
@@ -44,6 +63,8 @@ https://pypi.python.org/pypi/Compositor/ - "Morphologically Optimal ASCII Art"
 http://www.kameli.net/marq/?page_id=2717 - PETSCII editor from ~2013
 
 http://satellitesrecords.com/artists/c64.htm - C64 synthesizer created by Ryo Kawasaki
+
+http://rexpaint.blogspot.com/p/features.html - nice featureful ascii editor, Cogmind dev
 
 
 World/screen projection:
