@@ -9,8 +9,6 @@ onion skinning:
 
 mockup for frame/layer matrix
 
-- full about/credits (comprehensive way to get patron names / opt-outs?)
-
 games/ dir, contains art and "game scripts". playscii can be launched with "-game [gamename]" arg to launch straight into a game.  eventually, framework for hot-reloaded object system grows from this
 
 OSX glGenTextures crash: happens when SDL 2D renderer has been created
@@ -31,7 +29,7 @@ main popup
 - ability to "pin" popup so it stays on screen always
 - arrow keys navigate between char and color pickers properly
 
-O key: toggle between perspective and ortho views (steal unity's cool lerp)
+shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 
 human-readable errors if charset/palette not found
 
