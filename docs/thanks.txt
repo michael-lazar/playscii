@@ -4,7 +4,24 @@ Playscii was made with the support of many nice people:
 
 Patrons:
 
-[TODO: full patron list]
+Katelyn Gigante
+Andrew Yoder
+Josh Closs
+Jacques Frechet
+Nick Keirle
+Rohit Nirmal
+Aubrey Hesselgren
+Andrew Anderson
+Lachlan Cooper
+Isaac Halvorson
+Sam Crisp
+James Noble
+Holger Dors
+Chris Welch
+Aaron Brown
+Leon Hartwig
+Shannon Smith
+
 
 
 Programming Help:
@@ -13,9 +30,9 @@ Shawn Walker
 Sean Barrett
 Mark Wonnacott
 Ian MacLarty
-goldbuick
+Goldbuick
 Tin Tvrtković
-
+Sean Gubelman
 
 Tool Design Inspiration:
 
@@ -25,7 +42,6 @@ Bret Victor
 Tim Sweeney (ZZT)
 Craig Hickman (Kid Pix)
 Bill Atkinson (HyperCard)
-
 
 Love, Encouragement, Moral Support:
 
