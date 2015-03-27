@@ -29,6 +29,8 @@ class TileRenderable:
         self.art.renderables.append(self)
         # set true momentarily by image export process
         self.exporting = False
+        # flag for easy don't-render functionality
+        self.visible = True
         # frame of our art's animation we're on
         self.frame = 0
         self.animating = False
@@ -241,6 +243,8 @@ class TileRenderable:
         self.exporting = False
     
     def render(self, layers=None):
+        if not self.visible:
+            return
         GL.glUseProgram(self.shader.program)
         # bind textures - character set, palette, UI grain
         GL.glActiveTexture(GL.GL_TEXTURE0)

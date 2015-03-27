@@ -621,3 +621,6 @@ class InputLord:
     
     def BIND_toggle_onion_visibility(self):
         self.app.onion_frames_visible = not self.app.onion_frames_visible
+        if self.app.onion_frames_visible:
+            self.ui.reset_onion_frames()
+        self.ui.menu_bar.refresh_active_menu()
