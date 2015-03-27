@@ -544,10 +544,14 @@ class Application:
             for r in self.edit_renderables:
                 r.render()
             if self.onion_frames_visible:
-                for i in range(self.onion_show_frames_behind):
-                    self.onion_renderables_prev[i].render()
-                for i in range(self.onion_show_frames_ahead):
-                    self.onion_renderables_next[i].render()
+                # draw "nearest" frames first
+                i = 0
+                while i < max(self.onion_show_frames_behind, self.onion_show_frames_ahead):
+                    if i < self.onion_show_frames_behind:
+                        self.onion_renderables_prev[i].render()
+                    if i < self.onion_show_frames_ahead:
+                        self.onion_renderables_next[i].render()
+                    i += 1
             # draw selection grid, then selection, then cursor
             if self.grid.visible and self.ui.active_art:
                 self.grid.render()

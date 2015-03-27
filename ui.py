@@ -244,24 +244,44 @@ class UI:
         self.set_selected_xform(xform)
     
     def reset_onion_frames(self, new_art=None):
+        #print('----------------\nresetting onion frames:')
+        #print('current frame: %s' % (self.active_frame))
         new_art = new_art or self.active_art
         # set onion renderables to correct frames
-        # TODO: scale back if fewer than MAX_ONION_FRAMES in either direction
         alpha = 1
+        # scale back if fewer than MAX_ONION_FRAMES in either direction
+        total_onion_frames = 0
         for i,r in enumerate(self.app.onion_renderables_prev):
+            total_onion_frames += 1
+            if total_onion_frames >= new_art.frames:
+                r.visible = False
+                break
+            r.visible = True
             if new_art is not r.art:
                 r.set_art(new_art)
-            r.set_frame(self.active_frame - (self.app.onion_show_frames_behind - i))
+            new_frame = self.active_frame - (i + 1)
+            r.set_frame(new_frame)
             # each successive onion layer is dimmer
             alpha /= 2
+            #print('previous onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
             r.alpha = alpha
+            # make BG dimmer so it's easier to see
+            r.bg_alpha = alpha / 2
         alpha = 1
         for i,r in enumerate(self.app.onion_renderables_next):
+            total_onion_frames += 1
+            if total_onion_frames >= new_art.frames:
+                r.visible = False
+                break
+            r.visible = True
             if new_art is not r.art:
                 r.set_art(new_art)
-            r.set_frame(self.active_frame + i + 1)
+            new_frame = self.active_frame + i + 1
+            r.set_frame(new_frame)
             alpha /= 2
+            #print('next onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
             r.alpha = alpha
+            r.bg_alpha = alpha / 2
     
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames
