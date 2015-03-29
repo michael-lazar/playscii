@@ -3,9 +3,8 @@ TODO
 for 0.5.0:
 
 onion skinning:
-- O toggles
-- create two (or N) extra renderables of active art, render them before rest of scene
 - user control for: [show only next frames, only previous frames, both], # of frames to show, max skin opacity?
+- fix: opening multiple documents onion skin goes all weird!
 
 mockup for frame/layer matrix
 
