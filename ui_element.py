@@ -209,8 +209,6 @@ class MessageLineUI(UIElement):
         self.tile_width = ceil(self.ui.width_tiles)
         self.art.resize(self.tile_width, self.tile_height)
         self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
-        # one line from top
-        self.y = 1- self.art.quad_height
         UIElement.reset_loc(self)
     
     def post_line(self, new_line, hold_time=None):
@@ -218,7 +216,7 @@ class MessageLineUI(UIElement):
         self.hold_time = hold_time or self.default_hold_time
         start_x = 1
         # trim to screen width
-        self.line = new_line[:self.tile_width-start_x]
+        self.line = new_line[:self.tile_width-start_x-1]
         self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
         self.art.write_string(0, 0, start_x, 0, self.line)
         self.alpha = 1
@@ -236,3 +234,38 @@ class MessageLineUI(UIElement):
         # TODO: draw if popup is visible but not obscuring message line?
         if not self.ui.popup.visible and not self.ui.console.visible:
             UIElement.render(self)
+
+
+class DebugTextUI(UIElement):
+    
+    "simple UI element for posting debug text"
+    
+    tile_x, tile_y = 1, 4
+    tile_height = 20
+    clear_lines_after_render = False
+    
+    def __init__(self, ui):
+        UIElement.__init__(self, ui)
+        self.lines = []
+    
+    def reset_art(self):
+        self.tile_width = ceil(self.ui.width_tiles)
+        self.art.resize(self.tile_width, self.tile_height)
+        self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+        UIElement.reset_loc(self)
+    
+    def post_lines(self, lines):
+        self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+        if type(lines) is list:
+            for y,line in enumerate(lines):
+                self.art.write_string(0, 0, 0, y, line)
+            self.lines = lines
+        else:
+            self.art.write_string(0, 0, 0, 0, str(lines))
+            self.lines = str(lines)
+    
+    def render(self):
+        UIElement.render(self)
+        if self.clear_lines_after_render:
+            self.lines = []
+            self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)

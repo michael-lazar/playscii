@@ -187,10 +187,13 @@ class FrameNextMenuItem(PulldownMenuItem):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
 class FrameTogglePlaybackMenuItem(PulldownMenuItem):
-    label = 'Play/pause animation'
+    label = 'blah'
     command = 'toggle_anim_playback'
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        animating = app.ui.active_art.renderables[0].animating
+        return ['Start', 'Stop'][animating] + ' animation playback'
 
 class FrameToggleOnionMenuitem(PulldownMenuItem):
     label = 'blah'

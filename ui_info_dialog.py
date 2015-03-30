@@ -88,8 +88,8 @@ Aaron Brown, Leon Hartwig, Shannon Smith
       Programming Help and Contributions:
 
 Shawn Walker, Sean Barrett, Mark Wonnacott,
-Ian MacLarty, Goldbuick, Tin Tvrtkovic,
-Sean Gubelman
+Ian MacLarty, Goldbuick, Rohit Nirmal,
+Tin Tvrtkovic, Sean Gubelman
 
             Tool Design Inspiration:
 

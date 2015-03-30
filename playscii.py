@@ -22,7 +22,7 @@ from camera import Camera
 from charset import CharacterSet
 from palette import Palette
 from art import Art, ArtFromDisk, ArtFromEDSCII
-from renderable import TileRenderable
+from renderable import TileRenderable, OnionTileRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI
@@ -154,10 +154,10 @@ class Application:
         self.ui = UI(self, self.art_loaded_for_edit[0])
         # init onion skin
         for i in range(self.onion_show_frames_behind):
-            renderable = TileRenderable(self, self.ui.active_art)
+            renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_prev.append(renderable)
         for i in range(self.onion_show_frames_ahead):
-            renderable = TileRenderable(self, self.ui.active_art)
+            renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_next.append(renderable)
         # set camera bounds based on art size
         self.camera.max_x = self.ui.active_art.width * self.ui.active_art.quad_width
@@ -531,6 +531,22 @@ class Application:
         for item in draw_order:
             item.game_object.render(item.layer)
     
+    def debug_onion_frames(self):
+        "debug function to log onion renderable state"
+        # TODO: remove this once it's served its purpose
+        debug = ['current frame: %s' % self.ui.active_frame, '']
+        debug.append('onion_renderables_prev:')
+        def get_onion_info(i, r):
+            visible = 'VISIBLE' if r.visible else ''
+            return '%s: %s frame %s %s' % (i, r.art.filename.ljust(20), r.frame, visible)
+        for i,r in enumerate(self.onion_renderables_prev):
+            debug.append(get_onion_info(i, r))
+        debug.append('')
+        debug.append('onion_renderables_next:')
+        for i,r in enumerate(self.onion_renderables_next):
+            debug.append(get_onion_info(i, r))
+        self.ui.debug_text.post_lines(debug)
+    
     def render(self):
         # draw main scene to framebuffer
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
@@ -543,6 +559,7 @@ class Application:
                 self.converter.preview_sprite.render()
             for r in self.edit_renderables:
                 r.render()
+            #self.debug_onion_frames()
             if self.onion_frames_visible:
                 # draw "nearest" frames first
                 i = 0

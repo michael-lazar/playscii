@@ -465,6 +465,9 @@ class Art:
     
     def save_to_file(self):
         "build a dict representing all this art's data and write it to disk"
+        # cursor might be hovering, undo any preview changes
+        for edit in self.app.cursor.preview_edits:
+            edit.undo()
         d = {}
         d['width'] = self.width
         d['height'] = self.height
@@ -582,10 +585,13 @@ class Art:
     
     def write_string(self, frame, layer, x, y, text, fg_color_index=None, bg_color_index=None, right_justify=False):
         "writes out each char of a string to specified tiles"
+        x %= self.width
         if right_justify:
             x_offset = -len(text)
         else:
             x_offset = 0
+        # never let string drawing go out of bounds
+        text = text[:self.width - (x+x_offset)]
         for char in text:
             idx = self.charset.get_char_index(char)
             self.set_char_index_at(frame, layer, x+x_offset, y, idx)
@@ -594,8 +600,10 @@ class Art:
             if bg_color_index:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
-            if x+x_offset < 0 or x+x_offset > self.width - 1:
-                self.app.dev_log('Warning: %s.write_string went out of bounds at %s,%s' % (self.filename, x+x_offset, y))
+            # TODO: remove this once it's clear the above solution is better
+            # (now that text is snipped for width, this should never run...)
+            if (x + x_offset < 0) or (x + x_offset > self.width):
+                self.app.dev_log('Warning: %s.write_string went out of bounds writing "%s" at %s,%s' % (self.filename, text, x + x_offset, y))
                 break
 
 

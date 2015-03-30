@@ -387,13 +387,12 @@ class InputLord:
         self.ui.set_active_frame(self.ui.active_frame + 1)
     
     def BIND_toggle_anim_playback(self):
-        animating = False
         for r in self.ui.active_art.renderables:
-            r.animating = not r.animating
-            animating = r.animating
-        # restore to active frame if stopping
-        if not animating:
-            r.set_frame(self.ui.active_frame)
+            if r.animating:
+                r.stop_animating()
+            else:
+                r.start_animating()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_layer(self):
         self.ui.set_active_layer(self.ui.active_layer - 1)

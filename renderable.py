@@ -147,11 +147,26 @@ class TileRenderable:
         if self.log_animation:
             self.app.log('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
+    def start_animating(self):
+        self.animating = True
+        self.anim_timer = 0
+    
+    def stop_animating(self):
+        self.animating = False
+        # restore to active frame if stopping
+        self.set_frame(self.app.ui.active_frame)
+    
     def set_art(self, new_art):
         if self.art:
             self.art.renderables.remove(self)
         self.art = new_art
         self.art.renderables.append(self)
+        # make sure frame is valid
+        self.frame %= self.art.frames
+        #self.create_buffers()
+        self.update_geo_buffers()
+        self.update_tile_buffers(True, True, True, True)
+        #print('%s now uses Art %s' % (self, self.art.filename))
     
     def move_to(self, x, y, z, travel_time=None):
         # for fixed travel time, set move rate accordingly
@@ -305,3 +320,13 @@ class TileRenderable:
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
+
+
+class OnionTileRenderable(TileRenderable):
+    
+    # never animate
+    def start_animating(self):
+        pass
+    
+    def stop_animating(self):
+        pass

@@ -33,12 +33,16 @@ class SaveCommand(ConsoleCommand):
 
 class OpenCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: open [art filename]'
         filename = ' '.join(args)
         console.ui.app.load_art_for_edit(filename)
 
 
 class LoadPaletteCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: pal [palette filename]'
         filename = ' '.join(args)
         # load AND set
         palette = console.ui.app.load_palette(filename)
@@ -48,6 +52,8 @@ class LoadPaletteCommand(ConsoleCommand):
 
 class LoadCharSetCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: char [character set filename]'
         filename = ' '.join(args)
         charset = console.ui.app.load_charset(filename)
         console.ui.active_art.set_charset(charset)
@@ -61,12 +67,16 @@ class ImageExportCommand(ConsoleCommand):
 
 class ConvertImageCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: conv [image filename]'
         image_filename = ' '.join(args)
         ImageConverter(console.ui.app, image_filename, console.ui.active_art)
 
 
 class PaletteFromImageCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: getpal [image filename]'
         src_filename = ' '.join(args)
         new_pal = PaletteFromFile(console.ui.app, src_filename, src_filename)
         if not new_pal.init_success:

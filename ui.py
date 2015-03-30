@@ -3,7 +3,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -22,6 +22,7 @@ class UI:
     
     # user-configured UI scale factor
     scale = 1.0
+    max_onion_alpha = 0.5
     charset_name = 'ui'
     palette_name = 'c64_original'
     # low-contrast background texture that distinguishes UI from flat color
@@ -96,6 +97,7 @@ class UI:
         self.status_bar = StatusBarUI(self)
         self.popup = ToolPopup(self)
         self.message_line = MessageLineUI(self)
+        self.debug_text = DebugTextUI(self)
         self.pulldown = PulldownMenu(self)
         self.menu_bar = None
         self.menu_bar = MenuBar(self)
@@ -103,6 +105,7 @@ class UI:
         self.elements.append(self.status_bar)
         self.elements.append(self.popup)
         self.elements.append(self.message_line)
+        self.elements.append(self.debug_text)
         self.elements.append(self.pulldown)
         self.elements.append(self.menu_bar)
         # add console last so it draws last
@@ -244,44 +247,37 @@ class UI:
         self.set_selected_xform(xform)
     
     def reset_onion_frames(self, new_art=None):
-        #print('----------------\nresetting onion frames:')
-        #print('current frame: %s' % (self.active_frame))
+        "set correct visibility, frame, and alpha for all onion renderables"
         new_art = new_art or self.active_art
-        # set onion renderables to correct frames
-        alpha = 1
-        # scale back if fewer than MAX_ONION_FRAMES in either direction
+        alpha = self.max_onion_alpha
         total_onion_frames = 0
-        for i,r in enumerate(self.app.onion_renderables_prev):
-            total_onion_frames += 1
+        def set_onion(r, new_frame, alpha):
+            # scale back if fewer than MAX_ONION_FRAMES in either direction
             if total_onion_frames >= new_art.frames:
                 r.visible = False
-                break
+                return
             r.visible = True
-            if new_art is not r.art:
+            if not new_art is r.art:
                 r.set_art(new_art)
-            new_frame = self.active_frame - (i + 1)
             r.set_frame(new_frame)
-            # each successive onion layer is dimmer
-            alpha /= 2
-            #print('previous onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
             r.alpha = alpha
             # make BG dimmer so it's easier to see
             r.bg_alpha = alpha / 2
-        alpha = 1
+        # populate "next" frames first
         for i,r in enumerate(self.app.onion_renderables_next):
             total_onion_frames += 1
-            if total_onion_frames >= new_art.frames:
-                r.visible = False
-                break
-            r.visible = True
-            if new_art is not r.art:
-                r.set_art(new_art)
             new_frame = self.active_frame + i + 1
-            r.set_frame(new_frame)
+            set_onion(r, new_frame, alpha)
             alpha /= 2
             #print('next onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
-            r.alpha = alpha
-            r.bg_alpha = alpha / 2
+        alpha = self.max_onion_alpha
+        for i,r in enumerate(self.app.onion_renderables_prev):
+            total_onion_frames += 1
+            new_frame = self.active_frame - (i + 1)
+            set_onion(r, new_frame, alpha)
+            # each successive onion layer is dimmer
+            alpha /= 2
+            #print('previous onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
     
     def set_active_frame(self, new_frame):
         new_frame %= self.active_art.frames
