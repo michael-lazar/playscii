@@ -5,10 +5,6 @@ video:
 - onion skinnin'
 - 4-dir character move
 
-onion skin - menu items for:
-- # of frames to show
-- show only next frames, show only previous frames, show both
-
 ---
 
 further work on existing features:
@@ -35,10 +31,7 @@ further-out UI stuff in docs/ui.txt
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
 
-onion skinning:
-
-
-mockup for frame/layer matrix? still needed now that onion skin + layer pulldown list give a pretty good-enough view of this data?
+mockup for frame/layer matrix - is this still needed now that onion skin + layer pulldown list give a pretty good-enough view of this data?
 
 should game dirs have their own palettes/, charsets/ etc subdirs?
 
