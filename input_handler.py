@@ -452,8 +452,7 @@ class InputLord:
         self.app.screenshot()
     
     def BIND_run_game_mode_test(self):
-        self.app.game_mode_test()
-        self.app.enter_game_mode()
+        self.app.load_game('test1')
     
     def BIND_run_test_mutate(self):
         if self.ui.active_art.is_script_running('conway'):

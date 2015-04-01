@@ -1,14 +1,20 @@
 TODO
 
+each open art keeps its own active frame + layer
+
+video:
+- image conversion
+- onion skinnin'
+- 4-dir character move?
+
 for 0.5.0:
 
 onion skinning:
 - user control for: [show only next frames, only previous frames, both], # of frames to show, max skin opacity?
-- fix: opening multiple documents onion skin goes all weird!
 
 mockup for frame/layer matrix
 
-games/ dir, contains art and "game scripts". playscii can be launched with "-game [gamename]" arg to launch straight into a game.  eventually, framework for hot-reloaded object system grows from this
+should game dirs have their own palettes/, charsets/ etc subdirs?
 
 OSX glGenTextures crash: happens when SDL 2D renderer has been created
 

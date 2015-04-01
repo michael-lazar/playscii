@@ -2,11 +2,12 @@ import math
 
 from art import Art
 from renderable import TileRenderable
+from renderable_line import AxisIndicatorRenderable
 
 class GameObject:
     
-    def __init__(self, app, art):
-        self.x, self.y, self.z = 0, 0, 0
+    def __init__(self, app, art, loc=(0, 0, 0)):
+        (self.x, self.y, self.z) = loc
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.app = app
         # support a filename OR an existing Art object
@@ -15,6 +16,7 @@ class GameObject:
             self.app.log("Couldn't spawn GameObject with art %s" % art.filename)
             return
         self.renderable = TileRenderable(self.app, self.art)
+        self.axis_renderable = AxisIndicatorRenderable(app)
         if not self.art in self.app.art_loaded_for_game:
             self.app.art_loaded_for_game.append(self.art)
         self.app.game_renderables.append(self.renderable)
@@ -29,6 +31,8 @@ class GameObject:
         self.renderable.scale_x = self.scale_x
         self.renderable.scale_y = self.scale_y
         self.renderable.scale_z = self.scale_z
+        self.axis_renderable.x, self.axis_renderable.y = self.x, self.y
+        self.axis_renderable.z = self.z
     
     def start_animating(self):
         self.renderable.animating = True
@@ -40,6 +44,7 @@ class GameObject:
     def render(self, layer):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
         self.renderable.render(layer)
+        self.axis_renderable.render()
 
 
 class WobblyThing(GameObject):
@@ -67,10 +72,10 @@ class ParticleThing(GameObject):
     
     width, height = 8, 8
     
-    def __init__(self, app):
+    def __init__(self, app, loc=(0, 0, 0)):
         charset = app.load_charset('dos')
         palette = app.load_palette('ega')
         art = Art('smoke1', app, charset, palette, self.width, self.height)
         art.clear_frame_layer(0, 0, 0)
-        GameObject.__init__(self, app, art)
+        GameObject.__init__(self, app, art, loc)
         self.art.run_script_every('mutate')

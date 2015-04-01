@@ -40,6 +40,8 @@ CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
+GAME_DIR = 'games/'
+GAME_FILE_EXTENSION = 'game'
 
 VERSION = '0.5.0'
 
@@ -72,13 +74,15 @@ class Application:
     auto_save = False
     # show dev-only log messages
     show_dev_log = False
+    welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
     
-    def __init__(self, log_file, log_lines, art_filename):
+    def __init__(self, log_file, log_lines, art_filename, game_to_load):
         self.init_success = False
         # log fed in from __main__, might already have stuff in it
         self.log_file = log_file
         self.log_lines = log_lines
         self.elapsed_time = 0
+        self.delta_time = 0
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         self.inactive_layer_visibility = 1
@@ -171,7 +175,10 @@ class Application:
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
-        self.ui.message_line.post_line('Welcome to Playscii! Press SPACE to select characters and colors to paint.', 10)
+        if game_to_load:
+            self.load_game(game_to_load)
+        else:
+            self.ui.message_line.post_line(self.welcome_message, 10)
     
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu, what am i missing?
@@ -217,12 +224,12 @@ class Application:
         """
         orig_filename = filename
         filename = filename or 'new'
-        # try adding art subdir
-        if not os.path.exists(filename):
-            filename = '%s%s' % (ART_DIR, filename)
         # if not found, try adding extension
         if not os.path.exists(filename):
             filename += '.%s' % ART_FILE_EXTENSION
+        # try adding art subdir
+        if not os.path.exists(filename):
+            filename = '%s%s' % (ART_DIR, filename)
         art = None
         # use given path + file name even if it doesn't exist; use as new file's name
         if not os.path.exists(filename):
@@ -426,28 +433,19 @@ class Application:
     def exit_game_mode(self):
         self.game_mode = False
     
-    def game_mode_test(self):
-        "render quality/perf test for 'game mode'"
-        # TODO: move this to a "game script" in games/, see TODOs
-        # background w/ parallax layers
-        from game_object import GameObject, WobblyThing, ParticleThing
-        bg = GameObject(self, 'test_bg')
-        bg.set_loc(0, 0, -3)
-        self.player = GameObject(self, 'test_player')
-        self.player.set_loc(1, -13)
-        # spawn a bunch of enemies
-        from random import randint
-        for i in range(25):
-            enemy = WobblyThing(self, 'owell')
-            enemy.set_origin(randint(0, 30), randint(-30, 0), randint(-5, 5))
-            enemy.start_animating()
-        # particle thingy
-        smoke1 = ParticleThing(self)
-        smoke1.set_loc(25, -10)
-        # set camera
-        px = self.player.x + self.player.art.width / 2
-        self.camera.set_loc(px, self.player.y, self.camera.z)
-        self.camera.set_zoom(20)
+    def load_game(self, game_name):
+        self.log('loading game %s...' % game_name)
+        # execute game script, which loads game assets etc
+        game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
+        if not os.path.exists(game_file):
+            self.log("Couldn't find game script: %s" % game_file)
+            return
+        # set my_game_dir & my_game_art_dir for quick access within game script
+        my_game_dir = '%s%s/' % (GAME_DIR, game_name)
+        my_game_art_dir = '%s%s' % (my_game_dir, ART_DIR)
+        exec(open(game_file).read())
+        self.enter_game_mode()
+        self.log('loaded game %s' % game_name)
     
     def main_loop(self):
         while not self.should_quit:
@@ -626,10 +624,14 @@ if __name__ == "__main__":
         log_file.write('%s\n' % line)
         log_lines.append(line)
         print(line)
-    file_to_load = None
+    file_to_load, game_to_load = None, None
     if len(sys.argv) > 1:
-        file_to_load = sys.argv[1]
-    app = Application(log_file, log_lines, file_to_load)
+        # "-game test1" args will load test1 game from its dir
+        if sys.argv[1] == '-game' and len(sys.argv) > 2:
+            game_to_load = sys.argv[2]
+        else:
+            file_to_load = sys.argv[1]
+    app = Application(log_file, log_lines, file_to_load, game_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)
