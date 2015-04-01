@@ -355,12 +355,12 @@ class SaveAsDialog(UIDialog):
         self.dismiss()
 
 
-class ImportImageDialog(UIDialog):
+class ConvertImageDialog(UIDialog):
     
-    title = 'Import raster image'
+    title = 'Convert raster image'
     field0_label = 'Filename of image to convert:'
     fields = 1
-    confirm_caption = 'Import'
+    confirm_caption = 'Convert'
     
     def confirm_pressed(self):
         ConvertImageCommand.execute(self.ui.console, [self.field0_text])
@@ -578,7 +578,7 @@ class AddLayerDialog(UIDialog):
     def __init__(self, ui):
         UIDialog.__init__(self, ui)
         self.field0_text = 'Layer %s' % str(ui.active_art.layers + 1)
-        z = ui.active_art.layers_z[ui.active_layer] + DEFAULT_LAYER_Z_OFFSET
+        z = ui.active_art.layers_z[ui.active_art.active_layer] + DEFAULT_LAYER_Z_OFFSET
         self.field1_text = str(z)
     
     def is_valid_layer_name(self, name, exclude_active_layer=False):
@@ -615,7 +615,7 @@ class DuplicateLayerDialog(AddLayerDialog):
         if not valid: return
         name = self.get_field_text(0)
         z = float(self.get_field_text(1))
-        self.ui.active_art.duplicate_layer(self.ui.active_layer, z, name)
+        self.ui.active_art.duplicate_layer(self.ui.active_art.active_layer, z, name)
         self.dismiss()
 
 
@@ -631,7 +631,7 @@ class SetLayerNameDialog(AddLayerDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         new_name = self.get_field_text(0)
-        self.ui.active_art.layer_names[self.ui.active_layer] = new_name
+        self.ui.active_art.layer_names[self.ui.active_art.active_layer] = new_name
         self.dismiss()
 
 
@@ -646,7 +646,7 @@ class SetLayerZDialog(UIDialog):
     def __init__(self, ui):
         UIDialog.__init__(self, ui)
         # populate with existing z
-        self.field0_text = str(ui.active_art.layers_z[ui.active_layer])
+        self.field0_text = str(ui.active_art.layers_z[ui.active_art.active_layer])
     
     def is_input_valid(self):
         try: z = float(self.get_field_text(0))
@@ -657,7 +657,7 @@ class SetLayerZDialog(UIDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         new_z = float(self.get_field_text(0))
-        self.ui.active_art.layers_z[self.ui.active_layer] = new_z
+        self.ui.active_art.layers_z[self.ui.active_art.active_layer] = new_z
         self.ui.app.grid.reset()
         self.dismiss()
 

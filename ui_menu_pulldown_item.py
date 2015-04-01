@@ -59,9 +59,9 @@ class FileCloseMenuItem(PulldownMenuItem):
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileImportImageMenuItem(PulldownMenuItem):
-    label = 'Import Image...'
-    command = 'import_image'
+class FileConvertImageMenuItem(PulldownMenuItem):
+    label = 'Convert Image...'
+    command = 'convert_image'
     def should_dim(app):
         return app.ui.active_art is None
 
@@ -320,7 +320,7 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
-             FileCloseMenuItem, FileImportImageMenuItem, FilePNGExportMenuItem,
+             FileCloseMenuItem, FileConvertImageMenuItem, FilePNGExportMenuItem,
              SeparatorMenuItem, FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
@@ -381,7 +381,7 @@ class LayerMenuData(PulldownMenuData):
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
-        return ui.active_layer == item.cb_arg
+        return ui.active_art.active_layer == item.cb_arg
     
     def get_items(app):
         "turn each layer into a menu item"

@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ImportImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
@@ -237,8 +237,8 @@ class InputLord:
     def BIND_toggle_console(self):
         self.ui.console.toggle()
     
-    def BIND_import_image(self):
-        self.ui.open_dialog(ImportImageDialog)
+    def BIND_convert_image(self):
+        self.ui.open_dialog(ConvertImageDialog)
     
     def BIND_export_image(self):
         if not self.ui.active_art:
@@ -395,11 +395,11 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_layer(self):
-        self.ui.set_active_layer(self.ui.active_layer - 1)
+        self.ui.set_active_layer(self.ui.active_art.active_layer - 1)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_next_layer(self):
-        self.ui.set_active_layer(self.ui.active_layer + 1)
+        self.ui.set_active_layer(self.ui.active_art.active_layer + 1)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_art(self):
@@ -605,7 +605,7 @@ class InputLord:
         self.ui.open_dialog(SetLayerZDialog)
     
     def BIND_delete_layer(self):
-        self.ui.active_art.delete_layer(self.ui.active_layer)
+        self.ui.active_art.delete_layer(self.ui.active_art.active_layer)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_choose_charset(self):

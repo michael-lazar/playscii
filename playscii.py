@@ -169,7 +169,7 @@ class Application:
         self.update_window_title()
         self.cursor = Cursor(self)
         self.grid = Grid(self, self.ui.active_art)
-        self.ui.set_active_layer(0)
+        self.ui.set_active_layer(self.ui.active_art.active_layer)
         self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         # INPUTLORD rules input handling and keybinds
         self.il = InputLord(self)

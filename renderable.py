@@ -305,8 +305,8 @@ class TileRenderable:
         for i in layers:
             layer_start = i * layer_size
             layer_end = layer_start + layer_size
-            # TEST: for active art, dim all but active layer
-            if not self.app.game_mode and self.art is self.app.ui.active_art and i != self.app.ui.active_layer:
+            # for active art, dim all but active layer based on UI setting
+            if not self.app.game_mode and self.art is self.app.ui.active_art and i != self.art.active_layer:
                 GL.glUniform1f(self.alpha_uniform, self.alpha * self.app.inactive_layer_visibility)
             else:
                 GL.glUniform1f(self.alpha_uniform, self.alpha)

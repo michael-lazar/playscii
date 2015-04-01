@@ -50,7 +50,6 @@ class UI:
         self.app = app
         # the current art being edited
         self.active_art = active_art
-        self.active_layer = 0
         # dialog box set here
         self.active_dialog = None
         # easy color index lookups
@@ -156,8 +155,6 @@ class UI:
         self.active_art = new_art
         new_charset = self.active_art.charset
         new_palette = self.active_art.palette
-        # change active layer if new active art doesn't have that many
-        self.active_layer = min(self.active_layer, self.active_art.layers - 1)
         # make sure selection isn't out of bounds in new art
         old_selection = self.select_tool.selected_tiles.copy()
         for tile in old_selection:
@@ -285,15 +282,15 @@ class UI:
         self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_art.active_frame + 1))
     
     def set_active_layer(self, new_layer):
-        self.active_layer = min(max(0, new_layer), self.active_art.layers-1)
-        z = self.active_art.layers_z[self.active_layer]
+        self.active_art.set_active_layer(new_layer)
+        z = self.active_art.layers_z[self.active_art.active_layer]
         self.app.grid.z = z
         self.select_tool.select_renderable.z = z
         self.select_tool.drag_renderable.z = z
         self.app.cursor.z = z
         self.app.update_window_title()
         self.tool_settings_changed = True
-        layer_name = self.active_art.layer_names[self.active_layer]
+        layer_name = self.active_art.layer_names[self.active_art.active_layer]
         self.message_line.post_line(self.layer_selected_log % layer_name)
     
     def select_char(self, new_char_index):
@@ -334,12 +331,13 @@ class UI:
         if len(self.select_tool.selected_tiles) > 0:
             self.erase_tiles_in_selection()
         else:
-            self.active_art.clear_frame_layer(self.active_art.active_frame, self.active_layer,
+            self.active_art.clear_frame_layer(self.active_art.active_frame,
+                                              self.active_art.active_layer,
                                               bg_color=self.selected_bg_color)
     
     def erase_tiles_in_selection(self):
         # create and commit command group to clear all tiles in selection
-        frame, layer = self.active_art.active_frame, self.active_layer
+        frame, layer = self.active_art.active_frame, self.active_art.active_layer
         new_command = EditCommand(self.active_art)
         for tile in self.select_tool.selected_tiles:
             new_tile_command = EditCommandTile(self.active_art)
@@ -361,7 +359,7 @@ class UI:
         # EditCommandTiles for Cursor.preview_edits
         # (via PasteTool get_paint_commands)
         self.clipboard = []
-        frame, layer = self.active_art.active_frame, self.active_layer
+        frame, layer = self.active_art.active_frame, self.active_art.active_layer
         min_x, min_y = 9999, 9999
         max_x, max_y = -1, -1
         for tile in self.select_tool.selected_tiles:
