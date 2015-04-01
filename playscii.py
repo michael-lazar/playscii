@@ -146,7 +146,10 @@ class Application:
         self.game_objects = []
         # onion skin renderables
         self.onion_frames_visible = False
-        self.onion_show_frames_behind = self.onion_show_frames_ahead = MAX_ONION_FRAMES
+        self.onion_show_frames = MAX_ONION_FRAMES
+        # store constant so input_handler etc can read it
+        self.max_onion_frames = MAX_ONION_FRAMES
+        self.onion_show_frames_behind = self.onion_show_frames_ahead = True
         self.onion_renderables_prev, self.onion_renderables_next = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
@@ -157,10 +160,10 @@ class Application:
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded_for_edit[0])
         # init onion skin
-        for i in range(self.onion_show_frames_behind):
+        for i in range(self.onion_show_frames):
             renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_prev.append(renderable)
-        for i in range(self.onion_show_frames_ahead):
+        for i in range(self.onion_show_frames):
             renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_next.append(renderable)
         # set camera bounds based on art size
@@ -561,10 +564,10 @@ class Application:
             if self.onion_frames_visible:
                 # draw "nearest" frames first
                 i = 0
-                while i < max(self.onion_show_frames_behind, self.onion_show_frames_ahead):
-                    if i < self.onion_show_frames_behind:
+                while i < self.onion_show_frames:
+                    if self.onion_show_frames_behind:
                         self.onion_renderables_prev[i].render()
-                    if i < self.onion_show_frames_ahead:
+                    if self.onion_show_frames_ahead:
                         self.onion_renderables_next[i].render()
                     i += 1
             # draw selection grid, then selection, then cursor

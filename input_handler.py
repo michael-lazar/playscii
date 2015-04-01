@@ -622,3 +622,22 @@ class InputLord:
         if self.app.onion_frames_visible:
             self.ui.reset_onion_frames()
         self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_cycle_onion_frames(self):
+        self.app.onion_show_frames += 1
+        self.app.onion_show_frames %= self.app.max_onion_frames + 1
+        # start cycle at 1, not 0
+        self.app.onion_show_frames = max(1, self.app.onion_show_frames)
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_cycle_onion_ahead_behind(self):
+        # cycle between next, previous, next & previous
+        if self.app.onion_show_frames_behind and self.app.onion_show_frames_ahead:
+            self.app.onion_show_frames_behind = False
+        elif not self.app.onion_show_frames_behind and self.app.onion_show_frames_ahead:
+            self.app.onion_show_frames_behind = True
+            self.app.onion_show_frames_ahead = False
+        else:
+            self.app.onion_show_frames_ahead = True
+            self.app.onion_show_frames_ahead = True
+        self.ui.menu_bar.refresh_active_menu()

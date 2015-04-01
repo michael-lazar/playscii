@@ -102,5 +102,7 @@ self.edit_bind_src = {
     '_layer_name'   : 'change_layer_name',
     '_layer_z'      : 'change_layer_z',
     '_delete_layer' : 'delete_layer',
-    '_pal_from_file': 'palette_from_file'
+    '_pal_from_file': 'palette_from_file',
+	'_cycle_onion_frames': 'cycle_onion_frames',
+	'_cycle_onion_display': 'cycle_onion_ahead_behind'
 }
