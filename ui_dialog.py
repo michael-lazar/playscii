@@ -519,7 +519,7 @@ class DuplicateFrameDialog(AddFrameDialog):
         if not valid: return
         index = int(self.get_field_text(0))
         delay = float(self.get_field_text(1))
-        self.ui.active_art.duplicate_frame(self.ui.active_frame, index, delay)
+        self.ui.active_art.duplicate_frame(self.ui.active_art.active_frame, index, delay)
         self.dismiss()
 
 class FrameDelayDialog(AddFrameDialog):
@@ -542,7 +542,7 @@ class FrameDelayDialog(AddFrameDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         delay = float(self.get_field_text(0))
-        self.ui.active_art.frame_delays[self.ui.active_frame] = delay
+        self.ui.active_art.frame_delays[self.ui.active_art.active_frame] = delay
         self.dismiss()
 
 class FrameIndexDialog(AddFrameDialog):
@@ -555,7 +555,7 @@ class FrameIndexDialog(AddFrameDialog):
         if not valid: return
         # set new frame index (effectively moving it in the sequence)
         dest_index = int(self.get_field_text(0))
-        self.ui.active_art.move_frame_to_index(self.ui.active_frame, dest_index)
+        self.ui.active_art.move_frame_to_index(self.ui.active_art.active_frame, dest_index)
         self.dismiss()
 
 

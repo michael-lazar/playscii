@@ -192,7 +192,7 @@ class StatusBarUI(UIElement):
         frames = 0
         if art:
             frames = art.frames
-        frame = '%s/%s' % (self.ui.active_frame + 1, frames)
+        frame = '%s/%s' % (art.active_frame + 1, frames)
         self.art.write_string(0, 0, x, 0, frame, light, dark, True)
         x -= len(frame)
         self.art.write_string(0, 0, x, 0, self.frame_label, dark, light, True)

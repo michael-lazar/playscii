@@ -90,6 +90,8 @@ class Art:
         self.unsaved_changes = False
         self.width, self.height = width, height
         self.frames = 0
+        # current frame being edited
+        self.active_frame = 0
         # list of frame delays
         self.frame_delays = []
         self.layers = 1
@@ -269,6 +271,18 @@ class Art:
             return
         self.palette = new_palette
         self.set_unsaved_changes(True)
+    
+    def set_active_frame(self, new_frame):
+        new_frame %= self.frames
+        # bail if frame is still the same, eg we only have 1 frame
+        if new_frame == self.active_frame:
+            # return whether or not we actually changed frames
+            return False
+        self.active_frame = new_frame
+        # update our renderables
+        for r in self.renderables:
+            r.set_frame(self.active_frame)
+        return True
     
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
         x0, y0 = origin_x, origin_y
@@ -474,6 +488,7 @@ class Art:
         # preferred character set and palette, default used if not found
         d['charset'] = self.charset.name
         d['palette'] = self.palette.name
+        d['active_frame'] = self.active_frame
         # remember camera location
         d['camera'] = self.app.camera.x, self.app.camera.y, self.app.camera.z
         # frames and layers are dicts w/ lists of their data + a few properties
@@ -631,6 +646,8 @@ class ArtFromDisk(Art):
         frames = d['frames']
         self.frames = len(frames)
         self.frame_delays = []
+        # active frame will be set properly near end of init
+        self.active_frame = 0
         # number of layers should be same for all frames
         self.layers = len(frames[0]['layers'])
         # get layer z depths from first frame's data
@@ -676,6 +693,9 @@ class ArtFromDisk(Art):
         self.script_rates = []
         self.scripts_next_exec_time = []
         self.geo_changed = True
+        # set active frame properly
+        active_frame = d.get('active_frame', 0)
+        self.set_active_frame(active_frame)
         self.update()
         if self.log_creation:
             self.app.log('loaded %s from disk:' % filename)
@@ -718,6 +738,7 @@ class ArtFromEDSCII(Art):
         self.quad_height = self.charset.char_height / self.charset.char_width
         self.frames = 1
         self.frame_delays = [DEFAULT_FRAME_DELAY]
+        self.active_frame = 0
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
         self.layer_names = ['Layer 1']
