@@ -101,7 +101,7 @@ class PencilTool(UITool):
         commands = []
         art = self.ui.active_art
         frame = art.active_frame
-        layer = self.ui.active_layer
+        layer = art.active_layer
         tiles = self.ui.app.cursor.get_tiles_under_brush()
         for tile in tiles:
             # don't allow painting out of bounds
@@ -172,7 +172,7 @@ class GrabTool(UITool):
         # cursor preview edits, grab, then redo them
         for edit in self.ui.app.cursor.preview_edits:
             edit.undo()
-        frame, layer = art.active_frame, self.ui.active_layer
+        frame, layer = art.active_frame, art.active_layer
         if self.affects_char:
             self.ui.selected_char = art.get_char_index_at(frame, layer, x, y)
         if self.affects_fg_color:
@@ -222,7 +222,7 @@ class TextTool(UITool):
             return
         keystr = sdl2.SDL_GetKeyName(key).decode()
         art = self.ui.active_art
-        frame, layer = art.active_frame, self.ui.active_layer
+        frame, layer = art.active_frame, art.active_layer
         x, y = self.cursor.x, -self.cursor.y
         # TODO: if cursor isn't inside selection, bail early
         if keystr == 'Return':
@@ -387,7 +387,7 @@ class PasteTool(UITool):
             new_command.art = art
             frame, layer, x, y = new_command.frame, new_command.layer, new_command.x, new_command.y
             frame = art.active_frame
-            layer = self.ui.active_layer
+            layer = art.active_layer
             # offset cursor position, center paste on cursor
             x += self.ui.app.cursor.x - int(self.ui.clipboard_width / 2)
             y -= self.ui.app.cursor.y + int(self.ui.clipboard_height / 2)

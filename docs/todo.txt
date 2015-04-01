@@ -1,22 +1,9 @@
 TODO
 
-each open art keeps its own active frame + layer
-
 video:
 - image conversion
 - onion skinnin'
-- 4-dir character move?
-
-for 0.5.0:
-
-onion skinning:
-- user control for: [show only next frames, only previous frames, both], # of frames to show, max skin opacity?
-
-mockup for frame/layer matrix
-
-should game dirs have their own palettes/, charsets/ etc subdirs?
-
-OSX glGenTextures crash: happens when SDL 2D renderer has been created
+- 4-dir character move
 
 ---
 
@@ -43,3 +30,12 @@ separate camera for game mode
 further-out UI stuff in docs/ui.txt
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+
+onion skinning:
+- user control for: [show only next frames, only previous frames, both], # of frames to show, max skin opacity?
+
+mockup for frame/layer matrix? still needed now that onion skin + layer pulldown list give a pretty good-enough view of this data?
+
+should game dirs have their own palettes/, charsets/ etc subdirs?
+
+OSX glGenTextures crash: happens when SDL 2D renderer has been created

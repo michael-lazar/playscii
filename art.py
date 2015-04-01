@@ -95,6 +95,8 @@ class Art:
         # list of frame delays
         self.frame_delays = []
         self.layers = 1
+        # current layer being edited
+        self.active_layer = 0
         # lists of layer Z values and names
         self.layers_z = [DEFAULT_LAYER_Z]
         self.layer_names = ['Layer 1']
@@ -152,6 +154,9 @@ class Art:
         for l in range(1, self.layers):
             self.clear_frame_layer(index, l, 0, fg)
         self.mark_all_frames_changed()
+        # set new frame as active
+        if self.app.ui and self is self.app.ui.active_art:
+            self.app.ui.set_active_frame(index)
         if log:
             self.app.log('Created new frame at index %s' % str(index))
     
@@ -172,6 +177,9 @@ class Art:
         self.fg_colors.insert(dest_frame_index, self.fg_colors[src_frame_index].copy())
         self.bg_colors.insert(dest_frame_index, self.bg_colors[src_frame_index].copy())
         self.mark_all_frames_changed()
+        # set new frame as active
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_frame(dest_frame_index-1)
         self.app.log('Duplicated frame %s at frame %s' % (src_frame_index+1, dest_frame_index))
     
     def delete_frame_at(self, index):
@@ -181,6 +189,8 @@ class Art:
         self.uv_mods.pop(index)
         self.frames -= 1
         self.mark_all_frames_changed()
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_frame(index)
     
     def move_frame_to_index(self, src_index, dest_index):
         char_data = self.chars.pop(src_index)
@@ -202,6 +212,9 @@ class Art:
         self.duplicate_layer(index, z, name)
         for frame in range(self.frames):
             self.clear_frame_layer(frame, self.layers-1, 0)
+        # set new layer as active
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_layer(index+1)
     
     def duplicate_layer(self, src_index, z=None, new_name=None):
         def duplicate_layer_array(array):
@@ -283,6 +296,9 @@ class Art:
         for r in self.renderables:
             r.set_frame(self.active_frame)
         return True
+    
+    def set_active_layer(self, new_layer):
+        self.active_layer = min(max(0, new_layer), self.layers-1)
     
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
         x0, y0 = origin_x, origin_y
@@ -489,6 +505,7 @@ class Art:
         d['charset'] = self.charset.name
         d['palette'] = self.palette.name
         d['active_frame'] = self.active_frame
+        d['active_layer'] = self.active_layer
         # remember camera location
         d['camera'] = self.app.camera.x, self.app.camera.y, self.app.camera.z
         # frames and layers are dicts w/ lists of their data + a few properties
@@ -653,6 +670,8 @@ class ArtFromDisk(Art):
         # get layer z depths from first frame's data
         self.layers_z = []
         self.layer_names = []
+        # active frame will be set properly near end of init
+        self.active_layer = 0
         for i,layer in enumerate(frames[0]['layers']):
             self.layers_z.append(layer['z'])
             layer_num = str(i + 1)
@@ -693,9 +712,11 @@ class ArtFromDisk(Art):
         self.script_rates = []
         self.scripts_next_exec_time = []
         self.geo_changed = True
-        # set active frame properly
+        # set active frame and layer properly
         active_frame = d.get('active_frame', 0)
         self.set_active_frame(active_frame)
+        active_layer = d.get('active_layer', 0)
+        self.set_active_layer(active_layer)
         self.update()
         if self.log_creation:
             self.app.log('loaded %s from disk:' % filename)
@@ -742,6 +763,7 @@ class ArtFromEDSCII(Art):
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
         self.layer_names = ['Layer 1']
+        self.active_layer = 0
         shape = (self.layers, self.height, self.width, 4)
         chars = np.zeros(shape, dtype=np.float32)
         fg_colors = chars.copy()

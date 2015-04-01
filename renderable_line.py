@@ -19,7 +19,9 @@ class LineRenderable():
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
-        self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        self.scale_x, self.scale_y = 1, 1
+        # handle Z differently if verts are 2D vs 3D
+        self.scale_z = 0 if self.vert_items == 2 else 1
         self.build_geo()
         self.reset_loc()
         self.vao = GL.glGenVertexArrays(1)

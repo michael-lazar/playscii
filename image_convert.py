@@ -90,9 +90,9 @@ class ImageConverter:
         self.preview_sprite.y = -self.art.height * self.art.quad_height
         self.preview_sprite.scale_x = w / self.char_w
         self.preview_sprite.scale_y = h / self.char_h
-        self.preview_sprite.z = self.art.layers_z[app.ui.active_layer] - 0.01
+        self.preview_sprite.z = self.art.layers_z[self.art.active_layer] - 0.01
         # clear active layer so we can see preview
-        self.art.clear_frame_layer(self.art.active_frame, self.app.ui.active_layer, 0)
+        self.art.clear_frame_layer(self.art.active_frame, self.art.active_layer, 0)
         # block indices
         self.x, self.y = 0, 0
         # precompute block indices - lets us do a bit less + and *
@@ -132,7 +132,7 @@ class ImageConverter:
             x_end, y_end = x_start + self.char_w, y_start + self.char_h
             block = self.src_array[y_start:y_end, x_start:x_end]
             char, fg, bg = self.get_best_tile_for_block(block)
-            self.art.set_tile_at(self.art.active_frame, self.app.ui.active_layer,
+            self.art.set_tile_at(self.art.active_frame, self.art.active_layer,
                                  self.x, self.y, char, fg, bg)
             #print('set block %s,%s to ch %s fg %s bg %s' % (self.x, self.y, char, fg, bg))
             self.x += 1
