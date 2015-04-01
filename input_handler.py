@@ -381,10 +381,10 @@ class InputLord:
         self.app.grid.visible = not self.app.grid.visible
     
     def BIND_previous_frame(self):
-        self.ui.set_active_frame(self.ui.active_frame - 1)
+        self.ui.set_active_frame(self.ui.active_art.active_frame - 1)
     
     def BIND_next_frame(self):
-        self.ui.set_active_frame(self.ui.active_frame + 1)
+        self.ui.set_active_frame(self.ui.active_art.active_frame + 1)
     
     def BIND_toggle_anim_playback(self):
         for r in self.ui.active_art.renderables:
@@ -583,7 +583,7 @@ class InputLord:
         self.ui.open_dialog(FrameDelayDialog)
     
     def BIND_delete_frame(self):
-        self.ui.active_art.delete_frame_at(self.ui.active_frame)
+        self.ui.active_art.delete_frame_at(self.ui.active_art.active_frame)
     
     def BIND_change_frame_index(self):
         self.ui.open_dialog(FrameIndexDialog)

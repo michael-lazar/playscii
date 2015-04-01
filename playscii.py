@@ -532,7 +532,7 @@ class Application:
     def debug_onion_frames(self):
         "debug function to log onion renderable state"
         # TODO: remove this once it's served its purpose
-        debug = ['current frame: %s' % self.ui.active_frame, '']
+        debug = ['current frame: %s' % self.ui.active_art.active_frame, '']
         debug.append('onion_renderables_prev:')
         def get_onion_info(i, r):
             visible = 'VISIBLE' if r.visible else ''

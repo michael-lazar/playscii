@@ -32,7 +32,7 @@ class TileRenderable:
         # flag for easy don't-render functionality
         self.visible = True
         # frame of our art's animation we're on
-        self.frame = 0
+        self.frame = self.art.active_frame or 0
         self.animating = False
         self.anim_timer = 0
         # world space position and scale
@@ -154,7 +154,7 @@ class TileRenderable:
     def stop_animating(self):
         self.animating = False
         # restore to active frame if stopping
-        self.set_frame(self.app.ui.active_frame)
+        self.set_frame(self.art.active_frame)
     
     def set_art(self, new_art):
         if self.art:

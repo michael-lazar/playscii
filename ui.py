@@ -50,7 +50,6 @@ class UI:
         self.app = app
         # the current art being edited
         self.active_art = active_art
-        self.active_frame = 0
         self.active_layer = 0
         # dialog box set here
         self.active_dialog = None
@@ -157,8 +156,7 @@ class UI:
         self.active_art = new_art
         new_charset = self.active_art.charset
         new_palette = self.active_art.palette
-        # change active frame and layer if new active art doesn't have that many
-        self.active_frame = min(self.active_frame, self.active_art.frames - 1)
+        # change active layer if new active art doesn't have that many
         self.active_layer = min(self.active_layer, self.active_art.layers - 1)
         # make sure selection isn't out of bounds in new art
         old_selection = self.select_tool.selected_tiles.copy()
@@ -266,31 +264,25 @@ class UI:
         # populate "next" frames first
         for i,r in enumerate(self.app.onion_renderables_next):
             total_onion_frames += 1
-            new_frame = self.active_frame + i + 1
+            new_frame = new_art.active_frame + i + 1
             set_onion(r, new_frame, alpha)
             alpha /= 2
             #print('next onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
         alpha = self.max_onion_alpha
         for i,r in enumerate(self.app.onion_renderables_prev):
             total_onion_frames += 1
-            new_frame = self.active_frame - (i + 1)
+            new_frame = new_art.active_frame - (i + 1)
             set_onion(r, new_frame, alpha)
             # each successive onion layer is dimmer
             alpha /= 2
             #print('previous onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
     
     def set_active_frame(self, new_frame):
-        new_frame %= self.active_art.frames
-        # bail if frame is still the same, eg we only have 1 frame
-        if new_frame == self.active_frame:
+        if not self.active_art.set_active_frame(new_frame):
             return
-        self.active_frame = new_frame
-        # update active art's renderables
-        for r in self.active_art.renderables:
-            r.set_frame(self.active_frame)
         self.reset_onion_frames()
         self.tool_settings_changed = True
-        self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_frame + 1))
+        self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_art.active_frame + 1))
     
     def set_active_layer(self, new_layer):
         self.active_layer = min(max(0, new_layer), self.active_art.layers-1)
@@ -342,12 +334,12 @@ class UI:
         if len(self.select_tool.selected_tiles) > 0:
             self.erase_tiles_in_selection()
         else:
-            self.active_art.clear_frame_layer(self.active_frame, self.active_layer,
+            self.active_art.clear_frame_layer(self.active_art.active_frame, self.active_layer,
                                               bg_color=self.selected_bg_color)
     
     def erase_tiles_in_selection(self):
         # create and commit command group to clear all tiles in selection
-        frame, layer = self.active_frame, self.active_layer
+        frame, layer = self.active_art.active_frame, self.active_layer
         new_command = EditCommand(self.active_art)
         for tile in self.select_tool.selected_tiles:
             new_tile_command = EditCommandTile(self.active_art)
@@ -369,7 +361,7 @@ class UI:
         # EditCommandTiles for Cursor.preview_edits
         # (via PasteTool get_paint_commands)
         self.clipboard = []
-        frame, layer = self.active_frame, self.active_layer
+        frame, layer = self.active_art.active_frame, self.active_layer
         min_x, min_y = 9999, 9999
         max_x, max_y = -1, -1
         for tile in self.select_tool.selected_tiles:
