@@ -201,9 +201,30 @@ class FrameToggleOnionMenuitem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
     def get_label(app):
-        l = 'Onion skin frames: '
-        l += ['Hidden', 'Visible'][app.onion_frames_visible]
+        l = '%s onion skin frames' % ['Show', 'Hide'][app.onion_frames_visible]
         return l
+
+class FrameCycleOnionFramesMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'cycle_onion_frames'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        return 'Number of onion frames: %s' % app.onion_show_frames
+
+class FrameCycleOnionDisplayMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'cycle_onion_ahead_behind'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        if app.onion_show_frames_behind and app.onion_show_frames_ahead:
+            display = 'Next & Previous'
+        elif app.onion_show_frames_behind:
+            display = 'Previous'
+        else:
+            display = 'Next'
+        return 'Onion frames show: %s' % display
 
 class FrameAddFrameMenuItem(PulldownMenuItem):
     label = 'Add frame...'
@@ -365,8 +386,9 @@ class ArtMenuData(PulldownMenuData):
 
 class FrameMenuData(PulldownMenuData):
     items = [FramePreviousMenuItem, FrameNextMenuItem,
-             FrameTogglePlaybackMenuItem, FrameToggleOnionMenuitem,
-             SeparatorMenuItem,
+             FrameTogglePlaybackMenuItem, SeparatorMenuItem,
+             FrameToggleOnionMenuitem, FrameCycleOnionFramesMenuItem,
+             FrameCycleOnionDisplayMenuItem, SeparatorMenuItem,
              FrameAddFrameMenuItem, FrameDuplicateFrameMenuItem,
              FrameChangeDelayMenuItem, FrameChangeIndexMenuItem,
              FrameDeleteFrameMenuItem]
