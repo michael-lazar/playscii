@@ -11,3 +11,4 @@ binds.cfg
 ^art/.+\.jpg
 screenshots/*.*
 ignore/*
+games/*.*
