@@ -136,7 +136,8 @@ class UIElement:
         self.art.update()
     
     def render(self):
-        self.renderable.render()
+        if self.visible:
+            self.renderable.render()
     
     def destroy(self):
         for r in self.renderables:
@@ -167,6 +168,7 @@ class FPSCounterUI(UIElement):
     tile_width, tile_height = 12, 2
     snap_right = True
     game_mode_visible = True
+    visible = False
     
     def update(self):
         bg = 0
@@ -183,6 +185,11 @@ class FPSCounterUI(UIElement):
         # display last tick time; frame_time includes delay, is useless
         text = '%.1f ms ' % self.ui.app.last_tick_time
         self.art.write_string(0, 0, x, 1, text, color, None, True)
+    
+    def render(self):
+        # always show FPS if low
+        if self.visible or self.ui.app.fps < 30:
+            self.renderable.render()
 
 
 class MessageLineUI(UIElement):
@@ -243,6 +250,7 @@ class DebugTextUI(UIElement):
     tile_x, tile_y = 1, 4
     tile_height = 20
     clear_lines_after_render = False
+    game_mode_visible = True
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
