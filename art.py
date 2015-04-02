@@ -492,6 +492,7 @@ class Art:
         # empty lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
+        self.updated_this_tick = True
     
     def save_to_file(self):
         "build a dict representing all this art's data and write it to disk"

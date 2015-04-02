@@ -1,9 +1,9 @@
-from game_object import GameObject, WobblyThing, ParticleThing
+from game_object import GameObject, Player, WobblyThing, ParticleThing
 from random import randint
 
 # background w/ parallax layers
 bg = GameObject(self, my_game_art_dir + 'test_bg', (0, 0, -3))
-self.player = GameObject(self, my_game_art_dir + 'test_player', (1, -13, 0))
+self.player = Player(self, my_game_art_dir + 'test_player', (1, -13, 0))
 # spawn a bunch of enemies
 for i in range(5):
     enemy = WobblyThing(self, my_game_art_dir + 'owell')

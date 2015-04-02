@@ -341,6 +341,8 @@ class ConsoleUI(UIElement):
                 app = ui.app
                 camera = app.camera
                 art = ui.active_art
+                player = app.player
+                tuner = app.tuner
                 # special handling of assignment statements, eg x = 3:
                 # detect strings that pattern-match, send them to exec(),
                 # send all other strings to eval()

@@ -154,7 +154,8 @@ class TileRenderable:
     def stop_animating(self):
         self.animating = False
         # restore to active frame if stopping
-        self.set_frame(self.art.active_frame)
+        if not self.app.game_mode:
+            self.set_frame(self.art.active_frame)
     
     def set_art(self, new_art):
         if self.art:
@@ -181,6 +182,12 @@ class TileRenderable:
         self.goal_x, self.goal_y, self.goal_z = x, y, z
         if self.log_animation:
             self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
+    
+    def set_loc_from_object(self, obj):
+        self.x, self.y, self.z = obj.x, obj.y, obj.z
+    
+    def set_scale_from_object(self, obj):
+        self.scale_x, self.scale_y, self.scale_z = obj.scale_x, obj.scale_y, obj.scale_z
     
     def update_loc(self):
         # TODO: probably time to bust out the ol' vector module for this stuff

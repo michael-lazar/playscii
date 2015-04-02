@@ -517,6 +517,5 @@ class UI:
     
     def render(self):
         for e in self.elements:
-            if e.visible:
-                if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
-                    e.render()
+            if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
+                e.render()

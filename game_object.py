@@ -6,8 +6,15 @@ from renderable_line import AxisIndicatorRenderable
 
 class GameObject:
     
+    move_accel_rate = 0.01
+    # normal movement will accelerate up to this, final velocity is uncapped
+    max_move_speed = 0.4
+    friction = 0.1
+    log_move = False
+    
     def __init__(self, app, art, loc=(0, 0, 0)):
         (self.x, self.y, self.z) = loc
+        self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.app = app
         # support a filename OR an existing Art object
@@ -22,24 +29,50 @@ class GameObject:
         self.app.game_renderables.append(self.renderable)
         self.app.game_objects.append(self)
     
-    def update(self):
-        # TODO: if self.art has already updated this frame, don't bother
-        self.art.update()
-        self.renderable.update()
-        self.renderable.x, self.renderable.y = self.x, self.y
-        self.renderable.z = self.z
-        self.renderable.scale_x = self.scale_x
-        self.renderable.scale_y = self.scale_y
-        self.renderable.scale_z = self.scale_z
-        self.axis_renderable.x, self.axis_renderable.y = self.x, self.y
-        self.axis_renderable.z = self.z
-    
     def start_animating(self):
-        self.renderable.animating = True
+        self.renderable.start_animating()
+    
+    def stop_animating(self):
+        self.renderable.stop_animating()
     
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
         self.z = z or 0
+    
+    def move(self, dx, dy):
+        m = 1 + self.friction
+        vel_dx = dx * self.move_accel_rate * m
+        vel_dy = dy * self.move_accel_rate * m
+        # TODO: account for friction so max rate
+        # (below doesn't work properly, figure it out)
+        max_speed = self.max_move_speed# * (1 + self.friction)
+        if vel_dx < 0:
+            self.vel_x += max(vel_dx, -max_speed)
+        elif vel_dx > 0:
+            self.vel_x += min(vel_dx, max_speed)
+        if vel_dy < 0:
+            self.vel_y += max(vel_dy, -max_speed)
+        elif vel_dy > 0:
+            self.vel_y += min(vel_dy, max_speed)
+    
+    def update(self):
+        if not self.art.updated_this_tick:
+            self.art.update()
+        # apply friction and move
+        self.vel_x *= 1 - self.friction
+        self.vel_y *= 1 - self.friction
+        self.vel_z *= 1 - self.friction
+        self.x += self.vel_x
+        self.y += self.vel_y
+        self.z += self.vel_z
+        if self.log_move:
+            debug = ['%s velocity: %.4f, %.4f' % (self, self.vel_x, self.vel_y)]
+            self.app.ui.debug_text.post_lines(debug)
+        # update renderables
+        self.renderable.update()
+        self.renderable.set_loc_from_object(self)
+        self.renderable.set_scale_from_object(self)
+        self.axis_renderable.set_loc_from_object(self)
     
     def render(self, layer):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
@@ -79,3 +112,10 @@ class ParticleThing(GameObject):
         art.clear_frame_layer(0, 0, 0)
         GameObject.__init__(self, app, art, loc)
         self.art.run_script_every('mutate')
+
+
+class Player(GameObject):
+    move_accel_rate = 0.1
+    max_move_speed = 0.8
+    friction = 0.25
+    log_move = True

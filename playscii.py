@@ -32,7 +32,7 @@ from input_handler import InputLord
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
-from ui_element import UIRenderable
+from ui_element import UIRenderable, FPSCounterUI
 from image_convert import ImageConverter
 
 CONFIG_FILENAME = 'playscii.cfg'
@@ -143,6 +143,8 @@ class Application:
         # "game mode" renderables
         self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
+        # "tuner": set an object to this for quick console tuning access
+        self.player, self.tuner = None, None
         self.game_objects = []
         # onion skin renderables
         self.onion_frames_visible = False
@@ -452,6 +454,13 @@ class Application:
     
     def main_loop(self):
         while not self.should_quit:
+            # set all arts to "not updated"
+            if self.game_mode:
+                for game_object in self.game_objects:
+                    game_object.art.updated_this_tick = False
+            else:
+                for art in self.art_loaded_for_edit:
+                    art.updated_this_tick = False
             tick_time = sdl2.timer.SDL_GetTicks()
             self.input()
             self.update()

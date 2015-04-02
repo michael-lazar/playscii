@@ -51,6 +51,23 @@ class InputLord:
                 continue
             bind_function = getattr(self, bind_function_name)
             self.edit_binds[bind] = bind_function
+        # get controller(s)
+        # TODO: use kewl SDL2 gamepad system
+        js_init = sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
+        if js_init != 0:
+            self.app.log("SDL2: Couldn't initialize joystick subsystem, code %s" % js_init)
+            return
+        sticks = sdl2.SDL_NumJoysticks()
+        print('%s gamepads found' % sticks)
+        self.gamepad = None
+        # for now, just grab first pad
+        if sticks > 0:
+            pad = sdl2.SDL_JoystickOpen(0)
+            pad_name = sdl2.SDL_JoystickName(pad).decode('utf-8')
+            pad_axes = sdl2.SDL_JoystickNumAxes(pad)
+            pad_buttons = sdl2.SDL_JoystickNumButtons(pad)
+            print('Gamepad found: %s with %s axes, %s buttons' % (pad_name, pad_axes, pad_buttons))
+        self.gamepad = pad
     
     def parse_key_bind(self, in_string):
         "returns a tuple of (key, mod1, mod2) key bind data from given string"
@@ -106,6 +123,9 @@ class InputLord:
             self.ctrl_pressed = True
         if app.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             self.ctrl_pressed = True
+        # get controller state
+        self.gamepad_left_x = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTX) / 32768
+        self.gamepad_left_y = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTY) / -32768
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
                 app.should_quit = True
@@ -130,20 +150,6 @@ class InputLord:
                     f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                     if f:
                         f()
-                # TEST: alt + arrow keys control game mode test renderable
-                if self.app.game_mode and self.alt_pressed:
-                    if event.key.keysym.sym == sdl2.SDLK_UP:
-                        app.player.y += 1
-                    elif event.key.keysym.sym == sdl2.SDLK_DOWN:
-                        app.player.y -= 1
-                    elif event.key.keysym.sym == sdl2.SDLK_LEFT:
-                        app.player.x -= 1
-                    elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                        app.player.x += 1
-                    elif event.key.keysym.sym == sdl2.SDLK_a:
-                        app.player.z += 0.5
-                    elif event.key.keysym.sym == sdl2.SDLK_z:
-                        app.player.z -= 0.5
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
@@ -204,14 +210,22 @@ class InputLord:
         # directly query keys we don't want affected by OS key repeat delay
         # TODO: these are hard-coded for the moment, think of a good way
         # to expose this functionality to the key bind system
+        def pressing_up(ks):
+            return ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]
+        def pressing_down(ks):
+            return ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]
+        def pressing_left(ks):
+            return ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]
+        def pressing_right(ks):
+            return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]
         if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
-            if ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]:
+            if pressing_up(ks):
                 app.camera.pan(0, 1, True)
-            if ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]:
+            if pressing_down(ks):
                 app.camera.pan(0, -1, True)
-            if ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]:
+            if pressing_left(ks):
                 app.camera.pan(-1, 0, True)
-            if ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]:
+            if pressing_right(ks):
                 app.camera.pan(1, 0, True)
             if ks[sdl2.SDL_SCANCODE_X]:
                 app.camera.zoom(-1, True)
@@ -219,16 +233,30 @@ class InputLord:
                 app.camera.zoom(1, True)
         if app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
+        # game mode: arrow keys and left gamepad stick move player
+        if self.app.game_mode and not self.ui.console.visible:
+            if pressing_up(ks):
+                app.player.move(0, 1)
+            if pressing_down(ks):
+                app.player.move(0, -1)
+            if pressing_left(ks):
+                app.player.move(-1, 0)
+            if pressing_right(ks):
+                app.player.move(1, 0)
+            if abs(self.gamepad_left_x) > 0.15:
+                app.player.move(self.gamepad_left_x, 0)
+            if abs(self.gamepad_left_y) > 0.15:
+                app.player.move(0, self.gamepad_left_y)
         sdl2.SDL_PumpEvents()
-    
     #
     # bind functions
     #
     # function names correspond with key values in binds.cfg
-    
     def BIND_quit(self):
         for art in self.app.art_loaded_for_edit:
             if art.unsaved_changes:
+                if self.app.game_mode:
+                    self.app.exit_game_mode()
                 self.ui.set_active_art(art)
                 self.ui.open_dialog(QuitUnsavedChangesDialog)
                 return

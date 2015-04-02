@@ -79,6 +79,12 @@ class LineRenderable():
     def reset_loc(self):
         pass
     
+    def set_loc_from_object(self, obj):
+        self.x, self.y, self.z = obj.x, obj.y, obj.z
+    
+    def set_scale_from_object(self, obj):
+        self.scale_x, self.scale_y, self.scale_z = obj.scale_x, obj.scale_y, obj.scale_z
+    
     def rebind_buffers(self):
         # resend verts
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
