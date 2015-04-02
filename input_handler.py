@@ -60,6 +60,7 @@ class InputLord:
         sticks = sdl2.SDL_NumJoysticks()
         print('%s gamepads found' % sticks)
         self.gamepad = None
+        self.gamepad_left_x, self.gamepad_left_y = 0, 0
         # for now, just grab first pad
         if sticks > 0:
             pad = sdl2.SDL_JoystickOpen(0)
@@ -67,7 +68,7 @@ class InputLord:
             pad_axes = sdl2.SDL_JoystickNumAxes(pad)
             pad_buttons = sdl2.SDL_JoystickNumButtons(pad)
             print('Gamepad found: %s with %s axes, %s buttons' % (pad_name, pad_axes, pad_buttons))
-        self.gamepad = pad
+            self.gamepad = pad
     
     def parse_key_bind(self, in_string):
         "returns a tuple of (key, mod1, mod2) key bind data from given string"
@@ -124,8 +125,9 @@ class InputLord:
         if app.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             self.ctrl_pressed = True
         # get controller state
-        self.gamepad_left_x = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTX) / 32768
-        self.gamepad_left_y = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTY) / -32768
+        if self.gamepad:
+            self.gamepad_left_x = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTX) / 32768
+            self.gamepad_left_y = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTY) / -32768
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
                 app.should_quit = True
