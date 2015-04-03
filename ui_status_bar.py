@@ -183,16 +183,14 @@ class StatusBarUI(UIElement):
         x += -padding - len(self.tile_label)
         # layer
         layers = art.layers if art else 0
-        layer = '%s/%s' % (art.active_layer + 1, layers)
+        layer = '%s/%s' % (art.active_layer + 1, layers) if art else 'n/a'
         self.art.write_string(0, 0, x, 0, layer, light, dark, True)
         x -= len(layer)
         self.art.write_string(0, 0, x, 0, self.layer_label, dark, light, True)
         x += -padding - len(self.layer_label)
         # frame
-        frames = 0
-        if art:
-            frames = art.frames
-        frame = '%s/%s' % (art.active_frame + 1, frames)
+        frames = art.frames if art else 0
+        frame = '%s/%s' % (art.active_frame + 1, frames) if art else 'n/a'
         self.art.write_string(0, 0, x, 0, frame, light, dark, True)
         x -= len(frame)
         self.art.write_string(0, 0, x, 0, self.frame_label, dark, light, True)

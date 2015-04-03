@@ -152,6 +152,12 @@ class ToolPasteMenuItem(PulldownMenuItem):
     label = '  %s' % PasteTool.button_caption
     command = 'select_paste_tool'
 
+class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
+    label = 'Open all Game Mode assets'
+    command = 'open_all_game_assets'
+    def should_dim(app):
+        return len(app.game_objects) == 0
+
 class ArtPreviousMenuItem(PulldownMenuItem):
     label = 'Previous Art'
     command = 'previous_art'
@@ -360,6 +366,7 @@ class ToolMenuData(PulldownMenuData):
 
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeMenuItem, ArtCropToSelectionMenuItem, SeparatorMenuItem,
+             ArtOpenAllGameAssetsMenuItem, SeparatorMenuItem,
              ArtPreviousMenuItem, ArtNextMenuItem, SeparatorMenuItem]
     
     def should_mark_item(item, ui):

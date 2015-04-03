@@ -32,7 +32,7 @@ from input_handler import InputLord
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
-from ui_element import UIRenderable, FPSCounterUI
+from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
 
 CONFIG_FILENAME = 'playscii.cfg'

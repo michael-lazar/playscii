@@ -4,24 +4,31 @@ Playscii was made with the support of many nice people:
 
 Patrons:
 
-Katelyn Gigante
-Andrew Yoder
-Josh Closs
-Jacques Frechet
-Nick Keirle
-Rohit Nirmal
-Aubrey Hesselgren
 Andrew Anderson
-Lachlan Cooper
-Isaac Halvorson
-Sam Crisp
-James Noble
-Holger Dors
-Chris Welch
+Evan Armour
+Jason Bakker
 Aaron Brown
+Ben Burbank
+Josh Closs
+Lachlan Cooper
+Sam Crisp
+Holger Dors
+Matthew Duhamel
+Jacques Frechet
+Katelyn Gigante
+Isaac Halvorson
 Leon Hartwig
+Aubrey Hesselgren
+Nick Keirle
+Jón Kristinsson
+Jeremy Lonien
+Rohit Nirmal
+James Noble
+David Pittman
 Shannon Smith
-
+Jack Turner
+Chris Welch
+Andrew Yoder
 
 
 Programming Help:

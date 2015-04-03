@@ -90,7 +90,7 @@ class UI:
         self.hovered_elements = []
         # set geo sizes, force scale update
         self.set_scale(self.scale)
-        fps_counter = FPSCounterUI(self)
+        self.fps_counter = FPSCounterUI(self)
         self.console = ConsoleUI(self)
         self.status_bar = StatusBarUI(self)
         self.popup = ToolPopup(self)
@@ -99,7 +99,7 @@ class UI:
         self.pulldown = PulldownMenu(self)
         self.menu_bar = None
         self.menu_bar = MenuBar(self)
-        self.elements.append(fps_counter)
+        self.elements.append(self.fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.popup)
         self.elements.append(self.message_line)
