@@ -7,6 +7,7 @@ class LineRenderable():
     "Renderable comprised of GL_LINES"
     
     vert_shader_source = 'lines_v.glsl'
+    vert_shader_source_3d = 'lines_3d_v.glsl'
     frag_shader_source = 'lines_f.glsl'
     log_create_destroy = False
     line_width = 1
@@ -18,11 +19,15 @@ class LineRenderable():
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
-        self.scale_x, self.scale_y, self.scale_z = 1, 1, 0
+        self.scale_x, self.scale_y = 1, 1
+        # handle Z differently if verts are 2D vs 3D
+        self.scale_z = 0 if self.vert_items == 2 else 1
         self.build_geo()
         self.reset_loc()
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
+        if self.vert_items == 3:
+            self.vert_shader_source = self.vert_shader_source_3d
         self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
         # uniforms
         self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
@@ -73,6 +78,12 @@ class LineRenderable():
     
     def reset_loc(self):
         pass
+    
+    def set_loc_from_object(self, obj):
+        self.x, self.y, self.z = obj.x, obj.y, obj.z
+    
+    def set_scale_from_object(self, obj):
+        self.scale_x, self.scale_y, self.scale_z = obj.scale_x, obj.scale_y, obj.scale_z
     
     def rebind_buffers(self):
         # resend verts
@@ -159,3 +170,39 @@ class SwatchSelectionBoxRenderable(LineRenderable):
         self.vert_array = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=np.float32)
         self.elem_array = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
         self.color_array = np.array([self.color * 4], dtype=np.float32)
+
+
+class AxisIndicatorRenderable(LineRenderable):
+    
+    "classic 3-axis thingy showing location/rotation/scale"
+    
+    red   = (1.0, 0.1, 0.1, 1.0)
+    green = (0.1, 1.0, 0.1, 1.0)
+    blue  = (0.1, 0.1, 1.0, 1.0)
+    origin = (0, 0, 0)
+    x_axis = (1, 0, 0)
+    y_axis = (0, 1, 0)
+    z_axis = (0, 0, 1)
+    vert_items = 3
+    line_width = 3
+    
+    def __init__(self, app):
+        LineRenderable.__init__(self, app, None)
+    
+    def get_quad_size(self):
+        return 1, 1
+    
+    def get_projection_matrix(self):
+        return self.app.camera.projection_matrix
+    
+    def get_view_matrix(self):
+        return self.app.camera.view_matrix
+    
+    def build_geo(self):
+        self.vert_array = np.array([self.origin, self.x_axis,
+                                    self.origin, self.y_axis,
+                                    self.origin, self.z_axis],
+                                    dtype=np.float32)
+        self.elem_array = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
+        self.color_array = np.array([self.red, self.red, self.green, self.green,
+                                     self.blue, self.blue], dtype=np.float32)

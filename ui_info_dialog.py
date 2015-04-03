@@ -10,6 +10,7 @@ class PagedInfoDialog(UIDialog):
     title = 'Info'
     # message = list of page strings, each can be triple-quoted / contain line breaks
     message = ['']
+    tile_width = 51
     fields = 0
     confirm_caption = '>>'
     other_caption = '<<'
@@ -24,15 +25,17 @@ class PagedInfoDialog(UIDialog):
     def update(self):
         # disable prev/next buttons if we're at either end of the page list
         if self.page == 0:
-            self.confirm_button.can_hover = True
-            self.confirm_button.set_state('normal')
             self.other_button.can_hover = False
             self.other_button.set_state('dimmed')
         elif self.page == len(self.message) - 1:
             self.confirm_button.can_hover = False
             self.confirm_button.set_state('dimmed')
-            self.other_button.can_hover = True
-            self.other_button.set_state('normal')
+        else:
+            for button in [self.confirm_button, self.other_button]:
+                button.can_hover = True
+                button.dimmed = False
+                if button.state != 'normal':
+                    button.set_state('normal')
         UIElement.update(self)
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
@@ -45,7 +48,7 @@ class PagedInfoDialog(UIDialog):
             self.cancel_pressed()
     
     def get_message(self):
-        return self.message[self.page].strip().split('\n')
+        return self.message[self.page].rstrip().split('\n')
     
     def confirm_pressed(self):
         # confirm repurposed to "next page"
@@ -64,21 +67,49 @@ class PagedInfoDialog(UIDialog):
             self.reset_art(False)
 
 
-# TODO: full credits + patron thanks
 about_message = [
 """
-by JP LeBreton (c) 2014-2015\n
-Thank you, patrons!
-(full list coming soon)
+          by JP LeBreton (c) 2014-2015           |
+
+Playscii was made with the support of many
+nice people.
+
+                     Patrons:
+
+Andrew Anderson, Evan Armour, Jason Bakker,
+Aaron Brown, Ben Burbank, Josh Closs,
+Lachlan Cooper, Sam Crisp, Holger Dors,
+Matthew Duhamel, Jacques Frechet,
+Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
+Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
+Jeremy Lonien, Rohit Nirmal, James Noble,
+David Pittman, Shannon Smith, Jack Turner,
+Chris Welch, Andrew Yoder
 """,
 """
-Another page!
+      Programming Help and Contributions:
+
+Shawn Walker, Sean Barrett, Mark Wonnacott,
+Ian MacLarty, Goldbuick, Rohit Nirmal,
+Tin Tvrtković, Sean Gubelman
+
+            Tool Design Inspiration:
+
+Anna Anthropy, Andi McClure, Bret Victor,
+Tim Sweeney (ZZT), Craig Hickman (Kid Pix),
+Bill Atkinson (HyperCard)
 """,
 """
-And yet another!
-""",
-"""
-ok, we get it.
+      Love, Encouragement, Moral Support:
+
+L Stiger
+Gail, Gil, and Elise LeBreton
+Brendan Sinclair
+Liz Ryerson
+Johnnemann Nordhagen
+Aubrey Hesselgren
+Zak McClendon
+#tool-design
 """
 ]
 

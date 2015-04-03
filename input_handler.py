@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ImportImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
@@ -51,6 +51,24 @@ class InputLord:
                 continue
             bind_function = getattr(self, bind_function_name)
             self.edit_binds[bind] = bind_function
+        # get controller(s)
+        # TODO: use kewl SDL2 gamepad system
+        js_init = sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
+        if js_init != 0:
+            self.app.log("SDL2: Couldn't initialize joystick subsystem, code %s" % js_init)
+            return
+        sticks = sdl2.SDL_NumJoysticks()
+        print('%s gamepads found' % sticks)
+        self.gamepad = None
+        self.gamepad_left_x, self.gamepad_left_y = 0, 0
+        # for now, just grab first pad
+        if sticks > 0:
+            pad = sdl2.SDL_JoystickOpen(0)
+            pad_name = sdl2.SDL_JoystickName(pad).decode('utf-8')
+            pad_axes = sdl2.SDL_JoystickNumAxes(pad)
+            pad_buttons = sdl2.SDL_JoystickNumButtons(pad)
+            print('Gamepad found: %s with %s axes, %s buttons' % (pad_name, pad_axes, pad_buttons))
+            self.gamepad = pad
     
     def parse_key_bind(self, in_string):
         "returns a tuple of (key, mod1, mod2) key bind data from given string"
@@ -106,6 +124,10 @@ class InputLord:
             self.ctrl_pressed = True
         if app.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             self.ctrl_pressed = True
+        # get controller state
+        if self.gamepad:
+            self.gamepad_left_x = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTX) / 32768
+            self.gamepad_left_y = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTY) / -32768
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
                 app.should_quit = True
@@ -130,20 +152,6 @@ class InputLord:
                     f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                     if f:
                         f()
-                # TEST: alt + arrow keys control game mode test renderable
-                if self.app.game_mode and self.alt_pressed:
-                    if event.key.keysym.sym == sdl2.SDLK_UP:
-                        app.player.y += 1
-                    elif event.key.keysym.sym == sdl2.SDLK_DOWN:
-                        app.player.y -= 1
-                    elif event.key.keysym.sym == sdl2.SDLK_LEFT:
-                        app.player.x -= 1
-                    elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                        app.player.x += 1
-                    elif event.key.keysym.sym == sdl2.SDLK_a:
-                        app.player.z += 0.5
-                    elif event.key.keysym.sym == sdl2.SDLK_z:
-                        app.player.z -= 0.5
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
@@ -204,14 +212,22 @@ class InputLord:
         # directly query keys we don't want affected by OS key repeat delay
         # TODO: these are hard-coded for the moment, think of a good way
         # to expose this functionality to the key bind system
+        def pressing_up(ks):
+            return ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]
+        def pressing_down(ks):
+            return ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]
+        def pressing_left(ks):
+            return ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]
+        def pressing_right(ks):
+            return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]
         if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
-            if ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]:
+            if pressing_up(ks):
                 app.camera.pan(0, 1, True)
-            if ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]:
+            if pressing_down(ks):
                 app.camera.pan(0, -1, True)
-            if ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]:
+            if pressing_left(ks):
                 app.camera.pan(-1, 0, True)
-            if ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]:
+            if pressing_right(ks):
                 app.camera.pan(1, 0, True)
             if ks[sdl2.SDL_SCANCODE_X]:
                 app.camera.zoom(-1, True)
@@ -219,16 +235,30 @@ class InputLord:
                 app.camera.zoom(1, True)
         if app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
+        # game mode: arrow keys and left gamepad stick move player
+        if self.app.game_mode and not self.ui.console.visible:
+            if pressing_up(ks):
+                app.player.move(0, 1)
+            if pressing_down(ks):
+                app.player.move(0, -1)
+            if pressing_left(ks):
+                app.player.move(-1, 0)
+            if pressing_right(ks):
+                app.player.move(1, 0)
+            if abs(self.gamepad_left_x) > 0.15:
+                app.player.move(self.gamepad_left_x, 0)
+            if abs(self.gamepad_left_y) > 0.15:
+                app.player.move(0, self.gamepad_left_y)
         sdl2.SDL_PumpEvents()
-    
     #
     # bind functions
     #
     # function names correspond with key values in binds.cfg
-    
     def BIND_quit(self):
         for art in self.app.art_loaded_for_edit:
             if art.unsaved_changes:
+                if self.app.game_mode:
+                    self.app.exit_game_mode()
                 self.ui.set_active_art(art)
                 self.ui.open_dialog(QuitUnsavedChangesDialog)
                 return
@@ -237,8 +267,8 @@ class InputLord:
     def BIND_toggle_console(self):
         self.ui.console.toggle()
     
-    def BIND_import_image(self):
-        self.ui.open_dialog(ImportImageDialog)
+    def BIND_convert_image(self):
+        self.ui.open_dialog(ConvertImageDialog)
     
     def BIND_export_image(self):
         if not self.ui.active_art:
@@ -338,7 +368,7 @@ class InputLord:
         # menu bar active: bail out of current menu
         # either way: bail on image conversion if it's happening
         if self.app.converter:
-            self.app.converter.finished()
+            self.app.converter.finished(True)
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
         else:
@@ -381,26 +411,25 @@ class InputLord:
         self.app.grid.visible = not self.app.grid.visible
     
     def BIND_previous_frame(self):
-        self.ui.set_active_frame(self.ui.active_frame - 1)
+        self.ui.set_active_frame(self.ui.active_art.active_frame - 1)
     
     def BIND_next_frame(self):
-        self.ui.set_active_frame(self.ui.active_frame + 1)
+        self.ui.set_active_frame(self.ui.active_art.active_frame + 1)
     
     def BIND_toggle_anim_playback(self):
-        animating = False
         for r in self.ui.active_art.renderables:
-            r.animating = not r.animating
-            animating = r.animating
-        # restore to active frame if stopping
-        if not animating:
-            r.set_frame(self.ui.active_frame)
+            if r.animating:
+                r.stop_animating()
+            else:
+                r.start_animating()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_layer(self):
-        self.ui.set_active_layer(self.ui.active_layer - 1)
+        self.ui.set_active_layer(self.ui.active_art.active_layer - 1)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_next_layer(self):
-        self.ui.set_active_layer(self.ui.active_layer + 1)
+        self.ui.set_active_layer(self.ui.active_art.active_layer + 1)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_art(self):
@@ -453,8 +482,7 @@ class InputLord:
         self.app.screenshot()
     
     def BIND_run_game_mode_test(self):
-        self.app.game_mode_test()
-        self.app.enter_game_mode()
+        self.app.load_game('test1')
     
     def BIND_run_test_mutate(self):
         if self.ui.active_art.is_script_running('conway'):
@@ -585,7 +613,7 @@ class InputLord:
         self.ui.open_dialog(FrameDelayDialog)
     
     def BIND_delete_frame(self):
-        self.ui.active_art.delete_frame_at(self.ui.active_frame)
+        self.ui.active_art.delete_frame_at(self.ui.active_art.active_frame)
     
     def BIND_change_frame_index(self):
         self.ui.open_dialog(FrameIndexDialog)
@@ -607,7 +635,7 @@ class InputLord:
         self.ui.open_dialog(SetLayerZDialog)
     
     def BIND_delete_layer(self):
-        self.ui.active_art.delete_layer(self.ui.active_layer)
+        self.ui.active_art.delete_layer(self.ui.active_art.active_layer)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_choose_charset(self):
@@ -616,5 +644,42 @@ class InputLord:
     def BIND_choose_palette(self):
         self.ui.open_dialog(PaletteChooserDialog)
     
+    def BIND_palette_from_file(self):
+        self.ui.open_dialog(PaletteFromFileDialog)
+    
     def BIND_toggle_onion_visibility(self):
         self.app.onion_frames_visible = not self.app.onion_frames_visible
+        if self.app.onion_frames_visible:
+            self.ui.reset_onion_frames()
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_cycle_onion_frames(self):
+        self.app.onion_show_frames += 1
+        self.app.onion_show_frames %= self.app.max_onion_frames + 1
+        # start cycle at 1, not 0
+        self.app.onion_show_frames = max(1, self.app.onion_show_frames)
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_cycle_onion_ahead_behind(self):
+        # cycle between next, previous, next & previous
+        if self.app.onion_show_frames_behind and self.app.onion_show_frames_ahead:
+            self.app.onion_show_frames_behind = False
+        elif not self.app.onion_show_frames_behind and self.app.onion_show_frames_ahead:
+            self.app.onion_show_frames_behind = True
+            self.app.onion_show_frames_ahead = False
+        else:
+            self.app.onion_show_frames_ahead = True
+            self.app.onion_show_frames_ahead = True
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_toggle_debug_text(self):
+        self.ui.debug_text.visible = not self.ui.debug_text.visible
+    
+    def BIND_toggle_fps_counter(self):
+        self.ui.fps_counter.visible = not self.ui.fps_counter.visible
+    
+    def BIND_open_all_game_assets(self):
+        for game_obj in self.app.game_objects:
+            for art in game_obj.get_all_art():
+                self.app.load_art_for_edit(art.filename)
+        self.ui.menu_bar.refresh_active_menu()

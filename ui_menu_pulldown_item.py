@@ -59,9 +59,9 @@ class FileCloseMenuItem(PulldownMenuItem):
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileImportImageMenuItem(PulldownMenuItem):
-    label = 'Import Image...'
-    command = 'import_image'
+class FileConvertImageMenuItem(PulldownMenuItem):
+    label = 'Convert Image...'
+    command = 'convert_image'
     def should_dim(app):
         return app.ui.active_art is None
 
@@ -152,6 +152,12 @@ class ToolPasteMenuItem(PulldownMenuItem):
     label = '  %s' % PasteTool.button_caption
     command = 'select_paste_tool'
 
+class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
+    label = 'Open all Game Mode assets'
+    command = 'open_all_game_assets'
+    def should_dim(app):
+        return len(app.game_objects) == 0
+
 class ArtPreviousMenuItem(PulldownMenuItem):
     label = 'Previous Art'
     command = 'previous_art'
@@ -187,10 +193,13 @@ class FrameNextMenuItem(PulldownMenuItem):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
 class FrameTogglePlaybackMenuItem(PulldownMenuItem):
-    label = 'Play/pause animation'
+    label = 'blah'
     command = 'toggle_anim_playback'
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        animating = app.ui.active_art.renderables[0].animating
+        return ['Start', 'Stop'][animating] + ' animation playback'
 
 class FrameToggleOnionMenuitem(PulldownMenuItem):
     label = 'blah'
@@ -198,9 +207,30 @@ class FrameToggleOnionMenuitem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
     def get_label(app):
-        l = 'Onion skin frames: '
-        l += ['Hidden', 'Visible'][app.onion_frames_visible]
+        l = '%s onion skin frames' % ['Show', 'Hide'][app.onion_frames_visible]
         return l
+
+class FrameCycleOnionFramesMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'cycle_onion_frames'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        return 'Number of onion frames: %s' % app.onion_show_frames
+
+class FrameCycleOnionDisplayMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'cycle_onion_ahead_behind'
+    def should_dim(app):
+        return not app.ui.active_art or app.ui.active_art.frames < 2
+    def get_label(app):
+        if app.onion_show_frames_behind and app.onion_show_frames_ahead:
+            display = 'Next & Previous'
+        elif app.onion_show_frames_behind:
+            display = 'Previous'
+        else:
+            display = 'Next'
+        return 'Onion frames show: %s' % display
 
 class FrameAddFrameMenuItem(PulldownMenuItem):
     label = 'Add frame...'
@@ -279,6 +309,10 @@ class ChoosePaletteMenuItem(PulldownMenuItem):
     label = 'Choose palette...'
     command = 'choose_palette'
 
+class PaletteFromFileMenuItem(PulldownMenuItem):
+    label = 'Palette from file...'
+    command = 'palette_from_file'
+
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help...'
     command = 'open_help_screen'
@@ -313,7 +347,7 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
-             FileCloseMenuItem, FileImportImageMenuItem, FilePNGExportMenuItem,
+             FileCloseMenuItem, FileConvertImageMenuItem, FilePNGExportMenuItem,
              SeparatorMenuItem, FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
@@ -332,13 +366,12 @@ class ToolMenuData(PulldownMenuData):
 
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeMenuItem, ArtCropToSelectionMenuItem, SeparatorMenuItem,
+             ArtOpenAllGameAssetsMenuItem, SeparatorMenuItem,
              ArtPreviousMenuItem, ArtNextMenuItem, SeparatorMenuItem]
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
-        if ui.active_art is None:
-            return False
-        return ui.active_art.filename == item.cb_arg
+        return ui.active_art and ui.active_art.filename == item.cb_arg
     
     def get_items(app):
         "turn each loaded art into a menu item"
@@ -360,8 +393,9 @@ class ArtMenuData(PulldownMenuData):
 
 class FrameMenuData(PulldownMenuData):
     items = [FramePreviousMenuItem, FrameNextMenuItem,
-             FrameTogglePlaybackMenuItem, FrameToggleOnionMenuitem,
-             SeparatorMenuItem,
+             FrameTogglePlaybackMenuItem, SeparatorMenuItem,
+             FrameToggleOnionMenuitem, FrameCycleOnionFramesMenuItem,
+             FrameCycleOnionDisplayMenuItem, SeparatorMenuItem,
              FrameAddFrameMenuItem, FrameDuplicateFrameMenuItem,
              FrameChangeDelayMenuItem, FrameChangeIndexMenuItem,
              FrameDeleteFrameMenuItem]
@@ -376,12 +410,12 @@ class LayerMenuData(PulldownMenuData):
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
-        return ui.active_layer == item.cb_arg
+        return ui.active_art.active_layer == item.cb_arg
     
     def get_items(app):
         "turn each layer into a menu item"
         items = []
-        if app.ui.active_art is None:
+        if not app.ui.active_art:
             return items
         # first determine longest line to set width of items
         longest_line = 0
@@ -413,7 +447,7 @@ class LayerMenuData(PulldownMenuData):
         return items
 
 class CharColorMenuData(PulldownMenuData):
-    items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem]
+    items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

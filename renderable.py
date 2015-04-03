@@ -29,8 +29,10 @@ class TileRenderable:
         self.art.renderables.append(self)
         # set true momentarily by image export process
         self.exporting = False
+        # flag for easy don't-render functionality
+        self.visible = True
         # frame of our art's animation we're on
-        self.frame = 0
+        self.frame = self.art.active_frame or 0
         self.animating = False
         self.anim_timer = 0
         # world space position and scale
@@ -145,11 +147,27 @@ class TileRenderable:
         if self.log_animation:
             self.app.log('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
+    def start_animating(self):
+        self.animating = True
+        self.anim_timer = 0
+    
+    def stop_animating(self):
+        self.animating = False
+        # restore to active frame if stopping
+        if not self.app.game_mode:
+            self.set_frame(self.art.active_frame)
+    
     def set_art(self, new_art):
         if self.art:
             self.art.renderables.remove(self)
         self.art = new_art
         self.art.renderables.append(self)
+        # make sure frame is valid
+        self.frame %= self.art.frames
+        #self.create_buffers()
+        self.update_geo_buffers()
+        self.update_tile_buffers(True, True, True, True)
+        #print('%s now uses Art %s' % (self, self.art.filename))
     
     def move_to(self, x, y, z, travel_time=None):
         # for fixed travel time, set move rate accordingly
@@ -164,6 +182,12 @@ class TileRenderable:
         self.goal_x, self.goal_y, self.goal_z = x, y, z
         if self.log_animation:
             self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
+    
+    def set_loc_from_object(self, obj):
+        self.x, self.y, self.z = obj.x, obj.y, obj.z
+    
+    def set_scale_from_object(self, obj):
+        self.scale_x, self.scale_y, self.scale_z = obj.scale_x, obj.scale_y, obj.scale_z
     
     def update_loc(self):
         # TODO: probably time to bust out the ol' vector module for this stuff
@@ -241,6 +265,8 @@ class TileRenderable:
         self.exporting = False
     
     def render(self, layers=None):
+        if not self.visible:
+            return
         GL.glUseProgram(self.shader.program)
         # bind textures - character set, palette, UI grain
         GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -286,8 +312,8 @@ class TileRenderable:
         for i in layers:
             layer_start = i * layer_size
             layer_end = layer_start + layer_size
-            # TEST: for active art, dim all but active layer
-            if not self.app.game_mode and self.art is self.app.ui.active_art and i != self.app.ui.active_layer:
+            # for active art, dim all but active layer based on UI setting
+            if not self.app.game_mode and self.art is self.app.ui.active_art and i != self.art.active_layer:
                 GL.glUniform1f(self.alpha_uniform, self.alpha * self.app.inactive_layer_visibility)
             else:
                 GL.glUniform1f(self.alpha_uniform, self.alpha)
@@ -301,3 +327,13 @@ class TileRenderable:
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
+
+
+class OnionTileRenderable(TileRenderable):
+    
+    # never animate
+    def start_animating(self):
+        pass
+    
+    def stop_animating(self):
+        pass

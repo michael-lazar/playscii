@@ -71,6 +71,7 @@ class Cursor:
     def __init__(self, app):
         self.app = app
         self.x, self.y, self.z = 0, 0, 0
+        self.last_x, self.last_y = 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         # list of EditCommandTiles for preview
         self.preview_edits = []
@@ -157,7 +158,7 @@ class Cursor:
         pjm = np.matrix(self.app.camera.projection_matrix)
         vm = np.matrix(self.app.camera.view_matrix)
         vp_inverse = (pjm * vm).getI()
-        z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
+        z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
         point = vp_inverse.dot(np.array([x, y, z, 0]))
         point = point.getA()
         cz = self.app.camera.z - z

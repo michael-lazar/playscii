@@ -58,7 +58,7 @@ class SelectionRenderable(LineRenderable):
                 # right edge
                 add_line(top_right, bottom_right, v, e, c, index)
                 index += 2
-        self.z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
+        self.z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
         self.vert_array = np.array(v, dtype=np.float32)
         self.elem_array = np.array(e, dtype=np.uint32)
         self.color_array = np.array(c, dtype=np.float32)

@@ -54,7 +54,7 @@ class Grid(LineRenderable):
     def reset_loc(self):
         self.x = -self.art_margin
         self.y = self.art_margin
-        self.z = self.app.ui.active_art.layers_z[self.app.ui.active_layer]
+        self.z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
     
     def reset(self):
         "macro for convenience - rescale, reposition, update renderable"

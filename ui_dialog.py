@@ -8,6 +8,7 @@ from ui_console import OpenCommand, SaveCommand, ConvertImageCommand
 
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from key_shifts import shift_map
+from palette import PaletteFromFile
 
 class ConfirmButton(UIButton):
     caption = 'Confirm'
@@ -161,7 +162,7 @@ class UIDialog(UIElement):
     
     def get_message(self):
         # if a triple quoted string, split line breaks
-        msg = self.message.strip().split('\n')
+        msg = self.message.rstrip().split('\n')
         # TODO: split over multiple lines if too long
         return msg
     
@@ -289,7 +290,7 @@ class NewArtDialog(UIDialog):
     
     title = 'New art'
     fields = 3
-    field0_label = 'Enter name of new art:'
+    field0_label = 'Filename of new art:'
     field1_label = 'Width:'
     field2_label = 'Height:'
     confirm_caption = 'Create'
@@ -333,7 +334,7 @@ class OpenArtDialog(UIDialog):
     
     title = 'Open art'
     fields = 1
-    field0_label = 'Enter name of art to open:'
+    field0_label = 'Filename of art to open:'
     confirm_caption = 'Open'
     
     def confirm_pressed(self):
@@ -345,7 +346,7 @@ class OpenArtDialog(UIDialog):
 class SaveAsDialog(UIDialog):
     
     title = 'Save art'
-    field0_label = 'Enter new name for art:'
+    field0_label = 'New filename for art:'
     fields = 1
     confirm_caption = 'Save'
     
@@ -354,12 +355,12 @@ class SaveAsDialog(UIDialog):
         self.dismiss()
 
 
-class ImportImageDialog(UIDialog):
+class ConvertImageDialog(UIDialog):
     
-    title = 'Import raster image'
-    field0_label = 'Enter name of image to open:'
+    title = 'Convert raster image'
+    field0_label = 'Filename of image to convert:'
     fields = 1
-    confirm_caption = 'Import'
+    confirm_caption = 'Convert'
     
     def confirm_pressed(self):
         ConvertImageCommand.execute(self.ui.console, [self.field0_text])
@@ -518,7 +519,7 @@ class DuplicateFrameDialog(AddFrameDialog):
         if not valid: return
         index = int(self.get_field_text(0))
         delay = float(self.get_field_text(1))
-        self.ui.active_art.duplicate_frame(self.ui.active_frame, index, delay)
+        self.ui.active_art.duplicate_frame(self.ui.active_art.active_frame, index, delay)
         self.dismiss()
 
 class FrameDelayDialog(AddFrameDialog):
@@ -541,7 +542,7 @@ class FrameDelayDialog(AddFrameDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         delay = float(self.get_field_text(0))
-        self.ui.active_art.frame_delays[self.ui.active_frame] = delay
+        self.ui.active_art.frame_delays[self.ui.active_art.active_frame] = delay
         self.dismiss()
 
 class FrameIndexDialog(AddFrameDialog):
@@ -554,7 +555,7 @@ class FrameIndexDialog(AddFrameDialog):
         if not valid: return
         # set new frame index (effectively moving it in the sequence)
         dest_index = int(self.get_field_text(0))
-        self.ui.active_art.move_frame_to_index(self.ui.active_frame, dest_index)
+        self.ui.active_art.move_frame_to_index(self.ui.active_art.active_frame, dest_index)
         self.dismiss()
 
 
@@ -567,9 +568,9 @@ class AddLayerDialog(UIDialog):
     title = 'Add new layer'
     fields = 2
     field0_type = str
-    field0_label = 'Enter name for new layer:'
+    field0_label = 'Name for new layer:'
     field1_type = float
-    field1_label = 'Enter Z-depth for new layer:'
+    field1_label = 'Z-depth for new layer:'
     confirm_caption = 'Add'
     name_exists_error = 'Layer by that name already exists.'
     invalid_z_error = 'Invalid number.'
@@ -577,7 +578,7 @@ class AddLayerDialog(UIDialog):
     def __init__(self, ui):
         UIDialog.__init__(self, ui)
         self.field0_text = 'Layer %s' % str(ui.active_art.layers + 1)
-        z = ui.active_art.layers_z[ui.active_layer] + DEFAULT_LAYER_Z_OFFSET
+        z = ui.active_art.layers_z[ui.active_art.active_layer] + DEFAULT_LAYER_Z_OFFSET
         self.field1_text = str(z)
     
     def is_valid_layer_name(self, name, exclude_active_layer=False):
@@ -614,7 +615,7 @@ class DuplicateLayerDialog(AddLayerDialog):
         if not valid: return
         name = self.get_field_text(0)
         z = float(self.get_field_text(1))
-        self.ui.active_art.duplicate_layer(self.ui.active_layer, z, name)
+        self.ui.active_art.duplicate_layer(self.ui.active_art.active_layer, z, name)
         self.dismiss()
 
 
@@ -623,14 +624,14 @@ class SetLayerNameDialog(AddLayerDialog):
     title = 'Set layer name'
     fields = 1
     field0_type = str
-    field0_label = 'Enter new name for this layer:'
+    field0_label = 'New name for this layer:'
     confirm_caption = 'Rename'
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
         new_name = self.get_field_text(0)
-        self.ui.active_art.layer_names[self.ui.active_layer] = new_name
+        self.ui.active_art.layer_names[self.ui.active_art.active_layer] = new_name
         self.dismiss()
 
 
@@ -638,14 +639,14 @@ class SetLayerZDialog(UIDialog):
     title = 'Set layer Z-depth'
     fields = 1
     field0_type = float
-    field0_label = 'Enter Z-depth for layer:'
+    field0_label = 'Z-depth for layer:'
     confirm_caption = 'Set'
     invalid_z_error = 'Invalid number.'
     
     def __init__(self, ui):
         UIDialog.__init__(self, ui)
         # populate with existing z
-        self.field0_text = str(ui.active_art.layers_z[ui.active_layer])
+        self.field0_text = str(ui.active_art.layers_z[ui.active_art.active_layer])
     
     def is_input_valid(self):
         try: z = float(self.get_field_text(0))
@@ -656,6 +657,44 @@ class SetLayerZDialog(UIDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         new_z = float(self.get_field_text(0))
-        self.ui.active_art.layers_z[self.ui.active_layer] = new_z
+        self.ui.active_art.layers_z[self.ui.active_art.active_layer] = new_z
         self.ui.app.grid.reset()
+        self.dismiss()
+
+
+class PaletteFromFileDialog(UIDialog):
+    title = 'Create palette from file'
+    confirm_caption = 'Create'
+    fields = 3
+    field0_type = str
+    field0_label = 'Filename to create palette from:'
+    field1_type = str
+    field1_label = 'Filename for new palette:'
+    field2_type = int
+    field2_label = 'Colors in new palette:'
+    field2_width = int(36 / 4)
+    invalid_color_error = 'Palettes must be between 2 and 256 colors.'
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        self.field2_text = str(256)
+    
+    def valid_colors(self, colors):
+        try: c = int(colors)
+        except: return False
+        return 2 <= c <= 256
+    
+    def is_input_valid(self):
+        valid_colors = self.valid_colors(self.get_field_text(2))
+        if not valid_colors:
+            return False, self.invalid_color_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        src_filename = self.get_field_text(0)
+        palette_filename = self.get_field_text(1)
+        colors = int(self.get_field_text(2))
+        new_pal = PaletteFromFile(self.ui.app, src_filename, palette_filename, colors)
         self.dismiss()
