@@ -1,0 +1,18 @@
+from game_object import GameObject, Player, WobblyThing, ParticleThing
+from random import randint
+
+# background w/ parallax layers
+bg = GameObject(self, my_game_art_dir + 'test_bg', (0, 0, -3))
+self.player = Player(self, my_game_art_dir + 'test_player', (1, -13, 0))
+# spawn a bunch of enemies
+for i in range(5):
+    enemy = WobblyThing(self, my_game_art_dir + 'owell')
+    origin = (randint(0, 30), randint(-30, 0), randint(-5, 5))
+    enemy.set_origin(*origin)
+    enemy.start_animating()
+# particle thingy
+smoke1 = ParticleThing(self, (25, -10, 0))
+# set camera
+px = self.player.x + self.player.art.width / 2
+self.camera.set_loc(px, self.player.y, self.camera.z)
+self.camera.set_zoom(20)

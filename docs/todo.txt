@@ -1,24 +1,15 @@
 TODO
 
-for 0.5.0:
-
-onion skinning:
-- O toggles
-- create two (or N) extra renderables of active art, render them before rest of scene
-- user control for: [show only next frames, only previous frames, both], # of frames to show, max skin opacity?
-
-mockup for frame/layer matrix
-
-- full about/credits (comprehensive way to get patron names / opt-outs?)
-
-games/ dir, contains art and "game scripts". playscii can be launched with "-game [gamename]" arg to launch straight into a game.  eventually, framework for hot-reloaded object system grows from this
-
-possible lead on OSX GL crash:
-https://twitter.com/dphrygian/status/578758728570142720
+video:
+- image conversion
+- onion skinnin'
+- 4-dir character move
 
 ---
 
 further work on existing features:
+
+menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
 PNG export:
 - CRT off/on affects PNG output, according to a scale factor.
@@ -30,7 +21,7 @@ main popup
 - ability to "pin" popup so it stays on screen always
 - arrow keys navigate between char and color pickers properly
 
-O key: toggle between perspective and ortho views (steal unity's cool lerp)
+shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 
 human-readable errors if charset/palette not found
 
@@ -39,3 +30,9 @@ separate camera for game mode
 further-out UI stuff in docs/ui.txt
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+
+mockup for frame/layer matrix - is this still needed now that onion skin + layer pulldown list give a pretty good-enough view of this data?
+
+should game dirs have their own palettes/, charsets/ etc subdirs?
+
+OSX glGenTextures crash: happens when SDL 2D renderer has been created

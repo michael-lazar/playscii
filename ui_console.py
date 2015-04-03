@@ -6,6 +6,7 @@ from art import UV_FLIPY
 from key_shifts import shift_map
 
 from image_convert import ImageConverter
+from palette import PaletteFromFile
 
 
 class ConsoleCommand:
@@ -32,12 +33,16 @@ class SaveCommand(ConsoleCommand):
 
 class OpenCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: open [art filename]'
         filename = ' '.join(args)
         console.ui.app.load_art_for_edit(filename)
 
 
 class LoadPaletteCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: pal [palette filename]'
         filename = ' '.join(args)
         # load AND set
         palette = console.ui.app.load_palette(filename)
@@ -47,6 +52,8 @@ class LoadPaletteCommand(ConsoleCommand):
 
 class LoadCharSetCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: char [character set filename]'
         filename = ' '.join(args)
         charset = console.ui.app.load_charset(filename)
         console.ui.active_art.set_charset(charset)
@@ -60,8 +67,24 @@ class ImageExportCommand(ConsoleCommand):
 
 class ConvertImageCommand(ConsoleCommand):
     def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: conv [image filename]'
         image_filename = ' '.join(args)
         ImageConverter(console.ui.app, image_filename, console.ui.active_art)
+
+
+class PaletteFromImageCommand(ConsoleCommand):
+    def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: getpal [image filename]'
+        src_filename = ' '.join(args)
+        new_pal = PaletteFromFile(console.ui.app, src_filename, src_filename)
+        if not new_pal.init_success:
+            return
+        #console.ui.app.load_palette(new_pal.filename)
+        console.ui.app.palettes.append(new_pal)
+        console.ui.active_art.set_palette(new_pal)
+        console.ui.popup.set_active_palette(new_pal)
 
 
 # map strings to command classes for ConsoleUI.parse
@@ -73,7 +96,8 @@ commands = {
     'char': LoadCharSetCommand,
     'pal': LoadPaletteCommand,
     'export': ImageExportCommand,
-    'conv': ConvertImageCommand
+    'conv': ConvertImageCommand,
+    'getpal': PaletteFromImageCommand,
 }
 
 
@@ -317,6 +341,8 @@ class ConsoleUI(UIElement):
                 app = ui.app
                 camera = app.camera
                 art = ui.active_art
+                player = app.player
+                tuner = app.tuner
                 # special handling of assignment statements, eg x = 3:
                 # detect strings that pattern-match, send them to exec(),
                 # send all other strings to eval()

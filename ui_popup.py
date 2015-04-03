@@ -581,6 +581,8 @@ class ToolPopup(UIElement):
                 self.ui.selected_bg_color = self.cursor_color
     
     def render(self):
+        if not self.visible:
+            return
         UIElement.render(self)
         if self.active_tab == TAB_CHAR_COLOR:
             self.charset_swatch.render()

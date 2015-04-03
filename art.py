@@ -78,9 +78,6 @@ class Art:
     log_size_changes = False
     recalc_quad_height = True
     log_creation = True
-    # avoid writing to characters out of bounds in write_string -
-    # used for debug
-    write_string_range_check = False
     
     def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
@@ -93,9 +90,13 @@ class Art:
         self.unsaved_changes = False
         self.width, self.height = width, height
         self.frames = 0
+        # current frame being edited
+        self.active_frame = 0
         # list of frame delays
         self.frame_delays = []
         self.layers = 1
+        # current layer being edited
+        self.active_layer = 0
         # lists of layer Z values and names
         self.layers_z = [DEFAULT_LAYER_Z]
         self.layer_names = ['Layer 1']
@@ -153,6 +154,9 @@ class Art:
         for l in range(1, self.layers):
             self.clear_frame_layer(index, l, 0, fg)
         self.mark_all_frames_changed()
+        # set new frame as active
+        if self.app.ui and self is self.app.ui.active_art:
+            self.app.ui.set_active_frame(index)
         if log:
             self.app.log('Created new frame at index %s' % str(index))
     
@@ -173,6 +177,9 @@ class Art:
         self.fg_colors.insert(dest_frame_index, self.fg_colors[src_frame_index].copy())
         self.bg_colors.insert(dest_frame_index, self.bg_colors[src_frame_index].copy())
         self.mark_all_frames_changed()
+        # set new frame as active
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_frame(dest_frame_index-1)
         self.app.log('Duplicated frame %s at frame %s' % (src_frame_index+1, dest_frame_index))
     
     def delete_frame_at(self, index):
@@ -182,6 +189,8 @@ class Art:
         self.uv_mods.pop(index)
         self.frames -= 1
         self.mark_all_frames_changed()
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_frame(index)
     
     def move_frame_to_index(self, src_index, dest_index):
         char_data = self.chars.pop(src_index)
@@ -203,6 +212,9 @@ class Art:
         self.duplicate_layer(index, z, name)
         for frame in range(self.frames):
             self.clear_frame_layer(frame, self.layers-1, 0)
+        # set new layer as active
+        if self is self.app.ui.active_art:
+            self.app.ui.set_active_layer(index+1)
     
     def duplicate_layer(self, src_index, z=None, new_name=None):
         def duplicate_layer_array(array):
@@ -272,6 +284,21 @@ class Art:
             return
         self.palette = new_palette
         self.set_unsaved_changes(True)
+    
+    def set_active_frame(self, new_frame):
+        new_frame %= self.frames
+        # bail if frame is still the same, eg we only have 1 frame
+        if new_frame == self.active_frame:
+            # return whether or not we actually changed frames
+            return False
+        self.active_frame = new_frame
+        # update our renderables
+        for r in self.renderables:
+            r.set_frame(self.active_frame)
+        return True
+    
+    def set_active_layer(self, new_layer):
+        self.active_layer = min(max(0, new_layer), self.layers-1)
     
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
         x0, y0 = origin_x, origin_y
@@ -465,15 +492,21 @@ class Art:
         # empty lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
+        self.updated_this_tick = True
     
     def save_to_file(self):
         "build a dict representing all this art's data and write it to disk"
+        # cursor might be hovering, undo any preview changes
+        for edit in self.app.cursor.preview_edits:
+            edit.undo()
         d = {}
         d['width'] = self.width
         d['height'] = self.height
         # preferred character set and palette, default used if not found
         d['charset'] = self.charset.name
         d['palette'] = self.palette.name
+        d['active_frame'] = self.active_frame
+        d['active_layer'] = self.active_layer
         # remember camera location
         d['camera'] = self.app.camera.x, self.app.camera.y, self.app.camera.z
         # frames and layers are dicts w/ lists of their data + a few properties
@@ -585,10 +618,13 @@ class Art:
     
     def write_string(self, frame, layer, x, y, text, fg_color_index=None, bg_color_index=None, right_justify=False):
         "writes out each char of a string to specified tiles"
+        x %= self.width
         if right_justify:
             x_offset = -len(text)
         else:
             x_offset = 0
+        # never let string drawing go out of bounds
+        text = text[:self.width - (x+x_offset)]
         for char in text:
             idx = self.charset.get_char_index(char)
             self.set_char_index_at(frame, layer, x+x_offset, y, idx)
@@ -597,8 +633,10 @@ class Art:
             if bg_color_index:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
-            if self.write_string_range_check and (x+x_offset < 0 or x+x_offset > self.width - 1):
-                self.app.log('Warning: %s.write_string went out of bounds at %s,%s' % (self.filename, x+x_offset, y))
+            # TODO: remove this once it's clear the above solution is better
+            # (now that text is snipped for width, this should never run...)
+            if (x + x_offset < 0) or (x + x_offset > self.width):
+                self.app.dev_log('Warning: %s.write_string went out of bounds writing "%s" at %s,%s' % (self.filename, text, x + x_offset, y))
                 break
 
 
@@ -626,11 +664,15 @@ class ArtFromDisk(Art):
         frames = d['frames']
         self.frames = len(frames)
         self.frame_delays = []
+        # active frame will be set properly near end of init
+        self.active_frame = 0
         # number of layers should be same for all frames
         self.layers = len(frames[0]['layers'])
         # get layer z depths from first frame's data
         self.layers_z = []
         self.layer_names = []
+        # active frame will be set properly near end of init
+        self.active_layer = 0
         for i,layer in enumerate(frames[0]['layers']):
             self.layers_z.append(layer['z'])
             layer_num = str(i + 1)
@@ -671,6 +713,11 @@ class ArtFromDisk(Art):
         self.script_rates = []
         self.scripts_next_exec_time = []
         self.geo_changed = True
+        # set active frame and layer properly
+        active_frame = d.get('active_frame', 0)
+        self.set_active_frame(active_frame)
+        active_layer = d.get('active_layer', 0)
+        self.set_active_layer(active_layer)
         self.update()
         if self.log_creation:
             self.app.log('loaded %s from disk:' % filename)
@@ -713,9 +760,11 @@ class ArtFromEDSCII(Art):
         self.quad_height = self.charset.char_height / self.charset.char_width
         self.frames = 1
         self.frame_delays = [DEFAULT_FRAME_DELAY]
+        self.active_frame = 0
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
         self.layer_names = ['Layer 1']
+        self.active_layer = 0
         shape = (self.layers, self.height, self.width, 4)
         chars = np.zeros(shape, dtype=np.float32)
         fg_colors = chars.copy()

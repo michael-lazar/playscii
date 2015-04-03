@@ -36,6 +36,9 @@ mkdir dist\scripts
 copy /v scripts\*.* dist\scripts\
 mkdir dist\shaders
 copy /v shaders\*.* dist\shaders\
+mkdir dist\games
+mkdir dist\games\test1
+copy /v games\test1\*.* dist\games\test1\
 REM ignore ui art source assets (eg .xcf)
 mkdir dist\ui
 copy /v ui\*.png dist\ui\

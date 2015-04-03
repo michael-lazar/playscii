@@ -7,6 +7,9 @@ data_files = [
 ]
 
 includes = ['ctypes', 'logging']
+# in addition to core python stuff, includes list should include any
+# modules that game scripts need, eg GameObject
+includes += ['game_object']
 
 excludes = [
     # exclude OpenGL then manually copy from python install dir's sitepackages/

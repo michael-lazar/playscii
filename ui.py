@@ -3,7 +3,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -22,6 +22,7 @@ class UI:
     
     # user-configured UI scale factor
     scale = 1.0
+    max_onion_alpha = 0.5
     charset_name = 'ui'
     palette_name = 'c64_original'
     # low-contrast background texture that distinguishes UI from flat color
@@ -49,8 +50,6 @@ class UI:
         self.app = app
         # the current art being edited
         self.active_art = active_art
-        self.active_frame = 0
-        self.active_layer = 0
         # dialog box set here
         self.active_dialog = None
         # easy color index lookups
@@ -91,18 +90,20 @@ class UI:
         self.hovered_elements = []
         # set geo sizes, force scale update
         self.set_scale(self.scale)
-        fps_counter = FPSCounterUI(self)
+        self.fps_counter = FPSCounterUI(self)
         self.console = ConsoleUI(self)
         self.status_bar = StatusBarUI(self)
         self.popup = ToolPopup(self)
         self.message_line = MessageLineUI(self)
+        self.debug_text = DebugTextUI(self)
         self.pulldown = PulldownMenu(self)
         self.menu_bar = None
         self.menu_bar = MenuBar(self)
-        self.elements.append(fps_counter)
+        self.elements.append(self.fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.popup)
         self.elements.append(self.message_line)
+        self.elements.append(self.debug_text)
         self.elements.append(self.pulldown)
         self.elements.append(self.menu_bar)
         # add console last so it draws last
@@ -154,9 +155,6 @@ class UI:
         self.active_art = new_art
         new_charset = self.active_art.charset
         new_palette = self.active_art.palette
-        # change active frame and layer if new active art doesn't have that many
-        self.active_frame = min(self.active_frame, self.active_art.frames - 1)
-        self.active_layer = min(self.active_layer, self.active_art.layers - 1)
         # make sure selection isn't out of bounds in new art
         old_selection = self.select_tool.selected_tiles.copy()
         for tile in old_selection:
@@ -244,48 +242,55 @@ class UI:
         self.set_selected_xform(xform)
     
     def reset_onion_frames(self, new_art=None):
+        "set correct visibility, frame, and alpha for all onion renderables"
         new_art = new_art or self.active_art
-        # set onion renderables to correct frames
-        # TODO: scale back if fewer than MAX_ONION_FRAMES in either direction
-        alpha = 1
-        for i,r in enumerate(self.app.onion_renderables_prev):
-            if new_art is not r.art:
+        alpha = self.max_onion_alpha
+        total_onion_frames = 0
+        def set_onion(r, new_frame, alpha):
+            # scale back if fewer than MAX_ONION_FRAMES in either direction
+            if total_onion_frames >= new_art.frames:
+                r.visible = False
+                return
+            r.visible = True
+            if not new_art is r.art:
                 r.set_art(new_art)
-            r.set_frame(self.active_frame - (self.app.onion_show_frames_behind - i))
+            r.set_frame(new_frame)
+            r.alpha = alpha
+            # make BG dimmer so it's easier to see
+            r.bg_alpha = alpha / 2
+        # populate "next" frames first
+        for i,r in enumerate(self.app.onion_renderables_next):
+            total_onion_frames += 1
+            new_frame = new_art.active_frame + i + 1
+            set_onion(r, new_frame, alpha)
+            alpha /= 2
+            #print('next onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
+        alpha = self.max_onion_alpha
+        for i,r in enumerate(self.app.onion_renderables_prev):
+            total_onion_frames += 1
+            new_frame = new_art.active_frame - (i + 1)
+            set_onion(r, new_frame, alpha)
             # each successive onion layer is dimmer
             alpha /= 2
-            r.alpha = alpha
-        alpha = 1
-        for i,r in enumerate(self.app.onion_renderables_next):
-            if new_art is not r.art:
-                r.set_art(new_art)
-            r.set_frame(self.active_frame + i + 1)
-            alpha /= 2
-            r.alpha = alpha
+            #print('previous onion %s set to frame %s alpha %s' % (i, new_frame, alpha))
     
     def set_active_frame(self, new_frame):
-        new_frame %= self.active_art.frames
-        # bail if frame is still the same, eg we only have 1 frame
-        if new_frame == self.active_frame:
+        if not self.active_art.set_active_frame(new_frame):
             return
-        self.active_frame = new_frame
-        # update active art's renderables
-        for r in self.active_art.renderables:
-            r.set_frame(self.active_frame)
         self.reset_onion_frames()
         self.tool_settings_changed = True
-        self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_frame + 1))
+        self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_art.active_frame + 1))
     
     def set_active_layer(self, new_layer):
-        self.active_layer = min(max(0, new_layer), self.active_art.layers-1)
-        z = self.active_art.layers_z[self.active_layer]
+        self.active_art.set_active_layer(new_layer)
+        z = self.active_art.layers_z[self.active_art.active_layer]
         self.app.grid.z = z
         self.select_tool.select_renderable.z = z
         self.select_tool.drag_renderable.z = z
         self.app.cursor.z = z
         self.app.update_window_title()
         self.tool_settings_changed = True
-        layer_name = self.active_art.layer_names[self.active_layer]
+        layer_name = self.active_art.layer_names[self.active_art.active_layer]
         self.message_line.post_line(self.layer_selected_log % layer_name)
     
     def select_char(self, new_char_index):
@@ -326,12 +331,13 @@ class UI:
         if len(self.select_tool.selected_tiles) > 0:
             self.erase_tiles_in_selection()
         else:
-            self.active_art.clear_frame_layer(self.active_frame, self.active_layer,
+            self.active_art.clear_frame_layer(self.active_art.active_frame,
+                                              self.active_art.active_layer,
                                               bg_color=self.selected_bg_color)
     
     def erase_tiles_in_selection(self):
         # create and commit command group to clear all tiles in selection
-        frame, layer = self.active_frame, self.active_layer
+        frame, layer = self.active_art.active_frame, self.active_art.active_layer
         new_command = EditCommand(self.active_art)
         for tile in self.select_tool.selected_tiles:
             new_tile_command = EditCommandTile(self.active_art)
@@ -353,7 +359,7 @@ class UI:
         # EditCommandTiles for Cursor.preview_edits
         # (via PasteTool get_paint_commands)
         self.clipboard = []
-        frame, layer = self.active_frame, self.active_layer
+        frame, layer = self.active_art.active_frame, self.active_art.active_layer
         min_x, min_y = 9999, 9999
         max_x, max_y = -1, -1
         for tile in self.select_tool.selected_tiles:
@@ -511,6 +517,5 @@ class UI:
     
     def render(self):
         for e in self.elements:
-            if e.visible:
-                if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
-                    e.render()
+            if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
+                e.render()

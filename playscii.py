@@ -22,7 +22,7 @@ from camera import Camera
 from charset import CharacterSet
 from palette import Palette
 from art import Art, ArtFromDisk, ArtFromEDSCII
-from renderable import TileRenderable
+from renderable import TileRenderable, OnionTileRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
 from ui import UI
@@ -32,15 +32,18 @@ from input_handler import InputLord
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
-from ui_element import UIRenderable
+from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
+from image_convert import ImageConverter
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
+GAME_DIR = 'games/'
+GAME_FILE_EXTENSION = 'game'
 
-VERSION = '0.4.1'
+VERSION = '0.5.0'
 
 MAX_ONION_FRAMES = 3
 
@@ -69,13 +72,17 @@ class Application:
     test_life_each_frame = False
     test_art = False
     auto_save = False
+    # show dev-only log messages
+    show_dev_log = False
+    welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
     
-    def __init__(self, log_file, log_lines, art_filename):
+    def __init__(self, log_file, log_lines, art_filename, game_to_load):
         self.init_success = False
         # log fed in from __main__, might already have stuff in it
         self.log_file = log_file
         self.log_lines = log_lines
         self.elapsed_time = 0
+        self.delta_time = 0
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         self.inactive_layer_visibility = 1
@@ -136,10 +143,15 @@ class Application:
         # "game mode" renderables
         self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
+        # "tuner": set an object to this for quick console tuning access
+        self.player, self.tuner = None, None
         self.game_objects = []
         # onion skin renderables
         self.onion_frames_visible = False
-        self.onion_show_frames_behind = self.onion_show_frames_ahead = MAX_ONION_FRAMES
+        self.onion_show_frames = MAX_ONION_FRAMES
+        # store constant so input_handler etc can read it
+        self.max_onion_frames = MAX_ONION_FRAMES
+        self.onion_show_frames_behind = self.onion_show_frames_ahead = True
         self.onion_renderables_prev, self.onion_renderables_next = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
@@ -150,11 +162,11 @@ class Application:
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded_for_edit[0])
         # init onion skin
-        for i in range(self.onion_show_frames_behind):
-            renderable = TileRenderable(self, self.ui.active_art)
+        for i in range(self.onion_show_frames):
+            renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_prev.append(renderable)
-        for i in range(self.onion_show_frames_ahead):
-            renderable = TileRenderable(self, self.ui.active_art)
+        for i in range(self.onion_show_frames):
+            renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_next.append(renderable)
         # set camera bounds based on art size
         self.camera.max_x = self.ui.active_art.width * self.ui.active_art.quad_width
@@ -162,13 +174,16 @@ class Application:
         self.update_window_title()
         self.cursor = Cursor(self)
         self.grid = Grid(self, self.ui.active_art)
-        self.ui.set_active_layer(0)
+        self.ui.set_active_layer(self.ui.active_art.active_layer)
         self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         # INPUTLORD rules input handling and keybinds
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
-        self.ui.message_line.post_line('Welcome to Playscii! Press SPACE to select characters and colors to paint.', 10)
+        if game_to_load:
+            self.load_game(game_to_load)
+        else:
+            self.ui.message_line.post_line(self.welcome_message, 10)
     
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu, what am i missing?
@@ -193,6 +208,10 @@ class Application:
         if self.ui:
             self.ui.message_line.post_line(new_line)
     
+    def dev_log(self, new_line):
+        if self.show_dev_log:
+            self.log(new_line)
+    
     def new_art(self, filename, width=None, height=None):
         width = width or self.new_art_width
         height = height or self.new_art_height
@@ -210,12 +229,12 @@ class Application:
         """
         orig_filename = filename
         filename = filename or 'new'
-        # try adding art subdir
-        if not os.path.exists(filename):
-            filename = '%s%s' % (ART_DIR, filename)
         # if not found, try adding extension
         if not os.path.exists(filename):
             filename += '.%s' % ART_FILE_EXTENSION
+        # try adding art subdir
+        if not os.path.exists(filename):
+            filename = '%s%s' % (ART_DIR, filename)
         art = None
         # use given path + file name even if it doesn't exist; use as new file's name
         if not os.path.exists(filename):
@@ -265,7 +284,8 @@ class Application:
             return
         self.art_loaded_for_edit.remove(art)
         for r in art.renderables:
-            self.edit_renderables.remove(r)
+            if r in self.edit_renderables:
+                self.edit_renderables.remove(r)
         if art is self.ui.active_art:
             self.ui.active_art = None
         self.log('Unloaded %s' % art.filename)
@@ -383,10 +403,6 @@ class Application:
         # TODO: if CRT is on, use that shader for output w/ a scale factor!
         scale = 2 if self.fb.crt and not self.fb.disable_crt else 1
         # create render target
-        #export_fb = Framebuffer(self, w * scale, h * scale)
-        #GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, export_fb.framebuffer)
-        #GL.glClearColor(*self.bg_color)
-        #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         framebuffer = GL.glGenFramebuffers(1)
         render_buffer = GL.glGenRenderbuffers(1)
         GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, render_buffer)
@@ -422,31 +438,29 @@ class Application:
     def exit_game_mode(self):
         self.game_mode = False
     
-    def game_mode_test(self):
-        "render quality/perf test for 'game mode'"
-        # TODO: move this to a "game script" in games/, see TODOs
-        # background w/ parallax layers
-        from game_object import GameObject, WobblyThing, ParticleThing
-        bg = GameObject(self, 'test_bg')
-        bg.set_loc(0, 0, -3)
-        self.player = GameObject(self, 'test_player')
-        self.player.set_loc(1, -13)
-        # spawn a bunch of enemies
-        from random import randint
-        for i in range(25):
-            enemy = WobblyThing(self, 'owell')
-            enemy.set_origin(randint(0, 30), randint(-30, 0), randint(-5, 5))
-            enemy.start_animating()
-        # particle thingy
-        smoke1 = ParticleThing(self)
-        smoke1.set_loc(25, -10)
-        # set camera
-        px = self.player.x + self.player.art.width / 2
-        self.camera.set_loc(px, self.player.y, self.camera.z)
-        self.camera.set_zoom(20)
+    def load_game(self, game_name):
+        self.log('loading game %s...' % game_name)
+        # execute game script, which loads game assets etc
+        game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
+        if not os.path.exists(game_file):
+            self.log("Couldn't find game script: %s" % game_file)
+            return
+        # set my_game_dir & my_game_art_dir for quick access within game script
+        my_game_dir = '%s%s/' % (GAME_DIR, game_name)
+        my_game_art_dir = '%s%s' % (my_game_dir, ART_DIR)
+        exec(open(game_file).read())
+        self.enter_game_mode()
+        self.log('loaded game %s' % game_name)
     
     def main_loop(self):
         while not self.should_quit:
+            # set all arts to "not updated"
+            if self.game_mode:
+                for game_object in self.game_objects:
+                    game_object.art.updated_this_tick = False
+            else:
+                for art in self.art_loaded_for_edit:
+                    art.updated_this_tick = False
             tick_time = sdl2.timer.SDL_GetTicks()
             self.input()
             self.update()
@@ -527,6 +541,22 @@ class Application:
         for item in draw_order:
             item.game_object.render(item.layer)
     
+    def debug_onion_frames(self):
+        "debug function to log onion renderable state"
+        # TODO: remove this once it's served its purpose
+        debug = ['current frame: %s' % self.ui.active_art.active_frame, '']
+        debug.append('onion_renderables_prev:')
+        def get_onion_info(i, r):
+            visible = 'VISIBLE' if r.visible else ''
+            return '%s: %s frame %s %s' % (i, r.art.filename.ljust(20), r.frame, visible)
+        for i,r in enumerate(self.onion_renderables_prev):
+            debug.append(get_onion_info(i, r))
+        debug.append('')
+        debug.append('onion_renderables_next:')
+        for i,r in enumerate(self.onion_renderables_next):
+            debug.append(get_onion_info(i, r))
+        self.ui.debug_text.post_lines(debug)
+    
     def render(self):
         # draw main scene to framebuffer
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
@@ -539,11 +569,16 @@ class Application:
                 self.converter.preview_sprite.render()
             for r in self.edit_renderables:
                 r.render()
+            #self.debug_onion_frames()
             if self.onion_frames_visible:
-                for i in range(self.onion_show_frames_behind):
-                    self.onion_renderables_prev[i].render()
-                for i in range(self.onion_show_frames_ahead):
-                    self.onion_renderables_next[i].render()
+                # draw "nearest" frames first
+                i = 0
+                while i < self.onion_show_frames:
+                    if self.onion_show_frames_behind:
+                        self.onion_renderables_prev[i].render()
+                    if self.onion_show_frames_ahead:
+                        self.onion_renderables_next[i].render()
+                    i += 1
             # draw selection grid, then selection, then cursor
             if self.grid.visible and self.ui.active_art:
                 self.grid.render()
@@ -601,10 +636,14 @@ if __name__ == "__main__":
         log_file.write('%s\n' % line)
         log_lines.append(line)
         print(line)
-    file_to_load = None
+    file_to_load, game_to_load = None, None
     if len(sys.argv) > 1:
-        file_to_load = sys.argv[1]
-    app = Application(log_file, log_lines, file_to_load)
+        # "-game test1" args will load test1 game from its dir
+        if sys.argv[1] == '-game' and len(sys.argv) > 2:
+            game_to_load = sys.argv[2]
+        else:
+            file_to_load = sys.argv[1]
+    app = Application(log_file, log_lines, file_to_load, game_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)

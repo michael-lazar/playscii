@@ -183,6 +183,8 @@ class CharacterSetSwatch(UISwatch):
         self.selection_box.y -= (selection_y + 1) * self.art.quad_height
     
     def render(self):
+        if not self.popup.visible:
+            return
         UISwatch.render(self)
         self.grid.render()
         self.selection_box.render()
@@ -296,6 +298,8 @@ class PaletteSwatch(UISwatch):
         self.b_renderable.y -= y_offset
     
     def render(self):
+        if not self.popup.visible:
+            return
         UISwatch.render(self)
         self.transparent_x.render()
         self.fg_selection_box.render()
