@@ -251,6 +251,7 @@ class DebugTextUI(UIElement):
     tile_height = 20
     clear_lines_after_render = False
     game_mode_visible = True
+    visible = False
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
