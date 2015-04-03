@@ -10,7 +10,7 @@ class PagedInfoDialog(UIDialog):
     title = 'Info'
     # message = list of page strings, each can be triple-quoted / contain line breaks
     message = ['']
-    tile_width = 50
+    tile_width = 51
     fields = 0
     confirm_caption = '>>'
     other_caption = '<<'
@@ -67,29 +67,31 @@ class PagedInfoDialog(UIDialog):
             self.reset_art(False)
 
 
-# TODO: full credits + patron thanks
 about_message = [
 """
-          by JP LeBreton (c) 2014-2015          |
+          by JP LeBreton (c) 2014-2015           |
 
 Playscii was made with the support of many
 nice people.
 
                      Patrons:
 
-Katelyn Gigante, Andrew Yoder, Josh Closs,
-Jacques Frechet, Nick Keirle, Rohit Nirmal,
-Aubrey Hesselgren, Andrew Anderson,
-Lachlan Cooper, Isaac Halvorson, Sam Crisp,
-James Noble, Holger Dors, Chris Welch,
-Aaron Brown, Leon Hartwig, Shannon Smith
+Andrew Anderson, Evan Armour, Jason Bakker,
+Aaron Brown, Ben Burbank, Josh Closs,
+Lachlan Cooper, Sam Crisp, Holger Dors,
+Matthew Duhamel, Jacques Frechet,
+Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
+Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
+Jeremy Lonien, Rohit Nirmal, James Noble,
+David Pittman, Shannon Smith, Jack Turner,
+Chris Welch, Andrew Yoder
 """,
 """
       Programming Help and Contributions:
 
 Shawn Walker, Sean Barrett, Mark Wonnacott,
 Ian MacLarty, Goldbuick, Rohit Nirmal,
-Tin Tvrtkovic, Sean Gubelman
+Tin Tvrtković, Sean Gubelman
 
             Tool Design Inspiration:
 

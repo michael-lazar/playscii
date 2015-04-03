@@ -86,6 +86,8 @@ self.edit_bind_src = {
     'ctrl h'   : 'choose_charset',
     'ctrl p'   : 'choose_palette',
     'o'        : 'toggle_onion_visibility',
+	'f8'       : 'toggle_debug_text',
+	'f9'       : 'toggle_fps_counter',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'       : 'save_art_as',
@@ -104,5 +106,6 @@ self.edit_bind_src = {
     '_delete_layer' : 'delete_layer',
     '_pal_from_file': 'palette_from_file',
 	'_cycle_onion_frames': 'cycle_onion_frames',
-	'_cycle_onion_display': 'cycle_onion_ahead_behind'
+	'_cycle_onion_display': 'cycle_onion_ahead_behind',
+	'_open_game_assets' : 'open_all_game_assets'
 }
