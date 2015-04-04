@@ -1,4 +1,4 @@
-#version 130
+#version 150
 
 // CRT shader via Mattias Gustavsson - https://www.shadertoy.com/view/lsB3DV
 // (screen warp, scanlines, and vignetting removed)
@@ -6,12 +6,13 @@
 uniform sampler2D fbo_texture;
 uniform float elapsed_time;
 uniform vec2 resolution;
+out vec4 f_outPixel;
 
 vec3 sample( sampler2D tex, vec2 tc )
 {
 	// FIXME: apparently tons of these "dependent texture reads" are what
 	// kills linux intel GPU perf
-	vec3 s = pow(texture2D(tex,tc).rgb, vec3(2.2));
+	vec3 s = pow(texture(tex,tc).rgb, vec3(2.2));
 	return s;
 }
 
@@ -64,7 +65,7 @@ float rand(vec2 co){
 void main(void) {
 	vec2 q = gl_FragCoord.xy / resolution.xy;
     vec2 uv = q;
-    vec3 oricol = texture2D( fbo_texture, vec2(q.x,q.y) ).xyz;
+    vec3 oricol = texture( fbo_texture, vec2(q.x,q.y) ).xyz;
     vec3 col;
 	// warbley in X
 	float x = sin(0.1*elapsed_time+uv.y*21.0)*sin(0.23*elapsed_time+uv.y*29.0)*sin(0.3+0.11*elapsed_time+uv.y*31.0)*0.0017;
@@ -93,5 +94,5 @@ void main(void) {
 		col *= 0.0;
 	if (uv.y < 0.0 || uv.y > 1.0)
 		col *= 0.0;
-    gl_FragColor = vec4(col,1.0);
+    f_outPixel = vec4(col,1.0);
 }
