@@ -1,9 +1,14 @@
 TODO
 
-video:
-- image conversion
-- onion skinnin'
-- 4-dir character move
+game mode and edit mode use separate cameras
+
+collision detection!
+- 2D only, each colliding object has a single layer
+
+art style dev for [secret]:
+- test environment w/ layers, non-trivial sorting scenario
+- player character test: front/right/back stand + walk anim
+- enemy test: ??
 
 ---
 
