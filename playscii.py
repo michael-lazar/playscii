@@ -137,7 +137,10 @@ class Application:
         self.set_icon()
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
-        self.camera = Camera(self)
+        # separate cameras for edit vs game mode
+        self.edit_camera = Camera(self)
+        self.game_camera = Camera(self)
+        self.camera = self.edit_camera
         self.art_loaded_for_edit, self.edit_renderables = [], []
         self.converter = None
         # "game mode" renderables
@@ -434,11 +437,14 @@ class Application:
     
     def enter_game_mode(self):
         self.game_mode = True
+        self.camera = self.game_camera
     
     def exit_game_mode(self):
         self.game_mode = False
+        self.camera = self.edit_camera
     
     def load_game(self, game_name):
+        self.enter_game_mode()
         self.log('loading game %s...' % game_name)
         # execute game script, which loads game assets etc
         game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
@@ -449,7 +455,6 @@ class Application:
         my_game_dir = '%s%s/' % (GAME_DIR, game_name)
         my_game_art_dir = '%s%s' % (my_game_dir, ART_DIR)
         exec(open(game_file).read())
-        self.enter_game_mode()
         self.log('loaded game %s' % game_name)
     
     def main_loop(self):
