@@ -2,7 +2,7 @@ import math
 
 from art import Art
 from renderable import TileRenderable
-from renderable_line import AxisIndicatorRenderable
+from renderable_line import OriginIndicatorRenderable
 
 class GameObject:
     
@@ -11,7 +11,10 @@ class GameObject:
     max_move_speed = 0.4
     friction = 0.1
     log_move = False
-    show_axis = False
+    show_origin = False
+    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
+    origin_pct_x, origin_pct_y = 0.5, 0.5
+    show_bounds = False
     
     def __init__(self, app, art, loc=(0, 0, 0)):
         (self.x, self.y, self.z) = loc
@@ -24,7 +27,9 @@ class GameObject:
             self.app.log("Couldn't spawn GameObject with art %s" % art.filename)
             return
         self.renderable = TileRenderable(self.app, self.art)
-        self.axis_renderable = AxisIndicatorRenderable(app)
+        self.origin_renderable = OriginIndicatorRenderable(app)
+        # TODO: 1px LineRenderable showing object's bounding box
+        #self.bounds_renderable = BoundsIndicatorRenderable(app)
         if not self.art in self.app.art_loaded_for_game:
             self.app.art_loaded_for_game.append(self.art)
         self.app.game_renderables.append(self.renderable)
@@ -75,15 +80,14 @@ class GameObject:
             self.app.ui.debug_text.post_lines(debug)
         # update renderables
         self.renderable.update()
-        self.renderable.set_loc_from_object(self)
-        self.renderable.set_scale_from_object(self)
-        self.axis_renderable.set_loc_from_object(self)
+        self.origin_renderable.set_transform_from_object(self)
+        self.renderable.set_transform_from_object(self)
     
     def render(self, layer):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
         self.renderable.render(layer)
-        if self.show_axis:
-            self.axis_renderable.render()
+        if self.show_origin:
+            self.origin_renderable.render()
 
 
 class WobblyThing(GameObject):
@@ -182,12 +186,18 @@ class NSEWPlayer(Player):
     def face_left(self):
         if self.scale_x != -1:
             self.scale_x = -1
-            self.x += self.art.quad_width * self.art.width
+            #self.x += self.art.quad_width * self.art.width
     
     def face_right(self):
         if self.scale_x != 1:
             self.scale_x = 1
-            self.x -= self.art.quad_width * self.art.width
+            #self.x -= self.art.quad_width * self.art.width
+    
+    def set_anim(self, new_anim):
+        if self.art is not new_anim:
+            self.art = new_anim
+            self.renderable.set_art(self.art)
+            self.renderable.start_animating()
     
     def update(self):
         Player.update(self)
@@ -207,26 +217,15 @@ class NSEWPlayer(Player):
                 self.art = self.anim_stand_fwd
             self.renderable.set_art(self.art)
         elif self.last_move_dir[0] > 0:
-            if self.art is not self.anim_walk_right:
-                self.art = self.anim_walk_right
-                self.renderable.set_art(self.art)
-                self.renderable.start_animating()
+            self.set_anim(self.anim_walk_right)
             self.face_right()
         elif self.last_move_dir[0] < 0:
-            if self.art is not self.anim_walk_right:
-                self.art = self.anim_walk_right
-                self.renderable.set_art(self.art)
-                self.renderable.start_animating()
+            self.set_anim(self.anim_walk_right)
             self.face_left()
         elif self.last_move_dir[1] > 0:
-            if self.art is not self.anim_walk_back:
-                self.art = self.anim_walk_back
-                self.renderable.set_art(self.art)
-                self.renderable.start_animating()
+            self.set_anim(self.anim_walk_back)
             self.face_right()
         elif self.last_move_dir[1] < 0:
-            if self.art is not self.anim_walk_fwd:
-                self.art = self.anim_walk_fwd
-                self.renderable.set_art(self.art)
-                self.renderable.start_animating()
+            self.set_anim(self.anim_walk_fwd)
             self.face_right()
+        #self.renderable.set_transform_from_object(self)

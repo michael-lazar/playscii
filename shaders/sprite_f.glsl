@@ -1,4 +1,4 @@
-#version 150
+#version 130
 
 uniform sampler2D texture0;
 uniform float alpha;

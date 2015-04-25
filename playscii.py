@@ -34,6 +34,7 @@ from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
+from game_object import GameObject
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
@@ -43,7 +44,7 @@ SCREENSHOT_SUBDIR = 'screenshots'
 GAME_DIR = 'games/'
 GAME_FILE_EXTENSION = 'game'
 
-VERSION = '0.5.0'
+VERSION = '0.5.1'
 
 MAX_ONION_FRAMES = 3
 
@@ -132,8 +133,8 @@ class Application:
                 self.should_quit = True
                 return
         # draw black screen while doing other init
-        self.sdl_renderer = sdl2.SDL_CreateRenderer(self.window, -1, sdl2.SDL_RENDERER_ACCELERATED)
-        self.blank_screen()
+        GL.glClearColor(0.0, 0.0, 0.0, 1.0)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         self.set_icon()
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
@@ -351,14 +352,6 @@ class Application:
         if self.ui.active_art.unsaved_changes:
             full_filename += '*'
         self.set_window_title(full_filename)
-    
-    def blank_screen(self):
-        r = sdl2.SDL_Rect()
-        r.x, r.y = 0,0
-        r.w, r.h = self.window_width, self.window_height
-        sdl2.SDL_SetRenderDrawColor(self.sdl_renderer, 0, 0, 0, 255)
-        sdl2.SDL_RenderFillRect(self.sdl_renderer, r)
-        sdl2.SDL_GL_SwapWindow(self.window)
     
     def resize_window(self, new_width, new_height):
         GL.glViewport(0, 0, new_width, new_height)
