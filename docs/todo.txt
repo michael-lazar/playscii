@@ -1,9 +1,23 @@
 TODO
 
-game mode and edit mode use separate cameras
+game mode improvements:
+- "game" console command to open a game w/o switch
+- center origin markers, translate renderable relative to those
+- game mode object positioning mode/control? W/E/R for move/rotate/scale?
+- disable edit binds in game mode
+
+sorting: is basing sort entirely on Y position sufficient?
+- split cronotest1 scene into multiple objects if need be
 
 collision detection!
 - 2D only, each colliding object has a single layer
+- Renderable.collision_layer: -1 means no collision, >=0 means use that layer for collision
+-- make sure this should be a property of Renderable and not Art or GameObject
+- for simplicity, all collision layers are resolved as if they were on the same Z
+- each Renderable can have "display collision layer" toggled for debug
+-- collision layer Z can be set to anything in edit mode, but always rendered at 0 in game mode
+- broadphase: bounding boxes of each gameobject art
+- narrowphase: how to detect and resolve collisions? the hard part :]
 
 art style dev for [secret]:
 - test environment w/ layers, non-trivial sorting scenario
@@ -30,14 +44,8 @@ shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 
 human-readable errors if charset/palette not found
 
-separate camera for game mode
-
-further-out UI stuff in docs/ui.txt
-
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
 
 mockup for frame/layer matrix - is this still needed now that onion skin + layer pulldown list give a pretty good-enough view of this data?
 
 should game dirs have their own palettes/, charsets/ etc subdirs?
-
-OSX glGenTextures crash: happens when SDL 2D renderer has been created

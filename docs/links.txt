@@ -1,6 +1,25 @@
 possibly-helpful links
 
 
+collision:
+
+triplefox's response:
+http://pastebin.com/By7QdCcu
+
+Metanet classics:
+http://www.metanetsoftware.com/technique/tutorialA.html
+http://www.metanetsoftware.com/technique/tutorialB.html
+
+Handmade Hero has a few sections on collision: https://www.youtube.com/watch?v=_g8DLrNyVsQ
+
+http://jonathanwhiting.com/tutorial/collision/
+
+http://tim.hibal.org/blog/2d-character-movement/
+
+https://github.com/pybox2d/pybox2d use Box2D just for collision? objects can be placed in "kinematic" mode and won't simulate, just collide
+
+
+
 parallelization:
 
 https://docs.python.org/3/library/multiprocessing.html
@@ -9,6 +28,8 @@ https://timothyawiseman.wordpress.com/2012/12/21/a-really-simple-multiprocessing
 
 
 image conversion:
+
+http://trixter.oldskool.org/2014/06/19/8088-domination-post-mortem-part-1/
 
 http://sol.gfxile.net/textfx
 

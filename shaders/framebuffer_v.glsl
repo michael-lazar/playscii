@@ -1,4 +1,4 @@
-#version 150
+#version 130
 
 in vec2 v_coord;
 uniform sampler2D fbo_texture;

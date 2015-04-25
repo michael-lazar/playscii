@@ -261,6 +261,10 @@ class Cursor:
         GL.glUniform2f(self.quad_size_uniform, self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height)
         GL.glUniform1f(self.alpha_uniform, self.alpha)
         GL.glBindVertexArray(self.vao)
+        # bind elem array instead of passing it to glDrawElements - latter
+        # sends pyopengl a new array, which is deprecated and breaks on Mac.
+        # thanks Erin Congden!
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         # draw 4 corners
@@ -270,7 +274,8 @@ class Cursor:
             GL.glUniform2f(self.xform_uniform, tx, ty)
             GL.glUniform2f(self.offset_uniform, ox, oy)
             GL.glDrawElements(GL.GL_TRIANGLES, self.vert_count,
-                              GL.GL_UNSIGNED_INT, self.elem_array)
+                              GL.GL_UNSIGNED_INT, None)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)

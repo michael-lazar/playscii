@@ -1,4 +1,4 @@
-#version 150
+#version 130
 
 // plain vanilla (non CRT) screen shader
 

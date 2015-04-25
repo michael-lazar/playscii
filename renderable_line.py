@@ -1,6 +1,7 @@
 import time, ctypes
 import numpy as np
 from OpenGL import GL
+from renderable import TileRenderable
 
 class LineRenderable():
     
@@ -79,11 +80,8 @@ class LineRenderable():
     def reset_loc(self):
         pass
     
-    def set_loc_from_object(self, obj):
-        self.x, self.y, self.z = obj.x, obj.y, obj.z
-    
-    def set_scale_from_object(self, obj):
-        self.scale_x, self.scale_y, self.scale_z = obj.scale_x, obj.scale_y, obj.scale_z
+    def set_transform_from_object(self, obj):
+        TileRenderable.set_transform_from_object(self, obj)
     
     def rebind_buffers(self):
         # resend verts
@@ -129,11 +127,14 @@ class LineRenderable():
         GL.glUniform2f(self.quad_size_uniform, *self.get_quad_size())
         GL.glUniform4f(self.color_uniform, *self.get_color(self.app.elapsed_time))
         GL.glBindVertexArray(self.vao)
+        # bind elem array - see similar behavior in Cursor.render
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glLineWidth(self.line_width)
         GL.glDrawElements(GL.GL_LINES, self.vert_count,
-                          GL.GL_UNSIGNED_INT, self.elem_array)
+                          GL.GL_UNSIGNED_INT, None)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
@@ -172,7 +173,7 @@ class SwatchSelectionBoxRenderable(LineRenderable):
         self.color_array = np.array([self.color * 4], dtype=np.float32)
 
 
-class AxisIndicatorRenderable(LineRenderable):
+class OriginIndicatorRenderable(LineRenderable):
     
     "classic 3-axis thingy showing location/rotation/scale"
     

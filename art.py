@@ -266,7 +266,7 @@ class Art:
         self.layers -= 1
         self.geo_changed = True
         self.mark_all_frames_changed()
-        if self.app.ui.active_layer > self.layers - 1:
+        if self.active_layer > self.layers - 1:
             self.app.ui.set_active_layer(self.layers - 1)
     
     def set_charset(self, new_charset):

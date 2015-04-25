@@ -38,6 +38,9 @@ class TileRenderable:
         # world space position and scale
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        # width and height in XY render space
+        self.width, self.height = 1, 1
+        self.reset_size()
         # TODO: object rotation matrix, if needed
         self.goal_x, self.goal_y, self.goal_z = 0, 0, 0
         self.moving = False
@@ -161,6 +164,7 @@ class TileRenderable:
         if self.art:
             self.art.renderables.remove(self)
         self.art = new_art
+        self.reset_size()
         self.art.renderables.append(self)
         # make sure frame is valid
         self.frame %= self.art.frames
@@ -168,6 +172,10 @@ class TileRenderable:
         self.update_geo_buffers()
         self.update_tile_buffers(True, True, True, True)
         #print('%s now uses Art %s' % (self, self.art.filename))
+    
+    def reset_size(self):
+        self.width = self.art.width * self.art.quad_width * self.scale_x
+        self.height = self.art.height * self.art.quad_height * self.scale_y
     
     def move_to(self, x, y, z, travel_time=None):
         # for fixed travel time, set move rate accordingly
@@ -183,11 +191,18 @@ class TileRenderable:
         if self.log_animation:
             self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
     
-    def set_loc_from_object(self, obj):
-        self.x, self.y, self.z = obj.x, obj.y, obj.z
-    
-    def set_scale_from_object(self, obj):
-        self.scale_x, self.scale_y, self.scale_z = obj.scale_x, obj.scale_y, obj.scale_z
+    def set_transform_from_object(self, obj):
+        "updates our position & scale based on that of given game object"
+        self.z = obj.z
+        if self is obj.origin_renderable:
+            self.x, self.y = obj.x, obj.y
+        else:
+            if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
+                self.reset_size()
+            self.x = obj.x - (self.width * obj.origin_pct_x)
+            self.y = obj.y + (self.height * obj.origin_pct_y)
+        self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
+        self.scale_z = obj.scale_z
     
     def update_loc(self):
         # TODO: probably time to bust out the ol' vector module for this stuff
@@ -298,6 +313,7 @@ class TileRenderable:
         GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
         GL.glUniform3f(self.scale_uniform, *self.get_scale())
         GL.glBindVertexArray(self.vao)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         # draw all specified layers if no list given
@@ -323,7 +339,8 @@ class TileRenderable:
             z += self.art.layers_z[i]
             GL.glUniform3f(self.position_uniform, x, y, z)
             GL.glDrawElements(GL.GL_TRIANGLES, layer_size, GL.GL_UNSIGNED_INT,
-                              self.art.elem_array[layer_start:])
+                ctypes.c_void_p(layer_start * ctypes.sizeof(ctypes.c_uint)))
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
