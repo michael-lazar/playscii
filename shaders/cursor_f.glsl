@@ -1,5 +1,3 @@
-#version 130
-
 uniform vec4 baseColor;
 uniform float baseAlpha;
 

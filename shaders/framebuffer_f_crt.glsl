@@ -1,5 +1,3 @@
-#version 130
-
 // CRT shader via Mattias Gustavsson - https://www.shadertoy.com/view/lsB3DV
 // (screen warp, scanlines, and vignetting removed)
 
