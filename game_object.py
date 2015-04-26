@@ -12,8 +12,7 @@ class GameObject:
     friction = 0.1
     log_move = False
     show_origin = False
-    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
-    origin_pct_x, origin_pct_y = 0.5, 0.5
+    # TODO: linerenderable showing bounds of renderable
     show_bounds = False
     
     def __init__(self, app, art, loc=(0, 0, 0)):
@@ -26,10 +25,10 @@ class GameObject:
         if not self.art:
             self.app.log("Couldn't spawn GameObject with art %s" % art.filename)
             return
-        self.renderable = TileRenderable(self.app, self.art)
-        self.origin_renderable = OriginIndicatorRenderable(app)
+        self.renderable = TileRenderable(self.app, self.art, self)
+        self.origin_renderable = OriginIndicatorRenderable(app, self)
         # TODO: 1px LineRenderable showing object's bounding box
-        #self.bounds_renderable = BoundsIndicatorRenderable(app)
+        #self.bounds_renderable = BoundsIndicatorRenderable(app, self)
         if not self.art in self.app.art_loaded_for_game:
             self.app.art_loaded_for_game.append(self.art)
         self.app.game_renderables.append(self.renderable)
@@ -65,7 +64,7 @@ class GameObject:
         elif vel_dy > 0:
             self.vel_y += min(vel_dy, max_speed)
     
-    def update(self):
+    def update(self, update_renderables=True):
         if not self.art.updated_this_tick:
             self.art.update()
         # apply friction and move
@@ -78,10 +77,9 @@ class GameObject:
         if self.log_move:
             debug = ['%s velocity: %.4f, %.4f' % (self, self.vel_x, self.vel_y)]
             self.app.ui.debug_text.post_lines(debug)
-        # update renderables
-        self.renderable.update()
-        self.origin_renderable.set_transform_from_object(self)
-        self.renderable.set_transform_from_object(self)
+        if update_renderables:
+            self.origin_renderable.update()
+            self.renderable.update()
     
     def render(self, layer):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
@@ -132,8 +130,8 @@ class Player(GameObject):
     log_move = True
     camera_pan_scaler = 0
     
-    def update(self):
-        GameObject.update(self)
+    def update(self, update_renderables=True):
+        GameObject.update(self, update_renderables)
         # camera follow player
         if self.camera_pan_scaler != 0:
             self.app.camera.pan(self.vel_x * self.camera_pan_scaler,
@@ -186,12 +184,10 @@ class NSEWPlayer(Player):
     def face_left(self):
         if self.scale_x != -1:
             self.scale_x = -1
-            #self.x += self.art.quad_width * self.art.width
     
     def face_right(self):
         if self.scale_x != 1:
             self.scale_x = 1
-            #self.x -= self.art.quad_width * self.art.width
     
     def set_anim(self, new_anim):
         if self.art is not new_anim:
@@ -200,21 +196,22 @@ class NSEWPlayer(Player):
             self.renderable.start_animating()
     
     def update(self):
-        Player.update(self)
+        # tell update not to update renderables yet
+        Player.update(self, False)
         # set art and frame based on move direction/velocity
         if -0.01 < self.vel_x < 0.01 and -0.01 < self.vel_y < 0.01:
             self.renderable.stop_animating()
             # stand fwd/left/right/back based on last travel dir
             if self.last_move_dir[0] > 0:
-                self.art = self.anim_stand_right
+                self.set_anim(self.anim_stand_right)
                 self.face_right()
             elif self.last_move_dir[0] < 0:
-                self.art = self.anim_stand_right
+                self.set_anim(self.anim_stand_right)
                 self.face_left()
             elif self.last_move_dir[1] > 0:
-                self.art = self.anim_stand_back
+                self.set_anim(self.anim_stand_back)
             else:
-                self.art = self.anim_stand_fwd
+                self.set_anim(self.anim_stand_fwd)
             self.renderable.set_art(self.art)
         elif self.last_move_dir[0] > 0:
             self.set_anim(self.anim_walk_right)
@@ -224,8 +221,8 @@ class NSEWPlayer(Player):
             self.face_left()
         elif self.last_move_dir[1] > 0:
             self.set_anim(self.anim_walk_back)
-            self.face_right()
         elif self.last_move_dir[1] < 0:
             self.set_anim(self.anim_walk_fwd)
-            self.face_right()
-        #self.renderable.set_transform_from_object(self)
+        # now it's good to update renderables
+        self.origin_renderable.update()
+        self.renderable.update()

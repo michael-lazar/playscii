@@ -437,6 +437,8 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_next_art(self):
+        if len(self.app.art_loaded_for_edit) == 0:
+            return
         self.ui.next_active_art()
         self.ui.menu_bar.refresh_active_menu()
     
@@ -447,6 +449,8 @@ class InputLord:
         self.ui.redo()
     
     def BIND_quick_grab(self):
+        if self.app.game_mode:
+            return
         self.app.keyboard_editing = True
         self.ui.quick_grab()
     
@@ -459,6 +463,8 @@ class InputLord:
             self.ui.message_line.post_line('Camera tilt engaged.')
     
     def BIND_select_or_paint(self):
+        if self.app.game_mode:
+            return
         # select menu item if navigating pulldown
         if self.ui.menu_bar.active_menu_name:
             self.ui.pulldown.keyboard_select_item()
