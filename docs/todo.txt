@@ -1,7 +1,6 @@
 TODO
 
 game mode improvements:
-- center origin markers, translate renderable relative to those
 - game mode object positioning mode/control? W/E/R for move/rotate/scale?
 -- some way to save out the state changes brought about by this?  starts to become its own editor D:
 

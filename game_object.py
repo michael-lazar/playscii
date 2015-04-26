@@ -2,7 +2,7 @@ import math
 
 from art import Art
 from renderable import TileRenderable
-from renderable_line import OriginIndicatorRenderable
+from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
 class GameObject:
     
@@ -12,7 +12,6 @@ class GameObject:
     friction = 0.1
     log_move = False
     show_origin = False
-    # TODO: linerenderable showing bounds of renderable
     show_bounds = False
     
     def __init__(self, app, art, loc=(0, 0, 0)):
@@ -27,8 +26,8 @@ class GameObject:
             return
         self.renderable = TileRenderable(self.app, self.art, self)
         self.origin_renderable = OriginIndicatorRenderable(app, self)
-        # TODO: 1px LineRenderable showing object's bounding box
-        #self.bounds_renderable = BoundsIndicatorRenderable(app, self)
+        # 1px LineRenderable showing object's bounding box
+        self.bounds_renderable = BoundsIndicatorRenderable(app, self)
         if not self.art in self.app.art_loaded_for_game:
             self.app.art_loaded_for_game.append(self.art)
         self.app.game_renderables.append(self.renderable)
@@ -79,6 +78,7 @@ class GameObject:
             self.app.ui.debug_text.post_lines(debug)
         if update_renderables:
             self.origin_renderable.update()
+            self.bounds_renderable.update()
             self.renderable.update()
     
     def render(self, layer):
@@ -86,6 +86,8 @@ class GameObject:
         self.renderable.render(layer)
         if self.show_origin:
             self.origin_renderable.render()
+        if self.show_bounds:
+            self.bounds_renderable.render()
 
 
 class WobblyThing(GameObject):
@@ -193,6 +195,7 @@ class NSEWPlayer(Player):
         if self.art is not new_anim:
             self.art = new_anim
             self.renderable.set_art(self.art)
+            self.bounds_renderable.art = self.art
             self.renderable.start_animating()
     
     def update(self):
@@ -225,4 +228,5 @@ class NSEWPlayer(Player):
             self.set_anim(self.anim_walk_fwd)
         # now it's good to update renderables
         self.origin_renderable.update()
+        self.bounds_renderable.update()
         self.renderable.update()
