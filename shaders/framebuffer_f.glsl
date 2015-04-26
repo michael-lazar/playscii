@@ -1,5 +1,3 @@
-#version 130
-
 // plain vanilla (non CRT) screen shader
 
 uniform sampler2D fbo_texture;
