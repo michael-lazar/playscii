@@ -89,6 +89,9 @@ class LineRenderable():
         if self.game_object:
             self.update_transform_from_object(self.game_object)
     
+    def reset_size(self):
+        TileRenderable.reset_size(self)
+    
     def update_transform_from_object(self, obj):
         TileRenderable.update_transform_from_object(self, obj)
     
@@ -183,7 +186,16 @@ class SwatchSelectionBoxRenderable(LineRenderable):
         self.color_array = np.array([self.color * 4], dtype=np.float32)
 
 
-class OriginIndicatorRenderable(LineRenderable):
+class WorldLineRenderable(LineRenderable):
+    
+    def get_projection_matrix(self):
+        return self.app.camera.projection_matrix
+    
+    def get_view_matrix(self):
+        return self.app.camera.view_matrix
+
+
+class OriginIndicatorRenderable(WorldLineRenderable):
     
     "classic 3-axis thingy showing location/rotation/scale"
     
@@ -203,12 +215,6 @@ class OriginIndicatorRenderable(LineRenderable):
     def get_quad_size(self):
         return 1, 1
     
-    def get_projection_matrix(self):
-        return self.app.camera.projection_matrix
-    
-    def get_view_matrix(self):
-        return self.app.camera.view_matrix
-    
     def build_geo(self):
         self.vert_array = np.array([self.origin, self.x_axis,
                                     self.origin, self.y_axis,
@@ -217,3 +223,21 @@ class OriginIndicatorRenderable(LineRenderable):
         self.elem_array = np.array([0, 1, 2, 3, 4, 5], dtype=np.uint32)
         self.color_array = np.array([self.red, self.red, self.green, self.green,
                                      self.blue, self.blue], dtype=np.float32)
+
+class BoundsIndicatorRenderable(WorldLineRenderable):
+    color = (1, 1, 1, 0.5)
+    
+    def __init__(self, app, game_object):
+        LineRenderable.__init__(self, app, None, game_object)
+        self.art = self.game_object.renderable.art
+        self.width, self.height = self.get_quad_size()
+    
+    def get_quad_size(self):
+        if not self.game_object:
+            return 1, 1
+        return self.art.width * self.art.quad_width, self.art.height * self.art.quad_height
+    
+    def build_geo(self):
+        self.vert_array = np.array([(0, 0), (1, 0), (1, -1), (0, -1)], dtype=np.float32)
+        self.elem_array = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
+        self.color_array = np.array([self.color * 4], dtype=np.float32)
