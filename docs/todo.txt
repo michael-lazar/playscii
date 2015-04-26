@@ -1,10 +1,9 @@
 TODO
 
 game mode improvements:
-- "game" console command to open a game w/o switch
 - center origin markers, translate renderable relative to those
 - game mode object positioning mode/control? W/E/R for move/rotate/scale?
-- disable edit binds in game mode
+-- some way to save out the state changes brought about by this?  starts to become its own editor D:
 
 sorting: is basing sort entirely on Y position sufficient?
 - split cronotest1 scene into multiple objects if need be

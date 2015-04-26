@@ -214,6 +214,8 @@ class UI:
         self.set_active_art(self.app.art_loaded_for_edit[0])
     
     def set_selected_tool(self, new_tool):
+        if self.app.game_mode:
+            return
         if new_tool == self.selected_tool:
             return
         self.previous_tool = self.selected_tool
@@ -318,6 +320,8 @@ class UI:
         self.select_color(new_bg_index, False)
     
     def swap_fg_bg_colors(self):
+        if self.app.game_mode:
+            return
         fg, bg = self.selected_fg_color, self.selected_bg_color
         self.selected_fg_color, self.selected_bg_color = bg, fg
         self.tool_settings_changed = True
@@ -489,6 +493,8 @@ class UI:
             e.unclicked(button)
     
     def quick_grab(self):
+        if self.app.game_mode:
+            return
         if self.popup.visible or self.console.visible:
             return
         self.grab_tool.grab()
@@ -505,6 +511,8 @@ class UI:
         self.active_art.command_stack.redo()
     
     def open_dialog(self, box_class):
+        if self.app.game_mode and not box_class.game_mode_visible:
+            return
         dialog = box_class(self)
         self.active_dialog = dialog
         # insert dialog at index 0 so it draws first instead of last

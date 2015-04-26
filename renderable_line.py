@@ -1,4 +1,4 @@
-import time, ctypes
+import time, ctypes, platform
 import numpy as np
 from OpenGL import GL
 from renderable import TileRenderable
@@ -14,9 +14,14 @@ class LineRenderable():
     line_width = 1
     # items in vert array: 2 for XY-only renderables, 3 for ones that include Z
     vert_items = 2
+    # when part of a GameObject, offset relative to origin
+    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
+    origin_pct_x, origin_pct_y = 0.5, 0.5
     
-    def __init__(self, app, quad_size_ref):
+    def __init__(self, app, quad_size_ref, game_object=None):
         self.app = app
+        # we may be attached to a game object
+        self.game_object = game_object
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
@@ -80,8 +85,12 @@ class LineRenderable():
     def reset_loc(self):
         pass
     
-    def set_transform_from_object(self, obj):
-        TileRenderable.set_transform_from_object(self, obj)
+    def update(self):
+        if self.game_object:
+            self.update_transform_from_object(self.game_object)
+    
+    def update_transform_from_object(self, obj):
+        TileRenderable.update_transform_from_object(self, obj)
     
     def rebind_buffers(self):
         # resend verts
@@ -131,7 +140,8 @@ class LineRenderable():
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        GL.glLineWidth(self.line_width)
+        if platform.system() != 'Darwin':
+            GL.glLineWidth(self.line_width)
         GL.glDrawElements(GL.GL_LINES, self.vert_count,
                           GL.GL_UNSIGNED_INT, None)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
@@ -187,8 +197,8 @@ class OriginIndicatorRenderable(LineRenderable):
     vert_items = 3
     line_width = 3
     
-    def __init__(self, app):
-        LineRenderable.__init__(self, app, None)
+    def __init__(self, app, game_object):
+        LineRenderable.__init__(self, app, None, game_object)
     
     def get_quad_size(self):
         return 1, 1

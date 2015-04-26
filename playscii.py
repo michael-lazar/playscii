@@ -436,14 +436,20 @@ class Application:
         self.game_mode = False
         self.camera = self.edit_camera
     
+    def clear_game_assets(self):
+        self.art_loaded_for_game = []
+        self.game_renderables = []
+        self.game_objects = []
+    
     def load_game(self, game_name):
         self.enter_game_mode()
-        self.log('loading game %s...' % game_name)
         # execute game script, which loads game assets etc
         game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
         if not os.path.exists(game_file):
             self.log("Couldn't find game script: %s" % game_file)
             return
+        self.log('loading game %s...' % game_name)
+        self.clear_game_assets()
         # set my_game_dir & my_game_art_dir for quick access within game script
         my_game_dir = '%s%s/' % (GAME_DIR, game_name)
         my_game_art_dir = '%s%s' % (my_game_dir, ART_DIR)

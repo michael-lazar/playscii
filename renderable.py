@@ -22,11 +22,16 @@ class TileRenderable:
     alpha = 1
     bg_alpha = 1
     move_rate = 1
+    # when part of a GameObject, offset relative to origin
+    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
+    origin_pct_x, origin_pct_y = 0.5, 0.5
     
-    def __init__(self, app, art):
+    def __init__(self, app, art, game_object=None):
         self.app = app
         self.art = art
         self.art.renderables.append(self)
+        # we may be attached to a game object
+        self.game_object = game_object
         # set true momentarily by image export process
         self.exporting = False
         # flag for easy don't-render functionality
@@ -174,7 +179,7 @@ class TileRenderable:
         #print('%s now uses Art %s' % (self, self.art.filename))
     
     def reset_size(self):
-        self.width = self.art.width * self.art.quad_width * self.scale_x
+        self.width = self.art.width * self.art.quad_width * abs(self.scale_x)
         self.height = self.art.height * self.art.quad_height * self.scale_y
     
     def move_to(self, x, y, z, travel_time=None):
@@ -191,7 +196,7 @@ class TileRenderable:
         if self.log_animation:
             self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
     
-    def set_transform_from_object(self, obj):
+    def update_transform_from_object(self, obj):
         "updates our position & scale based on that of given game object"
         self.z = obj.z
         if self is obj.origin_renderable:
@@ -199,8 +204,11 @@ class TileRenderable:
         else:
             if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
                 self.reset_size()
-            self.x = obj.x - (self.width * obj.origin_pct_x)
-            self.y = obj.y + (self.height * obj.origin_pct_y)
+            if obj.scale_x > 0:
+                self.x = obj.x - (self.width * self.origin_pct_x)
+            else:
+                self.x = obj.x + (self.width * self.origin_pct_x)
+            self.y = obj.y + (self.height * self.origin_pct_y)
         self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
         self.scale_z = obj.scale_z
     
@@ -229,7 +237,9 @@ class TileRenderable:
         #self.app.log('%s moved to %s,%s' % (self, self.x, self.y))
     
     def update(self):
-        if self.moving:
+        if self.game_object:
+            self.update_transform_from_object(self.game_object)
+        elif self.moving:
             self.update_loc()
         if not self.animating:
             return
