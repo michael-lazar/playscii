@@ -1,8 +1,10 @@
 TODO
 
 game mode improvements:
-- game mode object positioning mode/control? W/E/R for move/rotate/scale?
--- some way to save out the state changes brought about by this?  starts to become its own editor D:
+- concept of "selected game object"
+-- object positioning mode/control? W/E/R for move/rotate/scale?
+-- generic properties window to edit an instance's properties?
+-- some way to save out the state changes brought about by this?  probably better to think of this as a full-on level editing mode D:
 
 sorting: is basing sort entirely on Y position sufficient?
 - split cronotest1 scene into multiple objects if need be
@@ -14,13 +16,9 @@ collision detection!
 - for simplicity, all collision layers are resolved as if they were on the same Z
 - each Renderable can have "display collision layer" toggled for debug
 -- collision layer Z can be set to anything in edit mode, but always rendered at 0 in game mode
+- dynamic objects can (should?) have circle or AABB collision
 - broadphase: bounding boxes of each gameobject art
 - narrowphase: how to detect and resolve collisions? the hard part :]
-
-art style dev for [secret]:
-- test environment w/ layers, non-trivial sorting scenario
-- player character test: front/right/back stand + walk anim
-- enemy test: ??
 
 ---
 

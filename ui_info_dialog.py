@@ -79,19 +79,20 @@ nice people.
 Andrew Anderson, Evan Armour, Jason Bakker,
 Aaron Brown, Ben Burbank, Josh Closs,
 Lachlan Cooper, Sam Crisp, Holger Dors,
-Matthew Duhamel, Jacques Frechet,
+Matthew Duhamel, Jaron Eldon, Jacques Frechet,
 Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
 Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
 Jeremy Lonien, Rohit Nirmal, James Noble,
-David Pittman, Shannon Smith, Jack Turner,
-Chris Welch, Andrew Yoder
+David Pittman, Shannon Smith,
+Pablo López Soriano, Jack Turner, Chris Welch,
+Andrew Yoder
 """,
 """
       Programming Help and Contributions:
 
 Shawn Walker, Sean Barrett, Mark Wonnacott,
 Ian MacLarty, Goldbuick, Rohit Nirmal,
-Tin Tvrtković, Sean Gubelman
+Tin Tvrtković, Sean Gubelman, Erin Congden
 
             Tool Design Inspiration:
 

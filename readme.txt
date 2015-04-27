@@ -2,21 +2,22 @@ PLAYSCII
 
 an ASCII art tool
 
-Playscii (pronounced play-skee) is the successor to EDSCII.  It's still in very early stages of development and may not be too useful as an art tool yet.  The latest version will always be available here:
+Playscii (pronounced play-skee) is the successor to EDSCII.  It's still in development and may not be fully usable as an art tool yet.  The latest version will always be available here:
 
+http://jp.itch.io/playscii
 https://bitbucket.org/JPLeBreton/playscii
 
 
 == Running ==
 
-If you unpacked this readme from a zip, then you should have a Windows EXE build you can run without needing to install anything listed below.
+If you downloaded the ZIP file without "source" in its name, you should have a Windows EXE build you can run without needing to install anything listed below.  A Mac application bundle file would also be nice, but I don't have a Mac to create one with - if you're interested in helping with this, let me know!
 
-If you got it from the project's source code repository, you can either run it from source using Python, or make a Windows EXE build.  See the "Running from Source" and "Building" sections below.
+If you downloaded the ZIP file with "source" in its name or from the project's source code repository, you can run Playscii from source if you have Python and a few libraries installed.  See the "Running from Source" and "Building" sections below.
 
 
 == Usage ==
 
-If you double-click the Playscii executable or run it from the command line with no extra arguments, the program will open a new, blank file.  You can also run it from the command line with the art file you'd like to open.  .PSCI files are Playscii's native format, and files with a .ED extension made with EDSCII can also be opened though they will be saved in the new format - before long Playscii will be a complete replacement for EDSCII.
+If you double-click the Playscii executable or run it from the command line with no extra arguments, the program will open a new, blank file.  You can also run it from the command line with the art file you'd like to open.  .PSCI files are Playscii's native format, and files with a .ED extension made with EDSCII can also be opened though they will be saved in the new format - as of version 0.5.0 Playscii is a complete replacement for EDSCII.
 
 
 == Controls ==
@@ -132,13 +133,10 @@ Simply run "build.bat" and it will place a complete build in the dist\ subdirect
 
 == A Brief Roadmap ==
 
-1. Fully usable UI for painting on different layers and frames.
+1. Collision detection for objects in Game Mode.
 
-2. Export your art to PNG or animated GIF.
+2. Game Mode object placement and editing mode.
 
-3. Play mode, in which game objects are represented by animating ASCII "sprites".
+3. Image export: CRT filter setting should affect output; GIF export of animations.
 
-Bonus: Raster-to-ASCII image conversion a la EDSCII.
-
-
-Lots to do yet!
+Still more to do!
