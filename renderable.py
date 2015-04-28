@@ -201,6 +201,9 @@ class TileRenderable:
         self.z = obj.z
         if self is obj.origin_renderable:
             self.x, self.y = obj.x, obj.y
+        elif self is obj.collision_renderable:
+            self.x = obj.x + obj.col_offset_x
+            self.y = obj.y + obj.col_offset_y
         else:
             if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
                 self.reset_size()

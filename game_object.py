@@ -2,7 +2,8 @@ import math
 
 from art import Art
 from renderable import TileRenderable
-from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
+from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable, CircleCollisionRenderable, BoxCollisionRenderable
+from collision import CT_NONE, CT_TILE, CT_CIRCLE, CT_AABB
 
 class GameObject:
     
@@ -13,6 +14,17 @@ class GameObject:
     log_move = False
     show_origin = False
     show_bounds = False
+    show_collision = False
+    # static/dynamic: only relevant if collision type != CT_NONE
+    # if false, object will only be checked by other, dynamic objects
+    dynamic = False
+    collision_type = CT_NONE
+    # collision circle/box offset from origin
+    col_offset_x, col_offset_y = 0, 0
+    col_radius = 1
+    # AABB top left / bottom right coordinates
+    col_box_left_x, col_box_right_x = -1, 1
+    col_box_top_y, col_box_bottom_y = -1, 1
     
     def __init__(self, app, art, loc=(0, 0, 0)):
         (self.x, self.y, self.z) = loc
@@ -26,6 +38,11 @@ class GameObject:
             return
         self.renderable = TileRenderable(self.app, self.art, self)
         self.origin_renderable = OriginIndicatorRenderable(app, self)
+        self.collision_renderable = None
+        if self.collision_type == CT_CIRCLE:
+            self.collision_renderable = CircleCollisionRenderable(app, self)
+        elif self.collision_type == CT_AABB:
+            self.collision_renderable = BoxCollisionRenderable(app, self)
         # 1px LineRenderable showing object's bounding box
         self.bounds_renderable = BoundsIndicatorRenderable(app, self)
         if not self.art in self.app.art_loaded_for_game:
@@ -63,7 +80,7 @@ class GameObject:
         elif vel_dy > 0:
             self.vel_y += min(vel_dy, max_speed)
     
-    def update(self, update_renderables=True):
+    def update(self, should_update_renderables=True):
         if not self.art.updated_this_tick:
             self.art.update()
         # apply friction and move
@@ -76,10 +93,17 @@ class GameObject:
         if self.log_move:
             debug = ['%s velocity: %.4f, %.4f' % (self, self.vel_x, self.vel_y)]
             self.app.ui.debug_text.post_lines(debug)
-        if update_renderables:
+        if should_update_renderables:
+            self.update_renderables()
+    
+    def update_renderables(self):
+        if self.show_origin:
             self.origin_renderable.update()
+        if self.show_bounds:
             self.bounds_renderable.update()
-            self.renderable.update()
+        if self.show_collision and self.collision_renderable:
+            self.collision_renderable.update()
+        self.renderable.update()
     
     def render(self, layer):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
@@ -88,9 +112,13 @@ class GameObject:
             self.origin_renderable.render()
         if self.show_bounds:
             self.bounds_renderable.render()
+        if self.show_collision and self.collision_renderable:
+            self.collision_renderable.render()
 
 
 class WobblyThing(GameObject):
+    
+    dynamic = True
     
     def __init__(self, app, art):
         GameObject.__init__(self, app, art)
@@ -131,6 +159,8 @@ class Player(GameObject):
     friction = 0.25
     log_move = True
     camera_pan_scaler = 0
+    dynamic = True
+    collision_type = CT_CIRCLE
     
     def update(self, update_renderables=True):
         GameObject.update(self, update_renderables)
@@ -226,7 +256,5 @@ class NSEWPlayer(Player):
             self.set_anim(self.anim_walk_back)
         elif self.last_move_dir[1] < 0:
             self.set_anim(self.anim_walk_fwd)
-        # now it's good to update renderables
-        self.origin_renderable.update()
-        self.bounds_renderable.update()
-        self.renderable.update()
+        # transforms all done, ready to update renderables
+        self.update_renderables()

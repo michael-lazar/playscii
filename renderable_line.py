@@ -1,4 +1,4 @@
-import time, ctypes, platform
+import math, time, ctypes, platform
 import numpy as np
 from OpenGL import GL
 from renderable import TileRenderable
@@ -153,6 +153,13 @@ class LineRenderable():
         GL.glUseProgram(0)
 
 
+def get_box_arrays(color=(1, 1, 1, 1)):
+    verts = np.array([(0, 0), (1, 0), (1, -1), (0, -1)], dtype=np.float32)
+    elems = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
+    colors = np.array([color * 4], dtype=np.float32)
+    return verts, elems, colors
+
+
 class UIRenderableX(LineRenderable):
     
     "Red X used to denote transparent color in various places"
@@ -181,9 +188,7 @@ class SwatchSelectionBoxRenderable(LineRenderable):
         return self.color
     
     def build_geo(self):
-        self.vert_array = np.array([(0, 0), (1, 0), (1, 1), (0, 1)], dtype=np.float32)
-        self.elem_array = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
-        self.color_array = np.array([self.color * 4], dtype=np.float32)
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays(self.color)
 
 
 class WorldLineRenderable(LineRenderable):
@@ -238,6 +243,43 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         return self.art.width * self.art.quad_width, self.art.height * self.art.quad_height
     
     def build_geo(self):
-        self.vert_array = np.array([(0, 0), (1, 0), (1, -1), (0, -1)], dtype=np.float32)
-        self.elem_array = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
-        self.color_array = np.array([self.color * 4], dtype=np.float32)
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays(self.color)
+
+
+class BoxCollisionRenderable(WorldLineRenderable):
+    
+    def build_geo(self):
+        # TODO: account for unique size of box
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays()
+
+class CircleCollisionRenderable(WorldLineRenderable):
+    
+    segments = 30
+    
+    def __init__(self, app, game_object):
+        # green = dynamic, blue = static
+        self.color = (0, 1, 0, 1) if game_object.dynamic else (0, 0, 1, 1)
+        LineRenderable.__init__(self, app, None, game_object)
+        self.z = 1
+    
+    def get_quad_size(self):
+        return self.game_object.col_radius, self.game_object.col_radius
+    
+    def build_geo(self):
+        verts, elements, colors = [], [], []
+        angle = 0
+        last_x, last_y = 1, 0
+        i = 0
+        while i < self.segments * 4:
+            angle += math.radians(360 / self.segments)
+            verts.append((last_x, last_y))
+            x = math.cos(angle)
+            y = math.sin(angle)
+            verts.append((x, y))
+            last_x, last_y = x, y
+            elements.append((i, i+1))
+            i += 2
+            colors.append([self.color * 2])
+        self.vert_array = np.array(verts, dtype=np.float32)
+        self.elem_array = np.array(elements, dtype=np.uint32)
+        self.color_array = np.array(colors, dtype=np.float32)

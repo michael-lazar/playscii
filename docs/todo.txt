@@ -1,15 +1,27 @@
 TODO
 
-game mode improvements:
-- concept of "selected game object"
--- object positioning mode/control? W/E/R for move/rotate/scale?
--- generic properties window to edit an instance's properties?
--- some way to save out the state changes brought about by this?  probably better to think of this as a full-on level editing mode D:
-
-sorting: is basing sort entirely on Y position sufficient?
-- split cronotest1 scene into multiple objects if need be
-
 collision detection!
+basic algo:
+for each object A that updated this frame:
+ update A's position on global grid
+ for each static & dynamic colliding object B:
+  if A can't overlap or collide with B:
+   break
+  if A was already tested against B this frame:
+   break
+  update B's position on global grid
+  if B's box doesn't overlap A's box:
+   break
+  if narrowphase collision check fails:
+   break
+  if A has an overlap interaction with B:
+   tell A & B the other overlaps
+   (if overlap just started or ended, callback)
+  elif A has a collision interaction with B:
+   resolve collision (moving one or both objects)
+   tell A & B the other is colliding
+   (if collide just started or ended, callback)
+
 - 2D only, each colliding object has a single layer
 - Renderable.collision_layer: -1 means no collision, >=0 means use that layer for collision
 -- make sure this should be a property of Renderable and not Art or GameObject
@@ -19,6 +31,16 @@ collision detection!
 - dynamic objects can (should?) have circle or AABB collision
 - broadphase: bounding boxes of each gameobject art
 - narrowphase: how to detect and resolve collisions? the hard part :]
+
+game mode improvements:
+- concept of "selected game object"
+-- floating label showing name
+-- object positioning mode/control - W/E/R for move/rotate/scale?
+-- generic properties window to edit an instance's properties?
+-- some way to save out the state changes brought about by this?  probably better to think of this as a full-on level editing mode D:
+
+sorting: is basing sort entirely on Y position sufficient?
+- split cronotest1 scene into multiple objects if need be
 
 ---
 
