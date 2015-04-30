@@ -86,7 +86,7 @@ class LineRenderable():
         pass
     
     def update(self):
-        if self.game_object:
+        if self.game_object and self.game_object.transformed_this_frame:
             self.update_transform_from_object(self.game_object)
     
     def reset_size(self):
@@ -153,8 +153,10 @@ class LineRenderable():
         GL.glUseProgram(0)
 
 
-def get_box_arrays(color=(1, 1, 1, 1)):
-    verts = np.array([(0, 0), (1, 0), (1, -1), (0, -1)], dtype=np.float32)
+BOX_VERTS = [(0, 0), (1, 0), (1, -1), (0, -1)]
+
+def get_box_arrays(vert_list=None, color=(1, 1, 1, 1)):
+    verts = np.array(vert_list or BOX_VERTS, dtype=np.float32)
     elems = np.array([0, 1, 1, 2, 2, 3, 3, 0], dtype=np.uint32)
     colors = np.array([color * 4], dtype=np.float32)
     return verts, elems, colors
@@ -188,7 +190,7 @@ class SwatchSelectionBoxRenderable(LineRenderable):
         return self.color
     
     def build_geo(self):
-        self.vert_array, self.elem_array, self.color_array = get_box_arrays(self.color)
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays(None, self.color)
 
 
 class WorldLineRenderable(LineRenderable):
@@ -243,14 +245,29 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         return self.art.width * self.art.quad_width, self.art.height * self.art.quad_height
     
     def build_geo(self):
-        self.vert_array, self.elem_array, self.color_array = get_box_arrays(self.color)
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays(None, self.color)
 
 
 class BoxCollisionRenderable(WorldLineRenderable):
     
+    def __init__(self, app, game_object):
+        # green = dynamic, blue = static
+        self.color = (0, 1, 0, 1) if game_object.dynamic else (0, 0, 1, 1)
+        LineRenderable.__init__(self, app, None, game_object)
+    
+    def get_quad_size(self):
+        # unlike circle, size is baked into verts
+        return 1, 1
+    
     def build_geo(self):
-        # TODO: account for unique size of box
-        self.vert_array, self.elem_array, self.color_array = get_box_arrays()
+        # account for unique size of box
+        obj = self.game_object
+        top_left = (obj.col_box_left_x, obj.col_box_top_y)
+        top_right = (obj.col_box_right_x, obj.col_box_top_y)
+        bottom_right = (obj.col_box_right_x, obj.col_box_bottom_y)
+        bottom_left = (obj.col_box_left_x, obj.col_box_bottom_y)
+        vert_list = [top_left, top_right, bottom_right, bottom_left]
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays(vert_list)
 
 class CircleCollisionRenderable(WorldLineRenderable):
     
@@ -260,7 +277,6 @@ class CircleCollisionRenderable(WorldLineRenderable):
         # green = dynamic, blue = static
         self.color = (0, 1, 0, 1) if game_object.dynamic else (0, 0, 1, 1)
         LineRenderable.__init__(self, app, None, game_object)
-        self.z = 1
     
     def get_quad_size(self):
         return self.game_object.col_radius, self.game_object.col_radius

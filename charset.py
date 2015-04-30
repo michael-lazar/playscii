@@ -85,7 +85,7 @@ class CharacterSet:
         self.u_width = self.char_width / self.image_width
         self.v_height = self.char_height / self.image_height
         # report
-        if log:
+        if log and not self.app.game_mode:
             self.app.log("loaded charmap '%s' from %s:" % (self.name, self.filename))
             self.app.log('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
             self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))

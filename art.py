@@ -124,7 +124,7 @@ class Art:
         # run update once before renderables initialize so they have
         # something to bind
         self.update()
-        if self.log_creation:
+        if self.log_creation and not self.app.game_mode:
             self.app.log('created new document:')
             self.app.log('  character set: %s' % self.charset.name)
             self.app.log('  palette: %s' % self.palette.name)
@@ -719,7 +719,7 @@ class ArtFromDisk(Art):
         active_layer = d.get('active_layer', 0)
         self.set_active_layer(active_layer)
         self.update()
-        if self.log_creation:
+        if self.log_creation and not self.app.game_mode:
             self.app.log('loaded %s from disk:' % filename)
             self.app.log('  character set: %s' % self.charset.name)
             self.app.log('  palette: %s' % self.palette.name)
@@ -811,7 +811,7 @@ class ArtFromEDSCII(Art):
         self.scripts_next_exec_time = []
         self.geo_changed = True
         self.update()
-        if self.log_creation:
+        if self.log_creation and not self.app.game_mode:
             self.app.log('EDSCII file %s loaded from disk:' % filename)
             self.app.log('  width/height: %s x %s' % (self.width, self.height))
         self.valid = True

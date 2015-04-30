@@ -29,6 +29,7 @@ from ui import UI
 from cursor import Cursor
 from grid import Grid
 from input_handler import InputLord
+from collision import CollisionLord, CT_NONE, CT_TILE, CT_CIRCLE, CT_AABB
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
@@ -43,6 +44,8 @@ LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
 GAME_DIR = 'games/'
 GAME_FILE_EXTENSION = 'game'
+
+COMPAT_FAIL_MSG = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
 
 VERSION = '0.5.1'
 
@@ -68,11 +71,6 @@ class Application:
     bg_color = (0.1, 0.1, 0.1, 1)
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
-    # debug test stuff
-    test_mutate_each_frame = False
-    test_life_each_frame = False
-    test_art = False
-    auto_save = False
     # show dev-only log messages
     show_dev_log = False
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
@@ -115,9 +113,15 @@ class Application:
             gl_ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
         gl_ver = gl_ver.decode('utf-8')
         self.log('OpenGL detected: %s' % gl_ver)
-        glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
-        if not glsl_ver:
-            glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
+        # GL 1.1 doesn't even habla shaders, quit if we fail GLSL version check
+        try:
+            glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
+            if not glsl_ver:
+                glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
+        except:
+            self.log('GLSL support not detected, ' + COMPAT_FAIL_MSG)
+            self.should_quit = True
+            return
         glsl_ver = glsl_ver.decode('utf-8')
         self.log('GLSL detected: %s' % glsl_ver)
         # verify that we got at least a 2.1 context
@@ -128,7 +132,7 @@ class Application:
         vao_support = bool(GL.glGenVertexArrays)
         self.log('Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
         if not vao_support  or context_version < 2.1 or gl_ver.startswith('2.0'):
-            self.log("Could not create a compatible OpenGL context, your hardware doesn't appear to meet Playscii's requirements!  Sorry ;_________;")
+            self.log("Couldn't create a compatible OpenGL context, " + COMPAT_FAIL_MSG)
             if not self.run_if_opengl_incompatible:
                 self.should_quit = True
                 return
@@ -150,6 +154,7 @@ class Application:
         # "tuner": set an object to this for quick console tuning access
         self.player, self.tuner = None, None
         self.game_objects = []
+        self.cl = CollisionLord(self)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -252,7 +257,8 @@ class Application:
                 # TODO: this check doesn't work on EDSCII imports b/c its name changes
                 if a.filename == filename:
                     return a
-            self.log('Loading file %s...' % filename)
+            if not self.game_mode:
+                self.log('Loading file %s...' % filename)
             art = ArtFromDisk(filename, self)
             if not art or not art.valid:
                 art = ArtFromEDSCII(filename, self)
@@ -458,10 +464,11 @@ class Application:
     
     def main_loop(self):
         while not self.should_quit:
-            # set all arts to "not updated"
+            # set all arts to "not updated", objects to "didn't transform"
             if self.game_mode:
                 for game_object in self.game_objects:
                     game_object.art.updated_this_tick = False
+                    game_object.transformed_this_frame = False
             else:
                 for art in self.art_loaded_for_edit:
                     art.updated_this_tick = False
@@ -500,24 +507,11 @@ class Application:
         if self.converter:
             self.converter.update()
         if self.game_mode:
+            # update objects based on movement, then resolve collisions
             for game_object in self.game_objects:
                 game_object.update()
+            self.cl.update()
         self.camera.update()
-        if self.test_mutate_each_frame:
-            self.test_mutate_each_frame = False
-            self.ui.active_art.run_script_every('mutate', 0.01)
-        if self.test_life_each_frame:
-            self.test_life_each_frame = False
-            self.ui.active_art.run_script_every('conway', 0.05)
-        if self.test_art:
-            self.test_art = False
-            # load some test data - simulates some user edits:
-            # add layers, write text, duplicate that frame, do some animation
-            self.ui.active_art.run_script('hello1')
-        # test saving functionality
-        if self.auto_save:
-            art.save_to_file()
-            self.auto_save = False
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
@@ -536,14 +530,26 @@ class Application:
     def game_render(self):
         # sort objects for drawing by each layer Z order
         draw_order = []
+        collision_items = []
         for game_object in self.game_objects:
             for i,z in enumerate(game_object.art.layers_z):
-                z += game_object.z
-                item = self.RenderItem(game_object, i, z)
+                # only draw collision layer if show collision is set
+                if game_object.collision_type == CT_TILE and game_object.col_layer_name == game_object.art.layer_names[i]:
+                    if game_object.show_collision:
+                        item = self.RenderItem(game_object, i, 0)
+                        collision_items.append(item)
+                    continue
+                item = self.RenderItem(game_object, i, z + game_object.z)
                 draw_order.append(item)
         draw_order.sort(key=lambda item: item.layer_z, reverse=False)
         for item in draw_order:
             item.game_object.render(item.layer)
+        # draw debug stuff: collision layers and origins/boxes
+        for item in collision_items:
+            # draw all tile collision at z 0
+            item.game_object.render(item.layer, 0)
+        for game_object in self.game_objects:
+            game_object.render_debug()
     
     def debug_onion_frames(self):
         "debug function to log onion renderable state"
