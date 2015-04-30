@@ -207,12 +207,14 @@ class TileRenderable:
         else:
             if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
                 self.reset_size()
-            if obj.scale_x > 0:
-                self.x = obj.x - (self.width * self.origin_pct_x)
-            else:
+            if obj.flip_x:
                 self.x = obj.x + (self.width * self.origin_pct_x)
+            else:
+                self.x = obj.x - (self.width * self.origin_pct_x)
             self.y = obj.y + (self.height * self.origin_pct_y)
         self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
+        if obj.flip_x:
+            self.scale_x *= -1
         self.scale_z = obj.scale_z
     
     def update_loc(self):
@@ -292,7 +294,7 @@ class TileRenderable:
         self.render(0)
         self.exporting = False
     
-    def render(self, layers=None):
+    def render(self, layers=None, z_override=None):
         if not self.visible:
             return
         GL.glUseProgram(self.shader.program)
@@ -350,6 +352,7 @@ class TileRenderable:
             # way a layer's Z can change w/o rebuilding its vert array
             x, y, z = self.get_loc()
             z += self.art.layers_z[i]
+            z = z_override if z_override else z
             GL.glUniform3f(self.position_uniform, x, y, z)
             GL.glDrawElements(GL.GL_TRIANGLES, layer_size, GL.GL_UNSIGNED_INT,
                 ctypes.c_void_p(layer_start * ctypes.sizeof(ctypes.c_uint)))

@@ -249,7 +249,7 @@ class DebugTextUI(UIElement):
     
     tile_x, tile_y = 1, 4
     tile_height = 20
-    clear_lines_after_render = False
+    clear_lines_after_render = True
     game_mode_visible = True
     visible = False
     
@@ -264,17 +264,18 @@ class DebugTextUI(UIElement):
         UIElement.reset_loc(self)
     
     def post_lines(self, lines):
-        self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
         if type(lines) is list:
-            for y,line in enumerate(lines):
-                self.art.write_string(0, 0, 0, y, line)
-            self.lines = lines
+            self.lines += lines
         else:
-            self.art.write_string(0, 0, 0, 0, str(lines))
-            self.lines = str(lines)
+            self.lines += [lines]
+    
+    def update(self):
+        self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+        for y,line in enumerate(self.lines):
+            self.art.write_string(0, 0, 0, y, line)
     
     def render(self):
         UIElement.render(self)
         if self.clear_lines_after_render:
             self.lines = []
-            self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+            #self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)

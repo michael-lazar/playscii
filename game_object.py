@@ -1,4 +1,4 @@
-import math
+import math, os
 
 from art import Art
 from renderable import TileRenderable
@@ -19,6 +19,8 @@ class GameObject:
     # if false, object will only be checked by other, dynamic objects
     dynamic = False
     collision_type = CT_NONE
+    # collision layer name for CT_TILE objects
+    col_layer_name = 'collision'
     # collision circle/box offset from origin
     col_offset_x, col_offset_y = 0, 0
     col_radius = 1
@@ -30,6 +32,12 @@ class GameObject:
         (self.x, self.y, self.z) = loc
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        self.flip_x = False
+        # update_renderables should behave as if we transformed on first frame
+        self.transformed_this_frame = True
+        # generate unique name for object 
+        name = str(self)
+        self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         self.app = app
         # support a filename OR an existing Art object
         self.art = self.app.load_art(art) if type(art) is str else art
@@ -49,6 +57,11 @@ class GameObject:
             self.app.art_loaded_for_game.append(self.art)
         self.app.game_renderables.append(self.renderable)
         self.app.game_objects.append(self)
+        # whether we're static or dynamic, run these once to set proper state
+        self.update_renderables()
+        # CT_TILE objects base their box edges off renderable loc + size
+        self.update_collision_box_edges()
+        self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -61,8 +74,17 @@ class GameObject:
         self.renderable.stop_animating()
     
     def set_loc(self, x, y, z=None):
+        if self.x != x or self.y != y:
+            self.transformed_this_frame = True
         self.x, self.y = x, y
+        if (not z and self.z != 0) or self.z != z:
+            self.transformed_this_frame = True
         self.z = z or 0
+    
+    def set_scale(self, x, y, z):
+        if self.scale_x != x or self.scale_y != y or self.scale_z != z:
+            self.transformed_this_frame = True
+        self.scale_x, self.scale_y, self.scale_z = x, y, z
     
     def move(self, dx, dy):
         m = 1 + self.friction
@@ -83,18 +105,43 @@ class GameObject:
     def update(self, should_update_renderables=True):
         if not self.art.updated_this_tick:
             self.art.update()
+        self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         # apply friction and move
-        self.vel_x *= 1 - self.friction
-        self.vel_y *= 1 - self.friction
-        self.vel_z *= 1 - self.friction
-        self.x += self.vel_x
-        self.y += self.vel_y
-        self.z += self.vel_z
-        if self.log_move:
-            debug = ['%s velocity: %.4f, %.4f' % (self, self.vel_x, self.vel_y)]
-            self.app.ui.debug_text.post_lines(debug)
+        if self.vel_x != 0 or self.vel_y != 0 or self.vel_z != 0:
+            self.vel_x *= 1 - self.friction
+            self.vel_y *= 1 - self.friction
+            self.vel_z *= 1 - self.friction
+            self.x += self.vel_x
+            self.y += self.vel_y
+            self.z += self.vel_z
+            if self.log_move:
+                debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
+                self.app.ui.debug_text.post_lines(debug)
+        if self.last_x != self.x or self.last_y != self.y or self.last_z != self.z:
+            self.transformed_this_frame = True
+            self.update_collision_box_edges()
         if should_update_renderables:
             self.update_renderables()
+    
+    def update_collision_box_edges(self):
+        if self.collision_type == CT_NONE:
+            self.left_x, self.right_x = 0, 0
+            self.top_y, self.bottom_y = 0, 0
+        elif self.collision_type == CT_TILE:
+            self.left_x = self.renderable.x
+            self.right_x = self.left_x + self.renderable.width
+            self.top_y = self.renderable.y
+            self.bottom_y = self.top_y - self.renderable.height
+        elif self.collision_type == CT_CIRCLE:
+            self.left_x = (self.x + self.col_offset_x) - self.col_radius
+            self.right_x = self.x + self.col_radius
+            self.top_y = (self.y + self.col_offset_y) + self.col_radius
+            self.bottom_y = self.top_y - (self.col_radius * 2)
+        elif self.collision_type == CT_AABB:
+            self.left_x = (self.x + self.col_offset_x) + self.col_box_left_x
+            self.right_x = self.x + self.col_box_right_x
+            self.top_y = (self.y + self.col_offset_y) - self.col_box_top_y
+            self.bottom_y = self.top_y + (self.col_box_top_y - self.col_box_bottom_y)
     
     def update_renderables(self):
         if self.show_origin:
@@ -105,15 +152,21 @@ class GameObject:
             self.collision_renderable.update()
         self.renderable.update()
     
-    def render(self, layer):
-        #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
-        self.renderable.render(layer)
+    def render_debug(self):
         if self.show_origin:
             self.origin_renderable.render()
         if self.show_bounds:
             self.bounds_renderable.render()
         if self.show_collision and self.collision_renderable:
             self.collision_renderable.render()
+    
+    def render(self, layer, z_override=None):
+        #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
+        self.renderable.render(layer, z_override)
+
+
+class StaticLevelObject(GameObject):
+    collision_type = CT_TILE
 
 
 class WobblyThing(GameObject):
@@ -134,8 +187,9 @@ class WobblyThing(GameObject):
         self.x = self.origin_x + x_off
         self.y = self.origin_y + y_off
         self.z = self.origin_z + z_off
-        self.scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
-        self.scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
+        scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
+        scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
+        self.set_scale(scale_x, scale_y, 1)
         GameObject.update(self)
 
 
@@ -160,7 +214,7 @@ class Player(GameObject):
     log_move = True
     camera_pan_scaler = 0
     dynamic = True
-    collision_type = CT_CIRCLE
+    collision_type = CT_AABB
     
     def update(self, update_renderables=True):
         GameObject.update(self, update_renderables)
@@ -213,14 +267,6 @@ class NSEWPlayer(Player):
         Player.move(self, dx, dy)
         self.last_move_dir = (dx, dy)
     
-    def face_left(self):
-        if self.scale_x != -1:
-            self.scale_x = -1
-    
-    def face_right(self):
-        if self.scale_x != 1:
-            self.scale_x = 1
-    
     def set_anim(self, new_anim):
         if self.art is not new_anim:
             self.art = new_anim
@@ -237,10 +283,10 @@ class NSEWPlayer(Player):
             # stand fwd/left/right/back based on last travel dir
             if self.last_move_dir[0] > 0:
                 self.set_anim(self.anim_stand_right)
-                self.face_right()
+                self.flip_x = False
             elif self.last_move_dir[0] < 0:
                 self.set_anim(self.anim_stand_right)
-                self.face_left()
+                self.flip_x = True
             elif self.last_move_dir[1] > 0:
                 self.set_anim(self.anim_stand_back)
             else:
@@ -248,10 +294,10 @@ class NSEWPlayer(Player):
             self.renderable.set_art(self.art)
         elif self.last_move_dir[0] > 0:
             self.set_anim(self.anim_walk_right)
-            self.face_right()
+            self.flip_x = False
         elif self.last_move_dir[0] < 0:
             self.set_anim(self.anim_walk_right)
-            self.face_left()
+            self.flip_x = True
         elif self.last_move_dir[1] > 0:
             self.set_anim(self.anim_walk_back)
         elif self.last_move_dir[1] < 0:
