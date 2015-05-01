@@ -47,7 +47,7 @@ GAME_FILE_EXTENSION = 'game'
 
 COMPAT_FAIL_MSG = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
 
-VERSION = '0.5.1'
+VERSION = '0.5.2'
 
 MAX_ONION_FRAMES = 3
 
@@ -73,6 +73,10 @@ class Application:
     override_saved_camera = False
     # show dev-only log messages
     show_dev_log = False
+    # toggles for "show all" debug viz modes
+    show_collision_all = False
+    show_bounds_all = False
+    show_origin_all = False
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
     
     def __init__(self, log_file, log_lines, art_filename, game_to_load):
@@ -447,6 +451,10 @@ class Application:
         self.game_renderables = []
         self.game_objects = []
     
+    def set_for_all_game_objects(self, name, value):
+        for game_obj in self.game_objects:
+            setattr(game_obj, name, value)
+    
     def load_game(self, game_name):
         self.enter_game_mode()
         # execute game script, which loads game assets etc
@@ -456,9 +464,9 @@ class Application:
             return
         self.log('loading game %s...' % game_name)
         self.clear_game_assets()
-        # set my_game_dir & my_game_art_dir for quick access within game script
-        my_game_dir = '%s%s/' % (GAME_DIR, game_name)
-        my_game_art_dir = '%s%s' % (my_game_dir, ART_DIR)
+        # set game_dir & game_art_dir for quick access within game script
+        self.game_dir = '%s%s/' % (GAME_DIR, game_name)
+        self.game_art_dir = '%s%s' % (self.game_dir, ART_DIR)
         exec(open(game_file).read())
         self.log('loaded game %s' % game_name)
     

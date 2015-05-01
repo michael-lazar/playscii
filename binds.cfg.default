@@ -86,6 +86,9 @@ self.edit_bind_src = {
     'ctrl h'   : 'choose_charset',
     'ctrl p'   : 'choose_palette',
     'o'        : 'toggle_onion_visibility',
+	'f5'       : 'toggle_all_origin_viz',
+	'f6'       : 'toggle_all_bounds_viz',
+	'f7'       : 'toggle_all_collision_viz',
 	'f8'       : 'toggle_debug_text',
 	'f9'       : 'toggle_fps_counter',
     # commands that don't have a shortcut still need to be declared

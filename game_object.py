@@ -7,6 +7,8 @@ from collision import CT_NONE, CT_TILE, CT_CIRCLE, CT_AABB
 
 class GameObject:
     
+    # if specified, this art will be loaded instead of what's passed into init
+    art_src = None
     move_accel_rate = 0.01
     # normal movement will accelerate up to this, final velocity is uncapped
     max_move_speed = 0.4
@@ -27,6 +29,9 @@ class GameObject:
     # AABB top left / bottom right coordinates
     col_box_left_x, col_box_right_x = -1, 1
     col_box_top_y, col_box_bottom_y = -1, 1
+    # lists of classes to call back on overlap / collide with
+    overlap_classes = []
+    collide_classes = []
     
     def __init__(self, app, art, loc=(0, 0, 0)):
         (self.x, self.y, self.z) = loc
@@ -35,10 +40,15 @@ class GameObject:
         self.flip_x = False
         # update_renderables should behave as if we transformed on first frame
         self.transformed_this_frame = True
+        self.overlapping_objects = []
+        self.colliding_objects = []
         # generate unique name for object 
         name = str(self)
         self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         self.app = app
+        # specify art in art_src else use what's passed in
+        if self.art_src:
+            art = self.app.game_art_dir + self.art_src
         # support a filename OR an existing Art object
         self.art = self.app.load_art(art) if type(art) is str else art
         if not self.art:
@@ -85,6 +95,14 @@ class GameObject:
         if self.scale_x != x or self.scale_y != y or self.scale_z != z:
             self.transformed_this_frame = True
         self.scale_x, self.scale_y, self.scale_z = x, y, z
+    
+    def started_overlap(self, other):
+        #print('%s started overlapping with %s' % (self.name, other.name))
+        self.overlapping_objects.append(other)
+    
+    def ended_overlap(self, other):
+        #print('%s stopped overlapping with %s' % (self.name, other.name))
+        self.overlapping_objects.remove(other)
     
     def move(self, dx, dy):
         m = 1 + self.friction
@@ -165,8 +183,15 @@ class GameObject:
         self.renderable.render(layer, z_override)
 
 
-class StaticLevelObject(GameObject):
+class StaticTileObject(GameObject):
     collision_type = CT_TILE
+
+class StaticBoxObject(GameObject):
+    collision_type = CT_AABB
+
+class Pickup(GameObject):
+    collision_type = CT_CIRCLE
+    dyanmic = True
 
 
 class WobblyThing(GameObject):
@@ -212,23 +237,14 @@ class Player(GameObject):
     max_move_speed = 0.8
     friction = 0.25
     log_move = True
-    camera_pan_scaler = 0
     dynamic = True
     collision_type = CT_AABB
-    
-    def update(self, update_renderables=True):
-        GameObject.update(self, update_renderables)
-        # camera follow player
-        if self.camera_pan_scaler != 0:
-            self.app.camera.pan(self.vel_x * self.camera_pan_scaler,
-                                self.vel_y * self.camera_pan_scaler)
 
 
 class NSEWPlayer(Player):
     
     "top-down player character that can face & travel in 4 directions"
     
-    camera_pan_scaler = 0.1
     anim_stand_base = 'stand'
     anim_walk_base = 'walk'
     anim_forward_base = 'fwd'

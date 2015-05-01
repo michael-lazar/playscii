@@ -687,3 +687,21 @@ class InputLord:
             for art in game_obj.get_all_art():
                 self.app.load_art_for_edit(art.filename)
         self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_toggle_all_collision_viz(self):
+        if not self.app.game_mode:
+            return
+        self.app.show_collision_all = not self.app.show_collision_all
+        self.app.set_for_all_game_objects('show_collision', self.app.show_collision_all)
+    
+    def BIND_toggle_all_bounds_viz(self):
+        if not self.app.game_mode:
+            return
+        self.app.show_bounds_all = not self.app.show_bounds_all
+        self.app.set_for_all_game_objects('show_bounds', self.app.show_bounds_all)
+    
+    def BIND_toggle_all_origin_viz(self):
+        if not self.app.game_mode:
+            return
+        self.app.show_origin_all = not self.app.show_origin_all
+        self.app.set_for_all_game_objects('show_origin', self.app.show_origin_all)
