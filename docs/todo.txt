@@ -1,5 +1,7 @@
 TODO
 
+make a static AABB object and a static (+dynamic?) circle object for cronotest
+
 collision detection!
 basic algo:
 for each object A that updated this frame:

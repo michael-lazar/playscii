@@ -41,6 +41,8 @@ class Camera:
         self.z = self.start_zoom
         self.vel_x, self.vel_y, self.vel_z = 0,0,0
         self.mouse_panned, self.moved_this_frame = False, False
+        # GameObject to focus on
+        self.focus_object = None
         self.calc_projection_matrix()
         self.calc_view_matrix()
     
@@ -160,23 +162,29 @@ class Camera:
     def update(self):
         # remember last position to see if it changed
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
-        # clamp velocity
-        self.vel_x = clamp(self.vel_x, -self.max_pan_speed, self.max_pan_speed)
-        self.vel_y = clamp(self.vel_y, -self.max_pan_speed, self.max_pan_speed)
+        # if focus object is set, use it for X and Y transforms
+        if self.focus_object:
+            self.x = self.focus_object.x
+            self.y = self.focus_object.y
+        else:
+            # clamp velocity
+            self.vel_x = clamp(self.vel_x, -self.max_pan_speed, self.max_pan_speed)
+            self.vel_y = clamp(self.vel_y, -self.max_pan_speed, self.max_pan_speed)
+            # apply friction
+            self.vel_x *= 1 - self.pan_friction
+            self.vel_y *= 1 - self.pan_friction        
+            if abs(self.vel_x) < self.min_velocity:
+                self.vel_x = 0
+            if abs(self.vel_y) < self.min_velocity:
+                self.vel_y = 0
+            # move
+            self.x += self.vel_x
+            self.y += self.vel_y
+        # process Z separately
         self.vel_z = clamp(self.vel_z, -self.max_zoom_speed, self.max_zoom_speed)
-        # apply friction
-        self.vel_x *= 1 - self.pan_friction
-        self.vel_y *= 1 - self.pan_friction
         self.vel_z *= 1 - self.zoom_friction
-        if abs(self.vel_x) < self.min_velocity:
-            self.vel_x = 0
-        if abs(self.vel_y) < self.min_velocity:
-            self.vel_y = 0
         if abs(self.vel_z) < self.min_velocity:
             self.vel_z = 0
-        # move
-        self.x += self.vel_x
-        self.y += self.vel_y
         self.z += self.vel_z
         # keep within bounds
         if not self.app.game_mode:
