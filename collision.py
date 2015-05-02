@@ -7,11 +7,12 @@ CT_AABB = 3
 
 class CollisionLord:
     
-    def __init__(self, app):
-        self.app = app
+    def __init__(self, world):
+        self.world = world
+        self.app = self.world.app
     
     def update(self):
-        for obj in self.app.game_objects:
+        for obj in self.world.objects:
             was_overlapping = obj.overlapping_objects[:]
             overlapping = []
             if not obj.dynamic:
@@ -23,7 +24,7 @@ class CollisionLord:
             if obj.collision_type == CT_TILE:
                 print('%s: collision type CT_TILE not handled yet!' % obj.name)
                 continue
-            for other in self.app.game_objects:
+            for other in self.world.objects:
                 if other is obj:
                     continue
                 if other.collision_type == CT_NONE:
