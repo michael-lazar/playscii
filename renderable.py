@@ -332,7 +332,7 @@ class TileRenderable:
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         # draw all specified layers if no list given
-        if not layers:
+        if layers is None:
             # sort layers in Z depth
             layers = list(range(self.art.layers))
             layers.sort(key=lambda i: self.art.layers_z[i], reverse=False)

@@ -34,6 +34,7 @@ class GameObject:
     collide_classes = []
     
     def __init__(self, app, art, loc=(0, 0, 0)):
+        self.initializing = True
         (self.x, self.y, self.z) = loc
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
@@ -71,6 +72,7 @@ class GameObject:
         self.update_renderables()
         # CT_TILE objects base their box edges off renderable loc + size
         self.update_collision_box_edges()
+        self.initializing = False
         self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
     def get_all_art(self):
@@ -162,11 +164,12 @@ class GameObject:
             self.bottom_y = self.top_y + (self.col_box_top_y - self.col_box_bottom_y)
     
     def update_renderables(self):
-        if self.show_origin:
+        # even if debug viz are off, update once on init to set correct state
+        if self.show_origin or self.initializing:
             self.origin_renderable.update()
-        if self.show_bounds:
+        if self.show_bounds or self.initializing:
             self.bounds_renderable.update()
-        if self.show_collision and self.collision_renderable:
+        if self.collision_renderable and (self.show_collision or self.initializing):
             self.collision_renderable.update()
         self.renderable.update()
     
