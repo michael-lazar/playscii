@@ -238,17 +238,17 @@ class InputLord:
         # game mode: arrow keys and left gamepad stick move player
         if self.app.game_mode and not self.ui.console.visible:
             if pressing_up(ks):
-                app.player.move(0, 1)
+                app.gw.player.move(0, 1)
             if pressing_down(ks):
-                app.player.move(0, -1)
+                app.gw.player.move(0, -1)
             if pressing_left(ks):
-                app.player.move(-1, 0)
+                app.gw.player.move(-1, 0)
             if pressing_right(ks):
-                app.player.move(1, 0)
+                app.gw.player.move(1, 0)
             if abs(self.gamepad_left_x) > 0.15:
-                app.player.move(self.gamepad_left_x, 0)
+                app.gw.player.move(self.gamepad_left_x, 0)
             if abs(self.gamepad_left_y) > 0.15:
-                app.player.move(0, self.gamepad_left_y)
+                app.gw.player.move(0, self.gamepad_left_y)
         sdl2.SDL_PumpEvents()
     #
     # bind functions
@@ -683,7 +683,7 @@ class InputLord:
         self.ui.fps_counter.visible = not self.ui.fps_counter.visible
     
     def BIND_open_all_game_assets(self):
-        for game_obj in self.app.game_objects:
+        for game_obj in self.app.gw.objects:
             for art in game_obj.get_all_art():
                 self.app.load_art_for_edit(art.filename)
         self.ui.menu_bar.refresh_active_menu()
@@ -692,16 +692,16 @@ class InputLord:
         if not self.app.game_mode:
             return
         self.app.show_collision_all = not self.app.show_collision_all
-        self.app.set_for_all_game_objects('show_collision', self.app.show_collision_all)
+        self.app.gw.set_for_all_objects('show_collision', self.app.show_collision_all)
     
     def BIND_toggle_all_bounds_viz(self):
         if not self.app.game_mode:
             return
         self.app.show_bounds_all = not self.app.show_bounds_all
-        self.app.set_for_all_game_objects('show_bounds', self.app.show_bounds_all)
+        self.app.gw.set_for_all_objects('show_bounds', self.app.show_bounds_all)
     
     def BIND_toggle_all_origin_viz(self):
         if not self.app.game_mode:
             return
         self.app.show_origin_all = not self.app.show_origin_all
-        self.app.set_for_all_game_objects('show_origin', self.app.show_origin_all)
+        self.app.gw.set_for_all_objects('show_origin', self.app.show_origin_all)

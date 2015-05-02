@@ -33,7 +33,7 @@ class GameObject:
     overlap_classes = []
     collide_classes = []
     
-    def __init__(self, app, art, loc=(0, 0, 0)):
+    def __init__(self, world, art, loc=(0, 0, 0)):
         self.initializing = True
         (self.x, self.y, self.z) = loc
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
@@ -46,28 +46,29 @@ class GameObject:
         # generate unique name for object 
         name = str(self)
         self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
-        self.app = app
+        self.world = world
+        self.app = self.world.app
         # specify art in art_src else use what's passed in
         if self.art_src:
-            art = self.app.game_art_dir + self.art_src
+            art = self.world.game_art_dir + self.art_src
         # support a filename OR an existing Art object
         self.art = self.app.load_art(art) if type(art) is str else art
         if not self.art:
             self.app.log("Couldn't spawn GameObject with art %s" % art.filename)
             return
         self.renderable = TileRenderable(self.app, self.art, self)
-        self.origin_renderable = OriginIndicatorRenderable(app, self)
+        self.origin_renderable = OriginIndicatorRenderable(self.app, self)
         self.collision_renderable = None
         if self.collision_type == CT_CIRCLE:
-            self.collision_renderable = CircleCollisionRenderable(app, self)
+            self.collision_renderable = CircleCollisionRenderable(self.app, self)
         elif self.collision_type == CT_AABB:
-            self.collision_renderable = BoxCollisionRenderable(app, self)
+            self.collision_renderable = BoxCollisionRenderable(self.app, self)
         # 1px LineRenderable showing object's bounding box
-        self.bounds_renderable = BoundsIndicatorRenderable(app, self)
-        if not self.art in self.app.art_loaded_for_game:
-            self.app.art_loaded_for_game.append(self.art)
-        self.app.game_renderables.append(self.renderable)
-        self.app.game_objects.append(self)
+        self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
+        if not self.art in self.world.art_loaded:
+            self.world.art_loaded.append(self.art)
+        self.world.renderables.append(self.renderable)
+        self.world.objects.append(self)
         # whether we're static or dynamic, run these once to set proper state
         self.update_renderables()
         # CT_TILE objects base their box edges off renderable loc + size
@@ -201,8 +202,8 @@ class WobblyThing(GameObject):
     
     dynamic = True
     
-    def __init__(self, app, art):
-        GameObject.__init__(self, app, art)
+    def __init__(self, world, art):
+        GameObject.__init__(self, world, art)
         self.origin_x, self.origin_y, self.origin_z = self.x, self.y, self.z
     
     def set_origin(self, x, y, z=None):
@@ -225,12 +226,12 @@ class ParticleThing(GameObject):
     
     width, height = 8, 8
     
-    def __init__(self, app, loc=(0, 0, 0)):
-        charset = app.load_charset('dos')
-        palette = app.load_palette('ega')
-        art = Art('smoke1', app, charset, palette, self.width, self.height)
+    def __init__(self, world, loc=(0, 0, 0)):
+        charset = world.app.load_charset('dos')
+        palette = world.app.load_palette('ega')
+        art = Art('smoke1', world.app, charset, palette, self.width, self.height)
         art.clear_frame_layer(0, 0, 0)
-        GameObject.__init__(self, app, art, loc)
+        GameObject.__init__(self, world, art, loc)
         self.art.run_script_every('mutate')
 
 
@@ -254,7 +255,7 @@ class NSEWPlayer(Player):
     anim_back_base = 'back'
     anim_right_base = 'right'
     
-    def __init__(self, app, anim_prefix, loc=(0, 0, 0)):
+    def __init__(self, world, anim_prefix, loc=(0, 0, 0)):
         # load animations
         stand_fwd_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_stand_base,
                                             self.anim_forward_base)
@@ -268,15 +269,15 @@ class NSEWPlayer(Player):
                                             self.anim_back_base)
         walk_right_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_walk_base,
                                              self.anim_right_base)
-        self.anim_stand_fwd = app.load_art(stand_fwd_anim_name)
-        self.anim_stand_back = app.load_art(stand_back_anim_name)
-        self.anim_stand_right = app.load_art(stand_right_anim_name)
-        self.anim_walk_fwd = app.load_art(walk_fwd_anim_name)
-        self.anim_walk_back = app.load_art(walk_back_anim_name)
-        self.anim_walk_right = app.load_art(walk_right_anim_name)
+        self.anim_stand_fwd = world.app.load_art(stand_fwd_anim_name)
+        self.anim_stand_back = world.app.load_art(stand_back_anim_name)
+        self.anim_stand_right = world.app.load_art(stand_right_anim_name)
+        self.anim_walk_fwd = world.app.load_art(walk_fwd_anim_name)
+        self.anim_walk_back = world.app.load_art(walk_back_anim_name)
+        self.anim_walk_right = world.app.load_art(walk_right_anim_name)
         self.last_move_dir = (0, 0)
         # set initial pose
-        Player.__init__(self, app, self.anim_stand_fwd, loc)
+        Player.__init__(self, world, self.anim_stand_fwd, loc)
     
     def get_all_art(self):
         return [self.anim_stand_fwd, self.anim_stand_back, self.anim_stand_right,

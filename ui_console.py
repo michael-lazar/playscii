@@ -91,7 +91,7 @@ class LoadGameCommand(ConsoleCommand):
         if len(args) == 0:
             return 'Usage: game [game name]'
         game_name = ' '.join(args)
-        console.ui.app.load_game(game_name)
+        console.ui.app.gw.load_game(game_name)
 
 
 # map strings to command classes for ConsoleUI.parse
@@ -349,8 +349,9 @@ class ConsoleUI(UIElement):
                 app = ui.app
                 camera = app.camera
                 art = ui.active_art
-                player = app.player
-                tuner = app.tuner
+                player = app.gw.player
+                tuner = app.gw.tuner
+                world = app.gw
                 # special handling of assignment statements, eg x = 3:
                 # detect strings that pattern-match, send them to exec(),
                 # send all other strings to eval()

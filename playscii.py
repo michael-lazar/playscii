@@ -1,4 +1,4 @@
-import sys, os.path, time
+import sys, os.path
 
 # obnoxious PyOpenGL workaround for py2exe
 import platform
@@ -9,7 +9,7 @@ if platform.system() == 'Windows':
     sys.path += ['.']
 
 # app imports
-import ctypes
+import ctypes, time
 import sdl2
 import sdl2.ext
 from sdl2 import video
@@ -29,21 +29,18 @@ from ui import UI
 from cursor import Cursor
 from grid import Grid
 from input_handler import InputLord
-from collision import CollisionLord, CT_NONE, CT_TILE, CT_CIRCLE, CT_AABB
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
-from game_object import GameObject
+from game_world import GameWorld
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
-GAME_DIR = 'games/'
-GAME_FILE_EXTENSION = 'game'
 
 COMPAT_FAIL_MSG = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
 
@@ -148,17 +145,11 @@ class Application:
         self.sl = ShaderLord(self)
         # separate cameras for edit vs game mode
         self.edit_camera = Camera(self)
-        self.game_camera = Camera(self)
         self.camera = self.edit_camera
         self.art_loaded_for_edit, self.edit_renderables = [], []
         self.converter = None
-        # "game mode" renderables
-        self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
-        # "tuner": set an object to this for quick console tuning access
-        self.player, self.tuner = None, None
-        self.game_objects = []
-        self.cl = CollisionLord(self)
+        self.gw = GameWorld(self)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -194,7 +185,7 @@ class Application:
         self.init_success = True
         self.log('init done.')
         if game_to_load:
-            self.load_game(game_to_load)
+            self.gw.load_game(game_to_load)
         else:
             self.ui.message_line.post_line(self.welcome_message, 10)
     
@@ -257,7 +248,7 @@ class Application:
             self.log(text)
             art = self.new_art(filename)
         else:
-            for a in self.art_loaded_for_edit + self.art_loaded_for_game:
+            for a in self.art_loaded_for_edit + self.gw.art_loaded:
                 # TODO: this check doesn't work on EDSCII imports b/c its name changes
                 if a.filename == filename:
                     return a
@@ -440,41 +431,17 @@ class Application:
     
     def enter_game_mode(self):
         self.game_mode = True
-        self.camera = self.game_camera
+        self.camera = self.gw.camera
     
     def exit_game_mode(self):
         self.game_mode = False
         self.camera = self.edit_camera
     
-    def clear_game_assets(self):
-        self.art_loaded_for_game = []
-        self.game_renderables = []
-        self.game_objects = []
-    
-    def set_for_all_game_objects(self, name, value):
-        for game_obj in self.game_objects:
-            setattr(game_obj, name, value)
-    
-    def load_game(self, game_name):
-        self.enter_game_mode()
-        # execute game script, which loads game assets etc
-        game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
-        if not os.path.exists(game_file):
-            self.log("Couldn't find game script: %s" % game_file)
-            return
-        self.log('loading game %s...' % game_name)
-        self.clear_game_assets()
-        # set game_dir & game_art_dir for quick access within game script
-        self.game_dir = '%s%s/' % (GAME_DIR, game_name)
-        self.game_art_dir = '%s%s' % (self.game_dir, ART_DIR)
-        exec(open(game_file).read())
-        self.log('loaded game %s' % game_name)
-    
     def main_loop(self):
         while not self.should_quit:
             # set all arts to "not updated", objects to "didn't transform"
             if self.game_mode:
-                for game_object in self.game_objects:
+                for game_object in self.gw.objects:
                     game_object.art.updated_this_tick = False
                     game_object.transformed_this_frame = False
             else:
@@ -515,10 +482,7 @@ class Application:
         if self.converter:
             self.converter.update()
         if self.game_mode:
-            # update objects based on movement, then resolve collisions
-            for game_object in self.game_objects:
-                game_object.update()
-            self.cl.update()
+            self.gw.update()
         self.camera.update()
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
@@ -527,37 +491,6 @@ class Application:
         if not self.game_mode:
             self.grid.update()
             self.cursor.end_update()
-    
-    class RenderItem:
-        "quickie class to debug render order"
-        def __init__(self, game_object, layer, layer_z):
-            self.game_object, self.layer, self.layer_z = game_object, layer, layer_z
-        def __str__(self):
-            return '%s layer %s z %s' % (self.game_object.art.filename, self.layer, self.layer_z)
-    
-    def game_render(self):
-        # sort objects for drawing by each layer Z order
-        draw_order = []
-        collision_items = []
-        for game_object in self.game_objects:
-            for i,z in enumerate(game_object.art.layers_z):
-                # only draw collision layer if show collision is set
-                if game_object.collision_type == CT_TILE and game_object.col_layer_name == game_object.art.layer_names[i]:
-                    if game_object.show_collision:
-                        item = self.RenderItem(game_object, i, 0)
-                        collision_items.append(item)
-                    continue
-                item = self.RenderItem(game_object, i, z + game_object.z)
-                draw_order.append(item)
-        draw_order.sort(key=lambda item: item.layer_z, reverse=False)
-        for item in draw_order:
-            item.game_object.render(item.layer)
-        # draw debug stuff: collision layers and origins/boxes
-        for item in collision_items:
-            # draw all tile collision at z 0
-            item.game_object.render(item.layer, 0)
-        for game_object in self.game_objects:
-            game_object.render_debug()
     
     def debug_onion_frames(self):
         "debug function to log onion renderable state"
@@ -581,7 +514,7 @@ class Application:
         GL.glClearColor(*self.bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         if self.game_mode:
-            self.game_render()
+            self.gw.render()
         else:
             if self.converter:
                 self.converter.preview_sprite.render()

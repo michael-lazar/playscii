@@ -156,7 +156,7 @@ class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
     label = 'Open all Game Mode assets'
     command = 'open_all_game_assets'
     def should_dim(app):
-        return len(app.game_objects) == 0
+        return len(app.gw.objects) == 0
 
 class ArtPreviousMenuItem(PulldownMenuItem):
     label = 'Previous Art'
