@@ -1,9 +1,17 @@
 import math, os
+import pymunk
 
 from art import Art
 from renderable import TileRenderable
-from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable, CircleCollisionRenderable, BoxCollisionRenderable
-from collision import CT_NONE, CT_TILE, CT_CIRCLE, CT_AABB
+from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable, CircleCollisionRenderable, BoxCollisionRenderable, TileCollisionRenderable
+
+from game_world import CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
+
+# collision shape types
+CST_NONE = 0
+CST_CIRCLE = 1
+CST_AABB = 2
+CST_TILE = 3
 
 class GameObject:
     
@@ -13,15 +21,18 @@ class GameObject:
     # normal movement will accelerate up to this, final velocity is uncapped
     max_move_speed = 0.4
     friction = 0.1
+    # mass - only used by pymunk
+    mass = 1
     log_move = False
     show_origin = False
     show_bounds = False
     show_collision = False
-    # static/dynamic: only relevant if collision type != CT_NONE
-    # if false, object will only be checked by other, dynamic objects
-    dynamic = False
+    # collision shape (tile, circle, AABB) and type (channel)
+    collision_shape_type = CST_NONE
     collision_type = CT_NONE
-    # collision layer name for CT_TILE objects
+    # segment thickness for AABB / tile based collision
+    seg_thickness = 0.01
+    # collision layer name for CST_TILE objects
     col_layer_name = 'collision'
     # collision circle/box offset from origin
     col_offset_x, col_offset_y = 0, 0
@@ -29,21 +40,16 @@ class GameObject:
     # AABB top left / bottom right coordinates
     col_box_left_x, col_box_right_x = -1, 1
     col_box_top_y, col_box_bottom_y = -1, 1
-    # lists of classes to call back on overlap / collide with
-    overlap_classes = []
-    collide_classes = []
     
     def __init__(self, world, art, loc=(0, 0, 0)):
-        self.initializing = True
         (self.x, self.y, self.z) = loc
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
         # update_renderables should behave as if we transformed on first frame
+        # TODO: remove this once clear it's no longer needed for pymunk setup
         self.transformed_this_frame = True
-        self.overlapping_objects = []
-        self.colliding_objects = []
-        # generate unique name for object 
+        # generate unique name for object
         name = str(self)
         self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         self.world = world
@@ -58,23 +64,84 @@ class GameObject:
             return
         self.renderable = TileRenderable(self.app, self.art, self)
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
-        self.collision_renderable = None
-        if self.collision_type == CT_CIRCLE:
-            self.collision_renderable = CircleCollisionRenderable(self.app, self)
-        elif self.collision_type == CT_AABB:
-            self.collision_renderable = BoxCollisionRenderable(self.app, self)
         # 1px LineRenderable showing object's bounding box
         self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
         if not self.art in self.world.art_loaded:
             self.world.art_loaded.append(self.art)
         self.world.renderables.append(self.renderable)
+        self.collision_renderable = None
+        if self.collision_shape_type != CST_NONE:
+            self.create_collision()
         self.world.objects.append(self)
         # whether we're static or dynamic, run these once to set proper state
         self.update_renderables()
-        # CT_TILE objects base their box edges off renderable loc + size
-        self.update_collision_box_edges()
-        self.initializing = False
         self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
+    
+    def create_collision(self):
+        self.col_body = pymunk.Body(self.mass, pymunk.inf)
+        self.col_body.position.x, self.col_body.position.y = self.x, self.y
+        # give our body a link back to us
+        self.col_body.gobj = self
+        # create different shapes based on collision type
+        self.col_shapes = []
+        if self.collision_shape_type == CST_CIRCLE:
+            self.col_shapes = [pymunk.Circle(self.col_body, self.col_radius, (self.col_offset_x, self.col_offset_y))]
+        elif self.collision_shape_type == CST_AABB:
+            self.col_shapes = self.get_box_segs()
+        elif self.collision_shape_type == CST_TILE:
+            self.col_shapes = self.get_tile_segs()
+        for shape in self.col_shapes:
+            shape.collision_type = self.collision_type
+            self.world.space.add(shape)
+        if self.collision_shape_type == CST_CIRCLE:
+            self.collision_renderable = CircleCollisionRenderable(self.app, self)
+        elif self.collision_shape_type == CST_AABB:
+            self.collision_renderable = BoxCollisionRenderable(self.app, self)
+        elif self.collision_shape_type == CST_TILE:
+            self.collision_renderable = TileCollisionRenderable(self.app, self)
+    
+    def get_box_segs(self):
+        left = self.col_box_left_x + self.col_offset_x
+        right = self.col_box_right_x + self.col_offset_x
+        top = self.col_box_top_y + self.col_offset_y
+        bottom = self.col_box_bottom_y + self.col_offset_y
+        left_shape = self.get_seg(left, top, left, bottom)
+        right_shape = self.get_seg(right, top, right, bottom)
+        top_shape = self.get_seg(left, top, right, top)
+        bottom_shape = self.get_seg(left, bottom, right, bottom)
+        return [left_shape, right_shape, top_shape, bottom_shape]
+    
+    def get_seg(self, x1, y1, x2, y2):
+        return pymunk.Segment(self.col_body, (x1, y1), (x2, y2), self.seg_thickness)
+    
+    def get_tile_segs(self):
+        segs = []
+        frame = self.renderable.frame
+        layer = self.art.layer_names.index(self.col_layer_name)
+        def is_dir_empty(x, y):
+            return self.art.get_char_index_at(frame, layer, x, y) == 0
+        for y in range(self.art.height):
+            for x in range(self.art.width):
+                if is_dir_empty(x, y):
+                    continue
+                left = (x * self.art.quad_width) - (self.renderable.width / 2)
+                right = left + self.art.quad_width
+                top = (self.renderable.height / 2) - (y * self.art.quad_height)
+                bottom = top - self.art.quad_height
+                # only create segs for 0/>0 tile boundaries
+                # empty space to left = left seg
+                if x == 0 or is_dir_empty(x-1, y):
+                    segs += [self.get_seg(left, top, left, bottom)]
+                if x == self.art.width or is_dir_empty(x+1, y):
+                    segs += [self.get_seg(right, top, right, bottom)]
+                if y == 0 or is_dir_empty(x, y-1):
+                    segs += [self.get_seg(left, top, right, top)]
+                if y == self.art.height or is_dir_empty(x, y+1):
+                    segs += [self.get_seg(left, bottom, right, bottom)]
+        return segs
+    
+    def is_dynamic(self):
+        return self.collision_type in CTG_DYNAMIC
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -93,25 +160,20 @@ class GameObject:
         if (not z and self.z != 0) or self.z != z:
             self.transformed_this_frame = True
         self.z = z or 0
+        if self.col_body:
+            self.col_body.position.x = self.x + self.col_offset_x
+            self.col_body.position.y = self.y + self.col_offset_y
     
     def set_scale(self, x, y, z):
         if self.scale_x != x or self.scale_y != y or self.scale_z != z:
             self.transformed_this_frame = True
         self.scale_x, self.scale_y, self.scale_z = x, y, z
     
-    def started_overlap(self, other):
-        #print('%s started overlapping with %s' % (self.name, other.name))
-        self.overlapping_objects.append(other)
-    
-    def ended_overlap(self, other):
-        #print('%s stopped overlapping with %s' % (self.name, other.name))
-        self.overlapping_objects.remove(other)
-    
     def move(self, dx, dy):
         m = 1 + self.friction
         vel_dx = dx * self.move_accel_rate * m
         vel_dy = dy * self.move_accel_rate * m
-        # TODO: account for friction so max rate
+        # TODO: account for friction so max rate is actually max rate
         # (below doesn't work properly, figure it out)
         max_speed = self.max_move_speed# * (1 + self.friction)
         if vel_dx < 0:
@@ -123,7 +185,7 @@ class GameObject:
         elif vel_dy > 0:
             self.vel_y += min(vel_dy, max_speed)
     
-    def update(self, should_update_renderables=True):
+    def update(self):
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
@@ -138,39 +200,21 @@ class GameObject:
             if self.log_move:
                 debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
                 self.app.ui.debug_text.post_lines(debug)
+        # update physics: shape's surface velocity, body's position
+        if self.col_shapes and self.col_body:
+            for shape in self.col_shapes:
+                shape.surface_velocity = self.vel_x, self.vel_y
+            self.col_body.position.x, self.col_body.position.y = self.x, self.y
         if self.last_x != self.x or self.last_y != self.y or self.last_z != self.z:
             self.transformed_this_frame = True
-            self.update_collision_box_edges()
-        if should_update_renderables:
-            self.update_renderables()
-    
-    def update_collision_box_edges(self):
-        if self.collision_type == CT_NONE:
-            self.left_x, self.right_x = 0, 0
-            self.top_y, self.bottom_y = 0, 0
-        elif self.collision_type == CT_TILE:
-            self.left_x = self.renderable.x
-            self.right_x = self.left_x + self.renderable.width
-            self.top_y = self.renderable.y
-            self.bottom_y = self.top_y - self.renderable.height
-        elif self.collision_type == CT_CIRCLE:
-            self.left_x = (self.x + self.col_offset_x) - self.col_radius
-            self.right_x = self.x + self.col_radius
-            self.top_y = (self.y + self.col_offset_y) + self.col_radius
-            self.bottom_y = self.top_y - (self.col_radius * 2)
-        elif self.collision_type == CT_AABB:
-            self.left_x = (self.x + self.col_offset_x) + self.col_box_left_x
-            self.right_x = self.x + self.col_box_right_x
-            self.top_y = (self.y + self.col_offset_y) - self.col_box_top_y
-            self.bottom_y = self.top_y + (self.col_box_top_y - self.col_box_bottom_y)
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
-        if self.show_origin or self.initializing:
+        if self.show_origin:
             self.origin_renderable.update()
-        if self.show_bounds or self.initializing:
+        if self.show_bounds:
             self.bounds_renderable.update()
-        if self.collision_renderable and (self.show_collision or self.initializing):
+        if self.collision_renderable and self.show_collision:
             self.collision_renderable.update()
         self.renderable.update()
     
@@ -188,52 +232,16 @@ class GameObject:
 
 
 class StaticTileObject(GameObject):
-    collision_type = CT_TILE
+    collision_shape_type = CST_TILE
+    collision_type = CT_GENERIC_STATIC
 
 class StaticBoxObject(GameObject):
-    collision_type = CT_AABB
+    collision_shape_type = CST_AABB
+    collision_type = CT_GENERIC_STATIC
 
 class Pickup(GameObject):
-    collision_type = CT_CIRCLE
-    dyanmic = True
-
-
-class WobblyThing(GameObject):
-    
-    dynamic = True
-    
-    def __init__(self, world, art):
-        GameObject.__init__(self, world, art)
-        self.origin_x, self.origin_y, self.origin_z = self.x, self.y, self.z
-    
-    def set_origin(self, x, y, z=None):
-        self.origin_x, self.origin_y, self.origin_z = x, y, z or self.z
-    
-    def update(self):
-        x_off = math.sin(self.app.elapsed_time / 1000) * self.origin_x
-        y_off = math.sin(self.app.elapsed_time / 500) * self.origin_y
-        z_off = math.sin(self.app.elapsed_time / 750) * self.origin_z
-        self.x = self.origin_x + x_off
-        self.y = self.origin_y + y_off
-        self.z = self.origin_z + z_off
-        scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
-        scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
-        self.set_scale(scale_x, scale_y, 1)
-        GameObject.update(self)
-
-
-class ParticleThing(GameObject):
-    
-    width, height = 8, 8
-    
-    def __init__(self, world, loc=(0, 0, 0)):
-        charset = world.app.load_charset('dos')
-        palette = world.app.load_palette('ega')
-        art = Art('smoke1', world.app, charset, palette, self.width, self.height)
-        art.clear_frame_layer(0, 0, 0)
-        GameObject.__init__(self, world, art, loc)
-        self.art.run_script_every('mutate')
-
+    collision_shape_type = CST_CIRCLE
+    collision_type = CT_GENERIC_DYNAMIC
 
 class Player(GameObject):
     
@@ -241,8 +249,8 @@ class Player(GameObject):
     max_move_speed = 0.8
     friction = 0.25
     log_move = True
-    dynamic = True
-    collision_type = CT_AABB
+    collision_shape_type = CST_CIRCLE
+    collision_type = CT_PLAYER
 
 
 class NSEWPlayer(Player):
@@ -295,8 +303,7 @@ class NSEWPlayer(Player):
             self.renderable.start_animating()
     
     def update(self):
-        # tell update not to update renderables yet
-        Player.update(self, False)
+        Player.update(self)
         # set art and frame based on move direction/velocity
         if -0.01 < self.vel_x < 0.01 and -0.01 < self.vel_y < 0.01:
             self.renderable.stop_animating()
@@ -322,5 +329,3 @@ class NSEWPlayer(Player):
             self.set_anim(self.anim_walk_back)
         elif self.last_move_dir[1] < 0:
             self.set_anim(self.anim_walk_fwd)
-        # transforms all done, ready to update renderables
-        self.update_renderables()
