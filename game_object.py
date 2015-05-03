@@ -46,9 +46,6 @@ class GameObject:
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
-        # update_renderables should behave as if we transformed on first frame
-        # TODO: remove this once clear it's no longer needed for pymunk setup
-        self.transformed_this_frame = True
         # generate unique name for object
         name = str(self)
         self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
@@ -74,7 +71,7 @@ class GameObject:
             self.create_collision()
         self.world.objects.append(self)
         # whether we're static or dynamic, run these once to set proper state
-        self.update_renderables()
+        #self.update_renderables()
         self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
     def create_collision(self):
@@ -154,19 +151,13 @@ class GameObject:
         self.renderable.stop_animating()
     
     def set_loc(self, x, y, z=None):
-        if self.x != x or self.y != y:
-            self.transformed_this_frame = True
         self.x, self.y = x, y
-        if (not z and self.z != 0) or self.z != z:
-            self.transformed_this_frame = True
         self.z = z or 0
         if self.col_body:
             self.col_body.position.x = self.x + self.col_offset_x
             self.col_body.position.y = self.y + self.col_offset_y
     
     def set_scale(self, x, y, z):
-        if self.scale_x != x or self.scale_y != y or self.scale_z != z:
-            self.transformed_this_frame = True
         self.scale_x, self.scale_y, self.scale_z = x, y, z
     
     def move(self, dx, dy):
@@ -205,8 +196,6 @@ class GameObject:
             for shape in self.col_shapes:
                 shape.surface_velocity = self.vel_x, self.vel_y
             self.col_body.position.x, self.col_body.position.y = self.x, self.y
-        if self.last_x != self.x or self.last_y != self.y or self.last_z != self.z:
-            self.transformed_this_frame = True
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
@@ -238,6 +227,10 @@ class StaticTileObject(GameObject):
 class StaticBoxObject(GameObject):
     collision_shape_type = CST_AABB
     collision_type = CT_GENERIC_STATIC
+
+class DynamicBoxObject(GameObject):
+    collision_shape_type = CST_AABB
+    collision_type = CT_GENERIC_DYNAMIC
 
 class Pickup(GameObject):
     collision_shape_type = CST_CIRCLE

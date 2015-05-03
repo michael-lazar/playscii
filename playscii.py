@@ -440,11 +440,10 @@ class Application:
     
     def main_loop(self):
         while not self.should_quit:
-            # set all arts to "not updated", objects to "didn't transform"
+            # set all arts to "not updated"
             if self.game_mode:
                 for game_object in self.gw.objects:
                     game_object.art.updated_this_tick = False
-                    game_object.transformed_this_frame = False
             else:
                 for art in self.art_loaded_for_edit:
                     art.updated_this_tick = False
