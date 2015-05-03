@@ -86,6 +86,7 @@ self.edit_bind_src = {
     'ctrl h'   : 'choose_charset',
     'ctrl p'   : 'choose_palette',
     'o'        : 'toggle_onion_visibility',
+	'f1'       : 'reset_game',
 	'f5'       : 'toggle_all_origin_viz',
 	'f6'       : 'toggle_all_bounds_viz',
 	'f7'       : 'toggle_all_collision_viz',

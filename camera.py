@@ -164,8 +164,16 @@ class Camera:
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         # if focus object is set, use it for X and Y transforms
         if self.focus_object:
-            self.x = self.focus_object.x
-            self.y = self.focus_object.y
+            # track towards target
+            # TODO: revisit this for better feel later
+            dx, dy = self.focus_object.x - self.x, self.focus_object.y - self.y
+            l = math.sqrt(dx ** 2 + dy ** 2)
+            if l != 0 and l > 0.1:
+                il = 1 / l
+                dx *= il
+                dy *= il
+                self.x += dx * self.pan_friction
+                self.y += dy * self.pan_friction
         else:
             # clamp velocity
             self.vel_x = clamp(self.vel_x, -self.max_pan_speed, self.max_pan_speed)

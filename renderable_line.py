@@ -153,6 +153,7 @@ class LineRenderable():
         GL.glUseProgram(0)
 
 
+# TODO: this is probably not a very useful refactor, revisit later
 BOX_VERTS = [(0, 0), (1, 0), (1, -1), (0, -1)]
 
 def get_box_arrays(vert_list=None, color=(1, 1, 1, 1)):
@@ -194,7 +195,7 @@ class SwatchSelectionBoxRenderable(LineRenderable):
 
 
 class WorldLineRenderable(LineRenderable):
-    
+    "any LineRenderable that draws in world, ie in 3D perspective"
     def get_projection_matrix(self):
         return self.app.camera.projection_matrix
     
@@ -222,6 +223,13 @@ class OriginIndicatorRenderable(WorldLineRenderable):
     def get_quad_size(self):
         return 1, 1
     
+    def update_transform_from_object(self, obj):
+        self.x, self.y, self.z = obj.x, obj.y, obj.z
+        self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
+        if obj.flip_x:
+            self.scale_x *= -1
+        self.scale_z = obj.scale_z
+    
     def build_geo(self):
         self.vert_array = np.array([self.origin, self.x_axis,
                                     self.origin, self.y_axis,
@@ -248,15 +256,27 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         self.vert_array, self.elem_array, self.color_array = get_box_arrays(None, self.color)
 
 
-class BoxCollisionRenderable(WorldLineRenderable):
+class CollisionRenderable(WorldLineRenderable):
     
     def __init__(self, app, game_object):
         # green = dynamic, blue = static
-        self.color = (0, 1, 0, 1) if game_object.dynamic else (0, 0, 1, 1)
-        LineRenderable.__init__(self, app, None, game_object)
+        self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
+        WorldLineRenderable.__init__(self, app, None, game_object)
+    
+    def update_transform_from_object(self, obj):
+        self.z = obj.z
+        self.x = obj.col_body.position.x + obj.col_offset_x
+        self.y = obj.col_body.position.y + obj.col_offset_y
+        self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
+        if obj.flip_x:
+            self.scale_x *= -1
+        self.scale_z = obj.scale_z
+
+
+class BoxCollisionRenderable(CollisionRenderable):
     
     def get_quad_size(self):
-        # unlike circle, size is baked into verts
+        # size is baked into vert locations
         return 1, 1
     
     def build_geo(self):
@@ -269,14 +289,9 @@ class BoxCollisionRenderable(WorldLineRenderable):
         vert_list = [top_left, top_right, bottom_right, bottom_left]
         self.vert_array, self.elem_array, self.color_array = get_box_arrays(vert_list)
 
-class CircleCollisionRenderable(WorldLineRenderable):
+class CircleCollisionRenderable(CollisionRenderable):
     
-    segments = 30
-    
-    def __init__(self, app, game_object):
-        # green = dynamic, blue = static
-        self.color = (0, 1, 0, 1) if game_object.dynamic else (0, 0, 1, 1)
-        LineRenderable.__init__(self, app, None, game_object)
+    segments = 24
     
     def get_quad_size(self):
         return self.game_object.col_radius, self.game_object.col_radius
@@ -299,3 +314,20 @@ class CircleCollisionRenderable(WorldLineRenderable):
         self.vert_array = np.array(verts, dtype=np.float32)
         self.elem_array = np.array(elements, dtype=np.uint32)
         self.color_array = np.array(colors, dtype=np.float32)
+
+
+class TileCollisionRenderable(CollisionRenderable):
+    
+    def __init__(self, app, game_object):
+        # green = dynamic, blue = static
+        self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
+        WorldLineRenderable.__init__(self, app, game_object.art, game_object)
+    
+    def build_geo(self):
+        verts, elems = [], []
+        for i,seg in enumerate(self.game_object.col_shapes):
+            verts += [(seg.a.x, seg.a.y), (seg.b.x, seg.b.y)]
+            elems += [i*2, i*2+1]
+        self.vert_array = np.array(verts, dtype=np.float32)
+        self.elem_array = np.array(elems, dtype=np.uint32)
+        self.color_array = np.array([self.color * len(elems)], dtype=np.float32)

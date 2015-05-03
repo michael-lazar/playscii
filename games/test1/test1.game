@@ -1,5 +1,39 @@
-from game_object import GameObject, Player, WobblyThing, ParticleThing
 from random import randint
+from game_object import GameObject, Player
+
+class WobblyThing(GameObject):
+    
+    def __init__(self, world, art):
+        GameObject.__init__(self, world, art)
+        self.origin_x, self.origin_y, self.origin_z = self.x, self.y, self.z
+    
+    def set_origin(self, x, y, z=None):
+        self.origin_x, self.origin_y, self.origin_z = x, y, z or self.z
+    
+    def update(self):
+        x_off = math.sin(self.app.elapsed_time / 1000) * self.origin_x
+        y_off = math.sin(self.app.elapsed_time / 500) * self.origin_y
+        z_off = math.sin(self.app.elapsed_time / 750) * self.origin_z
+        self.x = self.origin_x + x_off
+        self.y = self.origin_y + y_off
+        self.z = self.origin_z + z_off
+        scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
+        scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
+        self.set_scale(scale_x, scale_y, 1)
+        GameObject.update(self)
+
+class ParticleThing(GameObject):
+    
+    width, height = 8, 8
+    
+    def __init__(self, world, loc=(0, 0, 0)):
+        charset = world.app.load_charset('dos')
+        palette = world.app.load_palette('ega')
+        art = Art('smoke1', world.app, charset, palette, self.width, self.height)
+        art.clear_frame_layer(0, 0, 0)
+        GameObject.__init__(self, world, art, loc)
+        self.art.run_script_every('mutate')
+
 
 # background w/ parallax layers
 bg = GameObject(self, self.game_art_dir + 'test_bg', (0, 0, -3))

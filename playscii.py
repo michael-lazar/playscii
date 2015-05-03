@@ -35,6 +35,7 @@ from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
 from game_world import GameWorld
+from game_object import GameObject
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'

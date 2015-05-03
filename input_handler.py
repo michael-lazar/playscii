@@ -705,3 +705,6 @@ class InputLord:
             return
         self.app.show_origin_all = not self.app.show_origin_all
         self.app.gw.set_for_all_objects('show_origin', self.app.show_origin_all)
+    
+    def BIND_reset_game(self):
+        self.app.gw.reset_game()

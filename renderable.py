@@ -199,19 +199,13 @@ class TileRenderable:
     def update_transform_from_object(self, obj):
         "updates our position & scale based on that of given game object"
         self.z = obj.z
-        if self is obj.origin_renderable:
-            self.x, self.y = obj.x, obj.y
-        elif self is obj.collision_renderable:
-            self.x = obj.x + obj.col_offset_x
-            self.y = obj.y + obj.col_offset_y
+        if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
+            self.reset_size()
+        if obj.flip_x:
+            self.x = obj.x + (self.width * self.origin_pct_x)
         else:
-            if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
-                self.reset_size()
-            if obj.flip_x:
-                self.x = obj.x + (self.width * self.origin_pct_x)
-            else:
-                self.x = obj.x - (self.width * self.origin_pct_x)
-            self.y = obj.y + (self.height * self.origin_pct_y)
+            self.x = obj.x - (self.width * self.origin_pct_x)
+        self.y = obj.y + (self.height * self.origin_pct_y)
         self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
         if obj.flip_x:
             self.scale_x *= -1
