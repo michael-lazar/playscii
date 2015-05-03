@@ -32,8 +32,8 @@ def player_vs_dynamic_begin(space, arbiter):
     obj2 = arbiter.shapes[1].body.gobj
     #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
     c = arbiter.contacts[0]
-    x = obj2.x + c.normal.x * c.distance
-    y = obj2.y + c.normal.y * c.distance
+    x = obj2.x + c.normal.x * (c.distance / 3)
+    y = obj2.y + c.normal.y * (c.distance / 3)
     obj2.set_loc(x, y)
     return True
 
@@ -46,8 +46,10 @@ def player_vs_static_begin(space, arbiter):
     obj2 = arbiter.shapes[1].body.gobj
     #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
     c = arbiter.contacts[0]
-    x = obj1.x + c.normal.x * c.distance
-    y = obj1.y + c.normal.y * c.distance
+    x = obj1.x + c.normal.x * (c.distance / 4)
+    y = obj1.y + c.normal.y * (c.distance / 4)
+    #obj1.vel_x *= c.normal.y
+    #obj1.vel_y *= c.normal.x
     obj1.set_loc(x, y)
     #obj1.vel_x, obj1.vel_y = 0, 0
     return True

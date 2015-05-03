@@ -86,7 +86,7 @@ class LineRenderable():
         pass
     
     def update(self):
-        if self.game_object and self.game_object.transformed_this_frame:
+        if self.game_object:
             self.update_transform_from_object(self.game_object)
     
     def reset_size(self):
