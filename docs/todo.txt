@@ -1,38 +1,11 @@
 TODO
 
-make a static AABB object and a static (+dynamic?) circle object for cronotest
+game mode menu entries: toggle mode, open game
 
-collision detection!
-basic algo:
-for each object A that updated this frame:
- update A's position on global grid
- for each static & dynamic colliding object B:
-  if A can't overlap or collide with B:
-   break
-  if A was already tested against B this frame:
-   break
-  update B's position on global grid
-  if B's box doesn't overlap A's box:
-   break
-  if narrowphase collision check fails:
-   break
-  if A has an overlap interaction with B:
-   tell A & B the other overlaps
-   (if overlap just started or ended, callback)
-  elif A has a collision interaction with B:
-   resolve collision (moving one or both objects)
-   tell A & B the other is colliding
-   (if collide just started or ended, callback)
-
-- 2D only, each colliding object has a single layer
-- Renderable.collision_layer: -1 means no collision, >=0 means use that layer for collision
--- make sure this should be a property of Renderable and not Art or GameObject
-- for simplicity, all collision layers are resolved as if they were on the same Z
-- each Renderable can have "display collision layer" toggled for debug
--- collision layer Z can be set to anything in edit mode, but always rendered at 0 in game mode
-- dynamic objects can (should?) have circle or AABB collision
-- broadphase: bounding boxes of each gameobject art
-- narrowphase: how to detect and resolve collisions? the hard part :]
+collision:
+- debug viz for contacts (create on
+- fix player->static collisions - shouldn't jitter
+- fix player->dynamicBB collisions
 
 game mode improvements:
 - concept of "selected game object"

@@ -70,12 +70,17 @@ class GameObject:
         if self.collision_shape_type != CST_NONE:
             self.create_collision()
         self.world.objects.append(self)
-        # whether we're static or dynamic, run these once to set proper state
-        #self.update_renderables()
         self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
     def create_collision(self):
-        self.col_body = pymunk.Body(self.mass, pymunk.inf)
+        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
+            # TODO: calculate moment depending on type of shape
+            self.col_body = pymunk.Body(self.mass, 1)
+        else:
+            if self.collision_shape_type == CT_GENERIC_STATIC:
+                self.col_body = self.world.space.static_body
+            else:
+                self.col_body = pymunk.Body()
         self.col_body.position.x, self.col_body.position.y = self.x, self.y
         # give our body a link back to us
         self.col_body.gobj = self
@@ -87,9 +92,15 @@ class GameObject:
             self.col_shapes = self.get_box_segs()
         elif self.collision_shape_type == CST_TILE:
             self.col_shapes = self.get_tile_segs()
+        # always add shapes to world space, even if they're part of rogue bodies
         for shape in self.col_shapes:
+            shape.gobj = self
             shape.collision_type = self.collision_type
             self.world.space.add(shape)
+        # static bodies should always be "rogue" ie not added to world space
+        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
+            self.world.space.add(self.col_body)
+            pass
         if self.collision_shape_type == CST_CIRCLE:
             self.collision_renderable = CircleCollisionRenderable(self.app, self)
         elif self.collision_shape_type == CST_AABB:
@@ -193,9 +204,12 @@ class GameObject:
                 self.app.ui.debug_text.post_lines(debug)
         # update physics: shape's surface velocity, body's position
         if self.col_shapes and self.col_body:
-            for shape in self.col_shapes:
-                shape.surface_velocity = self.vel_x, self.vel_y
-            self.col_body.position.x, self.col_body.position.y = self.x, self.y
+            self.update_physics()
+    
+    def update_physics(self):
+        # default behavior: object's location shadows that of its phy body
+        #self.x, self.y = self.col_body.position.x, self.col_body.position.y
+        self.col_body.position.x, self.col_body.position.y = self.x, self.y
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
@@ -218,6 +232,19 @@ class GameObject:
     def render(self, layer, z_override=None):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
         self.renderable.render(layer, z_override)
+    
+    def destroy(self):
+        self.origin_renderable.destroy()
+        self.bounds_renderable.destroy()
+        if self.collision_renderable:
+            self.collision_renderable.destroy()
+        if len(self.col_shapes) > 0:
+            for shape in self.col_shapes:
+                self.world.space.remove(shape)
+        if self.col_body:
+            #self.world.space.remove(self.col_body)
+            pass
+        self.renderable.destroy()
 
 
 class StaticTileObject(GameObject):
@@ -244,6 +271,17 @@ class Player(GameObject):
     log_move = True
     collision_shape_type = CST_CIRCLE
     collision_type = CT_PLAYER
+    
+    def update_physics(self):
+        for shape in self.col_shapes:
+            #shape.surface_velocity = self.vel_x, self.vel_y
+            #print(shape.surface_velocity)
+            #shape.position.x = self.x + self.col_offset_x
+            #shape.position.y = self.y + self.col_offset_y
+            pass
+        #self.col_body.velocity = self.vel_x * 50, self.vel_y * 50
+        self.col_body.position.x, self.col_body.position.y = self.x, self.y
+        #self.x, self.y = self.col_body.position.x, self.col_body.position.y
 
 
 class NSEWPlayer(Player):
