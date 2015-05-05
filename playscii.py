@@ -545,10 +545,12 @@ class Application:
         sdl2.SDL_GL_SwapWindow(self.window)
     
     def quit(self):
-        self.log('Thank you for using Playscii!  <3')
         if self.init_success:
+            self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
+            for obj in self.gw.objects:
+                obj.destroy()
             self.fb.destroy()
             self.ui.destroy()
             for charset in self.charsets:

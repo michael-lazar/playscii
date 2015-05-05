@@ -271,6 +271,16 @@ class CollisionRenderable(WorldLineRenderable):
         if obj.flip_x:
             self.scale_x *= -1
         self.scale_z = obj.scale_z
+    
+    def build_geo(self):
+        "for objects comprised of segment shapes, use the actual seg data"
+        verts, elems = [], []
+        for i,seg in enumerate(self.game_object.col_shapes):
+            verts += [(seg.a.x, seg.a.y), (seg.b.x, seg.b.y)]
+            elems += [i*2, i*2+1]
+        self.vert_array = np.array(verts, dtype=np.float32)
+        self.elem_array = np.array(elems, dtype=np.uint32)
+        self.color_array = np.array([self.color * len(elems)], dtype=np.float32)
 
 
 class BoxCollisionRenderable(CollisionRenderable):
@@ -278,16 +288,7 @@ class BoxCollisionRenderable(CollisionRenderable):
     def get_quad_size(self):
         # size is baked into vert locations
         return 1, 1
-    
-    def build_geo(self):
-        # account for unique size of box
-        obj = self.game_object
-        top_left = (obj.col_box_left_x, obj.col_box_top_y)
-        top_right = (obj.col_box_right_x, obj.col_box_top_y)
-        bottom_right = (obj.col_box_right_x, obj.col_box_bottom_y)
-        bottom_left = (obj.col_box_left_x, obj.col_box_bottom_y)
-        vert_list = [top_left, top_right, bottom_right, bottom_left]
-        self.vert_array, self.elem_array, self.color_array = get_box_arrays(vert_list)
+
 
 class CircleCollisionRenderable(CollisionRenderable):
     
@@ -321,13 +322,5 @@ class TileCollisionRenderable(CollisionRenderable):
     def __init__(self, app, game_object):
         # green = dynamic, blue = static
         self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
+        # pass in object's art for quad_size_ref
         WorldLineRenderable.__init__(self, app, game_object.art, game_object)
-    
-    def build_geo(self):
-        verts, elems = [], []
-        for i,seg in enumerate(self.game_object.col_shapes):
-            verts += [(seg.a.x, seg.a.y), (seg.b.x, seg.b.y)]
-            elems += [i*2, i*2+1]
-        self.vert_array = np.array(verts, dtype=np.float32)
-        self.elem_array = np.array(elems, dtype=np.uint32)
-        self.color_array = np.array([self.color * len(elems)], dtype=np.float32)

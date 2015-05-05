@@ -27,14 +27,18 @@ class RenderItem:
     def __str__(self):
         return '%s layer %s z %s' % (self.obj.art.filename, self.layer, self.layer_z)
 
+def a_push_b(a, b, contact):
+    x = b.x + contact.normal.x * contact.distance
+    y = b.y + contact.normal.y * contact.distance
+    b.set_loc(x, y)
+    #b.vel_x = 0
+    #b.vel_y = 0
+
 def player_vs_dynamic_begin(space, arbiter):
-    obj1 = arbiter.shapes[0].body.gobj
-    obj2 = arbiter.shapes[1].body.gobj
-    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
-    c = arbiter.contacts[0]
-    x = obj2.x + c.normal.x * (c.distance / 3)
-    y = obj2.y + c.normal.y * (c.distance / 3)
-    obj2.set_loc(x, y)
+    obj1 = arbiter.shapes[0].gobj
+    obj2 = arbiter.shapes[1].gobj
+    print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
+    a_push_b(obj1, obj2, arbiter.contacts[0])
     return True
 
 def player_vs_dynamic_pre_solve(space, arbiter):
@@ -42,21 +46,18 @@ def player_vs_dynamic_pre_solve(space, arbiter):
     return False
 
 def player_vs_static_begin(space, arbiter):
-    obj1 = arbiter.shapes[0].body.gobj
-    obj2 = arbiter.shapes[1].body.gobj
-    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
-    c = arbiter.contacts[0]
-    x = obj1.x + c.normal.x * (c.distance / 4)
-    y = obj1.y + c.normal.y * (c.distance / 4)
-    #obj1.vel_x *= c.normal.y
-    #obj1.vel_y *= c.normal.x
-    obj1.set_loc(x, y)
-    #obj1.vel_x, obj1.vel_y = 0, 0
+    obj1 = arbiter.shapes[0].gobj
+    obj2 = arbiter.shapes[1].gobj
+    print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
+    a_push_b(obj2, obj1, arbiter.contacts[0])
     return True
 
 def player_vs_static_pre_solve(space, arbiter):
     player_vs_static_begin(space, arbiter)
     return False
+
+def always_collide(space, arbiter):
+    return True
 
 class GameWorld:
     
@@ -71,11 +72,17 @@ class GameWorld:
         self.objects = []
         self.space = pymunk.Space()
         self.space.gravity = self.gravity_x, self.gravity_y
-        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_DYNAMIC, begin=player_vs_dynamic_begin, pre_solve=player_vs_dynamic_pre_solve)
-        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_STATIC, begin=player_vs_static_begin, pre_solve=player_vs_static_pre_solve)
+        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_DYNAMIC,
+                                         begin=player_vs_dynamic_begin,
+                                         pre_solve=player_vs_dynamic_pre_solve)
+        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_STATIC,
+                                         begin=player_vs_static_begin,
+                                         pre_solve=player_vs_static_pre_solve)
         self.art_loaded, self.renderables = [], []
     
     def unload_game(self):
+        for obj in self.objects:
+            obj.destroy()
         self.objects = []
         self.renderables = []
         self.art_loaded = []
@@ -133,4 +140,3 @@ class GameWorld:
             item.obj.render(item.layer, 0)
         for obj in self.objects:
             obj.render_debug()
-    
