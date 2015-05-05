@@ -1,16 +1,21 @@
+import math
 from random import randint
+
+from art import Art
 from game_object import GameObject, Player
 
 class WobblyThing(GameObject):
     
-    def __init__(self, world, art):
-        GameObject.__init__(self, world, art)
-        self.origin_x, self.origin_y, self.origin_z = self.x, self.y, self.z
+    origin_x, origin_y, origin_z = 0, 0, 0
     
     def set_origin(self, x, y, z=None):
         self.origin_x, self.origin_y, self.origin_z = x, y, z or self.z
     
     def update(self):
+        # TODO: figure out why this garbage is necessary,
+        # ie the imports above don't work!
+        import math
+        from game_object import GameObject
         x_off = math.sin(self.app.elapsed_time / 1000) * self.origin_x
         y_off = math.sin(self.app.elapsed_time / 500) * self.origin_y
         z_off = math.sin(self.app.elapsed_time / 750) * self.origin_z
@@ -23,16 +28,7 @@ class WobblyThing(GameObject):
         GameObject.update(self)
 
 class ParticleThing(GameObject):
-    
     width, height = 8, 8
-    
-    def __init__(self, world, loc=(0, 0, 0)):
-        charset = world.app.load_charset('dos')
-        palette = world.app.load_palette('ega')
-        art = Art('smoke1', world.app, charset, palette, self.width, self.height)
-        art.clear_frame_layer(0, 0, 0)
-        GameObject.__init__(self, world, art, loc)
-        self.art.run_script_every('mutate')
 
 
 # background w/ parallax layers
@@ -45,7 +41,12 @@ for i in range(5):
     enemy.set_origin(*origin)
     enemy.start_animating()
 # particle thingy
-smoke1 = ParticleThing(self, (25, -10, 0))
+charset = self.app.load_charset('dos')
+palette = self.app.load_palette('ega')
+smoke_art = Art('smoke1', self.app, charset, palette,
+                ParticleThing.width, ParticleThing.height)
+smoke1 = ParticleThing(self, smoke_art, (25, -10, 0))
+smoke1.art.run_script_every('mutate')
 # set camera
 px = self.player.x + self.player.art.width / 2
 self.camera.set_loc(px, self.player.y, self.camera.z)

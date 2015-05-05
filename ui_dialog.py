@@ -4,7 +4,7 @@ import sdl2
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
-from ui_console import OpenCommand, SaveCommand, ConvertImageCommand
+from ui_console import OpenCommand, SaveCommand, ConvertImageCommand, OpenGameCommand
 
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from key_shifts import shift_map
@@ -697,4 +697,15 @@ class PaletteFromFileDialog(UIDialog):
         palette_filename = self.get_field_text(1)
         colors = int(self.get_field_text(2))
         new_pal = PaletteFromFile(self.ui.app, src_filename, palette_filename, colors)
+        self.dismiss()
+
+class OpenGameDialog(UIDialog):
+    
+    title = 'Open game'
+    fields = 1
+    field0_label = 'Filename of game to open:'
+    confirm_caption = 'Open'
+    
+    def confirm_pressed(self):
+        OpenGameCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()
