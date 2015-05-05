@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, OpenGameDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
@@ -92,6 +92,12 @@ class InputLord:
         keystr = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode().lower()
         key_data = (keystr, shift, alt, ctrl)
         return self.edit_binds.get(key_data, None)
+    
+    def get_command_shortcut(self, command_function):
+        for bind in self.edit_bind_src:
+            if command_function == self.edit_bind_src[bind]:
+                return bind
+        return ''
     
     def input(self):
         app = self.app
@@ -389,6 +395,12 @@ class InputLord:
         else:
             self.app.exit_game_mode()
     
+    def BIND_open_game(self):
+        self.ui.open_dialog(OpenGameDialog)
+    
+    def BIND_reset_game(self):
+        self.app.gw.reset_game()
+    
     def BIND_toggle_picker(self):
         if not self.ui.active_art:
             return
@@ -565,6 +577,9 @@ class InputLord:
     
     def BIND_open_char_color_menu(self):
         self.ui.menu_bar.open_menu_by_name('char_color')
+    
+    def BIND_open_game_menu(self):
+        self.ui.menu_bar.open_menu_by_name('game')
     
     def BIND_open_help_menu(self):
         self.ui.menu_bar.open_menu_by_name('help')

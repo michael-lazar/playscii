@@ -66,6 +66,7 @@ class GameWorld:
     
     def __init__(self, app):
         self.app = app
+        self.current_game_name = None
         # "tuner": set an object to this for quick console tuning access
         self.camera = Camera(self.app)
         self.player, self.tuner = None, None
@@ -92,7 +93,8 @@ class GameWorld:
             setattr(obj, name, value)
     
     def reset_game(self):
-        self.load_game(self.current_game_name)
+        if self.current_game_name:
+            self.load_game(self.current_game_name)
     
     def load_game(self, game_name):
         self.app.enter_game_mode()

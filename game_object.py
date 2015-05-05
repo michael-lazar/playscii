@@ -1,4 +1,4 @@
-import math, os
+import os
 import pymunk
 
 from art import Art
@@ -85,7 +85,6 @@ class GameObject:
         # give our body a link back to us
         self.col_body.gobj = self
         # create different shapes based on collision type
-        self.col_shapes = []
         if self.collision_shape_type == CST_CIRCLE:
             self.col_shapes = [pymunk.Circle(self.col_body, self.col_radius, (self.col_offset_x, self.col_offset_y))]
         elif self.collision_shape_type == CST_AABB:
@@ -203,7 +202,7 @@ class GameObject:
                 debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
                 self.app.ui.debug_text.post_lines(debug)
         # update physics: shape's surface velocity, body's position
-        if self.col_shapes and self.col_body:
+        if self.collision_shape_type != CST_NONE and self.col_shapes and self.col_body:
             self.update_physics()
     
     def update_physics(self):

@@ -43,8 +43,6 @@ LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
 
-COMPAT_FAIL_MSG = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
-
 VERSION = '0.5.2'
 
 MAX_ONION_FRAMES = 3
@@ -76,6 +74,8 @@ class Application:
     show_bounds_all = False
     show_origin_all = False
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
+    compat_fail_message = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
+    game_mode_message = 'Game mode active, press %s to return to Edit mode.'
     
     def __init__(self, log_file, log_lines, art_filename, game_to_load):
         self.init_success = False
@@ -121,7 +121,7 @@ class Application:
             if not glsl_ver:
                 glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
         except:
-            self.log('GLSL support not detected, ' + COMPAT_FAIL_MSG)
+            self.log('GLSL support not detected, ' + self.compat_fail_message)
             self.should_quit = True
             return
         glsl_ver = glsl_ver.decode('utf-8')
@@ -433,10 +433,15 @@ class Application:
     def enter_game_mode(self):
         self.game_mode = True
         self.camera = self.gw.camera
+        # display message on how to toggle game mode
+        mode_bind = self.il.get_command_shortcut('toggle_game_mode')
+        mode_bind = mode_bind.upper()
+        self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
     
     def exit_game_mode(self):
         self.game_mode = False
         self.camera = self.edit_camera
+        self.ui.message_line.post_line('', 1)
     
     def main_loop(self):
         while not self.should_quit:

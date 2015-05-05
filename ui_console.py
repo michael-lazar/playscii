@@ -86,7 +86,7 @@ class PaletteFromImageCommand(ConsoleCommand):
         console.ui.active_art.set_palette(new_pal)
         console.ui.popup.set_active_palette(new_pal)
 
-class LoadGameCommand(ConsoleCommand):
+class OpenGameCommand(ConsoleCommand):
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: game [game name]'
@@ -105,7 +105,7 @@ commands = {
     'export': ImageExportCommand,
     'conv': ConvertImageCommand,
     'getpal': PaletteFromImageCommand,
-    'game': LoadGameCommand
+    'game': OpenGameCommand
 }
 
 

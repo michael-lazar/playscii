@@ -313,6 +313,25 @@ class PaletteFromFileMenuItem(PulldownMenuItem):
     label = 'Palette from file...'
     command = 'palette_from_file'
 
+class ToggleGameModeMenuItem(PulldownMenuItem):
+    label = 'Toggle Game Mode'
+    command = 'toggle_game_mode'
+
+class OpenGameItem(PulldownMenuItem):
+    label = 'Open game...'
+    command = 'open_game'
+
+class ResetGameItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'reset_game'
+    def should_dim(app):
+        return app.gw.current_game_name is None
+    def get_label(app):
+        l = 'Reset game'
+        if app.gw.current_game_name:
+            l = '%s "%s"' % (l, app.gw.current_game_name)
+        return l
+
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help...'
     command = 'open_help_screen'
@@ -448,6 +467,9 @@ class LayerMenuData(PulldownMenuData):
 
 class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
+
+class GameMenuData(PulldownMenuData):
+    items = [ToggleGameModeMenuItem, OpenGameItem, ResetGameItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]
