@@ -22,10 +22,10 @@ from game_object import CST_TILE
 
 class RenderItem:
     "quickie class to debug render order"
-    def __init__(self, obj, layer, layer_z):
-        self.obj, self.layer, self.layer_z = obj, layer, layer_z
+    def __init__(self, obj, layer, sort_value):
+        self.obj, self.layer, self.sort_value = obj, layer, sort_value
     def __str__(self):
-        return '%s layer %s z %s' % (self.obj.art.filename, self.layer, self.layer_z)
+        return '%s layer %s sort %s' % (self.obj.art.filename, self.layer, self.sort_value)
 
 def a_push_b(a, b, contact):
     x = b.x + contact.normal.x * contact.distance
@@ -199,11 +199,14 @@ class GameWorld:
         self.space.step(1 / self.app.framerate)
     
     def render(self):
-        # sort objects for drawing by each layer Z order
+        for obj in self.objects:
+            obj.update_renderables()
+        #
+        # process non "Y sort" objects first
+        #
         draw_order = []
         collision_items = []
         for obj in self.objects:
-            obj.update_renderables()
             for i,z in enumerate(obj.art.layers_z):
                 # only draw collision layer if show collision is set
                 if obj.collision_shape_type == CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
@@ -211,12 +214,39 @@ class GameWorld:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
+                elif obj.y_sort:
+                    continue
                 item = RenderItem(obj, i, z + obj.z)
                 draw_order.append(item)
-        draw_order.sort(key=lambda item: item.layer_z, reverse=False)
+        draw_order.sort(key=lambda item: item.sort_value, reverse=False)
         for item in draw_order:
             item.obj.render(item.layer)
+        #
+        # process "Y sort" objects
+        #
+        y_objects = []
+        for obj in self.objects:
+            if obj.y_sort:
+                y_objects.append(obj)
+        y_objects.sort(key=lambda obj: obj.y, reverse=True)
+        # draw layers of each Y-sorted object in Z order
+        draw_order = []
+        for obj in y_objects:
+            items = []
+            for i,z in enumerate(obj.art.layers_z):
+                if obj.collision_shape_type == CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                    continue
+                item = RenderItem(obj, i, z)
+                items.append(item)
+            items.sort(key=lambda item: item.sort_value, reverse=False)
+            for item in items:
+                draw_order.append(item)
+        draw_order.sort(key=lambda item: item.sort_value, reverse=False)
+        for item in draw_order:
+            item.obj.render(item.layer)
+        #
         # draw debug stuff: collision layers and origins/boxes
+        #
         for item in collision_items:
             # draw all tile collision at z 0
             item.obj.render(item.layer, 0)

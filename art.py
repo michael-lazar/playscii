@@ -85,6 +85,8 @@ class Art:
             filename += '.%s' % ART_FILE_EXTENSION
         self.filename = filename
         self.app = app
+        # save "time loaded" for menu sorting
+        self.time_loaded = 0
         self.charset, self.palette = charset, palette
         self.command_stack = CommandStack(self)
         self.unsaved_changes = False

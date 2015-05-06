@@ -14,9 +14,8 @@ class LineRenderable():
     line_width = 1
     # items in vert array: 2 for XY-only renderables, 3 for ones that include Z
     vert_items = 2
-    # when part of a GameObject, offset relative to origin
-    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
-    origin_pct_x, origin_pct_y = 0.5, 0.5
+    # use game object's art_off_pct values
+    use_art_offset = True
     
     def __init__(self, app, quad_size_ref, game_object=None):
         self.app = app
@@ -29,6 +28,7 @@ class LineRenderable():
         # handle Z differently if verts are 2D vs 3D
         self.scale_z = 0 if self.vert_items == 2 else 1
         self.build_geo()
+        self.width, self.height = self.get_size()
         self.reset_loc()
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
@@ -90,7 +90,7 @@ class LineRenderable():
             self.update_transform_from_object(self.game_object)
     
     def reset_size(self):
-        TileRenderable.reset_size(self)
+        self.width, self.height = self.get_size()
     
     def update_transform_from_object(self, obj):
         TileRenderable.update_transform_from_object(self, obj)
@@ -117,6 +117,10 @@ class LineRenderable():
     
     def get_view_matrix(self):
         return np.eye(4, 4)
+    
+    def get_size(self):
+        # overriden in subclasses that need specific width/height data
+        return 1, 1
     
     def get_quad_size(self):
         return self.quad_size_ref.quad_width, self.quad_size_ref.quad_height
@@ -214,14 +218,18 @@ class OriginIndicatorRenderable(WorldLineRenderable):
     x_axis = (1, 0, 0)
     y_axis = (0, 1, 0)
     z_axis = (0, 0, 1)
-    vert_items = 3
+    vert_items = 3 
     line_width = 3
+    use_art_offset = False
     
     def __init__(self, app, game_object):
         LineRenderable.__init__(self, app, None, game_object)
     
     def get_quad_size(self):
         return 1, 1
+    
+    def get_size(self):
+        return self.game_object.scale_x, self.game_object.scale_y
     
     def update_transform_from_object(self, obj):
         self.x, self.y, self.z = obj.x, obj.y, obj.z
@@ -243,9 +251,14 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
     color = (1, 1, 1, 0.5)
     
     def __init__(self, app, game_object):
+        self.art = game_object.renderable.art
         LineRenderable.__init__(self, app, None, game_object)
-        self.art = self.game_object.renderable.art
-        self.width, self.height = self.get_quad_size()
+    
+    def get_size(self):
+        art = self.game_object.art
+        w = (art.width * art.quad_width) * self.game_object.scale_x
+        h = (art.height * art.quad_height) * self.game_object.scale_y
+        return w, h
     
     def get_color(self, elapsed_time):
         # pulse if selected
@@ -266,19 +279,17 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
 
 class CollisionRenderable(WorldLineRenderable):
     
+    use_art_offset = False
+    
     def __init__(self, app, game_object):
         # green = dynamic, blue = static
         self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
         WorldLineRenderable.__init__(self, app, None, game_object)
     
     def update_transform_from_object(self, obj):
-        self.z = obj.z
-        self.x = obj.col_body.position.x + obj.col_offset_x
-        self.y = obj.col_body.position.y + obj.col_offset_y
-        self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
-        if obj.flip_x:
-            self.scale_x *= -1
-        self.scale_z = obj.scale_z
+        TileRenderable.update_transform_from_object(self, obj)
+        self.x += obj.col_offset_x * obj.scale_x
+        self.y += obj.col_offset_y * obj.scale_y
     
     def build_geo(self):
         "for objects comprised of segment shapes, use the actual seg data"
@@ -296,7 +307,13 @@ class BoxCollisionRenderable(CollisionRenderable):
     def get_quad_size(self):
         # size is baked into vert locations
         return 1, 1
-
+    
+    def get_size(self):
+        w = self.game_object.col_box_right_x - self.game_object.col_box_left_x
+        w *= self.game_object.scale_x
+        h = self.game_object.col_box_bottom_y - self.game_object.col_box_top_y
+        h *= self.game_object.scale_y
+        return w, h
 
 class CircleCollisionRenderable(CollisionRenderable):
     
@@ -304,6 +321,12 @@ class CircleCollisionRenderable(CollisionRenderable):
     
     def get_quad_size(self):
         return self.game_object.col_radius, self.game_object.col_radius
+    
+    def get_size(self):
+        w = h = self.game_object.col_radius * 2
+        w *= self.game_object.scale_x
+        h *= self.game_object.scale_y
+        return w, h
     
     def build_geo(self):
         verts, elements, colors = [], [], []
@@ -332,3 +355,12 @@ class TileCollisionRenderable(CollisionRenderable):
         self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
         # pass in object's art for quad_size_ref
         WorldLineRenderable.__init__(self, app, game_object.art, game_object)
+    
+    def update_transform_from_object(self, obj):
+        TileRenderable.update_transform_from_object(self, obj)
+    
+    def get_size(self):
+        art = self.game_object.art
+        w = (art.width * art.quad_width) * self.game_object.scale_x
+        h = (art.height * art.quad_height) * self.game_object.scale_y
+        return w, h

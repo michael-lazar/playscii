@@ -1,5 +1,10 @@
 TODO
 
+sorting: is basing sort entirely on Y position sufficient?
+- split cronotest1 scene into multiple objects if need be: bannister, bed, front wall
+- "y_sort" property, if true then an object's Y determines its sort order
+- all non-y_sort objects draw first, then all y sort objects in order of Y: lower (in world space) = drawn later
+
 collision:
 - debug viz for contacts (create on contact start, destroy on contact end)
 - fix player->static collisions - shouldn't jitter
@@ -9,11 +14,7 @@ edit mode:
 - "state saves" - save and reset on the fly for easy iteration and testing
 -- make this its own file format so arbitrary object states can be serialized, remove current exec() way of loading games
 -- saving a game state doesn't modify object definitions, but if object definitions can be reloaded every time state is reloaded, that's basically user-initiated hot reloading which ain't bad
-- floating label showing selected object(s) name
 - generic properties window to edit a selected instance's properties?
-
-sorting: is basing sort entirely on Y position sufficient?
-- split cronotest1 scene into multiple objects if need be: bannister, bed, front wall
 
 ---
 
