@@ -150,6 +150,14 @@ class GameObject:
     def is_dynamic(self):
         return self.collision_type in CTG_DYNAMIC
     
+    def is_point_inside(self, x, y):
+        "returns True if given point is inside our bounds"
+        min_x = self.x - (self.renderable.width * self.renderable.origin_pct_x)
+        max_x = self.x + (self.renderable.width * self.renderable.origin_pct_x)
+        min_y = self.y - (self.renderable.height * self.renderable.origin_pct_y)
+        max_y = self.y + (self.renderable.height * self.renderable.origin_pct_y)
+        return min_x <= x <= max_x and min_y <= y <= max_y
+    
     def get_all_art(self):
         "returns a list of all Art used by this object"
         return [self.art]
@@ -212,18 +220,18 @@ class GameObject:
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
-        if self.show_origin:
+        if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.update()
-        if self.show_bounds:
+        if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.update()
         if self.collision_renderable and self.show_collision:
             self.collision_renderable.update()
         self.renderable.update()
     
     def render_debug(self):
-        if self.show_origin:
+        if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.render()
-        if self.show_bounds:
+        if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.render()
         if self.show_collision and self.collision_renderable:
             self.collision_renderable.render()

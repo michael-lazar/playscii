@@ -247,6 +247,14 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         self.art = self.game_object.renderable.art
         self.width, self.height = self.get_quad_size()
     
+    def get_color(self, elapsed_time):
+        # pulse if selected
+        if self.game_object in self.app.gw.selected_objects:
+            color = 0.75 + (math.sin(elapsed_time / 100) / 2)
+            return (color, color, color, 1)
+        else:
+            return (1, 1, 1, 1)
+    
     def get_quad_size(self):
         if not self.game_object:
             return 1, 1

@@ -1,18 +1,23 @@
 TODO
 
-game mode menu entries: toggle mode, open game
-
 collision:
-- debug viz for contacts (create on
+- debug viz for contacts (create on contact start, destroy on contact end)
 - fix player->static collisions - shouldn't jitter
 - fix player->dynamicBB collisions
 
-game mode improvements:
-- concept of "selected game object"
--- floating label showing name
--- object positioning mode/control - W/E/R for move/rotate/scale?
+edit mode:
+- not a full mode - basically "game mode with object(s) selected"
+- concept of "selected game objects"
+- left click: select object under mouse cursor
+- shift left click: add object under cursor to selection
+- ctrl left click: remove object under cursor from selection
+- esc: deselect all objects
+- floating label showing name
 -- generic properties window to edit an instance's properties?
--- some way to save out the state changes brought about by this?  probably better to think of this as a full-on level editing mode D:
+- object positioning mode/control - W/E/R for move/rotate/scale?
+- "state saves" - save and reset on the fly for easy iteration and testing
+-- make this its own file format so arbitrary object states can be serialized, remove current exec() way of loading games
+-- saving a game state doesn't modify object definitions, but if object definitions can be reloaded every time state is reloaded, that's basically user-initiated hot reloading which ain't bad
 
 sorting: is basing sort entirely on Y position sufficient?
 - split cronotest1 scene into multiple objects if need be

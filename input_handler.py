@@ -193,7 +193,10 @@ class InputLord:
                 self.ui.unclicked(event.button.button)
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
+                    # in game mode, select stuff
+                    if self.app.game_mode:
+                        self.app.gw.unclicked(event.button.button)
+                    elif self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
                         self.ui.select_tool.finish_select(self.shift_pressed, self.ctrl_pressed)
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         app.cursor.finish_paint()
@@ -204,9 +207,11 @@ class InputLord:
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if not self.ui.active_art:
+                    if self.app.game_mode:
+                        self.app.gw.clicked(event.button.button)
+                    elif not self.ui.active_art:
                         return
-                    if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                    elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
                         if not self.ui.select_tool.selection_in_progress:
@@ -366,7 +371,10 @@ class InputLord:
         self.ui.set_selected_tool(self.ui.paste_tool)
     
     def BIND_select_none(self):
-        self.ui.select_none()
+        if self.app.game_mode:
+            self.app.gw.deselect_all()
+        else:
+            self.ui.select_none()
     
     def BIND_cancel(self):
         # context-dependent:
