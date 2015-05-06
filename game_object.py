@@ -91,6 +91,20 @@ class GameObject:
         self.col_body.position.x, self.col_body.position.y = self.x, self.y
         # give our body a link back to us
         self.col_body.gobj = self
+        # create shapes in a separate method so shapes can be regen'd independently
+        self.create_collision_shapes()
+        # static bodies should always be "rogue" ie not added to world space
+        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
+            self.world.space.add(self.col_body)
+            pass
+        if self.collision_shape_type == CST_CIRCLE:
+            self.collision_renderable = CircleCollisionRenderable(self.app, self)
+        elif self.collision_shape_type == CST_AABB:
+            self.collision_renderable = BoxCollisionRenderable(self.app, self)
+        elif self.collision_shape_type == CST_TILE:
+            self.collision_renderable = TileCollisionRenderable(self.app, self)
+    
+    def create_collision_shapes(self):
         # create different shapes based on collision type
         if self.collision_shape_type == CST_CIRCLE:
             self.col_shapes = [pymunk.Circle(self.col_body, self.col_radius, (self.col_offset_x, self.col_offset_y))]
@@ -103,16 +117,12 @@ class GameObject:
             shape.gobj = self
             shape.collision_type = self.collision_type
             self.world.space.add(shape)
-        # static bodies should always be "rogue" ie not added to world space
-        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
-            self.world.space.add(self.col_body)
-            pass
-        if self.collision_shape_type == CST_CIRCLE:
-            self.collision_renderable = CircleCollisionRenderable(self.app, self)
-        elif self.collision_shape_type == CST_AABB:
-            self.collision_renderable = BoxCollisionRenderable(self.app, self)
-        elif self.collision_shape_type == CST_TILE:
-            self.collision_renderable = TileCollisionRenderable(self.app, self)
+    
+    def destroy_collision_shapes(self):
+        if len(self.col_shapes) > 0:
+            for shape in self.col_shapes:
+                self.world.space.remove(shape)
+        self.col_shapes = []
     
     def get_box_segs(self):
         left = self.col_box_left_x + self.col_offset_x
@@ -169,6 +179,18 @@ class GameObject:
         self.collision_type = new_type
         for shape in self.col_shapes:
             shape.collision_type = self.collision_type
+    
+    def start_dragging(self):
+        if self.collision_type != CT_NONE:
+            self.disable_collision()
+    
+    def stop_dragging(self):
+        if self.orig_collision_type is not None:
+            self.enable_collision()
+        # recreate shapes if stopping dragging a tile collision object
+        if self.collision_shape_type == CST_TILE:
+            self.destroy_collision_shapes()
+            self.create_collision_shapes()
     
     def enable_collision(self):
         self.set_collision_type(self.orig_collision_type)
