@@ -6,21 +6,14 @@ collision:
 - fix player->dynamicBB collisions
 
 edit mode:
-- not a full mode - basically "game mode with object(s) selected"
-- concept of "selected game objects"
-- left click: select object under mouse cursor
-- shift left click: add object under cursor to selection
-- ctrl left click: remove object under cursor from selection
-- esc: deselect all objects
-- floating label showing name
--- generic properties window to edit an instance's properties?
-- object positioning mode/control - W/E/R for move/rotate/scale?
 - "state saves" - save and reset on the fly for easy iteration and testing
 -- make this its own file format so arbitrary object states can be serialized, remove current exec() way of loading games
 -- saving a game state doesn't modify object definitions, but if object definitions can be reloaded every time state is reloaded, that's basically user-initiated hot reloading which ain't bad
+- floating label showing selected object(s) name
+- generic properties window to edit a selected instance's properties?
 
 sorting: is basing sort entirely on Y position sufficient?
-- split cronotest1 scene into multiple objects if need be
+- split cronotest1 scene into multiple objects if need be: bannister, bed, front wall
 
 ---
 

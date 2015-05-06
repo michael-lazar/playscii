@@ -3,7 +3,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, SelectedObjectLabel
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -99,6 +99,7 @@ class UI:
         self.pulldown = PulldownMenu(self)
         self.menu_bar = None
         self.menu_bar = MenuBar(self)
+        self.selection_label = SelectedObjectLabel(self)
         self.elements.append(self.fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.popup)
@@ -106,6 +107,7 @@ class UI:
         self.elements.append(self.debug_text)
         self.elements.append(self.pulldown)
         self.elements.append(self.menu_bar)
+        self.elements.append(self.selection_label)
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture

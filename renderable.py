@@ -285,7 +285,7 @@ class TileRenderable:
             edit.undo()
         # update art to commit changes to the renderable
         self.art.update()
-        self.render(0)
+        self.render()
         self.exporting = False
     
     def render(self, layers=None, z_override=None):
