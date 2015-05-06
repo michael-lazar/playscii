@@ -37,7 +37,7 @@ def a_push_b(a, b, contact):
 def player_vs_dynamic_begin(space, arbiter):
     obj1 = arbiter.shapes[0].gobj
     obj2 = arbiter.shapes[1].gobj
-    print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
+    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
     a_push_b(obj1, obj2, arbiter.contacts[0])
     return True
 
@@ -48,7 +48,7 @@ def player_vs_dynamic_pre_solve(space, arbiter):
 def player_vs_static_begin(space, arbiter):
     obj1 = arbiter.shapes[0].gobj
     obj2 = arbiter.shapes[1].gobj
-    print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
+    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
     a_push_b(obj2, obj1, arbiter.contacts[0])
     return True
 
@@ -121,13 +121,17 @@ class GameWorld:
             if len(objects) > 0:
                 self.deselect_object(objects[0])
             return
-        obj = self.pick_next_object_at(x, y)
+        if was_dragging:
+            # tell objects they're no longer being dragged
+            for obj in self.selected_objects:
+                obj.stop_dragging()
+        next_obj = self.pick_next_object_at(x, y)
         # don't select stuff if ending a drag
-        if not obj or was_dragging:
+        if not next_obj and was_dragging:
             return
-        elif not self.app.il.shift_pressed:
+        if not self.app.il.shift_pressed:
             self.deselect_all()
-        self.select_object(obj)
+        self.select_object(next_obj)
     
     def mouse_moved(self, dx, dy):
         # get mouse delta in world space
@@ -137,11 +141,12 @@ class GameWorld:
                                                         self.app.mouse_y + dy)
         world_dx, world_dy = mx2 - mx1, my2 - my1
         if self.app.left_mouse and world_dx != 0 and world_dy != 0:
-            self.dragging_object = True
-            # TODO: disable collision on dragging objects?
             for obj in self.selected_objects:
+                if not self.dragging_object:
+                    obj.start_dragging()
                 obj.x += world_dx
                 obj.y += world_dy
+            self.dragging_object = True
     
     def select_object(self, obj):
         if not obj in self.selected_objects:
