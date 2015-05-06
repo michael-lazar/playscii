@@ -22,9 +22,8 @@ class TileRenderable:
     alpha = 1
     bg_alpha = 1
     move_rate = 1
-    # when part of a GameObject, offset relative to origin
-    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
-    origin_pct_x, origin_pct_y = 0.5, 0.5
+    # use game object's art_off_pct values
+    use_art_offset = True
     
     def __init__(self, app, art, game_object=None):
         self.app = app
@@ -201,11 +200,13 @@ class TileRenderable:
         self.z = obj.z
         if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
             self.reset_size()
-        if obj.flip_x:
-            self.x = obj.x + (self.width * self.origin_pct_x)
-        else:
-            self.x = obj.x - (self.width * self.origin_pct_x)
-        self.y = obj.y + (self.height * self.origin_pct_y)
+        self.x, self.y = obj.x, obj.y
+        if self.use_art_offset:
+            if obj.flip_x:
+                self.x += self.width * obj.art_off_pct_x
+            else:
+                self.x -= self.width * obj.art_off_pct_x
+            self.y += self.height * obj.art_off_pct_y
         self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
         if obj.flip_x:
             self.scale_x *= -1

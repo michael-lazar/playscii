@@ -17,6 +17,8 @@ class GameObject:
     
     # if specified, this art will be loaded instead of what's passed into init
     art_src = None
+    # Y-sort: if true, object will sort according to its Y position
+    y_sort = False
     move_accel_rate = 0.01
     # normal movement will accelerate up to this, final velocity is uncapped
     max_move_speed = 0.4
@@ -40,6 +42,9 @@ class GameObject:
     # AABB top left / bottom right coordinates
     col_box_left_x, col_box_right_x = -1, 1
     col_box_top_y, col_box_bottom_y = -1, 1
+    # art offset from pivot: renderable's origin_pct set to this if !None
+    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
+    art_off_pct_x, art_off_pct_y = 0.5, 0.5
     
     def __init__(self, world, art, loc=(0, 0, 0)):
         (self.x, self.y, self.z) = loc
@@ -66,6 +71,8 @@ class GameObject:
         if not self.art in self.world.art_loaded:
             self.world.art_loaded.append(self.art)
         self.world.renderables.append(self.renderable)
+        # remember previous collision type for enable/disable
+        self.orig_collision_type = None
         self.collision_renderable = None
         if self.collision_shape_type != CST_NONE:
             self.create_collision()
@@ -131,9 +138,9 @@ class GameObject:
             for x in range(self.art.width):
                 if is_dir_empty(x, y):
                     continue
-                left = (x * self.art.quad_width) - (self.renderable.width / 2)
+                left = (x * self.art.quad_width) - (self.renderable.width * self.art_off_pct_x)
                 right = left + self.art.quad_width
-                top = (self.renderable.height / 2) - (y * self.art.quad_height)
+                top = (self.renderable.height * self.art_off_pct_y) - (y * self.art.quad_height)
                 bottom = top - self.art.quad_height
                 # only create segs for 0/>0 tile boundaries
                 # empty space to left = left seg
@@ -152,11 +159,24 @@ class GameObject:
     
     def is_point_inside(self, x, y):
         "returns True if given point is inside our bounds"
-        min_x = self.x - (self.renderable.width * self.renderable.origin_pct_x)
-        max_x = self.x + (self.renderable.width * self.renderable.origin_pct_x)
-        min_y = self.y - (self.renderable.height * self.renderable.origin_pct_y)
-        max_y = self.y + (self.renderable.height * self.renderable.origin_pct_y)
+        min_x = self.x - (self.renderable.width * self.art_off_pct_x)
+        max_x = self.x + (self.renderable.width * self.art_off_pct_x)
+        min_y = self.y - (self.renderable.height * self.art_off_pct_y)
+        max_y = self.y + (self.renderable.height * self.art_off_pct_y)
         return min_x <= x <= max_x and min_y <= y <= max_y
+    
+    def set_collision_type(self, new_type):
+        self.collision_type = new_type
+        for shape in self.col_shapes:
+            shape.collision_type = self.collision_type
+    
+    def enable_collision(self):
+        self.set_collision_type(self.orig_collision_type)
+        self.orig_collision_type = None
+    
+    def disable_collision(self):
+        self.orig_collision_type = self.collision_type
+        self.set_collision_type(CT_NONE)
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -254,9 +274,14 @@ class GameObject:
         self.renderable.destroy()
 
 
+class StaticTileBG(GameObject):
+    collision_shape_type = CST_TILE
+    collision_type = CT_GENERIC_STATIC
+
 class StaticTileObject(GameObject):
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
+    y_sort = True
 
 class StaticBoxObject(GameObject):
     collision_shape_type = CST_AABB
@@ -265,13 +290,16 @@ class StaticBoxObject(GameObject):
 class DynamicBoxObject(GameObject):
     collision_shape_type = CST_AABB
     collision_type = CT_GENERIC_DYNAMIC
+    y_sort = True
 
 class Pickup(GameObject):
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
+    y_sort = True
 
 class Player(GameObject):
     
+    y_sort = True
     move_accel_rate = 0.1
     max_move_speed = 0.8
     friction = 0.25

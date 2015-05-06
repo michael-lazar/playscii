@@ -94,6 +94,7 @@ self.edit_bind_src = {
 	'f7'       : 'toggle_all_collision_viz',
 	'f8'       : 'toggle_debug_text',
 	'f9'       : 'toggle_fps_counter',
+    'f3'       : 'toggle_collision_on_selected',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'       : 'save_art_as',

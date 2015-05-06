@@ -8,6 +8,7 @@ from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
 from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, OpenGameDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
+from game_world import CT_NONE
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -731,3 +732,12 @@ class InputLord:
     
     def BIND_reset_game(self):
         self.app.gw.reset_game()
+    
+    def BIND_toggle_collision_on_selected(self):
+        for obj in self.app.gw.selected_objects:
+            if obj.orig_collision_type:
+                obj.enable_collision()
+                self.ui.message_line.post_line('Collision enabled for %s' % obj.name)
+            elif obj.collision_type != CT_NONE:
+                obj.disable_collision()
+                self.ui.message_line.post_line('Collision disabled for %s' % obj.name)
