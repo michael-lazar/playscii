@@ -113,7 +113,7 @@ class GameWorld:
         if not self.app.il.ctrl_pressed and not self.app.il.shift_pressed:
             objects = self.get_objects_at(x, y)
             if len(objects) == 0:
-                self.selected_objects = []
+                self.deselect_all()
                 return
         if self.app.il.ctrl_pressed:
             # unselect first object found under mouse
@@ -126,7 +126,7 @@ class GameWorld:
         if not obj or was_dragging:
             return
         elif not self.app.il.shift_pressed:
-            self.selected_objects = []
+            self.deselect_all()
         self.select_object(obj)
     
     def mouse_moved(self, dx, dy):
@@ -146,13 +146,19 @@ class GameWorld:
     def select_object(self, obj):
         if not obj in self.selected_objects:
             self.selected_objects.append(obj)
+            self.app.ui.selection_label.set_object(obj)
     
     def deselect_object(self, obj):
         if obj in self.selected_objects:
             self.selected_objects.remove(obj)
+        if len(self.selected_objects) > 0:
+            self.app.ui.selection_label.set_object(self.selected_objects[0])
+        else:
+            self.app.ui.selection_label.set_object(None)
     
     def deselect_all(self):
         self.selected_objects = []
+        self.app.ui.selection_label.set_object(None)
     
     def unload_game(self):
         for obj in self.objects:
