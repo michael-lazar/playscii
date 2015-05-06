@@ -67,6 +67,7 @@ class GameWorld:
     def __init__(self, app):
         self.app = app
         self.current_game_name = None
+        self.selected_objects = []
         # "tuner": set an object to this for quick console tuning access
         self.camera = Camera(self.app)
         self.player, self.tuner = None, None
@@ -80,6 +81,78 @@ class GameWorld:
                                          begin=player_vs_static_begin,
                                          pre_solve=player_vs_static_pre_solve)
         self.art_loaded, self.renderables = [], []
+        # player is edit-dragging an object
+        self.dragging_object = False
+    
+    def pick_next_object_at(self, x, y):
+        # TODO: cycle through objects at point til an unselected one is found
+        for obj in self.get_objects_at(x, y):
+            if not obj in self.selected_objects:
+                return obj
+        return None
+    
+    def get_objects_at(self, x, y):
+        "returns all objects whose bounds fall within given point"
+        objects = []
+        # reverse object list, helps in (common) case where BG spawns first
+        objects_reversed = self.objects[:]
+        objects_reversed.reverse()
+        for obj in objects_reversed:
+            if obj.is_point_inside(x, y):
+                objects.append(obj)
+        return objects
+    
+    def clicked(self, button):
+        pass
+    
+    def unclicked(self, button):
+        x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
+                                                  self.app.mouse_y)
+        was_dragging = self.dragging_object
+        self.dragging_object = False
+        if not self.app.il.ctrl_pressed and not self.app.il.shift_pressed:
+            objects = self.get_objects_at(x, y)
+            if len(objects) == 0:
+                self.selected_objects = []
+                return
+        if self.app.il.ctrl_pressed:
+            # unselect first object found under mouse
+            objects = self.get_objects_at(x, y)
+            if len(objects) > 0:
+                self.deselect_object(objects[0])
+            return
+        obj = self.pick_next_object_at(x, y)
+        # don't select stuff if ending a drag
+        if not obj or was_dragging:
+            return
+        elif not self.app.il.shift_pressed:
+            self.selected_objects = []
+        self.select_object(obj)
+    
+    def mouse_moved(self, dx, dy):
+        # get mouse delta in world space
+        mx1, my1, mz1 = self.app.cursor.screen_to_world(self.app.mouse_x,
+                                                        self.app.mouse_y)
+        mx2, my2, mz2 = self.app.cursor.screen_to_world(self.app.mouse_x + dx,
+                                                        self.app.mouse_y + dy)
+        world_dx, world_dy = mx2 - mx1, my2 - my1
+        if self.app.left_mouse and world_dx != 0 and world_dy != 0:
+            self.dragging_object = True
+            # TODO: disable collision on dragging objects?
+            for obj in self.selected_objects:
+                obj.x += world_dx
+                obj.y += world_dy
+    
+    def select_object(self, obj):
+        if not obj in self.selected_objects:
+            self.selected_objects.append(obj)
+    
+    def deselect_object(self, obj):
+        if obj in self.selected_objects:
+            self.selected_objects.remove(obj)
+    
+    def deselect_all(self):
+        self.selected_objects = []
     
     def unload_game(self):
         for obj in self.objects:
@@ -113,6 +186,7 @@ class GameWorld:
         self.app.log('loaded game %s' % game_name)
     
     def update(self):
+        self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
         # update objects based on movement, then resolve collisions
         for obj in self.objects:
             obj.update()

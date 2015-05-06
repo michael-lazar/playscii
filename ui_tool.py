@@ -27,7 +27,7 @@ class UITool:
         self.affects_xform = True
     
     def toggle_affects_char(self):
-        if not self.affects_masks:
+        if not self.affects_masks or self.ui.app.game_mode:
             return
         self.affects_char = not self.affects_char
         self.ui.tool_settings_changed = True
@@ -36,7 +36,7 @@ class UITool:
         self.ui.message_line.post_line(line)
     
     def toggle_affects_fg(self):
-        if not self.affects_masks:
+        if not self.affects_masks or self.ui.app.game_mode:
             return
         self.affects_fg_color = not self.affects_fg_color
         self.ui.tool_settings_changed = True
@@ -44,7 +44,7 @@ class UITool:
         self.ui.message_line.post_line(line)
     
     def toggle_affects_bg(self):
-        if not self.affects_masks:
+        if not self.affects_masks or self.ui.app.game_mode:
             return
         self.affects_bg_color = not self.affects_bg_color
         self.ui.tool_settings_changed = True
@@ -52,7 +52,7 @@ class UITool:
         self.ui.message_line.post_line(line)
     
     def toggle_affects_xform(self):
-        if not self.affects_masks:
+        if not self.affects_masks or self.ui.app.game_mode:
             return
         self.affects_xform = not self.affects_xform
         self.ui.tool_settings_changed = True

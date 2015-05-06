@@ -75,7 +75,7 @@ class Application:
     show_origin_all = False
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
     compat_fail_message = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
-    game_mode_message = 'Game mode active, press %s to return to Edit mode.'
+    game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
     
     def __init__(self, log_file, log_lines, art_filename, game_to_load):
         self.init_success = False
