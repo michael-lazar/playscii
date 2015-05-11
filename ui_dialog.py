@@ -705,6 +705,7 @@ class OpenGameDialog(UIDialog):
     fields = 1
     field0_label = 'Filename of game to open:'
     confirm_caption = 'Open'
+    game_mode_visible = True
     
     def confirm_pressed(self):
         OpenGameCommand.execute(self.ui.console, [self.field0_text])

@@ -1,4 +1,4 @@
-import os
+import os, time, json, importlib
 import pymunk
 
 from art import ART_DIR
@@ -6,6 +6,7 @@ from camera import Camera
 
 GAME_DIR = 'games/'
 GAME_FILE_EXTENSION = 'game'
+GAME_STATE_FILE_EXTENSION = 'gs'
 
 # collision types
 CT_NONE = 0
@@ -190,6 +191,7 @@ class GameWorld:
         self.unload_game()
         self.app.log('loading game %s...' % game_name)
         # set game_dir & game_art_dir for quick access within game script
+        self.game_name = os.path.basename(game_name)
         self.game_dir = '%s%s/' % (GAME_DIR, game_name)
         self.game_art_dir = '%s%s' % (self.game_dir, ART_DIR)
         exec(open(game_file).read())
@@ -257,3 +259,39 @@ class GameWorld:
             item.obj.render(item.layer, 0)
         for obj in self.objects:
             obj.render_debug()
+    
+    def save_state_to_file(self):
+        d = {}
+        d['game_name'] = self.game_name
+        d['gravity_x'] = self.gravity_x
+        d['gravity_y'] = self.gravity_y
+        objects = []
+        for obj in self.objects:
+            objects.append(obj.get_state_dict())
+        d['objects'] = objects
+        # state filename example:
+        # games/mytestgame2/mytestgame2_1431116386.gs
+        timestamp = int(time.time())
+        filename = '%s/%s_%s.%s' % (self.game_dir, self.game_name, timestamp,
+                                    GAME_STATE_FILE_EXTENSION)
+        json.dump(d, open(filename, 'w'), sort_keys=True, indent=1)
+        self.app.log('Saved game state file %s to disk.' % filename)
+    
+    def load_state_from_file(self, filename):
+        try:
+            d = json.load(open(filename))
+        except:
+            self.app.log("Couldn't load game state from file %s" % filename)
+            return
+        # TODO: detect if switching games? does load logic differ if doing so?
+        # should self.unload_game() be run now?
+        self.game_name = d['game_name']
+        self.gravity_x = d['gravity_x']
+        self.gravity_y = d['gravity_y']
+        # TODO: get dict of {'module': ['class1', 'class2']} to load,
+        # reload modules already loaded and load new modules
+        # spawn classes, apply properties from JSON
+        
+        # importlib.import_module
+        for obj_data in d['objects']:
+            pass
