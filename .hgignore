@@ -3,6 +3,7 @@ dist/*.*
 __pycache__/*.*
 .idea/*.*
 console.log
+console_history
 playscii.cfg
 binds.cfg
 ^art/.+\.png
