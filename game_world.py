@@ -1,8 +1,8 @@
 import os, time, json, importlib
 import pymunk
 
-from art import ART_DIR
 from camera import Camera
+from art import ART_DIR
 
 GAME_DIR = 'games/'
 GAME_FILE_EXTENSION = 'game'
@@ -67,7 +67,8 @@ class GameWorld:
     
     def __init__(self, app):
         self.app = app
-        self.current_game_name = None
+        self.game_name = None
+        self.game_dir, self.game_art_dir = None, None
         self.selected_objects = []
         # "tuner": set an object to this for quick console tuning access
         self.camera = Camera(self.app)
@@ -178,8 +179,8 @@ class GameWorld:
             setattr(obj, name, value)
     
     def reset_game(self):
-        if self.current_game_name:
-            self.load_game(self.current_game_name)
+        if self.game_name:
+            self.load_game(self.game_name)
     
     def load_game(self, game_name):
         self.app.enter_game_mode()
@@ -195,7 +196,7 @@ class GameWorld:
         self.game_dir = '%s%s/' % (GAME_DIR, game_name)
         self.game_art_dir = '%s%s' % (self.game_dir, ART_DIR)
         exec(open(game_file).read())
-        self.current_game_name = game_name
+        self.game_name = game_name
         self.app.log('loaded game %s' % game_name)
     
     def update(self):

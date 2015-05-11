@@ -237,8 +237,12 @@ class Application:
         # if not found, try adding extension
         if not os.path.exists(filename):
             filename += '.%s' % ART_FILE_EXTENSION
+        # if a game is loaded, check in its art dir
+        game_art_filename = '%s%s' % (self.gw.game_art_dir, filename)
+        if self.gw.game_name and os.path.exists(game_art_filename):
+            filename = game_art_filename
         # try adding art subdir
-        if not os.path.exists(filename):
+        elif not os.path.exists(filename):
             filename = '%s%s' % (ART_DIR, filename)
         art = None
         # use given path + file name even if it doesn't exist; use as new file's name

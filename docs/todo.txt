@@ -1,6 +1,6 @@
 TODO
 
-save console command history to file to preserve across sessions!
+- file open operations (art, palette, charset) should look in currently loaded game folder as well as app-level dirs
 
 move cronotest starting state to a hand-made state file, class defs into cronotest/
 (folder structure?)

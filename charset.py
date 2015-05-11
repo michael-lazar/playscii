@@ -16,9 +16,13 @@ class CharacterSet:
         self.filename = src_filename
         # small chance we have a filename that == a dir name, eg "ui"
         if not os.path.exists(self.filename) or os.path.isdir(self.filename):
-            self.filename = CHARSET_DIR + self.filename
-        if not os.path.exists(self.filename):
             self.filename += '.%s' % CHARSET_FILE_EXTENSION
+        if self.app.gw.game_name:
+            game_charset_filename = self.app.gw.game_dir + CHARSET_DIR + self.filename
+            if os.path.exists(game_charset_filename):
+                self.filename = game_charset_filename
+        if not os.path.exists(self.filename):
+            self.filename = CHARSET_DIR + self.filename
         if not os.path.exists(self.filename):
             self.app.log("Couldn't find character set data file %s" % self.filename)
             return
