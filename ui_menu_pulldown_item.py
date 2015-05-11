@@ -325,11 +325,11 @@ class ResetGameItem(PulldownMenuItem):
     label = 'blah'
     command = 'reset_game'
     def should_dim(app):
-        return app.gw.current_game_name is None
+        return app.gw.game_name is None
     def get_label(app):
         l = 'Reset game'
-        if app.gw.current_game_name:
-            l = '%s "%s"' % (l, app.gw.current_game_name)
+        if app.gw.game_name:
+            l = '%s "%s"' % (l, app.gw.game_name)
         return l
 
 class HelpScreenMenuItem(PulldownMenuItem):

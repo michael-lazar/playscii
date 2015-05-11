@@ -13,11 +13,15 @@ class Palette:
         self.init_success = False
         self.app = app
         self.filename = src_filename
-        if not os.path.exists(self.filename) or os.path.isdir(self.filename):
-            self.filename = PALETTE_DIR + self.filename
         # auto-guess filename, but assume PNG
         if not os.path.exists(self.filename):
             self.filename += '.png'
+        if self.app.gw.game_name:
+            game_palette_filename = self.app.gw.game_dir + PALETTE_DIR + self.filename
+            if os.path.exists(game_palette_filename):
+                self.filename = game_palette_filename
+        if not os.path.exists(self.filename) or os.path.isdir(self.filename):
+            self.filename = PALETTE_DIR + self.filename
         if not os.path.exists(self.filename):
             self.app.log("Couldn't find palette image file %s" % self.filename)
             return

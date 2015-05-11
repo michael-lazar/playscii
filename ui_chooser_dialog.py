@@ -294,13 +294,20 @@ class PaletteChooserDialog(ChooserDialog):
     def get_items(self):
         items = []
         # find all suitable files (images)
-        filenames = os.listdir(PALETTE_DIR)
+        filenames = []
+        for filename in os.listdir(PALETTE_DIR):
+            filenames.append(PALETTE_DIR + filename)
+        # check loaded game dir as well, if it exists
+        if self.ui.app.gw.game_name:
+            game_palette_dir = self.ui.app.gw.game_dir + PALETTE_DIR
+            if os.path.exists(game_palette_dir):
+                for filename in os.listdir(game_palette_dir):
+                    filenames.append(game_palette_dir + filename)
         # use manual counter, as we skip past some files that don't fit
         i = 0
         for filename in filenames:
             if not filename.lower().endswith('.png'):
                 continue
-            filename = PALETTE_DIR + filename
             item = ChooserItem()
             item.index = i
             # load the actual palette
@@ -343,13 +350,20 @@ class CharSetChooserDialog(ChooserDialog):
     
     def get_items(self):
         items = []
-        filenames = os.listdir(CHARSET_DIR)
+        filenames = []
+        for filename in os.listdir(CHARSET_DIR):
+            filenames.append(CHARSET_DIR + filename)
+        # check loaded game dir as well, if it exists
+        if self.ui.app.gw.game_name:
+            game_charset_dir = self.ui.app.gw.game_dir + CHARSET_DIR
+            if os.path.exists(game_charset_dir):
+                for filename in os.listdir(game_charset_dir):
+                    filenames.append(game_charset_dir + filename)
         # use manual counter, as we skip past some files that don't fit
         i = 0
         for filename in filenames:
             if not filename.lower().endswith(CHARSET_FILE_EXTENSION):
                 continue
-            filename = CHARSET_DIR + filename
             item = ChooserItem()
             item.index = i
             # load the character set
