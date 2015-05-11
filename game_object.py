@@ -76,6 +76,7 @@ class GameObject:
         # remember previous collision type for enable/disable
         self.orig_collision_type = None
         self.collision_renderable = None
+        self.col_shapes, self.col_body = [], []
         if self.collision_shape_type != CST_NONE:
             self.create_collision()
         self.world.objects.append(self)
@@ -121,6 +122,8 @@ class GameObject:
             self.world.space.add(shape)
     
     def destroy_collision_shapes(self):
+        # it would be simpler to check for CST_NONE here, but that would miss
+        # objects with collision that's temporarily disabled!
         if len(self.col_shapes) > 0:
             for shape in self.col_shapes:
                 self.world.space.remove(shape)
@@ -292,6 +295,8 @@ class GameObject:
         for prop_name in self.serialized:
             if hasattr(self, prop_name):
                 d[prop_name] = getattr(self, prop_name)
+        if self is self.world.player:
+            d['is_player'] = True
         return d
     
     def destroy(self):
