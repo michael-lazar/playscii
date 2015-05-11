@@ -7,6 +7,7 @@ from art import ART_DIR
 GAME_DIR = 'games/'
 GAME_FILE_EXTENSION = 'game'
 GAME_STATE_FILE_EXTENSION = 'gs'
+GAME_SCRIPTS_DIR = 'scripts/'
 
 # collision types
 CT_NONE = 0
@@ -266,6 +267,9 @@ class GameWorld:
         d['game_name'] = self.game_name
         d['gravity_x'] = self.gravity_x
         d['gravity_y'] = self.gravity_y
+        d['camera_x'] = self.camera.x
+        d['camera_y'] = self.camera.y
+        d['camera_z'] = self.camera.z
         objects = []
         for obj in self.objects:
             objects.append(obj.get_state_dict())
@@ -278,6 +282,19 @@ class GameWorld:
         json.dump(d, open(filename, 'w'), sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
     
+    def spawn_object_from_data(self, object_data):
+        # TODO:
+        # load module and class from module_name and class_name
+        # (importlib.import_module)
+        # check for non-core scripts in self.game_dir + GAME_SCRIPTS_DIR
+        # spawn classes, apply properties from JSON
+        
+        new_object = None
+        # special handling if object is player
+        if object_data.get('is_player', False):
+            self.player = new_object
+            self.camera.focus_object = self.player
+    
     def load_state_from_file(self, filename):
         try:
             d = json.load(open(filename))
@@ -289,10 +306,10 @@ class GameWorld:
         self.game_name = d['game_name']
         self.gravity_x = d['gravity_x']
         self.gravity_y = d['gravity_y']
-        # TODO: get dict of {'module': ['class1', 'class2']} to load,
-        # reload modules already loaded and load new modules
-        # spawn classes, apply properties from JSON
-        
-        # importlib.import_module
+        # restore camera settings
+        self.camera.x = d.get('camera_x', self.camera.start_x)
+        self.camera.y = d.get('camera_y', self.camera.start_y)
+        self.camera.z = d.get('camera_z', self.camera.start_zoom)
+        # spawn objects
         for obj_data in d['objects']:
-            pass
+            self.spawn_object_from_data(obj_data)
