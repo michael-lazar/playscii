@@ -1,5 +1,10 @@
 TODO
 
+save console command history to file to preserve across sessions!
+
+move cronotest starting state to a hand-made state file, class defs into cronotest/
+(folder structure?)
+
 sorting: is basing sort entirely on Y position sufficient?
 - split cronotest1 scene into multiple objects if need be: bannister, bed, front wall
 - "y_sort" property, if true then an object's Y determines its sort order
@@ -11,9 +16,15 @@ collision:
 - fix player->dynamicBB collisions
 
 edit mode:
+
 - "state saves" - save and reset on the fly for easy iteration and testing
--- make this its own file format so arbitrary object states can be serialized, remove current exec() way of loading games
--- saving a game state doesn't modify object definitions, but if object definitions can be reloaded every time state is reloaded, that's basically user-initiated hot reloading which ain't bad
+-- use importlib to dynamically import modules based on what's in JSON, set right path with os.chdir(relative_path), save starting path out via os.getcwd()
+-- Class.__module__ to get module name, importlib.reload() to reload if already loaded
+--- for c in classes_loaded: if c.__name__ == [string of class name from JSON]: c()
+-- .gs file = JSON of serialized game object properties, setattr'd after they're init'd
+--- each gameobject subclass has a "serialized" list of string names of properties to serialize (weak refs should be avoided for this obvs)
+-- saving a game state doesn't modify object definitions, but object definitions are reloaded every time game state is reloaded
+- rename SelectedObjectLabel to ObjectPropertiesPanel, dock with left edge of screen
 - generic properties window to edit a selected instance's properties?
 
 ---

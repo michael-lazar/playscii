@@ -248,7 +248,7 @@ class InputLord:
         if app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
         # game mode: arrow keys and left gamepad stick move player
-        if self.app.game_mode and not self.ui.console.visible:
+        if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog:
             if pressing_up(ks):
                 app.gw.player.move(0, 1)
             if pressing_down(ks):

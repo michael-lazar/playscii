@@ -45,6 +45,8 @@ class GameObject:
     # art offset from pivot: renderable's origin_pct set to this if !None
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
+    # list of members to serialize (no weak refs!)
+    serialized = ['x', 'y']
     
     def __init__(self, world, art, loc=(0, 0, 0)):
         (self.x, self.y, self.z) = loc
@@ -281,6 +283,16 @@ class GameObject:
     def render(self, layer, z_override=None):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
         self.renderable.render(layer, z_override)
+    
+    def get_state_dict(self):
+        "return a dict that GameWorld.save_state_to_file can save as JSON"
+        d = {}
+        d['class_name'] = type(self).__name__
+        d['module_name'] = type(self).__module__
+        for prop_name in self.serialized:
+            if hasattr(self, prop_name):
+                d[prop_name] = getattr(self, prop_name)
+        return d
     
     def destroy(self):
         self.origin_renderable.destroy()
