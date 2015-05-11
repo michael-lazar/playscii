@@ -1,3 +1,4 @@
+import os
 import sdl2
 from math import ceil
 
@@ -8,6 +9,7 @@ from key_shifts import shift_map
 from image_convert import ImageConverter
 from palette import PaletteFromFile
 
+CONSOLE_HISTORY_FILENAME = 'console_history'
 
 class ConsoleCommand:
     "parent class for console commands"
@@ -139,7 +141,16 @@ class ConsoleUI(UIElement):
         self.renderable.y = self.y = 2
         # user input and log
         self.last_lines = []
-        self.command_history = []
+        if os.path.exists(CONSOLE_HISTORY_FILENAME):
+            self.history_file = open(CONSOLE_HISTORY_FILENAME, 'r')
+            try:
+                self.command_history = self.history_file.readlines()
+            except:
+                self.command_history = []
+            self.history_file = open(CONSOLE_HISTORY_FILENAME, 'a')
+        else:
+            self.history_file = open(CONSOLE_HISTORY_FILENAME, 'w+')
+            self.command_history = []
         self.history_index = 0
         # junk data in last user line so it changes on first update
         self.last_user_line = 'test'
@@ -273,7 +284,7 @@ class ConsoleUI(UIElement):
             return
         self.history_index = index
         self.history_index %= len(self.command_history)
-        self.current_line = self.command_history[self.history_index]
+        self.current_line = self.command_history[self.history_index].strip()
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         "handles a key from Application.input"
@@ -287,6 +298,7 @@ class ConsoleUI(UIElement):
             line = '%s %s' % (self.prompt, self.current_line)
             self.ui.app.log(line)
             self.command_history.append(self.current_line)
+            self.history_file.write(self.current_line + '\n')
             self.parse(self.current_line)
             self.current_line = ''
             self.history_index = 0
@@ -367,6 +379,9 @@ class ConsoleUI(UIElement):
         # commands CAN return None, so only log if there's something
         if output and output != 'None':
             self.ui.app.log(output)
+    
+    def destroy(self):
+        self.history_file.close()
 
 
 # delimiters - alt-backspace deletes to most recent one of these
