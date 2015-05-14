@@ -43,7 +43,7 @@ class FileOpenMenuItem(PulldownMenuItem):
 
 class FileSaveMenuItem(PulldownMenuItem):
     label = 'Save'
-    command = 'save_art'
+    command = 'save_current'
     def should_dim(app):
         return not app.ui.active_art or not app.ui.active_art.unsaved_changes
 
@@ -325,6 +325,13 @@ class LoadGameStateItem(PulldownMenuItem):
     label = 'Load game state...'
     command = 'load_game_state'
 
+class SaveGameStateMenuItem(PulldownMenuItem):
+    label = 'Save game state...'
+    command = 'save_current'
+    def should_dim(app):
+        return not app.game_mode
+
+
 class ResetGameItem(PulldownMenuItem):
     label = 'blah'
     command = 'reset_game'
@@ -473,7 +480,7 @@ class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
 
 class GameMenuData(PulldownMenuData):
-    items = [ToggleGameModeMenuItem, SetGameDirItem, LoadGameStateItem, ResetGameItem]
+    items = [ToggleGameModeMenuItem, SetGameDirItem, LoadGameStateItem, SaveGameStateMenuItem, ResetGameItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

@@ -70,9 +70,9 @@ class GameWorld:
         self.app = app
         self.game_dir = None
         self.selected_objects = []
-        # "tuner": set an object to this for quick console tuning access
         self.camera = Camera(self.app)
-        self.player, self.tuner = None, None
+        self.player = None
+        self.modules = {}
         self.objects = []
         self.space = pymunk.Space()
         self.space.gravity = self.gravity_x, self.gravity_y
@@ -186,6 +186,9 @@ class GameWorld:
         return TOP_GAME_DIR + self.game_dir
     
     def set_game_dir(self, dir_name):
+        if dir_name == self.game_dir:
+            self.load_game_state(DEFAULT_STATE_FILENAME)
+            return
         if os.path.exists(TOP_GAME_DIR + dir_name):
             self.game_dir = dir_name
             if not dir_name.endswith('/'):
@@ -282,6 +285,25 @@ class GameWorld:
         json.dump(d, open(TOP_GAME_DIR + filename, 'w'), sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
     
+    def find_module(self, module_name):
+        if module_name in self.modules:
+            return importlib.reload(self.modules[module_name])
+        try:
+            return importlib.import_module(module_name)
+        except:
+            # not found in global namespace, check in scripts dir
+            module_name = '%s.%s.%s.%s' % (TOP_GAME_DIR[:-1],
+                                           self.game_dir[:-1],
+                                           GAME_SCRIPTS_DIR[:-1], module_name)
+        if module_name in self.modules:
+            try:
+                return importlib.reload(self.modules[module_name])
+            except:
+                # TODO: return exceptions
+                return None
+        else:
+            return importlib.import_module(module_name)
+    
     def spawn_object_from_data(self, object_data):
         # load module and class
         class_name = object_data.get('class_name', None)
@@ -290,19 +312,11 @@ class GameWorld:
             self.app.log("Couldn't parse class %s in module %s" % (class_name,
                                                                    module_name))
             return
-        try:
-            module = importlib.import_module(module_name)
-        except:
-            # not found in global namespace, check in scripts dir
-            try:
-                module_name = '%s.%s.%s.%s' % (TOP_GAME_DIR[:-1],
-                                               self.game_dir[:-1],
-                                               GAME_SCRIPTS_DIR[:-1],
-                                               module_name)
-                module = importlib.import_module(module_name)
-            except:
-                self.app.log("Couldn't import module %s" % module_name)
-                return
+        module = self.find_module(module_name)
+        if not module:
+            self.app.log("Couldn't import module %s" % module_name)
+            return
+        self.modules[module.__name__] = module
         # spawn classes
         obj_class = module.__dict__[class_name]
         # pass in object data
@@ -310,10 +324,10 @@ class GameWorld:
         # apply properties from JSON
         for prop in new_object.serialized:
             if not hasattr(new_object, prop):
-                self.app.log("Unknown serialized property '%s' for %s" % (prop, new_object.name))
+                self.app.dev_log("Unknown serialized property '%s' for %s" % (prop, new_object.name))
                 continue
             elif not prop in object_data:
-                self.app.log("Serialized property '%s' not found for %s" % (prop, new_object.name))
+                self.app.dev_log("Serialized property '%s' not found for %s" % (prop, new_object.name))
                 continue
             setattr(new_object, prop, object_data.get(prop, None))
         # special handling if object is player
@@ -327,7 +341,7 @@ class GameWorld:
         self.unload_game()
         try:
             d = json.load(open(filename))
-            self.app.log('Loading game state file %s...' % filename)
+            #self.app.log('Loading game state file %s...' % filename)
         except:
             self.app.log("Couldn't load game state from file %s" % filename)
             print(sys.exc_info()[0])

@@ -1,33 +1,22 @@
 TODO
 
 rework test1 game data to use new system
-handle case of no start.gs found
-"save state" menu item, keybind, and dialog
+make sure changes to class data reload (module must reload(), not import?)
 
 ---
 
-move cronotest starting state to a hand-made state file, class defs into cronotest/
-(folder structure?)
-
-sorting: is basing sort entirely on Y position sufficient?
-- split cronotest1 scene into multiple objects if need be: bannister, bed, front wall
-- "y_sort" property, if true then an object's Y determines its sort order
-- all non-y_sort objects draw first, then all y sort objects in order of Y: lower (in world space) = drawn later
+continue sorting work:
+- verify that Y sorting is an acceptable strategy
+- split cronotest1 scene into multiple objects: bannister, front wall
 
 collision:
+- write up specific question(s) for next video
 - debug viz for contacts (create on contact start, destroy on contact end)
 - fix player->static collisions - shouldn't jitter
 - fix player->dynamicBB collisions
 
 edit mode:
-
-- "state saves" - save and reset on the fly for easy iteration and testing
--- use importlib to dynamically import modules based on what's in JSON, set right path with os.chdir(relative_path), save starting path out via os.getcwd()
 -- Class.__module__ to get module name, importlib.reload() to reload if already loaded
---- for c in classes_loaded: if c.__name__ == [string of class name from JSON]: c()
--- .gs file = JSON of serialized game object properties, setattr'd after they're init'd
---- each gameobject subclass has a "serialized" list of string names of properties to serialize (weak refs should be avoided for this obvs)
--- saving a game state doesn't modify object definitions, but object definitions are reloaded every time game state is reloaded
 - rename SelectedObjectLabel to ObjectPropertiesPanel, dock with left edge of screen
 - generic properties window to edit a selected instance's properties?
 

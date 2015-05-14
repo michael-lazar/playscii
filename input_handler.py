@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 from game_world import CT_NONE
@@ -424,8 +424,11 @@ class InputLord:
     def BIND_swap_fg_bg_colors(self):
         self.ui.swap_fg_bg_colors()
     
-    def BIND_save_art(self):
-        if self.ui.active_art:
+    def BIND_save_current(self):
+        # save current game state in game mode, else save current art
+        if self.app.game_mode:
+            self.ui.open_dialog(SaveGameStateDialog)
+        elif self.ui.active_art:
             self.ui.active_art.save_to_file()
     
     def BIND_toggle_ui_visibility(self):
