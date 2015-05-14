@@ -1,12 +1,12 @@
-import os, time, json, importlib
+import os, sys, time, json, importlib
 import pymunk
 
 from camera import Camera
 from art import ART_DIR
 
-GAME_DIR = 'games/'
-GAME_FILE_EXTENSION = 'game'
-GAME_STATE_FILE_EXTENSION = 'gs'
+TOP_GAME_DIR = 'games/'
+DEFAULT_STATE_FILENAME = 'start'
+STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
 
 # collision types
@@ -68,8 +68,7 @@ class GameWorld:
     
     def __init__(self, app):
         self.app = app
-        self.game_name = None
-        self.game_dir, self.game_art_dir = None, None
+        self.game_dir = None
         self.selected_objects = []
         # "tuner": set an object to this for quick console tuning access
         self.camera = Camera(self.app)
@@ -180,25 +179,22 @@ class GameWorld:
             setattr(obj, name, value)
     
     def reset_game(self):
-        if self.game_name:
-            self.load_game(self.game_name)
+        if self.game_dir:
+            self.set_game_dir(self.game_dir)
     
-    def load_game(self, game_name):
-        self.app.enter_game_mode()
-        # execute game script, which loads game assets etc
-        game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
-        if not os.path.exists(game_file):
-            self.app.log("Couldn't find game script: %s" % game_file)
-            return
-        self.unload_game()
-        self.app.log('loading game %s...' % game_name)
-        # set game_dir & game_art_dir for quick access within game script
-        self.game_name = os.path.basename(game_name)
-        self.game_dir = '%s%s/' % (GAME_DIR, game_name)
-        self.game_art_dir = '%s%s' % (self.game_dir, ART_DIR)
-        exec(open(game_file).read())
-        self.game_name = game_name
-        self.app.log('loaded game %s' % game_name)
+    def get_game_dir(self):
+        return TOP_GAME_DIR + self.game_dir
+    
+    def set_game_dir(self, dir_name):
+        if os.path.exists(TOP_GAME_DIR + dir_name):
+            self.game_dir = dir_name
+            if not dir_name.endswith('/'):
+                self.game_dir += '/'
+            self.app.log('Game data directory is now %s' % dir_name)
+            # load in a default state, eg start.gs
+            self.load_game_state(DEFAULT_STATE_FILENAME)
+        else:
+            self.app.log("Couldn't find game directory %s" % dir_name)
     
     def update(self):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
@@ -262,9 +258,8 @@ class GameWorld:
         for obj in self.objects:
             obj.render_debug()
     
-    def save_state_to_file(self):
+    def save_state_to_file(self, filename=None):
         d = {}
-        d['game_name'] = self.game_name
         d['gravity_x'] = self.gravity_x
         d['gravity_y'] = self.gravity_y
         d['camera_x'] = self.camera.x
@@ -274,42 +269,75 @@ class GameWorld:
         for obj in self.objects:
             objects.append(obj.get_state_dict())
         d['objects'] = objects
-        # state filename example:
-        # games/mytestgame2/mytestgame2_1431116386.gs
-        timestamp = int(time.time())
-        filename = '%s/%s_%s.%s' % (self.game_dir, self.game_name, timestamp,
-                                    GAME_STATE_FILE_EXTENSION)
-        json.dump(d, open(filename, 'w'), sort_keys=True, indent=1)
+        if filename:
+            if not filename.endswith(STATE_FILE_EXTENSION):
+                filename += '.' + STATE_FILE_EXTENSION
+            filename = '%s%s' % (self.game_dir, filename)
+        else:
+            # state filename example:
+            # games/mytestgame2/1431116386.gs
+            timestamp = int(time.time())
+            filename = '%s/%s_%s.%s' % (self.game_dir, timestamp,
+                                        STATE_FILE_EXTENSION)
+        json.dump(d, open(TOP_GAME_DIR + filename, 'w'), sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
     
     def spawn_object_from_data(self, object_data):
-        # TODO:
-        # load module and class from module_name and class_name
-        # (importlib.import_module)
-        # check for non-core scripts in self.game_dir + GAME_SCRIPTS_DIR
-        # spawn classes, apply properties from JSON
-        
-        new_object = None
+        # load module and class
+        class_name = object_data.get('class_name', None)
+        module_name = object_data.get('module_name', None)
+        if not class_name or not module_name:
+            self.app.log("Couldn't parse class %s in module %s" % (class_name,
+                                                                   module_name))
+            return
+        try:
+            module = importlib.import_module(module_name)
+        except:
+            # not found in global namespace, check in scripts dir
+            try:
+                module_name = '%s.%s.%s.%s' % (TOP_GAME_DIR[:-1],
+                                               self.game_dir[:-1],
+                                               GAME_SCRIPTS_DIR[:-1],
+                                               module_name)
+                module = importlib.import_module(module_name)
+            except:
+                self.app.log("Couldn't import module %s" % module_name)
+                return
+        # spawn classes
+        obj_class = module.__dict__[class_name]
+        # pass in object data
+        new_object = obj_class(self, object_data)
+        # apply properties from JSON
+        for prop in new_object.serialized:
+            if not hasattr(new_object, prop):
+                self.app.log("Unknown serialized property '%s' for %s" % (prop, new_object.name))
+                continue
+            elif not prop in object_data:
+                self.app.log("Serialized property '%s' not found for %s" % (prop, new_object.name))
+                continue
+            setattr(new_object, prop, object_data.get(prop, None))
         # special handling if object is player
         if object_data.get('is_player', False):
             self.player = new_object
             self.camera.focus_object = self.player
     
-    def load_state_from_file(self, filename):
+    def load_game_state(self, filename):
+        filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir, filename, STATE_FILE_EXTENSION)
+        self.app.enter_game_mode()
+        self.unload_game()
         try:
             d = json.load(open(filename))
+            self.app.log('Loading game state file %s...' % filename)
         except:
             self.app.log("Couldn't load game state from file %s" % filename)
+            print(sys.exc_info()[0])
             return
-        # TODO: detect if switching games? does load logic differ if doing so?
-        # should self.unload_game() be run now?
-        self.game_name = d['game_name']
         self.gravity_x = d['gravity_x']
         self.gravity_y = d['gravity_y']
-        # restore camera settings
-        self.camera.x = d.get('camera_x', self.camera.start_x)
-        self.camera.y = d.get('camera_y', self.camera.start_y)
-        self.camera.z = d.get('camera_z', self.camera.start_zoom)
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
+        # restore camera settings
+        if 'camera_x' in d and 'camera_y' in d and 'camera_z' in d:
+            self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])
+        self.app.log('Loaded game state from file %s' % filename)

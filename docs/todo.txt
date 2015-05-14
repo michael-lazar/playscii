@@ -1,5 +1,11 @@
 TODO
 
+rework test1 game data to use new system
+handle case of no start.gs found
+"save state" menu item, keybind, and dialog
+
+---
+
 move cronotest starting state to a hand-made state file, class defs into cronotest/
 (folder structure?)
 
@@ -24,6 +30,8 @@ edit mode:
 -- saving a game state doesn't modify object definitions, but object definitions are reloaded every time game state is reloaded
 - rename SelectedObjectLabel to ObjectPropertiesPanel, dock with left edge of screen
 - generic properties window to edit a selected instance's properties?
+
+Tools menu: after separator, same tool settings as can be accessed in popup
 
 ---
 

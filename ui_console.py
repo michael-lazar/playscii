@@ -88,13 +88,25 @@ class PaletteFromImageCommand(ConsoleCommand):
         console.ui.active_art.set_palette(new_pal)
         console.ui.popup.set_active_palette(new_pal)
 
-class OpenGameCommand(ConsoleCommand):
+class SetGameDirCommand(ConsoleCommand):
     def execute(console, args):
         if len(args) == 0:
-            return 'Usage: game [game name]'
-        game_name = ' '.join(args)
-        console.ui.app.gw.load_game(game_name)
+            return 'Usage: setgame [game dir name]'
+        game_dir_name = ' '.join(args)
+        console.ui.app.gw.set_game_dir(game_dir_name)
 
+class LoadGameStateCommand(ConsoleCommand):
+    def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: game [game state filename]'
+        gs_name = ' '.join(args)
+        console.ui.app.gw.load_game_state(gs_name)
+
+class SaveGameStateCommand(ConsoleCommand):
+    def execute(console, args):
+        "Usage: savegame [game state filename]"
+        gs_name = ' '.join(args)
+        console.ui.app.gw.save_state_to_file(gs_name)
 
 # map strings to command classes for ConsoleUI.parse
 commands = {
@@ -107,7 +119,9 @@ commands = {
     'export': ImageExportCommand,
     'conv': ConvertImageCommand,
     'getpal': PaletteFromImageCommand,
-    'game': OpenGameCommand
+    'setgame': SetGameDirCommand,
+    'game': LoadGameStateCommand,
+    'savegame': SaveGameStateCommand
 }
 
 
