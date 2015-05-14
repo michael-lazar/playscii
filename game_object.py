@@ -15,8 +15,10 @@ CST_TILE = 3
 
 class GameObject:
     
-    # if specified, this art will be loaded instead of what's passed into init
+    # if specified, this art will be loaded from disk
     art_src = None
+    # if art_src not specified, blank art will be created with these dimensions
+    art_width, art_height = 8, 8
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
     move_accel_rate = 0.01
@@ -46,10 +48,16 @@ class GameObject:
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
     # list of members to serialize (no weak refs!)
-    serialized = ['x', 'y']
+    serialized = ['name']
     
-    def __init__(self, world, art, loc=(0, 0, 0)):
-        (self.x, self.y, self.z) = loc
+    def __init__(self, world, obj_data=None):
+        self.x, self.y, self.z = 0, 0, 0
+        # use serialized data for properties that need to be set in early init
+        if 'x' in obj_data and 'y' in obj_data and 'z' in obj_data:
+            self.x, self.y, self.z = obj_data['x'], obj_data['y'], obj_data['z']
+        # get art_src from data for objects that don't define it in class
+        if 'art_src' in obj_data:
+            self.art_src = obj_data['art_src']
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
@@ -58,13 +66,15 @@ class GameObject:
         self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         self.world = world
         self.app = self.world.app
-        # specify art in art_src else use what's passed in
-        if self.art_src:
-            art = self.world.game_art_dir + self.art_src
-        # support a filename OR an existing Art object
-        self.art = self.app.load_art(art) if type(art) is str else art
+        # if art_src not specified, create a new art according to dimensions
+        if not self.art_src:
+            self.art_src = '%s_art' % self.name
+            self.art = self.app.new_art(self.art_src, self.art_width,
+                                        self.art_height)
+        else:
+            self.art = self.app.load_art(self.art_src)
         if not self.art:
-            self.app.log("Couldn't spawn GameObject with art %s" % art.filename)
+            self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
             return
         self.renderable = TileRenderable(self.app, self.art, self)
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
@@ -109,7 +119,9 @@ class GameObject:
     
     def create_collision_shapes(self):
         # create different shapes based on collision type
-        if self.collision_shape_type == CST_CIRCLE:
+        if self.collision_shape_type == CST_NONE:
+            return
+        elif self.collision_shape_type == CST_CIRCLE:
             self.col_shapes = [pymunk.Circle(self.col_body, self.col_radius, (self.col_offset_x, self.col_offset_y))]
         elif self.collision_shape_type == CST_AABB:
             self.col_shapes = self.get_box_segs()
@@ -146,6 +158,9 @@ class GameObject:
     def get_tile_segs(self):
         segs = []
         frame = self.renderable.frame
+        if not self.col_layer_name in self.art.layer_names:
+            self.app.log("%s: Couldn't find collision layer with name '%s'" % (self.name, self.col_layer_name))
+            return []
         layer = self.art.layer_names.index(self.col_layer_name)
         def is_dir_empty(x, y):
             return self.art.get_char_index_at(frame, layer, x, y) == 0
@@ -221,6 +236,9 @@ class GameObject:
         if self.col_body:
             self.col_body.position.x = self.x + self.col_offset_x
             self.col_body.position.y = self.y + self.col_offset_y
+        if self.collision_shape_type == CST_TILE:
+            self.destroy_collision_shapes()
+            self.create_collision_shapes()
     
     def set_scale(self, x, y, z):
         self.scale_x, self.scale_y, self.scale_z = x, y, z
@@ -295,8 +313,12 @@ class GameObject:
         for prop_name in self.serialized:
             if hasattr(self, prop_name):
                 d[prop_name] = getattr(self, prop_name)
-        if self is self.world.player:
-            d['is_player'] = True
+                if self is self.world.player:
+                    d['is_player'] = 1
+        d['x'], d['y'], d['z'] = self.x, self.y, self.z
+        # if no default art_src or non-default, infer from art's filename
+        if not self.art_src or self.art_src != self.__class__.art_src:
+            d['art_src'] = self.art.filename
         return d
     
     def destroy(self):
@@ -368,19 +390,19 @@ class NSEWPlayer(Player):
     anim_back_base = 'back'
     anim_right_base = 'right'
     
-    def __init__(self, world, anim_prefix, loc=(0, 0, 0)):
+    def __init__(self, world, obj_data=None):
         # load animations
-        stand_fwd_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_stand_base,
+        stand_fwd_anim_name = '%s_%s_%s' % (self.art_src, self.anim_stand_base,
                                             self.anim_forward_base)
-        stand_back_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_stand_base,
+        stand_back_anim_name = '%s_%s_%s' % (self.art_src, self.anim_stand_base,
                                              self.anim_back_base)
-        stand_right_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_stand_base,
+        stand_right_anim_name = '%s_%s_%s' % (self.art_src, self.anim_stand_base,
                                               self.anim_right_base)
-        walk_fwd_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_walk_base,
+        walk_fwd_anim_name = '%s_%s_%s' % (self.art_src, self.anim_walk_base,
                                            self.anim_forward_base)
-        walk_back_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_walk_base,
+        walk_back_anim_name = '%s_%s_%s' % (self.art_src, self.anim_walk_base,
                                             self.anim_back_base)
-        walk_right_anim_name = '%s_%s_%s' % (anim_prefix, self.anim_walk_base,
+        walk_right_anim_name = '%s_%s_%s' % (self.art_src, self.anim_walk_base,
                                              self.anim_right_base)
         self.anim_stand_fwd = world.app.load_art(stand_fwd_anim_name)
         self.anim_stand_back = world.app.load_art(stand_back_anim_name)
@@ -390,7 +412,7 @@ class NSEWPlayer(Player):
         self.anim_walk_right = world.app.load_art(walk_right_anim_name)
         self.last_move_dir = (0, 0)
         # set initial pose
-        Player.__init__(self, world, self.anim_stand_fwd, loc)
+        Player.__init__(self, world, obj_data)
     
     def get_all_art(self):
         return [self.anim_stand_fwd, self.anim_stand_back, self.anim_stand_right,

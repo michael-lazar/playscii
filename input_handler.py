@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, OpenGameDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 from game_world import CT_NONE
@@ -404,8 +404,11 @@ class InputLord:
         else:
             self.app.exit_game_mode()
     
-    def BIND_open_game(self):
-        self.ui.open_dialog(OpenGameDialog)
+    def BIND_set_game_dir(self):
+        self.ui.open_dialog(SetGameDirDialog)
+    
+    def BIND_load_game_state(self):
+        self.ui.open_dialog(LoadGameStateDialog)
     
     def BIND_reset_game(self):
         self.app.gw.reset_game()
@@ -729,9 +732,6 @@ class InputLord:
             return
         self.app.show_origin_all = not self.app.show_origin_all
         self.app.gw.set_for_all_objects('show_origin', self.app.show_origin_all)
-    
-    def BIND_reset_game(self):
-        self.app.gw.reset_game()
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:
