@@ -4,7 +4,7 @@ import sdl2
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
-from ui_console import OpenCommand, SaveCommand, ConvertImageCommand, SetGameDirCommand, LoadGameStateCommand
+from ui_console import OpenCommand, SaveCommand, ConvertImageCommand, SetGameDirCommand, LoadGameStateCommand, SaveGameStateCommand
 
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from key_shifts import shift_map
@@ -725,4 +725,16 @@ class LoadGameStateDialog(UIDialog):
     
     def confirm_pressed(self):
         LoadGameStateCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+class SaveGameStateDialog(UIDialog):
+    
+    title = 'Save game state'
+    fields = 1
+    field0_label = 'New filename for game state:'
+    confirm_caption = 'Save'
+    game_mode_visible = True
+    
+    def confirm_pressed(self):
+        SaveGameStateCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()

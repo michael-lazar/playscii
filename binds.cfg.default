@@ -47,7 +47,7 @@ self.edit_bind_src = {
 	'f2'       : 'reset_game',
     'space'    : 'toggle_picker',
     'w'        : 'swap_fg_bg_colors',
-    'ctrl s'   : 'save_art',
+    'ctrl s'   : 'save_current',
     'shift u'  : 'toggle_ui_visibility',
     'shift g'  : 'toggle_grid_visibility',
     ','        : 'previous_frame',

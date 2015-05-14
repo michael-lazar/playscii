@@ -28,6 +28,7 @@ class GameObject:
     # mass - only used by pymunk
     mass = 1
     log_move = False
+    log_spawn = False
     show_origin = False
     show_bounds = False
     show_collision = False
@@ -90,7 +91,8 @@ class GameObject:
         if self.collision_shape_type != CST_NONE:
             self.create_collision()
         self.world.objects.append(self)
-        self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
+        if self.log_spawn:
+            self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
     def create_collision(self):
         if self.is_dynamic():# and self.collision_type != CT_PLAYER:
@@ -411,7 +413,8 @@ class NSEWPlayer(Player):
         self.anim_walk_back = world.app.load_art(walk_back_anim_name)
         self.anim_walk_right = world.app.load_art(walk_right_anim_name)
         self.last_move_dir = (0, 0)
-        # set initial pose
+        # provide valid art_src so rest of init doesn't get confused
+        self.art_src = stand_fwd_anim_name
         Player.__init__(self, world, obj_data)
     
     def get_all_art(self):

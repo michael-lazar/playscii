@@ -21,7 +21,8 @@ class Texture:
         self.set_wrap(self.wrap, False)
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, width, height, 0,
                         GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img_data)
-        GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
+        if bool(GL.glGenerateMipmap):
+            GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
     
     def set_filter(self, new_mag_filter, new_min_filter, bind_first=True):
         if bind_first:
