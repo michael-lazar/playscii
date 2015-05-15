@@ -396,7 +396,12 @@ class InputLord:
         self.ui.invert_selection()
     
     def BIND_erase_selection_or_art(self):
-        self.ui.erase_selection_or_art()
+        # if in game mode, delete selected objects
+        if self.app.game_mode:
+            for obj in self.app.gw.selected_objects:
+                obj.destroy()
+        else:
+            self.ui.erase_selection_or_art()
     
     def BIND_toggle_game_mode(self):
         if not self.app.game_mode:

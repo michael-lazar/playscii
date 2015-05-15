@@ -299,7 +299,7 @@ class PaletteChooserDialog(ChooserDialog):
             filenames.append(PALETTE_DIR + filename)
         # check loaded game dir as well, if it exists
         if self.ui.app.gw.game_dir:
-            game_palette_dir = self.ui.app.gw.game_dir + PALETTE_DIR
+            game_palette_dir = self.ui.app.gw.get_game_dir() + PALETTE_DIR
             if os.path.exists(game_palette_dir):
                 for filename in os.listdir(game_palette_dir):
                     filenames.append(game_palette_dir + filename)
@@ -355,7 +355,7 @@ class CharSetChooserDialog(ChooserDialog):
             filenames.append(CHARSET_DIR + filename)
         # check loaded game dir as well, if it exists
         if self.ui.app.gw.game_dir:
-            game_charset_dir = self.ui.app.gw.game_dir + CHARSET_DIR
+            game_charset_dir = self.ui.app.gw.get_game_dir() + CHARSET_DIR
             if os.path.exists(game_charset_dir):
                 for filename in os.listdir(game_charset_dir):
                     filenames.append(game_charset_dir + filename)

@@ -108,6 +108,13 @@ class SaveGameStateCommand(ConsoleCommand):
         gs_name = ' '.join(args)
         console.ui.app.gw.save_state_to_file(gs_name)
 
+class SpawnObjectCommand(ConsoleCommand):
+    def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: spawn [class name]'
+        class_name = ' '.join(args)
+        console.ui.app.gw.spawn_object_of_class(class_name)
+
 # map strings to command classes for ConsoleUI.parse
 commands = {
     'exit': QuitCommand,
@@ -121,7 +128,8 @@ commands = {
     'getpal': PaletteFromImageCommand,
     'setgame': SetGameDirCommand,
     'game': LoadGameStateCommand,
-    'savegame': SaveGameStateCommand
+    'savegame': SaveGameStateCommand,
+    'spawn': SpawnObjectCommand
 }
 
 

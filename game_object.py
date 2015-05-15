@@ -49,7 +49,7 @@ class GameObject:
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
     # list of members to serialize (no weak refs!)
-    serialized = ['name']
+    serialized = ['y_sort', 'art_off_pct_x', 'art_off_pct_y']
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0, 0, 0
@@ -172,17 +172,18 @@ class GameObject:
                     continue
                 left = (x * self.art.quad_width) - (self.renderable.width * self.art_off_pct_x)
                 right = left + self.art.quad_width
-                top = (self.renderable.height * self.art_off_pct_y) - (y * self.art.quad_height)
+                # TODO: railing in cronotest is offset, fix!
+                top = self.renderable.height * self.art_off_pct_y - y * self.art.quad_height
                 bottom = top - self.art.quad_height
                 # only create segs for 0/>0 tile boundaries
                 # empty space to left = left seg
                 if x == 0 or is_dir_empty(x-1, y):
                     segs += [self.get_seg(left, top, left, bottom)]
-                if x == self.art.width or is_dir_empty(x+1, y):
+                if x == self.art.width or is_dir_empty(x, y):
                     segs += [self.get_seg(right, top, right, bottom)]
                 if y == 0 or is_dir_empty(x, y-1):
                     segs += [self.get_seg(left, top, right, top)]
-                if y == self.art.height or is_dir_empty(x, y+1):
+                if y == self.art.height or is_dir_empty(x, y):
                     segs += [self.get_seg(left, bottom, right, bottom)]
         return segs
     
@@ -231,6 +232,16 @@ class GameObject:
     
     def stop_animating(self):
         self.renderable.stop_animating()
+    
+    def set_art(self, new_art_filename):
+        if self.art:
+            old_art = self.art
+        self.art = self.app.load_art(new_art_filename)
+        if not self.art:
+            self.art = old_art
+            return
+        self.renderable.set_art(self.art)
+        self.bounds_renderable.art = self.art
     
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
@@ -309,21 +320,29 @@ class GameObject:
     
     def get_state_dict(self):
         "return a dict that GameWorld.save_state_to_file can save as JSON"
-        d = {}
-        d['class_name'] = type(self).__name__
-        d['module_name'] = type(self).__module__
-        for prop_name in self.serialized:
-            if hasattr(self, prop_name):
-                d[prop_name] = getattr(self, prop_name)
-                if self is self.world.player:
-                    d['is_player'] = 1
-        d['x'], d['y'], d['z'] = self.x, self.y, self.z
+        d = {
+            'class_name': type(self).__name__,
+            'module_name': type(self).__module__,
+            'x': self.x,
+            'y': self.y,
+            'z': self.z
+        }
+        if self is self.world.player:
+            d['is_player'] = True
         # if no default art_src or non-default, infer from art's filename
         if not self.art_src or self.art_src != self.__class__.art_src:
             d['art_src'] = self.art.filename
+        # serialize whatever other vars are declared in self.serialized
+        for prop_name in self.serialized:
+            if hasattr(self, prop_name):
+                d[prop_name] = getattr(self, prop_name)
         return d
     
     def destroy(self):
+        self.world.objects.remove(self)
+        if self in self.world.selected_objects:
+            self.world.selected_objects.remove(self)
+        self.world.renderables.remove(self.renderable)
         self.origin_renderable.destroy()
         self.bounds_renderable.destroy()
         if self.collision_renderable:

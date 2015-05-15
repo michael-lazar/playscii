@@ -77,7 +77,8 @@ class Application:
     compat_fail_message = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
     game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
     
-    def __init__(self, log_file, log_lines, art_filename, game_dir_to_load):
+    def __init__(self, log_file, log_lines, art_filename, game_dir_to_load,
+                 state_to_load):
         self.init_success = False
         # log fed in from __main__, might already have stuff in it
         self.log_file = log_file
@@ -186,7 +187,11 @@ class Application:
         self.init_success = True
         self.log('init done.')
         if game_dir_to_load:
-            self.gw.set_game_dir(game_dir_to_load)
+            if state_to_load:
+                self.gw.set_game_dir(game_dir_to_load, False)
+                self.gw.load_game_state(state_to_load)
+            else:
+                self.gw.set_game_dir(game_dir_to_load, True)
         else:
             self.ui.message_line.post_line(self.welcome_message, 10)
     
@@ -238,10 +243,9 @@ class Application:
         if not os.path.exists(filename):
             filename += '.%s' % ART_FILE_EXTENSION
         # if a game is loaded, check in its art dir
-        if self.gw.game_dir:
-            game_art_filename = self.gw.get_game_dir() + ART_DIR + filename
-            if os.path.exists(game_art_filename):
-                filename = game_art_filename
+        game_art_filename = self.gw.get_game_dir() + ART_DIR + filename if self.gw.game_dir else None
+        if game_art_filename and os.path.exists(game_art_filename):
+            filename = game_art_filename
         # try adding art subdir
         elif not os.path.exists(filename):
             filename = '%s%s' % (ART_DIR, filename)
@@ -599,14 +603,21 @@ if __name__ == "__main__":
         log_file.write('%s\n' % line)
         log_lines.append(line)
         print(line)
-    file_to_load, game_dir_to_load = None, None
+    file_to_load, game_dir_to_load, state_to_load = None, None, None
+    # usage:
+    # playscii.py [artfile] | [-game gamedir [-state statefile]]
     if len(sys.argv) > 1:
-        # "-game test1" args will load test1 game from its dir
-        if sys.argv[1] == '-game' and len(sys.argv) > 2:
+        # "-game test1" args will set test1/ as game dir
+        if len(sys.argv) > 2 and sys.argv[1] == '-game':
             game_dir_to_load = sys.argv[2]
+            # "-state testX" args will load testX game state from given game dir
+            if len(sys.argv) > 4 and sys.argv[3] == '-state':
+                state_to_load = sys.argv[4]
         else:
+            # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
-    app = Application(log_file, log_lines, file_to_load, game_dir_to_load)
+    app = Application(log_file, log_lines, file_to_load, game_dir_to_load,
+                      state_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)
