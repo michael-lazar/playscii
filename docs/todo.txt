@@ -1,10 +1,10 @@
 TODO
 
-rework test1 game data to use new system
+- fix collision offset on cronotest railing
+- rework test1 game data to use new system
 
 continue sorting work:
-- verify that Y sorting is an acceptable strategy
-- split cronotest1 scene into multiple objects: bannister, front wall
+- split cronotest scene into multiple objects: front wall
 
 collision:
 - write up specific question(s) for next video
@@ -13,14 +13,15 @@ collision:
 - fix player->dynamicBB collisions
 
 edit mode:
-- rename SelectedObjectLabel to ObjectPropertiesPanel, dock with left edge of screen
-- generic properties window to edit a selected instance's properties?
-
-Tools menu: after separator, same tool settings as can be accessed in popup
+- generic properties window to edit a selected instance's properties
+- left-side command panel for loading/saving state, spawning stuff, etc
+- key to toggle this UI?  think about overall "edit quasimode" design
 
 ---
 
 further work on existing features:
+
+Tools menu: after separator, same tool settings as can be accessed in popup
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
