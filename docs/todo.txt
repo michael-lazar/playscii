@@ -1,9 +1,6 @@
 TODO
 
 rework test1 game data to use new system
-make sure changes to class data reload (module must reload(), not import?)
-
----
 
 continue sorting work:
 - verify that Y sorting is an acceptable strategy
@@ -16,7 +13,6 @@ collision:
 - fix player->dynamicBB collisions
 
 edit mode:
--- Class.__module__ to get module name, importlib.reload() to reload if already loaded
 - rename SelectedObjectLabel to ObjectPropertiesPanel, dock with left edge of screen
 - generic properties window to edit a selected instance's properties?
 

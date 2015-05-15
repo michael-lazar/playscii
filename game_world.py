@@ -173,6 +173,7 @@ class GameWorld:
         self.objects = []
         self.renderables = []
         self.art_loaded = []
+        self.selected_objects = []
     
     def set_for_all_objects(self, name, value):
         for obj in self.objects:
@@ -185,7 +186,7 @@ class GameWorld:
     def get_game_dir(self):
         return TOP_GAME_DIR + self.game_dir
     
-    def set_game_dir(self, dir_name):
+    def set_game_dir(self, dir_name, reset=False):
         if dir_name == self.game_dir:
             self.load_game_state(DEFAULT_STATE_FILENAME)
             return
@@ -195,7 +196,8 @@ class GameWorld:
                 self.game_dir += '/'
             self.app.log('Game data directory is now %s' % dir_name)
             # load in a default state, eg start.gs
-            self.load_game_state(DEFAULT_STATE_FILENAME)
+            if reset:
+                self.load_game_state(DEFAULT_STATE_FILENAME)
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
     
@@ -303,6 +305,22 @@ class GameWorld:
                 return None
         else:
             return importlib.import_module(module_name)
+    
+    def get_module_name_for_class(self, class_name):
+        for module_name,module in self.modules.items():
+            if class_name in module.__dict__:
+                return module_name
+        return None
+    
+    def spawn_object_of_class(self, class_name, x=None, y=None):
+        module_name = self.get_module_name_for_class(class_name)
+        if not module_name:
+            self.app.log("Couldn't find module for class %s" % class_name)
+            return
+        d = {'class_name': class_name, 'module_name': module_name}
+        if x and y:
+            d['x'], d['y'] = x, y
+        self.spawn_object_from_data(d)
     
     def spawn_object_from_data(self, object_data):
         # load module and class
