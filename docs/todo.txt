@@ -1,28 +1,27 @@
 TODO
 
-game mode improvements:
-- concept of "selected game object"
--- object positioning mode/control? W/E/R for move/rotate/scale?
--- generic properties window to edit an instance's properties?
--- some way to save out the state changes brought about by this?  probably better to think of this as a full-on level editing mode D:
+- fix collision offset on cronotest railing
+- rework test1 game data to use new system
 
-sorting: is basing sort entirely on Y position sufficient?
-- split cronotest1 scene into multiple objects if need be
+continue sorting work:
+- split cronotest scene into multiple objects: front wall
 
-collision detection!
-- 2D only, each colliding object has a single layer
-- Renderable.collision_layer: -1 means no collision, >=0 means use that layer for collision
--- make sure this should be a property of Renderable and not Art or GameObject
-- for simplicity, all collision layers are resolved as if they were on the same Z
-- each Renderable can have "display collision layer" toggled for debug
--- collision layer Z can be set to anything in edit mode, but always rendered at 0 in game mode
-- dynamic objects can (should?) have circle or AABB collision
-- broadphase: bounding boxes of each gameobject art
-- narrowphase: how to detect and resolve collisions? the hard part :]
+collision:
+- write up specific question(s) for next video
+- debug viz for contacts (create on contact start, destroy on contact end)
+- fix player->static collisions - shouldn't jitter
+- fix player->dynamicBB collisions
+
+edit mode:
+- generic properties window to edit a selected instance's properties
+- left-side command panel for loading/saving state, spawning stuff, etc
+- key to toggle this UI?  think about overall "edit quasimode" design
 
 ---
 
 further work on existing features:
+
+Tools menu: after separator, same tool settings as can be accessed in popup
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 

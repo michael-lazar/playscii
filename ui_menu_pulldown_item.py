@@ -43,7 +43,7 @@ class FileOpenMenuItem(PulldownMenuItem):
 
 class FileSaveMenuItem(PulldownMenuItem):
     label = 'Save'
-    command = 'save_art'
+    command = 'save_current'
     def should_dim(app):
         return not app.ui.active_art or not app.ui.active_art.unsaved_changes
 
@@ -156,7 +156,7 @@ class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
     label = 'Open all Game Mode assets'
     command = 'open_all_game_assets'
     def should_dim(app):
-        return len(app.game_objects) == 0
+        return len(app.gw.objects) == 0
 
 class ArtPreviousMenuItem(PulldownMenuItem):
     label = 'Previous Art'
@@ -315,6 +315,36 @@ class PaletteFromFileMenuItem(PulldownMenuItem):
     label = 'Palette from file...'
     command = 'palette_from_file'
 
+class ToggleGameModeMenuItem(PulldownMenuItem):
+    label = 'Toggle Game Mode'
+    command = 'toggle_game_mode'
+
+class SetGameDirItem(PulldownMenuItem):
+    label = 'Set game dir...'
+    command = 'set_game_dir'
+
+class LoadGameStateItem(PulldownMenuItem):
+    label = 'Load game state...'
+    command = 'load_game_state'
+
+class SaveGameStateMenuItem(PulldownMenuItem):
+    label = 'Save game state...'
+    command = 'save_current'
+    def should_dim(app):
+        return not app.game_mode
+
+
+class ResetGameItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'reset_game'
+    def should_dim(app):
+        return app.gw.game_dir is None
+    def get_label(app):
+        l = 'Reset game'
+        if app.gw.game_dir:
+            l = '%s "%s"' % (l, app.gw.game_dir)
+        return l
+
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help...'
     command = 'open_help_screen'
@@ -452,6 +482,9 @@ class LayerMenuData(PulldownMenuData):
 
 class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
+
+class GameMenuData(PulldownMenuData):
+    items = [ToggleGameModeMenuItem, SetGameDirItem, LoadGameStateItem, SaveGameStateMenuItem, ResetGameItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

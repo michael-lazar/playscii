@@ -4,7 +4,7 @@ import sdl2
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
-from ui_console import OpenCommand, SaveCommand, ConvertImageCommand
+from ui_console import OpenCommand, SaveCommand, ConvertImageCommand, SetGameDirCommand, LoadGameStateCommand, SaveGameStateCommand
 
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from key_shifts import shift_map
@@ -697,4 +697,44 @@ class PaletteFromFileDialog(UIDialog):
         palette_filename = self.get_field_text(1)
         colors = int(self.get_field_text(2))
         new_pal = PaletteFromFile(self.ui.app, src_filename, palette_filename, colors)
+        self.dismiss()
+
+class SetGameDirDialog(UIDialog):
+    
+    title = 'Set game directory'
+    fields = 1
+    field0_label = 'Directory to load game data from:'
+    confirm_caption = 'Set'
+    game_mode_visible = True
+    
+    # TODO: only allow valid game directory
+    
+    def confirm_pressed(self):
+        SetGameDirCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+class LoadGameStateDialog(UIDialog):
+    
+    title = 'Open game state'
+    fields = 1
+    field0_label = 'Game state file to open:'
+    confirm_caption = 'Open'
+    game_mode_visible = True
+    
+    # TODO: only allow valid game state file in current game directory
+    
+    def confirm_pressed(self):
+        LoadGameStateCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+class SaveGameStateDialog(UIDialog):
+    
+    title = 'Save game state'
+    fields = 1
+    field0_label = 'New filename for game state:'
+    confirm_caption = 'Save'
+    game_mode_visible = True
+    
+    def confirm_pressed(self):
+        SaveGameStateCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()
