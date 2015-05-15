@@ -281,12 +281,14 @@ class DebugTextUI(UIElement):
             #self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
 
 
-class SelectedObjectLabel(UIElement):
+class ObjectPropertiesPanel(UIElement):
     
-    "floating label showing info for selected game object"
+    "panel showing info for selected game object"
     
     tile_width = 30
     tile_height = 3
+    tile_y = 5
+    snap_right = True
     game_mode_visible = True
     
     def __init__(self, ui):
@@ -294,32 +296,30 @@ class SelectedObjectLabel(UIElement):
         UIElement.__init__(self, ui)
     
     def reset_art(self):
-        self.art.clear_frame_layer(0, 0, self.ui.colors.black, self.ui.colors.white)
-        self.art.write_string(0, 0, 0, 0, '[nothing selected]')
+        self.art.clear_frame_layer(0, 0, self.ui.colors.white,
+                                   self.ui.colors.black)
+        self.art.write_string(0, 0, -1, 0, '[nothing selected]',
+                              None, None, True)
         if not self.game_object:
             return
+        self.art.clear_line(0, 0, 0, self.ui.colors.white, self.ui.colors.black)
         label = self.game_object.name
-        self.art.write_string(0, 0, 0, 0, label)
+        self.art.write_string(0, 0, -1, 0, label, None, None, True)
         loc = '%s, %s' % (self.game_object.x, self.game_object.y)
-        self.art.write_string(0, 0, 0, 1, loc)
+        self.art.write_string(0, 0, -1, 1, loc, None, None, True)
+        UIElement.reset_art(self)
     
     def set_object(self, new_obj):
         self.game_object = new_obj
         self.reset_art()
     
     def update(self):
-        # TODO: update position from right edge of self.game_object's renderable
-        # (world-to-screen projection)
         if self.game_object:
-            x = self.game_object.x - self.ui.app.camera.x
-            x += (self.game_object.renderable.width / 2)
-            x /= self.ui.app.camera.z
-            y = self.game_object.y - self.ui.app.camera.y
-            y /= self.ui.app.camera.z
-            self.renderable.x, self.renderable.y = x, y
             # update position line
+            self.art.clear_line(0, 0, 1)
             loc = '%.2f, %.2f' % (self.game_object.x, self.game_object.y)
-            self.art.write_string(0, 0, 0, 1, loc)
+            self.art.write_string(0, 0, -1, 1, loc, None, None, True)
+        UIElement.update(self)
     
     def render(self):
         if self.ui.app.game_mode and self.game_object:

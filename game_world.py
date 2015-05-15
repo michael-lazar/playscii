@@ -65,6 +65,7 @@ class GameWorld:
     
     "holds global state for game mode"
     gravity_x, gravity_y = 0, 0
+    log_load = False
     
     def __init__(self, app):
         self.app = app
@@ -153,19 +154,19 @@ class GameWorld:
     def select_object(self, obj):
         if not obj in self.selected_objects:
             self.selected_objects.append(obj)
-            self.app.ui.selection_label.set_object(obj)
+            self.app.ui.selection_panel.set_object(obj)
     
     def deselect_object(self, obj):
         if obj in self.selected_objects:
             self.selected_objects.remove(obj)
         if len(self.selected_objects) > 0:
-            self.app.ui.selection_label.set_object(self.selected_objects[0])
+            self.app.ui.selection_panel.set_object(self.selected_objects[0])
         else:
-            self.app.ui.selection_label.set_object(None)
+            self.app.ui.selection_panel.set_object(None)
     
     def deselect_all(self):
         self.selected_objects = []
-        self.app.ui.selection_label.set_object(None)
+        self.app.ui.selection_panel.set_object(None)
     
     def unload_game(self):
         for obj in self.objects:
@@ -342,10 +343,12 @@ class GameWorld:
         # apply properties from JSON
         for prop in new_object.serialized:
             if not hasattr(new_object, prop):
-                self.app.dev_log("Unknown serialized property '%s' for %s" % (prop, new_object.name))
+                if self.log_load:
+                    self.app.dev_log("Unknown serialized property '%s' for %s" % (prop, new_object.name))
                 continue
             elif not prop in object_data:
-                self.app.dev_log("Serialized property '%s' not found for %s" % (prop, new_object.name))
+                if self.log_load:
+                    self.app.dev_log("Serialized property '%s' not found for %s" % (prop, new_object.name))
                 continue
             setattr(new_object, prop, object_data.get(prop, None))
         # special handling if object is player
