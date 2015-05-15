@@ -22,9 +22,8 @@ class TileRenderable:
     alpha = 1
     bg_alpha = 1
     move_rate = 1
-    # when part of a GameObject, offset relative to origin
-    # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
-    origin_pct_x, origin_pct_y = 0.5, 0.5
+    # use game object's art_off_pct values
+    use_art_offset = True
     
     def __init__(self, app, art, game_object=None):
         self.app = app
@@ -199,17 +198,18 @@ class TileRenderable:
     def update_transform_from_object(self, obj):
         "updates our position & scale based on that of given game object"
         self.z = obj.z
-        if self is obj.origin_renderable:
-            self.x, self.y = obj.x, obj.y
-        else:
-            if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
-                self.reset_size()
-            if obj.scale_x > 0:
-                self.x = obj.x - (self.width * self.origin_pct_x)
+        if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
+            self.reset_size()
+        self.x, self.y = obj.x, obj.y
+        if self.use_art_offset:
+            if obj.flip_x:
+                self.x += self.width * obj.art_off_pct_x
             else:
-                self.x = obj.x + (self.width * self.origin_pct_x)
-            self.y = obj.y + (self.height * self.origin_pct_y)
+                self.x -= self.width * obj.art_off_pct_x
+            self.y += self.height * obj.art_off_pct_y
         self.scale_x, self.scale_y = obj.scale_x, obj.scale_y
+        if obj.flip_x:
+            self.scale_x *= -1
         self.scale_z = obj.scale_z
     
     def update_loc(self):
@@ -286,10 +286,10 @@ class TileRenderable:
             edit.undo()
         # update art to commit changes to the renderable
         self.art.update()
-        self.render(0)
+        self.render()
         self.exporting = False
     
-    def render(self, layers=None):
+    def render(self, layers=None, z_override=None):
         if not self.visible:
             return
         GL.glUseProgram(self.shader.program)
@@ -327,7 +327,7 @@ class TileRenderable:
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         # draw all specified layers if no list given
-        if not layers:
+        if layers is None:
             # sort layers in Z depth
             layers = list(range(self.art.layers))
             layers.sort(key=lambda i: self.art.layers_z[i], reverse=False)
@@ -347,6 +347,7 @@ class TileRenderable:
             # way a layer's Z can change w/o rebuilding its vert array
             x, y, z = self.get_loc()
             z += self.art.layers_z[i]
+            z = z_override if z_override else z
             GL.glUniform3f(self.position_uniform, x, y, z)
             GL.glDrawElements(GL.GL_TRIANGLES, layer_size, GL.GL_UNSIGNED_INT,
                 ctypes.c_void_p(layer_start * ctypes.sizeof(ctypes.c_uint)))

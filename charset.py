@@ -16,9 +16,13 @@ class CharacterSet:
         self.filename = src_filename
         # small chance we have a filename that == a dir name, eg "ui"
         if not os.path.exists(self.filename) or os.path.isdir(self.filename):
-            self.filename = CHARSET_DIR + self.filename
-        if not os.path.exists(self.filename):
             self.filename += '.%s' % CHARSET_FILE_EXTENSION
+        if self.app.gw.game_dir:
+            game_charset_filename = self.app.gw.get_game_dir() + CHARSET_DIR + self.filename
+            if os.path.exists(game_charset_filename):
+                self.filename = game_charset_filename
+        if not os.path.exists(self.filename):
+            self.filename = CHARSET_DIR + self.filename
         if not os.path.exists(self.filename):
             self.app.log("Couldn't find character set data file %s" % self.filename)
             return
@@ -85,7 +89,7 @@ class CharacterSet:
         self.u_width = self.char_width / self.image_width
         self.v_height = self.char_height / self.image_height
         # report
-        if log:
+        if log and not self.app.game_mode:
             self.app.log("loaded charmap '%s' from %s:" % (self.name, self.filename))
             self.app.log('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
             self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))

@@ -78,14 +78,15 @@ nice people.
 
 Andrew Anderson, Evan Armour, Jason Bakker,
 Aaron Brown, Ben Burbank, Josh Closs,
-Lachlan Cooper, Sam Crisp, Holger Dors,
+Lachlan Cooper, Sam Crisp,
+Torbjørn Grønnevik Dahle, Holger Dors,
 Matthew Duhamel, Jaron Eldon, Jacques Frechet,
 Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
 Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
 Jeremy Lonien, Rohit Nirmal, James Noble,
-David Pittman, Shannon Smith,
-Pablo López Soriano, Jack Turner, Chris Welch,
-Andrew Yoder
+David Pittman, Richard Porczak, Dan Sanderson,
+Shannon Smith, Pablo López Soriano, Jack Turner,
+Chris Welch, Andrew Yoder
 """,
 """
       Programming Help and Contributions:

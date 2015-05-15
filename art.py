@@ -85,6 +85,8 @@ class Art:
             filename += '.%s' % ART_FILE_EXTENSION
         self.filename = filename
         self.app = app
+        # save "time loaded" for menu sorting
+        self.time_loaded = 0
         self.charset, self.palette = charset, palette
         self.command_stack = CommandStack(self)
         self.unsaved_changes = False
@@ -124,7 +126,7 @@ class Art:
         # run update once before renderables initialize so they have
         # something to bind
         self.update()
-        if self.log_creation:
+        if self.log_creation and not self.app.game_mode:
             self.app.log('created new document:')
             self.app.log('  character set: %s' % self.charset.name)
             self.app.log('  palette: %s' % self.palette.name)
@@ -616,7 +618,17 @@ class Art:
                 exec(open(script).read())
                 self.scripts_next_exec_time[i] += self.script_rates[i]
     
-    def write_string(self, frame, layer, x, y, text, fg_color_index=None, bg_color_index=None, right_justify=False):
+    def clear_line(self, frame, layer, line_y, fg_color_index=None,
+                   bg_color_index=None):
+        for x in range(self.width):
+            self.set_char_index_at(frame, layer, x, line_y, 0)
+            if fg_color_index:
+                self.set_color_at(frame, layer, x, line_y, fg_color_index)
+            if bg_color_index:
+                self.set_color_at(frame, layer, x, line_y, bg_color_index, False)
+    
+    def write_string(self, frame, layer, x, y, text, fg_color_index=None,
+                     bg_color_index=None, right_justify=False):
         "writes out each char of a string to specified tiles"
         x %= self.width
         if right_justify:
@@ -633,11 +645,6 @@ class Art:
             if bg_color_index:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
-            # TODO: remove this once it's clear the above solution is better
-            # (now that text is snipped for width, this should never run...)
-            if (x + x_offset < 0) or (x + x_offset > self.width):
-                self.app.dev_log('Warning: %s.write_string went out of bounds writing "%s" at %s,%s' % (self.filename, text, x + x_offset, y))
-                break
 
 
 class ArtFromDisk(Art):
@@ -719,7 +726,7 @@ class ArtFromDisk(Art):
         active_layer = d.get('active_layer', 0)
         self.set_active_layer(active_layer)
         self.update()
-        if self.log_creation:
+        if self.log_creation and not self.app.game_mode:
             self.app.log('loaded %s from disk:' % filename)
             self.app.log('  character set: %s' % self.charset.name)
             self.app.log('  palette: %s' % self.palette.name)
@@ -811,7 +818,7 @@ class ArtFromEDSCII(Art):
         self.scripts_next_exec_time = []
         self.geo_changed = True
         self.update()
-        if self.log_creation:
+        if self.log_creation and not self.app.game_mode:
             self.app.log('EDSCII file %s loaded from disk:' % filename)
             self.app.log('  width/height: %s x %s' % (self.width, self.height))
         self.valid = True

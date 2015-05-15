@@ -54,7 +54,7 @@ class UISwatch(UIElement):
         tile_y = int(math.ceil(tile_y / h) * h)
         # back to screen coords
         x = tile_x * w + self.x
-        y = (tile_y - 1) * h + self.y
+        y = tile_y * h + self.y
         tile_index = (abs(tile_y) * self.art.width) + tile_x
         # if a valid character isn't hovered, bail
         if not self.is_selection_index_valid(tile_index):
@@ -180,7 +180,7 @@ class CharacterSetSwatch(UISwatch):
         self.selection_box.x += selection_x * self.art.quad_width
         self.selection_box.y = self.renderable.y
         selection_y = (self.ui.selected_char - selection_x) / charset.map_width
-        self.selection_box.y -= (selection_y + 1) * self.art.quad_height
+        self.selection_box.y -= selection_y * self.art.quad_height
     
     def render(self):
         if not self.popup.visible:
@@ -275,16 +275,16 @@ class PaletteSwatch(UISwatch):
         self.fg_selection_box.x = self.renderable.x
         self.fg_selection_box.x += self.art.quad_width * (self.ui.selected_fg_color % self.art.width)
         self.fg_selection_box.y = self.renderable.y
-        self.fg_selection_box.y -= self.art.quad_height * math.ceil((self.ui.selected_fg_color + 1) / self.art.width)
+        self.fg_selection_box.y -= self.art.quad_height * math.floor(self.ui.selected_fg_color / self.art.width)
         # bg box position
         self.bg_selection_box.x = self.renderable.x
         self.bg_selection_box.x += self.art.quad_width * (self.ui.selected_bg_color % self.art.width)
         self.bg_selection_box.y = self.renderable.y
-        self.bg_selection_box.y -= self.art.quad_height * math.ceil((self.ui.selected_bg_color + 1) / self.art.width)
+        self.bg_selection_box.y -= self.art.quad_height * math.floor(self.ui.selected_bg_color / self.art.width)
         # FG label position
         self.f_renderable.alpha = 1 - color
         self.f_renderable.x = self.fg_selection_box.x
-        self.f_renderable.y = self.fg_selection_box.y + self.art.quad_height
+        self.f_renderable.y = self.fg_selection_box.y
         # center F in box
         x_offset = (self.art.quad_width - self.popup.art.quad_width) / 2
         y_offset = (self.art.quad_height - self.popup.art.quad_height) / 2
@@ -293,7 +293,7 @@ class PaletteSwatch(UISwatch):
         # BG label position
         self.b_renderable.alpha = 1 - color
         self.b_renderable.x = self.bg_selection_box.x
-        self.b_renderable.y = self.bg_selection_box.y + self.art.quad_height
+        self.b_renderable.y = self.bg_selection_box.y
         self.b_renderable.x += x_offset
         self.b_renderable.y -= y_offset
     

@@ -5,9 +5,10 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
+from game_world import CT_NONE
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -92,6 +93,12 @@ class InputLord:
         keystr = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode().lower()
         key_data = (keystr, shift, alt, ctrl)
         return self.edit_binds.get(key_data, None)
+    
+    def get_command_shortcut(self, command_function):
+        for bind in self.edit_bind_src:
+            if command_function == self.edit_bind_src[bind]:
+                return bind
+        return ''
     
     def input(self):
         app = self.app
@@ -187,7 +194,10 @@ class InputLord:
                 self.ui.unclicked(event.button.button)
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
+                    # in game mode, select stuff
+                    if self.app.game_mode:
+                        self.app.gw.unclicked(event.button.button)
+                    elif self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
                         self.ui.select_tool.finish_select(self.shift_pressed, self.ctrl_pressed)
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         app.cursor.finish_paint()
@@ -198,9 +208,11 @@ class InputLord:
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if not self.ui.active_art:
+                    if self.app.game_mode:
+                        self.app.gw.clicked(event.button.button)
+                    elif not self.ui.active_art:
                         return
-                    if self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
+                    elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
                         if not self.ui.select_tool.selection_in_progress:
@@ -236,19 +248,19 @@ class InputLord:
         if app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
         # game mode: arrow keys and left gamepad stick move player
-        if self.app.game_mode and not self.ui.console.visible:
+        if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog:
             if pressing_up(ks):
-                app.player.move(0, 1)
+                app.gw.player.move(0, 1)
             if pressing_down(ks):
-                app.player.move(0, -1)
+                app.gw.player.move(0, -1)
             if pressing_left(ks):
-                app.player.move(-1, 0)
+                app.gw.player.move(-1, 0)
             if pressing_right(ks):
-                app.player.move(1, 0)
+                app.gw.player.move(1, 0)
             if abs(self.gamepad_left_x) > 0.15:
-                app.player.move(self.gamepad_left_x, 0)
+                app.gw.player.move(self.gamepad_left_x, 0)
             if abs(self.gamepad_left_y) > 0.15:
-                app.player.move(0, self.gamepad_left_y)
+                app.gw.player.move(0, self.gamepad_left_y)
         sdl2.SDL_PumpEvents()
     #
     # bind functions
@@ -360,7 +372,10 @@ class InputLord:
         self.ui.set_selected_tool(self.ui.paste_tool)
     
     def BIND_select_none(self):
-        self.ui.select_none()
+        if self.app.game_mode:
+            self.app.gw.deselect_all()
+        else:
+            self.ui.select_none()
     
     def BIND_cancel(self):
         # context-dependent:
@@ -381,13 +396,27 @@ class InputLord:
         self.ui.invert_selection()
     
     def BIND_erase_selection_or_art(self):
-        self.ui.erase_selection_or_art()
+        # if in game mode, delete selected objects
+        if self.app.game_mode:
+            for obj in self.app.gw.selected_objects:
+                obj.destroy()
+        else:
+            self.ui.erase_selection_or_art()
     
     def BIND_toggle_game_mode(self):
         if not self.app.game_mode:
             self.app.enter_game_mode()
         else:
             self.app.exit_game_mode()
+    
+    def BIND_set_game_dir(self):
+        self.ui.open_dialog(SetGameDirDialog)
+    
+    def BIND_load_game_state(self):
+        self.ui.open_dialog(LoadGameStateDialog)
+    
+    def BIND_reset_game(self):
+        self.app.gw.reset_game()
     
     def BIND_toggle_picker(self):
         if not self.ui.active_art:
@@ -400,8 +429,11 @@ class InputLord:
     def BIND_swap_fg_bg_colors(self):
         self.ui.swap_fg_bg_colors()
     
-    def BIND_save_art(self):
-        if self.ui.active_art:
+    def BIND_save_current(self):
+        # save current game state in game mode, else save current art
+        if self.app.game_mode:
+            self.ui.open_dialog(SaveGameStateDialog)
+        elif self.ui.active_art:
             self.ui.active_art.save_to_file()
     
     def BIND_toggle_ui_visibility(self):
@@ -566,6 +598,9 @@ class InputLord:
     def BIND_open_char_color_menu(self):
         self.ui.menu_bar.open_menu_by_name('char_color')
     
+    def BIND_open_game_menu(self):
+        self.ui.menu_bar.open_menu_by_name('game')
+    
     def BIND_open_help_menu(self):
         self.ui.menu_bar.open_menu_by_name('help')
     
@@ -683,7 +718,34 @@ class InputLord:
         self.ui.fps_counter.visible = not self.ui.fps_counter.visible
     
     def BIND_open_all_game_assets(self):
-        for game_obj in self.app.game_objects:
+        for game_obj in self.app.gw.objects:
             for art in game_obj.get_all_art():
                 self.app.load_art_for_edit(art.filename)
         self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_toggle_all_collision_viz(self):
+        if not self.app.game_mode:
+            return
+        self.app.show_collision_all = not self.app.show_collision_all
+        self.app.gw.set_for_all_objects('show_collision', self.app.show_collision_all)
+    
+    def BIND_toggle_all_bounds_viz(self):
+        if not self.app.game_mode:
+            return
+        self.app.show_bounds_all = not self.app.show_bounds_all
+        self.app.gw.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+    
+    def BIND_toggle_all_origin_viz(self):
+        if not self.app.game_mode:
+            return
+        self.app.show_origin_all = not self.app.show_origin_all
+        self.app.gw.set_for_all_objects('show_origin', self.app.show_origin_all)
+    
+    def BIND_toggle_collision_on_selected(self):
+        for obj in self.app.gw.selected_objects:
+            if obj.orig_collision_type:
+                obj.enable_collision()
+                self.ui.message_line.post_line('Collision enabled for %s' % obj.name)
+            elif obj.collision_type != CT_NONE:
+                obj.disable_collision()
+                self.ui.message_line.post_line('Collision disabled for %s' % obj.name)

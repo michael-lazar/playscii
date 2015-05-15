@@ -1,4 +1,4 @@
-import sys, os.path, time
+import sys, os.path
 
 # obnoxious PyOpenGL workaround for py2exe
 import platform
@@ -9,7 +9,7 @@ if platform.system() == 'Windows':
     sys.path += ['.']
 
 # app imports
-import ctypes
+import ctypes, time
 import sdl2
 import sdl2.ext
 from sdl2 import video
@@ -34,6 +34,7 @@ from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
+from game_world import GameWorld
 from game_object import GameObject
 
 CONFIG_FILENAME = 'playscii.cfg'
@@ -41,10 +42,8 @@ CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
-GAME_DIR = 'games/'
-GAME_FILE_EXTENSION = 'game'
 
-VERSION = '0.5.1'
+VERSION = '0.5.2'
 
 MAX_ONION_FRAMES = 3
 
@@ -68,16 +67,18 @@ class Application:
     bg_color = (0.1, 0.1, 0.1, 1)
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
-    # debug test stuff
-    test_mutate_each_frame = False
-    test_life_each_frame = False
-    test_art = False
-    auto_save = False
     # show dev-only log messages
     show_dev_log = False
+    # toggles for "show all" debug viz modes
+    show_collision_all = False
+    show_bounds_all = False
+    show_origin_all = False
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
+    compat_fail_message = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
+    game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
     
-    def __init__(self, log_file, log_lines, art_filename, game_to_load):
+    def __init__(self, log_file, log_lines, art_filename, game_dir_to_load,
+                 state_to_load):
         self.init_success = False
         # log fed in from __main__, might already have stuff in it
         self.log_file = log_file
@@ -115,9 +116,15 @@ class Application:
             gl_ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
         gl_ver = gl_ver.decode('utf-8')
         self.log('OpenGL detected: %s' % gl_ver)
-        glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
-        if not glsl_ver:
-            glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
+        # GL 1.1 doesn't even habla shaders, quit if we fail GLSL version check
+        try:
+            glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
+            if not glsl_ver:
+                glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION, ctypes.c_int(0))
+        except:
+            self.log('GLSL support not detected, ' + self.compat_fail_message)
+            self.should_quit = True
+            return
         glsl_ver = glsl_ver.decode('utf-8')
         self.log('GLSL detected: %s' % glsl_ver)
         # verify that we got at least a 2.1 context
@@ -128,7 +135,7 @@ class Application:
         vao_support = bool(GL.glGenVertexArrays)
         self.log('Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
         if not vao_support  or context_version < 2.1 or gl_ver.startswith('2.0'):
-            self.log("Could not create a compatible OpenGL context, your hardware doesn't appear to meet Playscii's requirements!  Sorry ;_________;")
+            self.log("Couldn't create a compatible OpenGL context, " + COMPAT_FAIL_MSG)
             if not self.run_if_opengl_incompatible:
                 self.should_quit = True
                 return
@@ -140,16 +147,11 @@ class Application:
         self.sl = ShaderLord(self)
         # separate cameras for edit vs game mode
         self.edit_camera = Camera(self)
-        self.game_camera = Camera(self)
         self.camera = self.edit_camera
         self.art_loaded_for_edit, self.edit_renderables = [], []
         self.converter = None
-        # "game mode" renderables
-        self.art_loaded_for_game, self.game_renderables = [], []
         self.game_mode = False
-        # "tuner": set an object to this for quick console tuning access
-        self.player, self.tuner = None, None
-        self.game_objects = []
+        self.gw = GameWorld(self)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -184,8 +186,12 @@ class Application:
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
-        if game_to_load:
-            self.load_game(game_to_load)
+        if game_dir_to_load:
+            if state_to_load:
+                self.gw.set_game_dir(game_dir_to_load, False)
+                self.gw.load_game_state(state_to_load)
+            else:
+                self.gw.set_game_dir(game_dir_to_load, True)
         else:
             self.ui.message_line.post_line(self.welcome_message, 10)
     
@@ -236,8 +242,12 @@ class Application:
         # if not found, try adding extension
         if not os.path.exists(filename):
             filename += '.%s' % ART_FILE_EXTENSION
+        # if a game is loaded, check in its art dir
+        game_art_filename = self.gw.get_game_dir() + ART_DIR + filename if self.gw.game_dir else None
+        if game_art_filename and os.path.exists(game_art_filename):
+            filename = game_art_filename
         # try adding art subdir
-        if not os.path.exists(filename):
+        elif not os.path.exists(filename):
             filename = '%s%s' % (ART_DIR, filename)
         art = None
         # use given path + file name even if it doesn't exist; use as new file's name
@@ -248,11 +258,12 @@ class Application:
             self.log(text)
             art = self.new_art(filename)
         else:
-            for a in self.art_loaded_for_edit + self.art_loaded_for_game:
+            for a in self.art_loaded_for_edit + self.gw.art_loaded:
                 # TODO: this check doesn't work on EDSCII imports b/c its name changes
                 if a.filename == filename:
                     return a
-            self.log('Loading file %s...' % filename)
+            if not self.game_mode:
+                self.log('Loading file %s...' % filename)
             art = ArtFromDisk(filename, self)
             if not art or not art.valid:
                 art = ArtFromEDSCII(filename, self)
@@ -430,37 +441,22 @@ class Application:
     
     def enter_game_mode(self):
         self.game_mode = True
-        self.camera = self.game_camera
+        self.camera = self.gw.camera
+        # display message on how to toggle game mode
+        mode_bind = self.il.get_command_shortcut('toggle_game_mode')
+        mode_bind = mode_bind.upper()
+        self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
     
     def exit_game_mode(self):
         self.game_mode = False
         self.camera = self.edit_camera
-    
-    def clear_game_assets(self):
-        self.art_loaded_for_game = []
-        self.game_renderables = []
-        self.game_objects = []
-    
-    def load_game(self, game_name):
-        self.enter_game_mode()
-        # execute game script, which loads game assets etc
-        game_file = '%s%s/%s.%s' % (GAME_DIR, game_name, game_name, GAME_FILE_EXTENSION)
-        if not os.path.exists(game_file):
-            self.log("Couldn't find game script: %s" % game_file)
-            return
-        self.log('loading game %s...' % game_name)
-        self.clear_game_assets()
-        # set my_game_dir & my_game_art_dir for quick access within game script
-        my_game_dir = '%s%s/' % (GAME_DIR, game_name)
-        my_game_art_dir = '%s%s' % (my_game_dir, ART_DIR)
-        exec(open(game_file).read())
-        self.log('loaded game %s' % game_name)
+        self.ui.message_line.post_line('', 1)
     
     def main_loop(self):
         while not self.should_quit:
             # set all arts to "not updated"
             if self.game_mode:
-                for game_object in self.game_objects:
+                for game_object in self.gw.objects:
                     game_object.art.updated_this_tick = False
             else:
                 for art in self.art_loaded_for_edit:
@@ -500,24 +496,8 @@ class Application:
         if self.converter:
             self.converter.update()
         if self.game_mode:
-            for game_object in self.game_objects:
-                game_object.update()
+            self.gw.update()
         self.camera.update()
-        if self.test_mutate_each_frame:
-            self.test_mutate_each_frame = False
-            self.ui.active_art.run_script_every('mutate', 0.01)
-        if self.test_life_each_frame:
-            self.test_life_each_frame = False
-            self.ui.active_art.run_script_every('conway', 0.05)
-        if self.test_art:
-            self.test_art = False
-            # load some test data - simulates some user edits:
-            # add layers, write text, duplicate that frame, do some animation
-            self.ui.active_art.run_script('hello1')
-        # test saving functionality
-        if self.auto_save:
-            art.save_to_file()
-            self.auto_save = False
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
         if self.ui.visible:
@@ -525,25 +505,6 @@ class Application:
         if not self.game_mode:
             self.grid.update()
             self.cursor.end_update()
-    
-    class RenderItem:
-        "quickie class to debug render order"
-        def __init__(self, game_object, layer, layer_z):
-            self.game_object, self.layer, self.layer_z = game_object, layer, layer_z
-        def __str__(self):
-            return '%s layer %s z %s' % (self.game_object.art.filename, self.layer, self.layer_z)
-    
-    def game_render(self):
-        # sort objects for drawing by each layer Z order
-        draw_order = []
-        for game_object in self.game_objects:
-            for i,z in enumerate(game_object.art.layers_z):
-                z += game_object.z
-                item = self.RenderItem(game_object, i, z)
-                draw_order.append(item)
-        draw_order.sort(key=lambda item: item.layer_z, reverse=False)
-        for item in draw_order:
-            item.game_object.render(item.layer)
     
     def debug_onion_frames(self):
         "debug function to log onion renderable state"
@@ -567,7 +528,7 @@ class Application:
         GL.glClearColor(*self.bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         if self.game_mode:
-            self.game_render()
+            self.gw.render()
         else:
             if self.converter:
                 self.converter.preview_sprite.render()
@@ -598,10 +559,12 @@ class Application:
         sdl2.SDL_GL_SwapWindow(self.window)
     
     def quit(self):
-        self.log('Thank you for using Playscii!  <3')
         if self.init_success:
+            self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
+            for obj in self.gw.objects:
+                obj.destroy()
             self.fb.destroy()
             self.ui.destroy()
             for charset in self.charsets:
@@ -640,14 +603,21 @@ if __name__ == "__main__":
         log_file.write('%s\n' % line)
         log_lines.append(line)
         print(line)
-    file_to_load, game_to_load = None, None
+    file_to_load, game_dir_to_load, state_to_load = None, None, None
+    # usage:
+    # playscii.py [artfile] | [-game gamedir [-state statefile]]
     if len(sys.argv) > 1:
-        # "-game test1" args will load test1 game from its dir
-        if sys.argv[1] == '-game' and len(sys.argv) > 2:
-            game_to_load = sys.argv[2]
+        # "-game test1" args will set test1/ as game dir
+        if len(sys.argv) > 2 and sys.argv[1] == '-game':
+            game_dir_to_load = sys.argv[2]
+            # "-state testX" args will load testX game state from given game dir
+            if len(sys.argv) > 4 and sys.argv[3] == '-state':
+                state_to_load = sys.argv[4]
         else:
+            # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
-    app = Application(log_file, log_lines, file_to_load, game_to_load)
+    app = Application(log_file, log_lines, file_to_load, game_dir_to_load,
+                      state_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)
