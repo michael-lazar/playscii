@@ -198,8 +198,8 @@ class FrameTogglePlaybackMenuItem(PulldownMenuItem):
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
     def get_label(app):
-        if app.ui.active_art is None:
-            return ''
+        if not app.ui.active_art:
+            return 'Start animation playback'
         animating = app.ui.active_art.renderables[0].animating
         return ['Start', 'Stop'][animating] + ' animation playback'
 
@@ -442,7 +442,7 @@ class LayerMenuData(PulldownMenuData):
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
-        if ui.active_art is None:
+        if not ui.active_art:
             return False
         return ui.active_art.active_layer == item.cb_arg
     

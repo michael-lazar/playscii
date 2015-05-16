@@ -300,6 +300,9 @@ class CollisionRenderable(WorldLineRenderable):
         self.vert_array = np.array(verts, dtype=np.float32)
         self.elem_array = np.array(elems, dtype=np.uint32)
         self.color_array = np.array([self.color * len(elems)], dtype=np.float32)
+        # set line width based on segment thickness
+        if len(self.game_object.col_shapes) > 0:
+            self.line_width = self.game_object.col_shapes[0].radius * 50
 
 
 class BoxCollisionRenderable(CollisionRenderable):
@@ -318,6 +321,7 @@ class BoxCollisionRenderable(CollisionRenderable):
 class CircleCollisionRenderable(CollisionRenderable):
     
     segments = 24
+    line_width = 2
     
     def get_quad_size(self):
         return self.game_object.col_radius, self.game_object.col_radius
