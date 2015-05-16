@@ -1,6 +1,7 @@
 import os, sys, time, json, importlib
 import pymunk
 
+import collision
 from camera import Camera
 from art import ART_DIR
 
@@ -29,43 +30,10 @@ class RenderItem:
     def __str__(self):
         return '%s layer %s sort %s' % (self.obj.art.filename, self.layer, self.sort_value)
 
-def a_push_b(a, b, contact):
-    x = b.x + contact.normal.x * contact.distance
-    y = b.y + contact.normal.y * contact.distance
-    b.set_loc(x, y)
-    #b.vel_x = 0
-    #b.vel_y = 0
-
-def player_vs_dynamic_begin(space, arbiter):
-    obj1 = arbiter.shapes[0].gobj
-    obj2 = arbiter.shapes[1].gobj
-    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
-    a_push_b(obj1, obj2, arbiter.contacts[0])
-    return True
-
-def player_vs_dynamic_pre_solve(space, arbiter):
-    player_vs_dynamic_begin(space, arbiter)
-    return False
-
-def player_vs_static_begin(space, arbiter):
-    obj1 = arbiter.shapes[0].gobj
-    obj2 = arbiter.shapes[1].gobj
-    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
-    a_push_b(obj2, obj1, arbiter.contacts[0])
-    return True
-
-def player_vs_static_pre_solve(space, arbiter):
-    player_vs_static_begin(space, arbiter)
-    return False
-
-def always_collide(space, arbiter):
-    return True
-
 class GameWorld:
     
     "holds global state for game mode"
     gravity_x, gravity_y = 0, 0
-    log_load = False
     
     def __init__(self, app):
         self.app = app
@@ -78,14 +46,15 @@ class GameWorld:
         self.space = pymunk.Space()
         self.space.gravity = self.gravity_x, self.gravity_y
         self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_DYNAMIC,
-                                         begin=player_vs_dynamic_begin,
-                                         pre_solve=player_vs_dynamic_pre_solve)
+                                         begin=collision.player_vs_dynamic_begin,
+                                         pre_solve=collision.player_vs_dynamic_pre_solve)
         self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_STATIC,
-                                         begin=player_vs_static_begin,
-                                         pre_solve=player_vs_static_pre_solve)
+                                         begin=collision.player_vs_static_begin,
+                                         pre_solve=collision.player_vs_static_pre_solve)
         self.art_loaded, self.renderables = [], []
         # player is edit-dragging an object
         self.dragging_object = False
+        self.last_state_loaded = None
     
     def pick_next_object_at(self, x, y):
         # TODO: cycle through objects at point til an unselected one is found
@@ -175,6 +144,7 @@ class GameWorld:
         self.renderables = []
         self.art_loaded = []
         self.selected_objects = []
+        self.app.ui.selection_panel.set_object(None)
     
     def set_for_all_objects(self, name, value):
         for obj in self.objects:
@@ -182,7 +152,7 @@ class GameWorld:
     
     def reset_game(self):
         if self.game_dir:
-            self.set_game_dir(self.game_dir)
+            self.set_game_dir(self.game_dir, True)
     
     def get_game_dir(self):
         return TOP_GAME_DIR + self.game_dir
@@ -217,7 +187,11 @@ class GameWorld:
         #
         draw_order = []
         collision_items = []
+        y_objects = []
         for obj in self.objects:
+            if obj.y_sort:
+                y_objects.append(obj)
+                continue
             for i,z in enumerate(obj.art.layers_z):
                 # only draw collision layer if show collision is set
                 if obj.collision_shape_type == CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
@@ -225,34 +199,27 @@ class GameWorld:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                elif obj.y_sort:
-                    continue
                 item = RenderItem(obj, i, z + obj.z)
                 draw_order.append(item)
         draw_order.sort(key=lambda item: item.sort_value, reverse=False)
-        for item in draw_order:
-            item.obj.render(item.layer)
         #
         # process "Y sort" objects
         #
-        y_objects = []
-        for obj in self.objects:
-            if obj.y_sort:
-                y_objects.append(obj)
         y_objects.sort(key=lambda obj: obj.y, reverse=True)
         # draw layers of each Y-sorted object in Z order
-        draw_order = []
         for obj in y_objects:
             items = []
             for i,z in enumerate(obj.art.layers_z):
                 if obj.collision_shape_type == CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                    if obj.show_collision:
+                        item = RenderItem(obj, i, 0)
+                        collision_items.append(item)
                     continue
                 item = RenderItem(obj, i, z)
                 items.append(item)
             items.sort(key=lambda item: item.sort_value, reverse=False)
             for item in items:
                 draw_order.append(item)
-        draw_order.sort(key=lambda item: item.sort_value, reverse=False)
         for item in draw_order:
             item.obj.render(item.layer)
         #
@@ -308,10 +275,22 @@ class GameWorld:
             return importlib.import_module(module_name)
     
     def get_module_name_for_class(self, class_name):
+        if '.' in class_name:
+            return class_name[:class_name.rfind('.')]
         for module_name,module in self.modules.items():
             if class_name in module.__dict__:
                 return module_name
         return None
+    
+    def reset_object_in_place(self, obj):
+        x, y = obj.x, obj.y
+        obj_class = obj.__class__.__name__
+        spawned = self.spawn_object_of_class(obj_class, x, y)
+        if spawned:
+            self.app.log('%s reset to class defaults' % obj.name)
+            if obj is self.player:
+                self.player = spawned
+            obj.destroy()
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
         module_name = self.get_module_name_for_class(class_name)
@@ -319,9 +298,9 @@ class GameWorld:
             self.app.log("Couldn't find module for class %s" % class_name)
             return
         d = {'class_name': class_name, 'module_name': module_name}
-        if x and y:
+        if x is not None and y is not None:
             d['x'], d['y'] = x, y
-        self.spawn_object_from_data(d)
+        return self.spawn_object_from_data(d)
     
     def spawn_object_from_data(self, object_data):
         # load module and class
@@ -340,21 +319,11 @@ class GameWorld:
         obj_class = module.__dict__[class_name]
         # pass in object data
         new_object = obj_class(self, object_data)
-        # apply properties from JSON
-        for prop in new_object.serialized:
-            if not hasattr(new_object, prop):
-                if self.log_load:
-                    self.app.dev_log("Unknown serialized property '%s' for %s" % (prop, new_object.name))
-                continue
-            elif not prop in object_data:
-                if self.log_load:
-                    self.app.dev_log("Serialized property '%s' not found for %s" % (prop, new_object.name))
-                continue
-            setattr(new_object, prop, object_data.get(prop, None))
         # special handling if object is player
         if object_data.get('is_player', False):
             self.player = new_object
             self.camera.focus_object = self.player
+        return new_object
     
     def load_game_state(self, filename):
         filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir, filename, STATE_FILE_EXTENSION)
@@ -376,3 +345,5 @@ class GameWorld:
         if 'camera_x' in d and 'camera_y' in d and 'camera_z' in d:
             self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])
         self.app.log('Loaded game state from file %s' % filename)
+        self.last_state_loaded = filename
+        self.app.update_window_title()

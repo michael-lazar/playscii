@@ -408,6 +408,7 @@ class InputLord:
             self.app.enter_game_mode()
         else:
             self.app.exit_game_mode()
+        self.app.update_window_title()
     
     def BIND_set_game_dir(self):
         self.ui.open_dialog(SetGameDirDialog)

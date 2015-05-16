@@ -28,6 +28,7 @@ class GameObject:
     # mass - only used by pymunk
     mass = 1
     log_move = False
+    log_load = False
     log_spawn = False
     show_origin = False
     show_bounds = False
@@ -36,7 +37,7 @@ class GameObject:
     collision_shape_type = CST_NONE
     collision_type = CT_NONE
     # segment thickness for AABB / tile based collision
-    seg_thickness = 0.01
+    seg_thickness = 0.1
     # collision layer name for CST_TILE objects
     col_layer_name = 'collision'
     # collision circle/box offset from origin
@@ -49,16 +50,22 @@ class GameObject:
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
     # list of members to serialize (no weak refs!)
-    serialized = ['y_sort', 'art_off_pct_x', 'art_off_pct_y']
+    serialized = ['x', 'y', 'z', 'art_src', 'y_sort', 'art_off_pct_x', 'art_off_pct_y']
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0, 0, 0
-        # use serialized data for properties that need to be set in early init
-        if 'x' in obj_data and 'y' in obj_data and 'z' in obj_data:
-            self.x, self.y, self.z = obj_data['x'], obj_data['y'], obj_data['z']
-        # get art_src from data for objects that don't define it in class
-        if 'art_src' in obj_data:
-            self.art_src = obj_data['art_src']
+        # apply serialized data before most of init happens
+        # properties that need non-None defaults should be declared above
+        for v in self.serialized:
+            if not hasattr(self, v):
+                if log_load:
+                    self.app.dev_log("Unknown serialized property '%s' for %s" % (v, self.name))
+                continue
+            elif not v in obj_data:
+                if self.log_load:
+                    self.app.dev_log("Serialized property '%s' not found for %s" % (v, self.name))
+                continue
+            setattr(self, v, obj_data[v])
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
@@ -173,17 +180,17 @@ class GameObject:
                 left = (x * self.art.quad_width) - (self.renderable.width * self.art_off_pct_x)
                 right = left + self.art.quad_width
                 # TODO: railing in cronotest is offset, fix!
-                top = self.renderable.height * self.art_off_pct_y - y * self.art.quad_height
+                top = (self.renderable.height * self.art_off_pct_y) - (y * self.art.quad_height)
                 bottom = top - self.art.quad_height
                 # only create segs for 0/>0 tile boundaries
                 # empty space to left = left seg
                 if x == 0 or is_dir_empty(x-1, y):
                     segs += [self.get_seg(left, top, left, bottom)]
-                if x == self.art.width or is_dir_empty(x, y):
+                if x == self.art.width - 1 or is_dir_empty(x+1, y):
                     segs += [self.get_seg(right, top, right, bottom)]
                 if y == 0 or is_dir_empty(x, y-1):
                     segs += [self.get_seg(left, top, right, top)]
-                if y == self.art.height or is_dir_empty(x, y):
+                if y == self.art.height - 1 or is_dir_empty(x, y+1):
                     segs += [self.get_seg(left, bottom, right, bottom)]
         return segs
     
@@ -246,7 +253,7 @@ class GameObject:
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
         self.z = z or 0
-        if self.col_body:
+        if self.col_body and self.col_body is not self.world.space.static_body:
             self.col_body.position.x = self.x + self.col_offset_x
             self.col_body.position.y = self.y + self.col_offset_y
         if self.collision_shape_type == CST_TILE:
@@ -323,20 +330,17 @@ class GameObject:
         d = {
             'class_name': type(self).__name__,
             'module_name': type(self).__module__,
-            'x': self.x,
-            'y': self.y,
-            'z': self.z
         }
         if self is self.world.player:
             d['is_player'] = True
-        # if no default art_src or non-default, infer from art's filename
-        if not self.art_src or self.art_src != self.__class__.art_src:
-            d['art_src'] = self.art.filename
         # serialize whatever other vars are declared in self.serialized
         for prop_name in self.serialized:
             if hasattr(self, prop_name):
                 d[prop_name] = getattr(self, prop_name)
         return d
+    
+    def reset_in_place(self):
+        self.world.reset_object_in_place(self)
     
     def destroy(self):
         self.world.objects.remove(self)

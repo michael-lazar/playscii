@@ -152,6 +152,9 @@ class Application:
         self.converter = None
         self.game_mode = False
         self.gw = GameWorld(self)
+        # if game dir specified, set it before we try to load any art
+        if game_dir_to_load:
+            self.gw.set_game_dir(game_dir_to_load, False)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -187,11 +190,11 @@ class Application:
         self.init_success = True
         self.log('init done.')
         if game_dir_to_load:
+            # set initial game state
             if state_to_load:
-                self.gw.set_game_dir(game_dir_to_load, False)
                 self.gw.load_game_state(state_to_load)
             else:
-                self.gw.set_game_dir(game_dir_to_load, True)
+                self.gw.reset_game()
         else:
             self.ui.message_line.post_line(self.welcome_message, 10)
     
@@ -351,6 +354,10 @@ class Application:
         sdl2.SDL_SetWindowTitle(self.window, new_title)
     
     def update_window_title(self):
+        if self.game_mode and self.gw.game_dir:
+            title = self.gw.last_state_loaded
+            self.set_window_title(title)
+            return
         if not self.ui.active_art:
             self.set_window_title()
             return
@@ -579,7 +586,6 @@ class Application:
 
 
 if __name__ == "__main__":
-    file_to_load = None
     # start log file even before Application has initialized so we can write to it
     log_file = open(LOG_FILENAME, 'w')
     log_lines = []
@@ -605,7 +611,7 @@ if __name__ == "__main__":
         print(line)
     file_to_load, game_dir_to_load, state_to_load = None, None, None
     # usage:
-    # playscii.py [artfile] | [-game gamedir [-state statefile]]
+    # playscii.py [artfile] | [-game gamedir [-state statefile | artfile]]
     if len(sys.argv) > 1:
         # "-game test1" args will set test1/ as game dir
         if len(sys.argv) > 2 and sys.argv[1] == '-game':
@@ -613,6 +619,8 @@ if __name__ == "__main__":
             # "-state testX" args will load testX game state from given game dir
             if len(sys.argv) > 4 and sys.argv[3] == '-state':
                 state_to_load = sys.argv[4]
+            elif len(sys.argv) > 3:
+                file_to_load = sys.argv[3]
         else:
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
