@@ -6,6 +6,7 @@ REM Build needs to know where your python and SDL2 dll are, modify
 REM the two lines below as needed:
 set PYTHONPATH="c:\Python34"
 set SDLPATH=".\"
+set MUNKPATH=".\"
 
 echo Removing old build...
 rmdir /S /Q dist\
@@ -23,6 +24,9 @@ del /s /Q dist\OpenGL\*.pyo
 echo Copying SDL2.dll...
 copy %SDLPATH%\SDL2.dll dist\
 
+echo Copying chipmunk.dll...
+copy %MUNKPATH%\chipmunk.dll dist\
+
 echo Copying Playscii data files...
 mkdir dist\art
 copy /v art\*.* dist\art\
@@ -38,7 +42,13 @@ mkdir dist\shaders
 copy /v shaders\*.* dist\shaders\
 mkdir dist\games
 mkdir dist\games\test1
+mkdir dist\games\test1\art
+mkdir dist\games\test1\palettes
+mkdir dist\games\test1\scripts
 copy /v games\test1\*.* dist\games\test1\
+copy /v games\test1\art\*.* dist\games\test1\art\
+copy /v games\test1\palettes\*.* dist\games\test1\palettes\
+copy /v games\test1\scripts\*.* dist\games\test1\scripts\
 REM ignore ui art source assets (eg .xcf)
 mkdir dist\ui
 copy /v ui\*.png dist\ui\
