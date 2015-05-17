@@ -250,13 +250,26 @@ class InputLord:
         # game mode: arrow keys and left gamepad stick move player
         if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog:
             if pressing_up(ks):
-                app.gw.player.move(0, 1)
+                # shift = move selected
+                if self.shift_pressed and self.app.can_edit:
+                    app.gw.move_selected(0, 1, 0)
+                else:
+                    app.gw.player.move(0, 1)
             if pressing_down(ks):
-                app.gw.player.move(0, -1)
+                if self.shift_pressed and self.app.can_edit:
+                    app.gw.move_selected(0, -1, 0)
+                else:
+                    app.gw.player.move(0, -1)
             if pressing_left(ks):
-                app.gw.player.move(-1, 0)
+                if self.shift_pressed and self.app.can_edit:
+                    app.gw.move_selected(-1, 0, 0)
+                else:
+                    app.gw.player.move(-1, 0)
             if pressing_right(ks):
-                app.gw.player.move(1, 0)
+                if self.shift_pressed and self.app.can_edit:
+                    app.gw.move_selected(1, 0, 0)
+                else:
+                    app.gw.player.move(1, 0)
             if abs(self.gamepad_left_x) > 0.15:
                 app.gw.player.move(self.gamepad_left_x, 0)
             if abs(self.gamepad_left_y) > 0.15:
@@ -404,6 +417,8 @@ class InputLord:
             self.ui.erase_selection_or_art()
     
     def BIND_toggle_game_mode(self):
+        if not self.app.can_edit:
+            return
         if not self.app.game_mode:
             self.app.enter_game_mode()
         else:

@@ -384,7 +384,7 @@ class ConsoleUI(UIElement):
                 camera = app.camera
                 art = ui.active_art
                 player = app.gw.player
-                sel = app.gw.selected_objects[0]
+                sel = None if len(app.gw.selected_objects) == 0 else app.gw.selected_objects[0]
                 world = app.gw
                 # special handling of assignment statements, eg x = 3:
                 # detect strings that pattern-match, send them to exec(),

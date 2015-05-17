@@ -76,6 +76,8 @@ class Application:
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
     compat_fail_message = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
     game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
+    # can_edit: if False, user can't use art or edit functionality
+    can_edit = True
     
     def __init__(self, log_file, log_lines, art_filename, game_dir_to_load,
                  state_to_load):
@@ -225,14 +227,15 @@ class Application:
         if self.show_dev_log:
             self.log(new_line)
     
-    def new_art(self, filename, width=None, height=None):
+    def new_art(self, filename, width=None, height=None,
+                charset=None, palette=None):
         width = width or self.new_art_width
         height = height or self.new_art_height
         filename = filename or 'new'
         if not filename.startswith(ART_DIR):
             filename = '%s%s' % (ART_DIR, filename)
-        charset = self.load_charset(self.starting_charset)
-        palette = self.load_palette(self.starting_palette)
+        charset = self.load_charset(charset or self.starting_charset)
+        palette = self.load_palette(palette or self.starting_palette)
         return Art(filename, self, charset, palette, width, height)
     
     def load_art(self, filename):
