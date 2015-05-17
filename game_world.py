@@ -21,7 +21,7 @@ CTG_STATIC = [CT_GENERIC_STATIC]
 CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 
 # import after game_object has done its imports from us
-from game_object import CST_TILE
+import game_object
 
 class RenderItem:
     "quickie class to debug render order"
@@ -41,7 +41,7 @@ class GameWorld:
         self.selected_objects = []
         self.camera = Camera(self.app)
         self.player = None
-        self.modules = {}
+        self.modules = {'game_object': game_object}
         self.objects = []
         self.space = pymunk.Space()
         self.space.gravity = self.gravity_x, self.gravity_y
@@ -150,6 +150,13 @@ class GameWorld:
         for obj in self.objects:
             setattr(obj, name, value)
     
+    def move_selected(self, move_x, move_y, move_z):
+        for obj in self.selected_objects:
+            #obj.move(move_x, move_y)
+            obj.x += move_x
+            obj.y += move_y
+            obj.z += move_z
+    
     def reset_game(self):
         if self.game_dir:
             self.set_game_dir(self.game_dir, True)
@@ -166,11 +173,24 @@ class GameWorld:
             if not dir_name.endswith('/'):
                 self.game_dir += '/'
             self.app.log('Game data directory is now %s' % dir_name)
+            # import all submodules to get them in namespace from the get-go
+            self.import_all()
             # load in a default state, eg start.gs
             if reset:
                 self.load_game_state(DEFAULT_STATE_FILENAME)
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
+    
+    def import_all(self):
+        module_suffix = TOP_GAME_DIR[:-1] + '.'
+        module_suffix += self.game_dir[:-1] + '.'
+        module_suffix += GAME_SCRIPTS_DIR[:-1] + '.'
+        module_path = TOP_GAME_DIR + self.game_dir + GAME_SCRIPTS_DIR
+        for filename in os.listdir(module_path):
+            if filename.endswith('.py'):
+                module_name = module_suffix + filename[:-3]
+                if not module_name in self.modules:
+                    self.modules[module_name] = importlib.import_module(module_name)
     
     def update(self):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
@@ -194,7 +214,7 @@ class GameWorld:
                 continue
             for i,z in enumerate(obj.art.layers_z):
                 # only draw collision layer if show collision is set
-                if obj.collision_shape_type == CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == game_object.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
@@ -210,7 +230,7 @@ class GameWorld:
         for obj in y_objects:
             items = []
             for i,z in enumerate(obj.art.layers_z):
-                if obj.collision_shape_type == CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == game_object.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
@@ -269,7 +289,8 @@ class GameWorld:
             try:
                 return importlib.reload(self.modules[module_name])
             except:
-                # TODO: return exceptions
+                # log exception info
+                #self.app.log(sys.exc_info())
                 return None
         else:
             return importlib.import_module(module_name)
@@ -334,7 +355,7 @@ class GameWorld:
             #self.app.log('Loading game state file %s...' % filename)
         except:
             self.app.log("Couldn't load game state from file %s" % filename)
-            print(sys.exc_info()[0])
+            #self.app.log(sys.exc_info())
             return
         self.gravity_x = d['gravity_x']
         self.gravity_y = d['gravity_y']
@@ -346,4 +367,7 @@ class GameWorld:
             self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])
         self.app.log('Loaded game state from file %s' % filename)
         self.last_state_loaded = filename
+        self.set_for_all_objects('show_collision', self.app.show_collision_all)
+        self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+        self.set_for_all_objects('show_origin', self.app.show_origin_all)
         self.app.update_window_title()

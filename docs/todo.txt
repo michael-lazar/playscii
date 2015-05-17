@@ -1,6 +1,6 @@
 TODO
 
-- rework test1 game data to use new system
+is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
 
 collision:
 - write up specific question(s) for next video
@@ -11,7 +11,18 @@ collision:
 edit mode:
 - right panel: generic properties view to edit selected instance's properties
 -- if multiple selected, show only title bar "3 Selected" etc
-- left-side command panel for loading/saving state, spawning stuff, etc
+-- reset to class defaults
+-- toggle lock/unlock location
+-- toggle object visible
+- left panel of edit mode buttons:
+-- return to art mode
+-- hide edit UI (shows message with key to unhide)
+-- load state
+-- save state
+-- reset to start state
+-- spawn something (dialog to specify class) (mouse pick location?)
+-- set game dir
+-- select a particular object (chooser UI?)
 - key to toggle this UI?  think about overall "edit quasimode" design
 
 ---

@@ -17,8 +17,11 @@ class GameObject:
     
     # if specified, this art will be loaded from disk
     art_src = None
-    # if art_src not specified, blank art will be created with these dimensions
+    # if generate_art is True, blank art will be created with these
+    # dimensions, charset, and palette
+    generate_art = False
     art_width, art_height = 8, 8
+    art_charset, art_palette = None, None
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
     move_accel_rate = 0.01
@@ -58,7 +61,7 @@ class GameObject:
         # properties that need non-None defaults should be declared above
         for v in self.serialized:
             if not hasattr(self, v):
-                if log_load:
+                if self.log_load:
                     self.app.dev_log("Unknown serialized property '%s' for %s" % (v, self.name))
                 continue
             elif not v in obj_data:
@@ -75,10 +78,11 @@ class GameObject:
         self.world = world
         self.app = self.world.app
         # if art_src not specified, create a new art according to dimensions
-        if not self.art_src:
+        if self.generate_art:
             self.art_src = '%s_art' % self.name
             self.art = self.app.new_art(self.art_src, self.art_width,
-                                        self.art_height)
+                                        self.art_height, self.art_charset,
+                                        self.art_palette)
         else:
             self.art = self.app.load_art(self.art_src)
         if not self.art:
@@ -247,6 +251,7 @@ class GameObject:
         if not self.art:
             self.art = old_art
             return
+        self.art_src = new_art_filename
         self.renderable.set_art(self.art)
         self.bounds_renderable.art = self.art
     
@@ -326,7 +331,7 @@ class GameObject:
         self.renderable.render(layer, z_override)
     
     def get_state_dict(self):
-        "return a dict that GameWorld.save_state_to_file can save as JSON"
+        "return a dict that GameWorld.save_state_to_file can dump to JSON"
         d = {
             'class_name': type(self).__name__,
             'module_name': type(self).__module__,

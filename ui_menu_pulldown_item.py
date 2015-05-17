@@ -326,13 +326,14 @@ class SetGameDirItem(PulldownMenuItem):
 class LoadGameStateItem(PulldownMenuItem):
     label = 'Load game state...'
     command = 'load_game_state'
+    def should_dim(app):
+        return app.gw.game_dir is None
 
 class SaveGameStateMenuItem(PulldownMenuItem):
     label = 'Save game state...'
     command = 'save_current'
     def should_dim(app):
-        return not app.game_mode
-
+        return app.gw.game_dir is None
 
 class ResetGameItem(PulldownMenuItem):
     label = 'blah'
@@ -342,7 +343,7 @@ class ResetGameItem(PulldownMenuItem):
     def get_label(app):
         l = 'Reset game'
         if app.gw.game_dir:
-            l = '%s "%s"' % (l, app.gw.game_dir)
+            l = '%s "%s"' % (l, app.gw.game_dir[:-1])
         return l
 
 class HelpScreenMenuItem(PulldownMenuItem):
