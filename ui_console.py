@@ -93,7 +93,7 @@ class SetGameDirCommand(ConsoleCommand):
         if len(args) == 0:
             return 'Usage: setgame [game dir name]'
         game_dir_name = ' '.join(args)
-        console.ui.app.gw.set_game_dir(game_dir_name)
+        console.ui.app.gw.set_game_dir(game_dir_name, True)
 
 class LoadGameStateCommand(ConsoleCommand):
     def execute(console, args):

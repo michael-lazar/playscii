@@ -78,6 +78,8 @@ class Application:
     game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
     # can_edit: if False, user can't use art or edit functionality
     can_edit = True
+    # start_game: if set, load this game on start no matter what
+    start_game = None
     
     def __init__(self, log_file, log_lines, art_filename, game_dir_to_load,
                  state_to_load):
@@ -137,7 +139,7 @@ class Application:
         vao_support = bool(GL.glGenVertexArrays)
         self.log('Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
         if not vao_support  or context_version < 2.1 or gl_ver.startswith('2.0'):
-            self.log("Couldn't create a compatible OpenGL context, " + COMPAT_FAIL_MSG)
+            self.log("Couldn't create a compatible OpenGL context, " + self.compat_fail_message)
             if not self.run_if_opengl_incompatible:
                 self.should_quit = True
                 return
@@ -155,8 +157,8 @@ class Application:
         self.game_mode = False
         self.gw = GameWorld(self)
         # if game dir specified, set it before we try to load any art
-        if game_dir_to_load:
-            self.gw.set_game_dir(game_dir_to_load, False)
+        if game_dir_to_load or self.start_game:
+            self.gw.set_game_dir(game_dir_to_load or self.start_game, False)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -191,7 +193,7 @@ class Application:
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
-        if game_dir_to_load:
+        if game_dir_to_load or self.start_game:
             # set initial game state
             if state_to_load:
                 self.gw.load_game_state(state_to_load)
@@ -199,6 +201,8 @@ class Application:
                 self.gw.reset_game()
         else:
             self.ui.message_line.post_line(self.welcome_message, 10)
+        if not self.can_edit:
+            self.enter_game_mode()
     
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu, what am i missing?
@@ -455,7 +459,8 @@ class Application:
         # display message on how to toggle game mode
         mode_bind = self.il.get_command_shortcut('toggle_game_mode')
         mode_bind = mode_bind.upper()
-        self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
+        if self.can_edit:
+            self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
     
     def exit_game_mode(self):
         self.game_mode = False
