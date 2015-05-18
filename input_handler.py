@@ -314,9 +314,11 @@ class InputLord:
     
     def BIND_decrease_brush_size(self):
         self.ui.selected_tool.decrease_brush_size()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_increase_brush_size(self):
         self.ui.selected_tool.increase_brush_size()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_cycle_char_forward(self):
         self.ui.select_char(self.ui.selected_char+1)
@@ -344,15 +346,19 @@ class InputLord:
     
     def BIND_toggle_affects_char(self):
         self.ui.selected_tool.toggle_affects_char()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_affects_fg(self):
         self.ui.selected_tool.toggle_affects_fg()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_affects_bg(self):
         self.ui.selected_tool.toggle_affects_bg()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_affects_xform(self):
         self.ui.selected_tool.toggle_affects_xform()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_crt(self):
         self.app.fb.toggle_crt()

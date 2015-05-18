@@ -152,6 +152,62 @@ class ToolPasteMenuItem(PulldownMenuItem):
     label = '  %s' % PasteTool.button_caption
     command = 'select_paste_tool'
 
+class ToolIncreaseBrushSizeItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'increase_brush_size'
+    def should_dim(app):
+        # dim this item for tools where brush size doesn't apply
+        if not app.ui.selected_tool.brush_size:
+            return True
+    def get_label(app):
+        if not app.ui.selected_tool.brush_size:
+            return 'Increase brush size'
+        size = app.ui.selected_tool.brush_size + 1
+        return 'Increase brush size to %s' % size
+
+class ToolDecreaseBrushSizeItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'decrease_brush_size'
+    def should_dim(app):
+        if not app.ui.selected_tool.brush_size:
+            return True
+        return app.ui.selected_tool.brush_size <= 1
+    def get_label(app):
+        if not app.ui.selected_tool.brush_size:
+            return 'Decrease brush size'
+        size = app.ui.selected_tool.brush_size - 1
+        return 'Decrease brush size to %s' % size
+
+class ToolSettingsMenuItem(PulldownMenuItem):
+    # base class for tool settings toggle items
+    def should_dim(app):
+        # blacklist specific tools
+        return type(app.ui.selected_tool) in [SelectTool]
+
+class ToolToggleAffectsCharItem(ToolSettingsMenuItem):
+    label = '  Affects: character'
+    command = 'toggle_affects_char'
+    def should_mark(ui):
+        return ui.selected_tool.affects_char
+
+class ToolToggleAffectsFGItem(ToolSettingsMenuItem):
+    label = '  Affects: foreground color'
+    command = 'toggle_affects_fg'
+    def should_mark(ui):
+        return ui.selected_tool.affects_fg_color
+
+class ToolToggleAffectsBGItem(ToolSettingsMenuItem):
+    label = '  Affects: background color'
+    command = 'toggle_affects_bg'
+    def should_mark(ui):
+        return ui.selected_tool.affects_bg_color
+
+class ToolToggleAffectsXformItem(ToolSettingsMenuItem):
+    label = '  Affects: character xform'
+    command = 'toggle_affects_xform'
+    def should_mark(ui):
+        return ui.selected_tool.affects_xform
+
 class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
     label = 'Open all Game Mode assets'
     command = 'open_all_game_assets'
@@ -390,10 +446,19 @@ class EditMenuData(PulldownMenuData):
              EditSelectNoneMenuItem, EditSelectInvertMenuItem]
 
 class ToolMenuData(PulldownMenuData):
-    items = [ToolPaintMenuItem, ToolEraseMenuItem, ToolRotateMenuItem, ToolGrabMenuItem,
-             ToolTextMenuItem, ToolSelectMenuItem, ToolPasteMenuItem]
+    items = [ToolPaintMenuItem, ToolEraseMenuItem, ToolRotateMenuItem,
+             ToolGrabMenuItem, ToolTextMenuItem, ToolSelectMenuItem,
+             ToolPasteMenuItem, SeparatorMenuItem, ToolIncreaseBrushSizeItem,
+             ToolDecreaseBrushSizeItem, ToolToggleAffectsCharItem,
+             ToolToggleAffectsFGItem, ToolToggleAffectsBGItem,
+             ToolToggleAffectsXformItem
+             # TODO: cycle char/color/xform items?
+    ]
     # TODO: generate list from UI.tools instead of manually specified MenuItems
     def should_mark_item(item, ui):
+        # if it's a tool setting toggle, use its own mark check function
+        if item.__bases__[0] is ToolSettingsMenuItem:
+            return item.should_mark(ui)
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 

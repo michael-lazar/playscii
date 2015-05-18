@@ -96,7 +96,9 @@ class Application:
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
         sdl2.ext.init()
-        flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
+        # TODO: SDL_WINDOW_ALLOW_HIGHDPI doesn't seem to work right,
+        # determine whether we're using it wrong or it's broken
+        flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE# | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
         self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
