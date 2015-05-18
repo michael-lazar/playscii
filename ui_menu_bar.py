@@ -153,6 +153,8 @@ class MenuBar(UIElement):
         self.ui.pulldown.visible = False
     
     def refresh_active_menu(self):
+        if not self.ui.pulldown.visible:
+            return
         for button in self.buttons:
             if button.name == self.active_menu_name:
                 self.ui.pulldown.open_at(button)
