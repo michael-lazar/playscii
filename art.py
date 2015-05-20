@@ -620,6 +620,7 @@ class Art:
     
     def clear_line(self, frame, layer, line_y, fg_color_index=None,
                    bg_color_index=None):
+        # TODO: use numpy slicing to do this much more quickly!
         for x in range(self.width):
             self.set_char_index_at(frame, layer, x, line_y, 0)
             if fg_color_index:
