@@ -78,6 +78,8 @@ class GameWorld:
         pass
     
     def unclicked(self, button):
+        if self.app.ui.active_dialog:
+            return
         x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                   self.app.mouse_y)
         was_dragging = self.dragging_object
@@ -106,6 +108,8 @@ class GameWorld:
         self.select_object(next_obj)
     
     def mouse_moved(self, dx, dy):
+        if self.app.ui.active_dialog:
+            return
         # get mouse delta in world space
         mx1, my1, mz1 = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                         self.app.mouse_y)
@@ -123,19 +127,13 @@ class GameWorld:
     def select_object(self, obj):
         if not obj in self.selected_objects:
             self.selected_objects.append(obj)
-            self.app.ui.selection_panel.set_object(obj)
     
     def deselect_object(self, obj):
         if obj in self.selected_objects:
             self.selected_objects.remove(obj)
-        if len(self.selected_objects) > 0:
-            self.app.ui.selection_panel.set_object(self.selected_objects[0])
-        else:
-            self.app.ui.selection_panel.set_object(None)
     
     def deselect_all(self):
         self.selected_objects = []
-        self.app.ui.selection_panel.set_object(None)
     
     def unload_game(self):
         for obj in self.objects:
@@ -144,7 +142,6 @@ class GameWorld:
         self.renderables = []
         self.art_loaded = []
         self.selected_objects = []
-        self.app.ui.selection_panel.set_object(None)
     
     def set_for_all_objects(self, name, value):
         for obj in self.objects:

@@ -9,11 +9,7 @@ collision:
 - fix player->dynamicBB collisions
 
 edit mode:
-- right panel: generic properties view to edit selected instance's properties
--- if multiple selected, show only title bar "3 Selected" etc
--- reset to class defaults
--- toggle lock/unlock location
--- toggle object visible
+- key to toggle this UI?  think about overall "edit quasimode" design
 - left panel of edit mode buttons:
 -- return to art mode
 -- hide edit UI (shows message with key to unhide)
@@ -22,14 +18,16 @@ edit mode:
 -- reset to start state
 -- spawn something (dialog to specify class) (mouse pick location?)
 -- set game dir
--- select a particular object (chooser UI?)
-- key to toggle this UI?  think about overall "edit quasimode" design
+-- select a particular object (chooser UI? panel expands?)
+- right panel: generic properties view to edit selected instance's properties
+-- if multiple selected, show only title bar "3 Selected" etc
+-- reset to class defaults
+-- toggle lock/unlock location
+-- toggle object visible
 
 ---
 
 further work on existing features:
-
-Tools menu: after separator, same tool settings as can be accessed in popup
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 

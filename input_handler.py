@@ -771,3 +771,6 @@ class InputLord:
             elif obj.collision_type != CT_NONE:
                 obj.disable_collision()
                 self.ui.message_line.post_line('Collision disabled for %s' % obj.name)
+    
+    def BIND_toggle_game_edit_ui(self):
+        self.ui.toggle_game_edit_ui()
