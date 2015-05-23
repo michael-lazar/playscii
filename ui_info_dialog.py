@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import sdl2
 
 from ui_element import UIElement
