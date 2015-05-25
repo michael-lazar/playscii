@@ -706,6 +706,7 @@ class SetGameDirDialog(UIDialog):
     field0_label = 'Directory to load game data from:'
     confirm_caption = 'Set'
     game_mode_visible = True
+    all_modes_visible = True
     
     # TODO: only allow valid game directory
     
@@ -720,6 +721,7 @@ class LoadGameStateDialog(UIDialog):
     field0_label = 'Game state file to open:'
     confirm_caption = 'Open'
     game_mode_visible = True
+    all_modes_visible = True
     
     # TODO: only allow valid game state file in current game directory
     
@@ -734,6 +736,7 @@ class SaveGameStateDialog(UIDialog):
     field0_label = 'New filename for game state:'
     confirm_caption = 'Save'
     game_mode_visible = True
+    all_modes_visible = True
     
     def confirm_pressed(self):
         SaveGameStateCommand.execute(self.ui.console, [self.field0_text])

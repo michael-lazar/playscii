@@ -22,6 +22,7 @@ class UIElement:
     buttons = []
     # renders in "game mode"
     game_mode_visible = False
+    all_modes_visible = False
     
     def __init__(self, ui):
         self.ui = ui
@@ -90,13 +91,23 @@ class UIElement:
     
     def unclicked(self, button):
         self.log_event('unclicked', button)
+        handled = False
         for b in self.hovered_buttons:
             b.unclick()
+            handled = True
+        return handled
     
     def log_event(self, event_type, mouse_button=None):
         mouse_button = mouse_button or '[n/a]'
         if self.ui.logg:
             self.ui.app.log('UIElement: %s %s with mouse button %s' % (self.__class__.__name__, event_type, mouse_button))
+    
+    def is_visible(self):
+        if not self.ui.app.game_mode and self.game_mode_visible and not self.all_modes_visible:
+            return False
+        elif self.ui.app.game_mode and not self.game_mode_visible:
+            return False
+        return self.visible
     
     def reset_loc(self):
         if self.snap_top:
@@ -136,8 +147,8 @@ class UIElement:
         self.art.update()
     
     def render(self):
-        if self.visible:
-            self.renderable.render()
+        # "is visible" check happens in UI.render, calls our is_visible
+        self.renderable.render()
     
     def destroy(self):
         for r in self.renderables:
@@ -168,6 +179,7 @@ class FPSCounterUI(UIElement):
     tile_width, tile_height = 12, 2
     snap_right = True
     game_mode_visible = True
+    all_modes_visible = True
     visible = False
     
     def update(self):
@@ -203,6 +215,7 @@ class MessageLineUI(UIElement):
     default_hold_time = 1
     fade_rate = 0.025
     game_mode_visible = True
+    all_modes_visible = True
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)

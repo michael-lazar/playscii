@@ -120,5 +120,5 @@ class UIButton:
         if self.never_draw:
             return
         self.set_state_colors()
-        if self.should_draw_caption and self.caption != '':
+        if self.should_draw_caption:
             self.draw_caption()

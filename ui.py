@@ -475,7 +475,7 @@ class UI:
         self.hovered_elements = []
         for e in self.elements:
             # only check visible elements
-            if e.visible and e.can_hover and e.is_inside(mx, my):
+            if e.is_visible() and e.can_hover and e.is_inside(mx, my):
                 self.hovered_elements.append(e)
                 # only hover if we weren't last update
                 if not e in was_hovering:
@@ -485,20 +485,29 @@ class UI:
                 e.unhovered()
         # update all elements, regardless of whether they're being hovered etc
         for e in self.elements:
-            e.update()
-            # art update: tell renderables to refresh buffers
-            e.art.update()
+            # don't update invisible items
+            if e.is_visible():
+                e.update()
+                # art update: tell renderables to refresh buffers
+                e.art.update()
         self.tool_settings_changed = False
     
     def clicked(self, button):
+        handled = False
+        # return True if any button handled the input
         for e in self.hovered_elements:
-            e.clicked(button)
+            if e.clicked(button):
+                handled = True
         if self.pulldown.visible and not self.pulldown in self.hovered_elements and not self.menu_bar in self.hovered_elements:
             self.menu_bar.close_active_menu()
+        return handled
     
     def unclicked(self, button):
+        handled = False
         for e in self.hovered_elements:
-            e.unclicked(button)
+            if e.unclicked(button):
+                handled = True
+        return handled
     
     def quick_grab(self):
         if self.app.game_mode:
@@ -546,5 +555,5 @@ class UI:
     
     def render(self):
         for e in self.elements:
-            if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
+            if e.is_visible():
                 e.render()
