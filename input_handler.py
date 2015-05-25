@@ -191,7 +191,11 @@ class InputLord:
                     else:
                         app.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
-                self.ui.unclicked(event.button.button)
+                # "consume" input if UI handled it
+                ui_unclicked = self.ui.unclicked(event.button.button)
+                if ui_unclicked:
+                    sdl2.SDL_PumpEvents()
+                    return
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     # in game mode, select stuff
@@ -202,9 +206,10 @@ class InputLord:
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         app.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                self.ui.clicked(event.button.button)
+                ui_clicked = self.ui.clicked(event.button.button)
                 # don't register edit commands if a menu is up
-                if self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                if ui_clicked or self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                    sdl2.SDL_PumpEvents()
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
@@ -746,22 +751,19 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_collision_viz(self):
-        if not self.app.game_mode:
-            return
-        self.app.show_collision_all = not self.app.show_collision_all
-        self.app.gw.set_for_all_objects('show_collision', self.app.show_collision_all)
+        if self.app.game_mode:
+            self.app.gw.toggle_all_collision_viz()
+            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_all_bounds_viz(self):
-        if not self.app.game_mode:
-            return
-        self.app.show_bounds_all = not self.app.show_bounds_all
-        self.app.gw.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+        if self.app.game_mode:
+            self.app.gw.toggle_all_bounds_viz()
+            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_all_origin_viz(self):
-        if not self.app.game_mode:
-            return
-        self.app.show_origin_all = not self.app.show_origin_all
-        self.app.gw.set_for_all_objects('show_origin', self.app.show_origin_all)
+        if self.app.game_mode:
+            self.app.gw.toggle_all_origin_viz()
+            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:

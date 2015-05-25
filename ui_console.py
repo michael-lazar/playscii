@@ -150,6 +150,7 @@ class ConsoleUI(UIElement):
     # transient, but must be set here b/c UIElement.init calls reset_art
     current_line = ''
     game_mode_visible = True
+    all_modes_visible = True
     
     def __init__(self, ui):
         self.bg_color_index = ui.colors.darkgrey

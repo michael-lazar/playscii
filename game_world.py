@@ -368,3 +368,15 @@ class GameWorld:
         self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
         self.set_for_all_objects('show_origin', self.app.show_origin_all)
         self.app.update_window_title()
+    
+    def toggle_all_origin_viz(self):
+        self.app.show_origin_all = not self.app.show_origin_all
+        self.set_for_all_objects('show_origin', self.app.show_origin_all)
+    
+    def toggle_all_bounds_viz(self):
+        self.app.show_bounds_all = not self.app.show_bounds_all
+        self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+    
+    def toggle_all_collision_viz(self):
+        self.app.show_collision_all = not self.app.show_collision_all
+        self.set_for_all_objects('show_collision', self.app.show_collision_all)
