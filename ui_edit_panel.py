@@ -26,13 +26,14 @@ class SetGameDirButton(UIButton):
 class LoadStateButton(UIButton):
     caption = 'Load game state...'
     def clicked(button):
-        #button.element.ui.open_dialog(LoadGameStateDialog)
         button.element.list_panel.list_states()
 
 class SaveStateButton(UIButton):
     caption = 'Save game state...'
     def clicked(button):
         button.element.ui.open_dialog(SaveGameStateDialog)
+        # show states in list for convenience
+        button.element.list_panel.list_states()
 
 class SpawnObjectButton(UIButton):
     caption = 'Spawn object...'
@@ -119,8 +120,8 @@ class GamePanel(UIElement):
     
     def clicked(self, button):
         if self.ui.active_dialog:
-            return
-        UIElement.clicked(self, button)
+            return False
+        return UIElement.clicked(self, button)
 
 
 # list type constants
@@ -137,6 +138,7 @@ class EditGamePanel(GamePanel):
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):
+        self.world = ui.app.gw
         GamePanel.__init__(self, ui)
         self.buttons = []
         for i,button_class in enumerate(self.button_classes):
@@ -152,6 +154,11 @@ class EditGamePanel(GamePanel):
             self.buttons.append(button)
         self.list_panel = self.ui.edit_list_panel
     
+    def cancel(self):
+        self.world.deselect_all()
+        self.list_panel.list_mode = LIST_NONE
+        self.world.classname_to_spawn = None
+    
     def refresh_all_captions(self):
         for b in self.buttons:
             if hasattr(b, 'refresh_caption'):
@@ -159,13 +166,14 @@ class EditGamePanel(GamePanel):
     
     def get_label(self):
         l = ' %s' % self.ui.app.gw.game_dir
-        if self.ui.app.gw.last_state_loaded:
-            l += self.ui.app.gw.last_state_loaded
+        if self.world.last_state_loaded:
+            l += self.world.last_state_loaded
         return l
     
     def clicked(self, button):
+        self.world.classname_to_spawn = None
         self.list_panel.list_mode = LIST_NONE
-        GamePanel.clicked(self, button)
+        return GamePanel.clicked(self, button)
 
 
 class ListButton(UIButton):
@@ -203,8 +211,8 @@ class EditListPanel(GamePanel):
     def clicked_item(self, item):
         # check list type, do appropriate thing
         if self.list_mode == LIST_CLASSES:
-            # TODO: handle class list
-            pass
+            # set this class to be the one spawned when GameWorld is clicked
+            self.ui.app.gw.classname_to_spawn = item.name
         elif self.list_mode == LIST_OBJECTS:
             # add to/remove from/overwrite selected list based on mod keys
             if self.ui.app.il.ctrl_pressed:
@@ -218,9 +226,11 @@ class EditListPanel(GamePanel):
             self.ui.app.gw.load_game_state(item.name)
     
     def list_classes(self):
-        class_table = []
-        # TODO: get list of available classes (probably from GameWorld)
-        self.items = class_table
+        self.items = []
+        # get list of available classes from GameWorld
+        for classname,classdef in self.ui.app.gw.get_all_loaded_classes().items():
+            item = self.ListItem(classname, classdef)
+            self.items.append(item)
         self.clear_buttons()
         self.titlebar = 'Object classes:'
         self.list_mode = LIST_CLASSES
@@ -235,6 +245,8 @@ class EditListPanel(GamePanel):
         self.list_mode = LIST_OBJECTS
     
     def list_states(self):
+        if not self.ui.app.gw.game_dir:
+            return
         self.items = []
         self.clear_buttons()
         # list state files in current game dir
@@ -252,6 +264,13 @@ class EditListPanel(GamePanel):
     def should_highlight(self, item):
         if self.list_mode == LIST_OBJECTS:
             if item.obj in self.ui.app.gw.selected_objects:
+                return True
+        elif self.list_mode == LIST_CLASSES:
+            if item.name == self.ui.app.gw.classname_to_spawn:
+                return True
+        elif self.list_mode == LIST_STATES:
+            # TODO: this doesn't work, though it doesn't matter too much
+            if item.name == self.ui.app.gw.last_state_loaded:
                 return True
         return False
     
@@ -295,8 +314,8 @@ class EditListPanel(GamePanel):
     
     def clicked(self, button):
         if self.ui.active_dialog:
-            return
-        UIElement.clicked(self, button)
+            return False
+        return UIElement.clicked(self, button)
     
     def render(self):
         if self.list_mode != LIST_NONE:

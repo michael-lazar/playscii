@@ -208,12 +208,13 @@ class InputLord:
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 ui_clicked = self.ui.clicked(event.button.button)
                 # don't register edit commands if a menu is up
-                if ui_clicked or self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                if self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
                     sdl2.SDL_PumpEvents()
+                    self.app.gw.accept_unclicks = False
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if self.app.game_mode:
+                    if self.app.game_mode and not ui_clicked:
                         self.app.gw.clicked(event.button.button)
                     elif not self.ui.active_art:
                         return
@@ -403,6 +404,7 @@ class InputLord:
     
     def BIND_cancel(self):
         # context-dependent:
+        # game mode: 
         # normal painting mode: cancel current selection
         # menu bar active: bail out of current menu
         # either way: bail on image conversion if it's happening
@@ -410,6 +412,8 @@ class InputLord:
             self.app.converter.finished(True)
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
+        elif self.app.game_mode:
+            self.ui.edit_game_panel.cancel()
         else:
             self.ui.select_none()
     
