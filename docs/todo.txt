@@ -1,13 +1,11 @@
 TODO
 
 edit mode:
-- clicks in panels/dialogs shouldn't deselect
-- left panel of edit mode buttons:
--- spawn something (dialog to specify class) (mouse pick location?)
--- select a particular object (chooser UI? panel expands?)
--- toggle: origin/bounds/collision display
-- list panel:
--- click stuff in list to select it
+- highlight edit panel button that's clicked if it affects edit UI state, eg anything that alters the list panel
+- put up text message explaining that clicks in world will spawn selected class
+- list panel should handle deleting objects!
+- alphabetize list of classes
+- "scroll" buttons for list panel when lots of items are available
 - right panel:
 -- button: reset to class defaults
 -- button: toggle lock/unlock location

@@ -1,4 +1,4 @@
-import os, sys, time, json, importlib
+import os, sys, time, json, importlib, inspect
 import pymunk
 
 import collision
@@ -34,6 +34,7 @@ class GameWorld:
     
     "holds global state for game mode"
     gravity_x, gravity_y = 0, 0
+    accept_unclicks = True
     
     def __init__(self, app):
         self.app = app
@@ -42,6 +43,7 @@ class GameWorld:
         self.camera = Camera(self.app)
         self.player = None
         self.modules = {'game_object': game_object}
+        self.classname_to_spawn = None
         self.objects = []
         self.space = pymunk.Space()
         self.space.gravity = self.gravity_x, self.gravity_y
@@ -75,10 +77,19 @@ class GameWorld:
         return objects
     
     def clicked(self, button):
-        pass
+        if self.classname_to_spawn:
+            x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
+                                                      self.app.mouse_y)
+            self.spawn_object_of_class(self.classname_to_spawn, x, y)
     
     def unclicked(self, button):
-        if self.app.ui.active_dialog:
+        # clicks on UI are consumed and flag world to not accept unclicks
+        # (keeps unclicks after dialog dismiss from deselecting objects)
+        if not self.accept_unclicks:
+            self.accept_unclicks = True
+            return
+        # if we're clicking to spawn something, don't drag/select
+        if self.classname_to_spawn:
             return
         x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                   self.app.mouse_y)
@@ -273,6 +284,7 @@ class GameWorld:
         self.app.log('Saved game state file %s to disk.' % filename)
     
     def find_module(self, module_name):
+        "returns module object with given name, importing/reloading if needed"
         if module_name in self.modules:
             return importlib.reload(self.modules[module_name])
         try:
@@ -299,6 +311,18 @@ class GameWorld:
             if class_name in module.__dict__:
                 return module_name
         return None
+    
+    def get_all_loaded_classes(self):
+        "returns classname,class dict of all classes in loaded modules"
+        cd = {}
+        for module_name,module in self.modules.items():
+            for k,v in module.__dict__.items():
+                if not type(v) is type:
+                    continue
+                # use inspect module to get /all/ parent classes
+                if game_object.GameObject in inspect.getmro(v):
+                    cd[k] = v
+        return cd
     
     def reset_object_in_place(self, obj):
         x, y = obj.x, obj.y

@@ -86,7 +86,7 @@ class UIElement:
                         b.callback(b.cb_arg)
                     else:
                         b.callback()
-                    handled = True
+                handled = True
         return handled
     
     def unclicked(self, button):
