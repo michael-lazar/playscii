@@ -426,7 +426,9 @@ class InputLord:
     def BIND_erase_selection_or_art(self):
         # if in game mode, delete selected objects
         if self.app.game_mode:
-            for obj in self.app.gw.selected_objects:
+            # operate on a copy of selected objects list,
+            # as obj.destroy() removes itself from original
+            for obj in self.app.gw.selected_objects[:]:
                 obj.destroy()
         else:
             self.ui.erase_selection_or_art()

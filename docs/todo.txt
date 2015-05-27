@@ -2,10 +2,6 @@ TODO
 
 game edit panel:
 - highlight edit panel button that's clicked if it affects edit UI state, eg anything that alters the list panel
-- put up text message explaining that clicks in world will spawn selected class
-- list panel should handle deleting objects!
-- alphabetize list of classes
-- "scroll" buttons for list panel when lots of items are available
 
 object edit panel:
 - button: reset to class defaults
