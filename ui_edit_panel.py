@@ -11,42 +11,47 @@ from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
 class ToggleEditUIButton(UIButton):
     caption = '<< Hide edit UI'
     y = 0
-    def clicked(button):
+    def selected(button):
         button.element.ui.toggle_game_edit_ui()
 
 class ResetStateButton(UIButton):
     caption = 'Reset'
-    def clicked(button):
+    def selected(button):
         button.element.ui.app.gw.reset_game()
 
 class SetGameDirButton(UIButton):
     caption = 'Set new game dir...'
-    def clicked(button):
+    def selected(button):
         button.element.ui.open_dialog(SetGameDirDialog)
+        button.element.highlight_button(button)
 
 class LoadStateButton(UIButton):
     caption = 'Load game state...'
-    def clicked(button):
+    def selected(button):
         button.element.list_panel.list_states()
+        button.element.highlight_button(button)
 
 class SaveStateButton(UIButton):
     caption = 'Save game state...'
-    def clicked(button):
+    def selected(button):
         button.element.ui.open_dialog(SaveGameStateDialog)
         # show states in list for convenience
         button.element.list_panel.list_states()
+        button.element.highlight_button(button)
 
 class SpawnObjectButton(UIButton):
     caption = 'Spawn object...'
-    def clicked(button):
+    def selected(button):
         # change list to show object classes
         button.element.list_panel.list_classes()
+        button.element.highlight_button(button)
 
 class SelectObjectsButton(UIButton):
     caption = 'Select objects...'
-    def clicked(button):
+    def selected(button):
         # change list to show objects
         button.element.list_panel.list_objects()
+        button.element.highlight_button(button)
 
 class GameEditToggleButton(UIButton):
     "button whose caption reflects an on/off state"
@@ -69,7 +74,7 @@ class ToggleOriginVizButton(GameEditToggleButton):
     base_caption = 'Object origins:'
     def get_caption_value(button):
         return button.element.ui.app.show_origin_all
-    def clicked(button):
+    def selected(button):
         button.element.ui.app.gw.toggle_all_origin_viz()
         button.refresh_caption()
 
@@ -77,7 +82,7 @@ class ToggleBoundsVizButton(GameEditToggleButton):
     base_caption = 'Object bounds:'
     def get_caption_value(button):
         return button.element.ui.app.show_bounds_all
-    def clicked(button):
+    def selected(button):
         button.element.ui.app.gw.toggle_all_bounds_viz()
         button.refresh_caption()
 
@@ -85,7 +90,7 @@ class ToggleCollisionVizButton(GameEditToggleButton):
     base_caption = 'Object collision:'
     def get_caption_value(button):
         return button.element.ui.app.show_collision_all
-    def clicked(button):
+    def selected(button):
         button.element.ui.app.gw.toggle_all_collision_viz()
         button.refresh_caption()
 
@@ -102,6 +107,26 @@ class GamePanel(UIElement):
     # label and main item draw functions - overridden in subclasses
     def get_label(self): pass
     def refresh_items(self): pass
+    
+    # reset all buttons to default state
+    def clear_buttons(self, button_list=None):
+        buttons = button_list or self.buttons
+        for button in buttons:
+            self.reset_button(button)
+    
+    def reset_button(self, button):
+        button.normal_fg_color = UIButton.normal_fg_color
+        button.normal_bg_color = UIButton.normal_bg_color
+        button.hovered_fg_color = UIButton.hovered_fg_color
+        button.hovered_bg_color = UIButton.hovered_bg_color
+        button.can_hover = True
+    
+    def highlight_button(self, button):
+        button.normal_fg_color = UIButton.clicked_fg_color
+        button.normal_bg_color = UIButton.clicked_bg_color
+        button.hovered_fg_color = UIButton.clicked_fg_color
+        button.hovered_bg_color = UIButton.clicked_bg_color
+        button.can_hover = False
     
     def draw_titlebar(self):
         self.art.clear_line(0, 0, 0, self.titlebar_fg, self.titlebar_bg)
@@ -146,7 +171,7 @@ class EditGamePanel(GamePanel):
             button = button_class(self)
             button.width = self.tile_width
             button.y = i + 1
-            button.callback = button.clicked
+            button.callback = button.selected
             # draw buttons with dynamic caption
             if button.clear_before_caption_draw:
                 button.refresh_caption()
@@ -159,6 +184,8 @@ class EditGamePanel(GamePanel):
         self.world.deselect_all()
         self.list_panel.list_mode = LIST_NONE
         self.world.classname_to_spawn = None
+        self.clear_buttons()
+        self.draw_buttons()
     
     def refresh_all_captions(self):
         for b in self.buttons:
@@ -174,6 +201,10 @@ class EditGamePanel(GamePanel):
     def clicked(self, button):
         self.world.classname_to_spawn = None
         self.list_panel.list_mode = LIST_NONE
+        # reset all buttons
+        self.clear_buttons()
+        # draw to set proper visual state
+        self.draw_buttons()
         return GamePanel.clicked(self, button)
 
 
@@ -278,13 +309,13 @@ class EditListPanel(GamePanel):
             self.items.append(item)
         # sort classes alphabetically
         self.items.sort(key=lambda i: i.name)
-        self.clear_buttons()
+        self.clear_buttons(self.list_buttons)
         self.titlebar = 'Object classes:'
         self.list_mode = LIST_CLASSES
     
     def list_objects(self):
         self.items = []
-        self.clear_buttons()
+        self.clear_buttons(self.list_buttons)
         for obj in self.ui.app.gw.objects:
             li = self.ListItem(obj.name, obj)
             self.items.append(li)
@@ -295,7 +326,7 @@ class EditListPanel(GamePanel):
         if not self.ui.app.gw.game_dir:
             return
         self.items = []
-        self.clear_buttons()
+        self.clear_buttons(self.list_buttons)
         # list state files in current game dir
         game_path = TOP_GAME_DIR + self.ui.app.gw.game_dir
         for filename in os.listdir(game_path):
@@ -316,17 +347,11 @@ class EditListPanel(GamePanel):
             if item.name == self.ui.app.gw.classname_to_spawn:
                 return True
         elif self.list_mode == LIST_STATES:
-            # TODO: this doesn't work, though it doesn't matter too much
-            if item.name == self.ui.app.gw.last_state_loaded:
+            last_gs = os.path.basename(self.ui.app.gw.last_state_loaded)
+            last_gs = os.path.splitext(last_gs)[0]
+            if item.name == last_gs:
                 return True
         return False
-    
-    def clear_buttons(self):
-        for b in self.list_buttons:
-            b.normal_fg_color = UIButton.normal_fg_color
-            b.normal_bg_color = UIButton.normal_bg_color
-            b.hovered_fg_color = UIButton.hovered_fg_color
-            b.hovered_bg_color = UIButton.hovered_bg_color
     
     def refresh_items(self):
         # prune any objects that have been deleted from items
@@ -334,16 +359,11 @@ class EditListPanel(GamePanel):
             for item in self.items:
                 if not item.obj in self.ui.app.gw.objects:
                     self.items.remove(item)
-        def reset_button(button):
-            button.normal_fg_color = UIButton.normal_fg_color
-            button.normal_bg_color = UIButton.normal_bg_color
-            button.hovered_fg_color = UIButton.hovered_fg_color
-            button.hovered_bg_color = UIButton.hovered_bg_color
         for i,b in enumerate(self.list_buttons):
             if i >= len(self.items):
                 b.caption = ''
                 b.can_hover = False
-                reset_button(b)
+                self.reset_button(b)
             else:
                 index = self.list_scroll_index + i
                 item = self.items[index]
@@ -353,12 +373,9 @@ class EditListPanel(GamePanel):
                 # change button appearance if this item should remain
                 # highlighted/selected
                 if self.should_highlight(item):
-                    b.normal_fg_color = UIButton.clicked_fg_color
-                    b.normal_bg_color = UIButton.clicked_bg_color
-                    b.hovered_fg_color = UIButton.clicked_fg_color
-                    b.hovered_bg_color = UIButton.clicked_bg_color
+                    self.highlight_button(b)
                 else:
-                    reset_button(b)
+                    self.reset_button(b)
         self.draw_buttons()
     
     def update(self):
