@@ -3,6 +3,7 @@ import os
 from ui_element import UIElement
 from ui_button import UIButton
 from ui_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
+from ui_chooser_dialog import ScrollArrowButton
 from ui_colors import UIColors
 
 from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
@@ -177,16 +178,27 @@ class EditGamePanel(GamePanel):
 
 
 class ListButton(UIButton):
-    width = 26
+    width = 25
     clear_before_caption_draw = True
 
+class ListScrollArrowButton(ScrollArrowButton):
+    x = ListButton.width
+    normal_bg_color = UIButton.normal_bg_color
+
+class ListScrollUpArrowButton(ListScrollArrowButton):
+    y = 1
+
+class ListScrollDownArrowButton(ListScrollArrowButton):
+    up = False
 
 class EditListPanel(GamePanel):
-    tile_width = ListButton.width
+    tile_width = ListButton.width + 1
     tile_y = EditGamePanel.tile_y + EditGamePanel.tile_height + 1
+    scrollbar_shade_char = 54
     # height will change based on how many items in list
-    tile_height = 12
+    tile_height = 16
     snap_left = True
+    spawn_msg = 'Click anywhere in the world view to spawn a %s'
     # transient state
     titlebar = 'List titlebar'
     items = []
@@ -196,8 +208,8 @@ class EditListPanel(GamePanel):
         def __str__(self): return self.name
     
     def __init__(self, ui):
-        GamePanel.__init__(self, ui)
-        self.buttons = []
+        # separate lists for item buttons vs other controls
+        self.list_buttons = []
         self.list_mode = LIST_NONE
         def list_callback(item):
             self.clicked_item(item)
@@ -206,13 +218,46 @@ class EditListPanel(GamePanel):
             button.y = y + 1
             button.callback = list_callback
             # button.cb_art set by refresh_items()
-            self.buttons.append(button)
+            self.list_buttons.append(button)
+        self.buttons = self.list_buttons[:]
+        self.up_button = ListScrollUpArrowButton(self)
+        self.up_button.callback = self.scroll_list_up
+        self.buttons.append(self.up_button)
+        self.down_button = ListScrollDownArrowButton(self)
+        self.down_button.callback = self.scroll_list_down
+        # TODO: adjust height according to screen tile height
+        self.down_button.y = self.tile_height - 1
+        self.buttons.append(self.down_button)
+        # topmost index of items to show in view
+        self.list_scroll_index = 0
+        GamePanel.__init__(self, ui)
+    
+    def reset_art(self):
+        UIElement.reset_art(self)
+        x = self.tile_width - 1
+        for y in range(1, self.tile_height):
+            self.art.set_tile_at(0, 0, x, y, self.scrollbar_shade_char,
+                                 UIColors.medgrey)
+    
+    def scroll_list_up(self):
+        if self.list_scroll_index > 0:
+            self.list_scroll_index -= 1
+    
+    def scroll_list_down(self):
+        max_scroll = len(self.items) - self.tile_height
+        #max_scroll = len(self.element.items) - self.element.items_in_view
+        if self.list_scroll_index < max_scroll:
+            self.list_scroll_index += 1
     
     def clicked_item(self, item):
+        # clear message line if not in class list
+        # TODO: do this also for game edit panel buttons
+        self.ui.message_line.post_line('')
         # check list type, do appropriate thing
         if self.list_mode == LIST_CLASSES:
             # set this class to be the one spawned when GameWorld is clicked
             self.ui.app.gw.classname_to_spawn = item.name
+            self.ui.message_line.post_line(self.spawn_msg % self.ui.app.gw.classname_to_spawn, 5)
         elif self.list_mode == LIST_OBJECTS:
             # add to/remove from/overwrite selected list based on mod keys
             if self.ui.app.il.ctrl_pressed:
@@ -231,6 +276,8 @@ class EditListPanel(GamePanel):
         for classname,classdef in self.ui.app.gw.get_all_loaded_classes().items():
             item = self.ListItem(classname, classdef)
             self.items.append(item)
+        # sort classes alphabetically
+        self.items.sort(key=lambda i: i.name)
         self.clear_buttons()
         self.titlebar = 'Object classes:'
         self.list_mode = LIST_CLASSES
@@ -275,20 +322,31 @@ class EditListPanel(GamePanel):
         return False
     
     def clear_buttons(self):
-        for b in self.buttons:
+        for b in self.list_buttons:
             b.normal_fg_color = UIButton.normal_fg_color
             b.normal_bg_color = UIButton.normal_bg_color
             b.hovered_fg_color = UIButton.hovered_fg_color
             b.hovered_bg_color = UIButton.hovered_bg_color
     
     def refresh_items(self):
-        # self.items is set by list_* methods above
-        for i,b in enumerate(self.buttons):
+        # prune any objects that have been deleted from items
+        if self.list_mode == LIST_OBJECTS:
+            for item in self.items:
+                if not item.obj in self.ui.app.gw.objects:
+                    self.items.remove(item)
+        def reset_button(button):
+            button.normal_fg_color = UIButton.normal_fg_color
+            button.normal_bg_color = UIButton.normal_bg_color
+            button.hovered_fg_color = UIButton.hovered_fg_color
+            button.hovered_bg_color = UIButton.hovered_bg_color
+        for i,b in enumerate(self.list_buttons):
             if i >= len(self.items):
                 b.caption = ''
                 b.can_hover = False
+                reset_button(b)
             else:
-                item = self.items[i]
+                index = self.list_scroll_index + i
+                item = self.items[index]
                 b.cb_arg = item
                 b.caption = item.name[:self.tile_width]
                 b.can_hover = True
@@ -300,10 +358,7 @@ class EditListPanel(GamePanel):
                     b.hovered_fg_color = UIButton.clicked_fg_color
                     b.hovered_bg_color = UIButton.clicked_bg_color
                 else:
-                    b.normal_fg_color = UIButton.normal_fg_color
-                    b.normal_bg_color = UIButton.normal_bg_color
-                    b.hovered_fg_color = UIButton.hovered_fg_color
-                    b.hovered_bg_color = UIButton.hovered_bg_color
+                    reset_button(b)
         self.draw_buttons()
     
     def update(self):
