@@ -1,16 +1,17 @@
 TODO
 
-edit mode:
+game edit panel:
 - highlight edit panel button that's clicked if it affects edit UI state, eg anything that alters the list panel
 - put up text message explaining that clicks in world will spawn selected class
 - list panel should handle deleting objects!
 - alphabetize list of classes
 - "scroll" buttons for list panel when lots of items are available
-- right panel:
--- button: reset to class defaults
--- button: toggle lock/unlock location
--- button: toggle object visible
--- allow editing of serialized properties!
+
+object edit panel:
+- button: reset to class defaults
+- button: toggle lock/unlock location
+- button: toggle object visible
+- allow editing of serialized properties!
 
 state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
 
