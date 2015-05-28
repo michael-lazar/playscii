@@ -14,6 +14,12 @@ class ToggleEditUIButton(UIButton):
     def selected(button):
         button.element.ui.toggle_game_edit_ui()
 
+class ToggleGameModeButton(UIButton):
+    caption = 'Toggle Game Mode'
+    y = 0
+    def selected(button):
+        button.element.ui.app.exit_game_mode()
+
 class ResetStateButton(UIButton):
     caption = 'Reset'
     def selected(button):
@@ -167,10 +173,11 @@ class EditGamePanel(GamePanel):
     tile_width = 26
     tile_y = 5
     snap_left = True
-    button_classes = [ToggleEditUIButton, SetGameDirButton, ResetStateButton,
-                      LoadStateButton, SaveStateButton, SpawnObjectButton,
-                      SelectObjectsButton, ToggleOriginVizButton,
-                      ToggleBoundsVizButton, ToggleCollisionVizButton]
+    button_classes = [ToggleEditUIButton, ToggleGameModeButton,
+                      SetGameDirButton, ResetStateButton, LoadStateButton,
+                      SaveStateButton, SpawnObjectButton, SelectObjectsButton,
+                      ToggleOriginVizButton, ToggleBoundsVizButton,
+                      ToggleCollisionVizButton]
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):

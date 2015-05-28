@@ -21,6 +21,7 @@ class EditObjectPropertyDialog(UIDialog):
     fields = 1
     field0_base_label = 'New %s for %s:'
     confirm_caption = 'Set'
+    center_in_window = False
     game_mode_visible = True
     
     def is_input_valid(self):
@@ -128,12 +129,14 @@ class EditObjectPanel(GamePanel):
         EditObjectPropertyDialog.title = EditObjectPropertyDialog.base_title % item.prop_name
         EditObjectPropertyDialog.field0_label = EditObjectPropertyDialog.field0_base_label % (item.prop_type.__name__, item.prop_name)
         EditObjectPropertyDialog.field0_type = item.prop_type or str
-        x = self.ui.width_tiles - self.tile_width
-        x -= EditObjectPropertyDialog.tile_width
+        tile_x = self.ui.width_tiles - self.tile_width
+        tile_x -= EditObjectPropertyDialog.tile_width
         # give dialog a handle to item
         EditObjectPropertyDialog.item = item
-        self.ui.open_dialog(EditObjectPropertyDialog, x, self.tile_y)
+        self.ui.open_dialog(EditObjectPropertyDialog)
         self.ui.active_dialog.field0_text = str(item.prop_value)
+        self.ui.active_dialog.tile_x, self.ui.active_dialog.tile_y = tile_x, self.tile_y
+        self.ui.active_dialog.reset_loc()
     
     def get_label(self):
         # if 1 object seleted, show its name; if >1 selected, show #
