@@ -1,5 +1,9 @@
 TODO
 
+game edit panel buttons:
+- duplicate object
+- toggle player camera lock
+
 collision:
 - debug viz for contacts (create on contact start, destroy on contact end)
 - fix player->static collisions - shouldn't jitter

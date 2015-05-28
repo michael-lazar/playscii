@@ -83,10 +83,10 @@ Torbjørn Grønnevik Dahle, Holger Dors,
 Matthew Duhamel, Jaron Eldon, Jacques Frechet,
 Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
 Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
-Jeremy Lonien, Rohit Nirmal, James Noble,
-David Pittman, Richard Porczak, Dan Sanderson,
-Shannon Smith, Pablo López Soriano, Jack Turner,
-Chris Welch, Andrew Yoder
+Pat LaBine, Jeremy Lonien, Rohit Nirmal,
+James Noble, David Pittman, Richard Porczak,
+Dan Sanderson, Shannon Smith, Pablo López Soriano,
+Jack Turner, Chris Welch, Andrew Yoder
 """,
 """
            Programming Contributions:

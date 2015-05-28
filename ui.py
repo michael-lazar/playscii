@@ -528,10 +528,10 @@ class UI:
     def redo(self):
         self.active_art.command_stack.redo()
     
-    def open_dialog(self, box_class, tile_x=None, tile_y=None):
+    def open_dialog(self, box_class):
         if self.app.game_mode and not box_class.game_mode_visible:
             return
-        dialog = box_class(self, tile_x, tile_y)
+        dialog = box_class(self)
         self.active_dialog = dialog
         # insert dialog at index 0 so it draws first instead of last
         self.elements.insert(0, dialog)
