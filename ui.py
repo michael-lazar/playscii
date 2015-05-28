@@ -9,7 +9,8 @@ from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_menu_bar import MenuBar
 from ui_menu_pulldown import PulldownMenu
-from ui_edit_panel import EditGamePanel, EditListPanel, EditObjectPanel
+from ui_edit_panel import EditGamePanel, EditListPanel
+from ui_object_panel import EditObjectPanel
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
@@ -527,10 +528,10 @@ class UI:
     def redo(self):
         self.active_art.command_stack.redo()
     
-    def open_dialog(self, box_class):
+    def open_dialog(self, box_class, tile_x=None, tile_y=None):
         if self.app.game_mode and not box_class.game_mode_visible:
             return
-        dialog = box_class(self)
+        dialog = box_class(self, tile_x, tile_y)
         self.active_dialog = dialog
         # insert dialog at index 0 so it draws first instead of last
         self.elements.insert(0, dialog)

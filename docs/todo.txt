@@ -1,7 +1,6 @@
 TODO
 
-game edit panel:
-- highlight edit panel button that's clicked if it affects edit UI state, eg anything that alters the list panel
+shorten game dir in game edit panel titlebar
 
 object edit panel:
 - button: reset to class defaults

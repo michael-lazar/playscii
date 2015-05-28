@@ -58,7 +58,9 @@ class UIDialog(UIElement):
     other_caption = None
     cancel_caption = None
     
-    def __init__(self, ui):
+    def __init__(self, ui, tile_x=None, tile_y=None):
+        self.tile_x = self.tile_x or tile_x
+        self.tile_y = self.tile_y or tile_y
         self.confirm_button = ConfirmButton(self)
         self.other_button = OtherButton(self)
         self.cancel_button = CancelButton(self)

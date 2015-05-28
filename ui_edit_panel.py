@@ -17,7 +17,7 @@ class ToggleEditUIButton(UIButton):
 class ResetStateButton(UIButton):
     caption = 'Reset'
     def selected(button):
-        button.element.ui.app.gw.reset_game()
+        button.element.world.reset_game()
 
 class SetGameDirButton(UIButton):
     caption = 'Set new game dir...'
@@ -75,7 +75,7 @@ class ToggleOriginVizButton(GameEditToggleButton):
     def get_caption_value(button):
         return button.element.ui.app.show_origin_all
     def selected(button):
-        button.element.ui.app.gw.toggle_all_origin_viz()
+        button.element.world.toggle_all_origin_viz()
         button.refresh_caption()
 
 class ToggleBoundsVizButton(GameEditToggleButton):
@@ -83,7 +83,7 @@ class ToggleBoundsVizButton(GameEditToggleButton):
     def get_caption_value(button):
         return button.element.ui.app.show_bounds_all
     def selected(button):
-        button.element.ui.app.gw.toggle_all_bounds_viz()
+        button.element.world.toggle_all_bounds_viz()
         button.refresh_caption()
 
 class ToggleCollisionVizButton(GameEditToggleButton):
@@ -91,7 +91,7 @@ class ToggleCollisionVizButton(GameEditToggleButton):
     def get_caption_value(button):
         return button.element.ui.app.show_collision_all
     def selected(button):
-        button.element.ui.app.gw.toggle_all_collision_viz()
+        button.element.world.toggle_all_collision_viz()
         button.refresh_caption()
 
 class GamePanel(UIElement):
@@ -104,6 +104,14 @@ class GamePanel(UIElement):
     titlebar_bg = UIColors.darkgrey
     text_left = True
     
+    def __init__(self, ui):
+        self.ui = ui
+        self.world = self.ui.app.gw
+        UIElement.__init__(self, ui)
+        self.buttons = []
+        self.create_buttons()
+    
+    def create_buttons(self): pass
     # label and main item draw functions - overridden in subclasses
     def get_label(self): pass
     def refresh_items(self): pass
@@ -147,7 +155,9 @@ class GamePanel(UIElement):
     def clicked(self, button):
         if self.ui.active_dialog:
             return False
-        return UIElement.clicked(self, button)
+        # always handle input, even if we didn't hit a button
+        UIElement.clicked(self, button)
+        return True
 
 
 # list type constants
@@ -164,9 +174,10 @@ class EditGamePanel(GamePanel):
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):
-        self.world = ui.app.gw
         GamePanel.__init__(self, ui)
-        self.buttons = []
+        self.list_panel = self.ui.edit_list_panel
+    
+    def create_buttons(self):
         for i,button_class in enumerate(self.button_classes):
             button = button_class(self)
             button.width = self.tile_width
@@ -178,7 +189,6 @@ class EditGamePanel(GamePanel):
             else:
                 button.caption = ' %s' % button.caption
             self.buttons.append(button)
-        self.list_panel = self.ui.edit_list_panel
     
     def cancel(self):
         self.world.deselect_all()
@@ -193,7 +203,7 @@ class EditGamePanel(GamePanel):
                 b.refresh_caption()
     
     def get_label(self):
-        l = ' %s' % self.ui.app.gw.game_dir
+        l = ' %s' % self.world.game_dir
         if self.world.last_state_loaded:
             l += self.world.last_state_loaded
         return l
@@ -209,7 +219,7 @@ class EditGamePanel(GamePanel):
 
 
 class ListButton(UIButton):
-    width = 25
+    width = EditGamePanel.tile_width - 1
     clear_before_caption_draw = True
 
 class ListScrollArrowButton(ScrollArrowButton):
@@ -239,10 +249,16 @@ class EditListPanel(GamePanel):
         def __str__(self): return self.name
     
     def __init__(self, ui):
+        # topmost index of items to show in view
+        self.list_scroll_index = 0
+        self.list_mode = LIST_NONE
         # separate lists for item buttons vs other controls
         self.list_buttons = []
-        self.list_mode = LIST_NONE
-        def list_callback(item):
+        GamePanel.__init__(self, ui)
+    
+    def create_buttons(self):
+        def list_callback(item=None):
+            if not item: return
             self.clicked_item(item)
         for y in range(self.tile_height-1):
             button = ListButton(self)
@@ -259,12 +275,9 @@ class EditListPanel(GamePanel):
         # TODO: adjust height according to screen tile height
         self.down_button.y = self.tile_height - 1
         self.buttons.append(self.down_button)
-        # topmost index of items to show in view
-        self.list_scroll_index = 0
-        GamePanel.__init__(self, ui)
     
     def reset_art(self):
-        UIElement.reset_art(self)
+        GamePanel.reset_art(self)
         x = self.tile_width - 1
         for y in range(1, self.tile_height):
             self.art.set_tile_at(0, 0, x, y, self.scrollbar_shade_char,
@@ -287,24 +300,24 @@ class EditListPanel(GamePanel):
         # check list type, do appropriate thing
         if self.list_mode == LIST_CLASSES:
             # set this class to be the one spawned when GameWorld is clicked
-            self.ui.app.gw.classname_to_spawn = item.name
-            self.ui.message_line.post_line(self.spawn_msg % self.ui.app.gw.classname_to_spawn, 5)
+            self.world.classname_to_spawn = item.name
+            self.ui.message_line.post_line(self.spawn_msg % self.world.classname_to_spawn, 5)
         elif self.list_mode == LIST_OBJECTS:
             # add to/remove from/overwrite selected list based on mod keys
             if self.ui.app.il.ctrl_pressed:
-                self.ui.app.gw.deselect_object(item.obj)
+                self.world.deselect_object(item.obj)
             elif self.ui.app.il.shift_pressed:
-                self.ui.app.gw.select_object(item.obj)
+                self.world.select_object(item.obj)
             else:
-                self.ui.app.gw.deselect_all()
-                self.ui.app.gw.select_object(item.obj)
+                self.world.deselect_all()
+                self.world.select_object(item.obj)
         elif self.list_mode == LIST_STATES:
-            self.ui.app.gw.load_game_state(item.name)
+            self.world.load_game_state(item.name)
     
     def list_classes(self):
         self.items = []
         # get list of available classes from GameWorld
-        for classname,classdef in self.ui.app.gw.get_all_loaded_classes().items():
+        for classname,classdef in self.world.get_all_loaded_classes().items():
             item = self.ListItem(classname, classdef)
             self.items.append(item)
         # sort classes alphabetically
@@ -316,19 +329,19 @@ class EditListPanel(GamePanel):
     def list_objects(self):
         self.items = []
         self.clear_buttons(self.list_buttons)
-        for obj in self.ui.app.gw.objects:
+        for obj in self.world.objects:
             li = self.ListItem(obj.name, obj)
             self.items.append(li)
         self.titlebar = 'Objects:'
         self.list_mode = LIST_OBJECTS
     
     def list_states(self):
-        if not self.ui.app.gw.game_dir:
+        if not self.world.game_dir:
             return
         self.items = []
         self.clear_buttons(self.list_buttons)
         # list state files in current game dir
-        game_path = TOP_GAME_DIR + self.ui.app.gw.game_dir
+        game_path = TOP_GAME_DIR + self.world.game_dir
         for filename in os.listdir(game_path):
             if filename.endswith('.%s' % STATE_FILE_EXTENSION):
                 li = self.ListItem(filename[:-3], None)
@@ -341,13 +354,13 @@ class EditListPanel(GamePanel):
     
     def should_highlight(self, item):
         if self.list_mode == LIST_OBJECTS:
-            if item.obj in self.ui.app.gw.selected_objects:
+            if item.obj in self.world.selected_objects:
                 return True
         elif self.list_mode == LIST_CLASSES:
-            if item.name == self.ui.app.gw.classname_to_spawn:
+            if item.name == self.world.classname_to_spawn:
                 return True
         elif self.list_mode == LIST_STATES:
-            last_gs = os.path.basename(self.ui.app.gw.last_state_loaded)
+            last_gs = os.path.basename(self.world.last_state_loaded)
             last_gs = os.path.splitext(last_gs)[0]
             if item.name == last_gs:
                 return True
@@ -357,13 +370,14 @@ class EditListPanel(GamePanel):
         # prune any objects that have been deleted from items
         if self.list_mode == LIST_OBJECTS:
             for item in self.items:
-                if not item.obj in self.ui.app.gw.objects:
+                if not item.obj in self.world.objects:
                     self.items.remove(item)
         for i,b in enumerate(self.list_buttons):
             if i >= len(self.items):
                 b.caption = ''
-                b.can_hover = False
+                b.cb_arg = None
                 self.reset_button(b)
+                b.can_hover = False
             else:
                 index = self.list_scroll_index + i
                 item = self.items[index]
@@ -384,77 +398,6 @@ class EditListPanel(GamePanel):
         self.refresh_items()
         GamePanel.update(self)
     
-    def clicked(self, button):
-        if self.ui.active_dialog:
-            return False
-        return UIElement.clicked(self, button)
-    
     def render(self):
         if self.list_mode != LIST_NONE:
-            GamePanel.render(self)
-
-
-class EditObjectPanel(GamePanel):
-    
-    "panel showing info for selected game object"
-    tile_width = 32
-    tile_height = 10
-    snap_right = True
-    text_left = False
-    
-    def get_label(self):
-        # if 1 object seleted, show its name; if >1 selected, show #
-        selected = len(self.ui.app.gw.selected_objects)
-        # panel shouldn't draw when nothing selected, fill in anyway
-        if selected == 0:
-            return '[nothing selected]'
-        elif selected == 1:
-            return self.ui.app.gw.selected_objects[0].name
-        else:
-            return '[%s selected]' % selected
-    
-    def draw_obj_property_on_line(self, obj, propname, y):
-        self.art.clear_line(0, 0, y+1, self.fg_color, self.bg_color)
-        # if multiple selected, clear line but don't write anything
-        # TODO: think about how to show common values for multiple objects
-        if len(self.ui.app.gw.selected_objects) > 1:
-            return
-        value = getattr(obj, propname)
-        if type(value) is float:
-            valstr = '%.3f' % value
-            # non-fixed decimal version may be shorter, if so use it
-            if len(str(value)) < len(valstr):
-                valstr = str(value)
-        elif type(value) is str:
-            # file? shorten to basename minus extension
-            if os.path.exists:
-                valstr = os.path.basename(value)
-                valstr = os.path.splitext(valstr)[0]
-            else:
-                valstr = value
-        else:
-            valstr = str(value)
-        self.art.write_string(0, 0, -1, y+1, valstr, None, None, True)
-        fg = UIColors.darkgrey
-        x = -len(valstr) - 1
-        self.art.write_string(0, 0, x, y+1, '%s: ' % propname, fg, None, True)
-    
-    def refresh_items(self):
-        if len(self.ui.app.gw.selected_objects) == 0:
-            return
-        obj = self.ui.app.gw.selected_objects[0]
-        # list each serialized property on its own line
-        for y,propname in enumerate(obj.serialized):
-            if y < self.tile_height:
-                self.draw_obj_property_on_line(obj, propname, y)
-    
-    def update(self):
-        # redraw contents every update
-        self.draw_titlebar()
-        if len(self.ui.app.gw.selected_objects) > 0:
-            self.refresh_items()
-        GamePanel.update(self)
-    
-    def render(self):
-        if len(self.ui.app.gw.selected_objects) > 0:
             GamePanel.render(self)
