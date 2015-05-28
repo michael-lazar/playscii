@@ -134,7 +134,7 @@ class GamePanel(UIElement):
         button.normal_bg_color = UIButton.clicked_bg_color
         button.hovered_fg_color = UIButton.clicked_fg_color
         button.hovered_bg_color = UIButton.clicked_bg_color
-        button.can_hover = False
+        button.can_hover = True
     
     def draw_titlebar(self):
         self.art.clear_line(0, 0, 0, self.titlebar_fg, self.titlebar_bg)
@@ -203,10 +203,7 @@ class EditGamePanel(GamePanel):
                 b.refresh_caption()
     
     def get_label(self):
-        l = ' %s' % self.world.game_dir
-        if self.world.last_state_loaded:
-            l += self.world.last_state_loaded
-        return l
+        return ' %s' % self.world.game_dir
     
     def clicked(self, button):
         self.world.classname_to_spawn = None

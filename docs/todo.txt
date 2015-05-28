@@ -1,9 +1,5 @@
 TODO
 
-shorten game dir in game edit panel titlebar
-
-state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
-
 collision:
 - debug viz for contacts (create on contact start, destroy on contact end)
 - fix player->static collisions - shouldn't jitter
@@ -32,3 +28,5 @@ shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 human-readable errors if charset/palette not found
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+
+state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
