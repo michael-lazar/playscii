@@ -33,6 +33,9 @@ class GameObject:
     log_move = False
     log_load = False
     log_spawn = False
+    visible = True
+    # location is protected from edit mode drags
+    location_locked = False
     show_origin = False
     show_bounds = False
     show_collision = False
@@ -53,7 +56,8 @@ class GameObject:
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
     # list of members to serialize (no weak refs!)
-    serialized = ['x', 'y', 'z', 'art_src', 'y_sort', 'art_off_pct_x', 'art_off_pct_y']
+    serialized = ['x', 'y', 'z', 'art_src', 'visible', 'location_locked',
+                  'y_sort', 'art_off_pct_x', 'art_off_pct_y']
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0, 0, 0
@@ -285,6 +289,9 @@ class GameObject:
             self.vel_y += min(vel_dy, max_speed)
     
     def update(self):
+        # edit mode might have changed art_src, set it proper if so
+        if not self.generate_art and self.art.filename != self.art_src:
+            self.set_art(self.art_src)
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z

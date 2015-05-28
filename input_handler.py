@@ -208,9 +208,9 @@ class InputLord:
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 ui_clicked = self.ui.clicked(event.button.button)
                 # don't register edit commands if a menu is up
-                if self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                if ui_clicked or self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
                     sdl2.SDL_PumpEvents()
-                    self.app.gw.accept_unclicks = False
+                    self.app.gw.last_click_on_ui = True
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:

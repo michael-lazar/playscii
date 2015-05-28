@@ -34,7 +34,7 @@ class GameWorld:
     
     "holds global state for game mode"
     gravity_x, gravity_y = 0, 0
-    accept_unclicks = True
+    last_click_on_ui = False
     
     def __init__(self, app):
         self.app = app
@@ -72,7 +72,9 @@ class GameWorld:
         objects_reversed = self.objects[:]
         objects_reversed.reverse()
         for obj in objects_reversed:
-            if obj.is_point_inside(x, y):
+            # only allow selecting of visible objects
+            # (can still be selected via edit panel)
+            if obj.visible and obj.is_point_inside(x, y):
                 objects.append(obj)
         return objects
     
@@ -85,8 +87,8 @@ class GameWorld:
     def unclicked(self, button):
         # clicks on UI are consumed and flag world to not accept unclicks
         # (keeps unclicks after dialog dismiss from deselecting objects)
-        if not self.accept_unclicks:
-            self.accept_unclicks = True
+        if self.last_click_on_ui:
+            self.last_click_on_ui = False
             return
         # if we're clicking to spawn something, don't drag/select
         if self.classname_to_spawn:
@@ -121,6 +123,9 @@ class GameWorld:
     def mouse_moved(self, dx, dy):
         if self.app.ui.active_dialog:
             return
+        # if last onclick was a UI element, don't drag
+        if self.last_click_on_ui:
+            return
         # get mouse delta in world space
         mx1, my1, mz1 = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                         self.app.mouse_y)
@@ -131,8 +136,10 @@ class GameWorld:
             for obj in self.selected_objects:
                 if not self.dragging_object:
                     obj.start_dragging()
-                obj.x += world_dx
-                obj.y += world_dy
+                # check "location locked" flag
+                if not obj.location_locked:
+                    obj.x += world_dx
+                    obj.y += world_dy
             self.dragging_object = True
     
     def select_object(self, obj):
@@ -188,6 +195,8 @@ class GameWorld:
                 self.load_game_state(DEFAULT_STATE_FILENAME)
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
+        if self.app.ui:
+            self.app.ui.edit_game_panel.draw_titlebar()
     
     def import_all(self):
         module_suffix = TOP_GAME_DIR[:-1] + '.'
@@ -227,8 +236,10 @@ class GameWorld:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                item = RenderItem(obj, i, z + obj.z)
-                draw_order.append(item)
+                # respect object's "should render at all" flag
+                if obj.visible:
+                    item = RenderItem(obj, i, z + obj.z)
+                    draw_order.append(item)
         draw_order.sort(key=lambda item: item.sort_value, reverse=False)
         #
         # process "Y sort" objects
@@ -243,8 +254,9 @@ class GameWorld:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                item = RenderItem(obj, i, z)
-                items.append(item)
+                if obj.visible:
+                    item = RenderItem(obj, i, z)
+                    items.append(item)
             items.sort(key=lambda item: item.sort_value, reverse=False)
             for item in items:
                 draw_order.append(item)
