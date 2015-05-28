@@ -2,12 +2,6 @@ TODO
 
 shorten game dir in game edit panel titlebar
 
-object edit panel:
-- button: reset to class defaults
-- button: toggle lock/unlock location
-- button: toggle object visible
-- allow editing of serialized properties!
-
 state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
 
 collision:
