@@ -43,6 +43,37 @@ class EditObjectPropertyButton(UIButton):
     caption_justify = TEXT_RIGHT
 
 
+class PropertyItem:
+    multi_value_text = '[various]'
+    
+    def __init__(self, prop_name):
+        self.prop_name = prop_name
+        # property value & type filled in after creation
+        self.prop_value = None
+        self.prop_type = None
+    def set_value(self, value):
+        # convert value to a button-friendly string
+        if type(value) is float:
+            valstr = '%.3f' % value
+            # non-fixed decimal version may be shorter, if so use it
+            if len(str(value)) < len(valstr):
+                valstr = str(value)
+        elif type(value) is str:
+            # file? shorten to basename minus extension
+            if os.path.exists:
+                valstr = os.path.basename(value)
+                valstr = os.path.splitext(valstr)[0]
+            else:
+                valstr = value
+        else:
+            valstr = str(value)
+        # if values vary across objects use [various]
+        if self.prop_value is not None and self.prop_value != valstr:
+            self.prop_value = self.multi_value_text
+        else:
+            self.prop_value = valstr
+
+
 class EditObjectPanel(GamePanel):
     
     "panel showing info for selected game object"
@@ -51,7 +82,6 @@ class EditObjectPanel(GamePanel):
     snap_right = True
     text_left = False
     base_button_classes = [ResetObjectButton]
-    multi_value_text = '[various]'
     
     def __init__(self, ui):
         self.base_buttons = []
@@ -86,10 +116,9 @@ class EditObjectPanel(GamePanel):
     def clicked_item(self, item):
         # if property is a bool just toggle/set it, no need for a dialog
         if item.prop_type is bool:
-
             for obj in self.world.selected_objects:
                 # if multiple object values vary, set it True
-                if item.prop_value == self.multi_value_text:
+                if item.prop_value == PropertyItem.multi_value_text:
                     setattr(obj, item.prop_name, True)
                 else:
                     val = getattr(obj, item.prop_name)
@@ -99,12 +128,12 @@ class EditObjectPanel(GamePanel):
         EditObjectPropertyDialog.title = EditObjectPropertyDialog.base_title % item.prop_name
         EditObjectPropertyDialog.field0_label = EditObjectPropertyDialog.field0_base_label % (item.prop_type.__name__, item.prop_name)
         EditObjectPropertyDialog.field0_type = item.prop_type or str
-        EditObjectPropertyDialog.field0_text = item.prop_value
         x = self.ui.width_tiles - self.tile_width
         x -= EditObjectPropertyDialog.tile_width
         # give dialog a handle to item
         EditObjectPropertyDialog.item = item
         self.ui.open_dialog(EditObjectPropertyDialog, x, self.tile_y)
+        self.ui.active_dialog.field0_text = str(item.prop_value)
     
     def get_label(self):
         # if 1 object seleted, show its name; if >1 selected, show #
@@ -112,38 +141,10 @@ class EditObjectPanel(GamePanel):
         # panel shouldn't draw when nothing selected, fill in anyway
         if selected == 0:
             return '[nothing selected]'
-        elif selected == 1:
+        elif selected == 1 and self.world.selected_objects[0]:
             return self.world.selected_objects[0].name
         else:
             return '[%s selected]' % selected
-    
-    class PropertyItem:
-        def __init__(self, prop_name):
-            self.prop_name = prop_name
-            # property value & type filled in after creation
-            self.prop_value = None
-            self.prop_type = None
-        def set_value(self, value):
-            # if values vary across objects use [various]
-            if self.prop_value is not None and self.prop_value != value:
-                self.prop_value = self.multi_value_text
-                return
-            # convert value to a button-friendly string
-            if type(value) is float:
-                valstr = '%.3f' % value
-                # non-fixed decimal version may be shorter, if so use it
-                if len(str(value)) < len(valstr):
-                    valstr = str(value)
-            elif type(value) is str:
-                # file? shorten to basename minus extension
-                if os.path.exists:
-                    valstr = os.path.basename(value)
-                    valstr = os.path.splitext(valstr)[0]
-                else:
-                    valstr = value
-            else:
-                valstr = str(value)
-            self.prop_value = valstr
     
     def refresh_items(self):
         if len(self.world.selected_objects) == 0:
@@ -157,7 +158,7 @@ class EditObjectPanel(GamePanel):
         # build list of items from properties
         items = []
         for propname in propnames:
-            item = self.PropertyItem(propname)
+            item = PropertyItem(propname)
             for obj in self.world.selected_objects:
                 if hasattr(obj, propname):
                     # fill in type and value

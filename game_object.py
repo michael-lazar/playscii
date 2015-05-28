@@ -47,7 +47,7 @@ class GameObject:
     # collision layer name for CST_TILE objects
     col_layer_name = 'collision'
     # collision circle/box offset from origin
-    col_offset_x, col_offset_y = 0, 0
+    col_offset_x, col_offset_y = 0., 0.
     col_radius = 1
     # AABB top left / bottom right coordinates
     col_box_left_x, col_box_right_x = -1, 1
@@ -60,7 +60,7 @@ class GameObject:
                   'y_sort', 'art_off_pct_x', 'art_off_pct_y']
     
     def __init__(self, world, obj_data=None):
-        self.x, self.y, self.z = 0, 0, 0
+        self.x, self.y, self.z = 0., 0., 0.
         # apply serialized data before most of init happens
         # properties that need non-None defaults should be declared above
         for v in self.serialized:
@@ -72,7 +72,13 @@ class GameObject:
                 if self.log_load:
                     self.app.dev_log("Serialized property '%s' not found for %s" % (v, self.name))
                 continue
-            setattr(self, v, obj_data[v])
+            # match type of variable as declared, eg loc might be written as
+            # an int in the JSON so preserve its floatness
+            if getattr(self, v) is not None:
+                src_type = type(getattr(self, v))
+                setattr(self, v, src_type(obj_data[v]))
+            else:
+                setattr(self, v, obj_data[v])
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
