@@ -3,15 +3,9 @@ import pymunk
 
 from art import Art
 from renderable import TileRenderable
-from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable, CircleCollisionRenderable, BoxCollisionRenderable, TileCollisionRenderable
+from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
-from game_world import CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
-
-# collision shape types
-CST_NONE = 0
-CST_CIRCLE = 1
-CST_AABB = 2
-CST_TILE = 3
+from collision import Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
 
 class GameObject:
     
@@ -58,6 +52,8 @@ class GameObject:
     # list of members to serialize (no weak refs!)
     serialized = ['x', 'y', 'z', 'art_src', 'visible', 'location_locked',
                   'y_sort', 'art_off_pct_x', 'art_off_pct_y']
+    # if setting a given property should run some logic, specify method here
+    set_methods = {'art_src': 'set_art'}
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
@@ -107,109 +103,10 @@ class GameObject:
         self.world.renderables.append(self.renderable)
         # remember previous collision type for enable/disable
         self.orig_collision_type = None
-        self.collision_renderable = None
-        self.col_shapes, self.col_body = [], []
-        if self.collision_shape_type != CST_NONE:
-            self.create_collision()
+        self.collision = Collideable(self)
         self.world.objects.append(self)
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
-    
-    def create_collision(self):
-        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
-            # TODO: calculate moment depending on type of shape
-            self.col_body = pymunk.Body(self.mass, 1)
-        else:
-            if self.collision_shape_type == CT_GENERIC_STATIC:
-                self.col_body = self.world.space.static_body
-            else:
-                self.col_body = pymunk.Body()
-        self.col_body.position.x, self.col_body.position.y = self.x, self.y
-        # give our body a link back to us
-        self.col_body.gobj = self
-        # create shapes in a separate method so shapes can be regen'd independently
-        self.create_collision_shapes()
-        # static bodies should always be "rogue" ie not added to world space
-        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
-            self.world.space.add(self.col_body)
-            pass
-        if self.collision_shape_type == CST_CIRCLE:
-            self.collision_renderable = CircleCollisionRenderable(self.app, self)
-        elif self.collision_shape_type == CST_AABB:
-            self.collision_renderable = BoxCollisionRenderable(self.app, self)
-        elif self.collision_shape_type == CST_TILE:
-            self.collision_renderable = TileCollisionRenderable(self.app, self)
-    
-    def create_collision_shapes(self):
-        # create different shapes based on collision type
-        if self.collision_shape_type == CST_NONE:
-            return
-        elif self.collision_shape_type == CST_CIRCLE:
-            self.col_shapes = [pymunk.Circle(self.col_body, self.col_radius, (self.col_offset_x, self.col_offset_y))]
-        elif self.collision_shape_type == CST_AABB:
-            self.col_shapes = self.get_box_segs()
-        elif self.collision_shape_type == CST_TILE:
-            self.col_shapes = self.get_tile_segs()
-        # always add shapes to world space, even if they're part of rogue bodies
-        for shape in self.col_shapes:
-            shape.gobj = self
-            shape.collision_type = self.collision_type
-            self.world.space.add(shape)
-    
-    def destroy_collision_shapes(self):
-        # it would be simpler to check for CST_NONE here, but that would miss
-        # objects with collision that's temporarily disabled!
-        if len(self.col_shapes) > 0:
-            for shape in self.col_shapes:
-                self.world.space.remove(shape)
-        self.col_shapes = []
-    
-    def get_box_segs(self):
-        left = self.col_box_left_x + self.col_offset_x
-        right = self.col_box_right_x + self.col_offset_x
-        top = self.col_box_top_y + self.col_offset_y
-        bottom = self.col_box_bottom_y + self.col_offset_y
-        left_shape = self.get_seg(left, top, left, bottom)
-        right_shape = self.get_seg(right, top, right, bottom)
-        top_shape = self.get_seg(left, top, right, top)
-        bottom_shape = self.get_seg(left, bottom, right, bottom)
-        return [left_shape, right_shape, top_shape, bottom_shape]
-    
-    def get_seg(self, x1, y1, x2, y2):
-        return pymunk.Segment(self.col_body, (x1, y1), (x2, y2), self.seg_thickness)
-    
-    def get_tile_segs(self):
-        segs = []
-        frame = self.renderable.frame
-        if not self.col_layer_name in self.art.layer_names:
-            self.app.log("%s: Couldn't find collision layer with name '%s'" % (self.name, self.col_layer_name))
-            return []
-        layer = self.art.layer_names.index(self.col_layer_name)
-        def is_dir_empty(x, y):
-            return self.art.get_char_index_at(frame, layer, x, y) == 0
-        for y in range(self.art.height):
-            for x in range(self.art.width):
-                if is_dir_empty(x, y):
-                    continue
-                left = (x * self.art.quad_width) - (self.renderable.width * self.art_off_pct_x)
-                right = left + self.art.quad_width
-                # TODO: railing in cronotest is offset, fix!
-                top = (self.renderable.height * self.art_off_pct_y) - (y * self.art.quad_height)
-                bottom = top - self.art.quad_height
-                # only create segs for 0/>0 tile boundaries
-                # empty space to left = left seg
-                if x == 0 or is_dir_empty(x-1, y):
-                    segs += [self.get_seg(left, top, left, bottom)]
-                if x == self.art.width - 1 or is_dir_empty(x+1, y):
-                    segs += [self.get_seg(right, top, right, bottom)]
-                if y == 0 or is_dir_empty(x, y-1):
-                    segs += [self.get_seg(left, top, right, top)]
-                if y == self.art.height - 1 or is_dir_empty(x, y+1):
-                    segs += [self.get_seg(left, bottom, right, bottom)]
-        return segs
-    
-    def is_dynamic(self):
-        return self.collision_type in CTG_DYNAMIC
     
     def is_point_inside(self, x, y):
         "returns True if given point is inside our bounds"
@@ -218,11 +115,6 @@ class GameObject:
         min_y = self.y - (self.renderable.height * self.art_off_pct_y)
         max_y = self.y + (self.renderable.height * self.art_off_pct_y)
         return min_x <= x <= max_x and min_y <= y <= max_y
-    
-    def set_collision_type(self, new_type):
-        self.collision_type = new_type
-        for shape in self.col_shapes:
-            shape.collision_type = self.collision_type
     
     def start_dragging(self):
         if self.collision_type != CT_NONE:
@@ -253,6 +145,15 @@ class GameObject:
     
     def stop_animating(self):
         self.renderable.stop_animating()
+    
+    def set_object_property(self, prop_name, new_value):
+        if not hasattr(self, prop_name):
+            return
+        if prop_name in self.set_methods:
+            method = getattr(self, self.set_methods[prop_name])
+            method(new_value)
+        else:
+            setattr(self, prop_name, new_value)
     
     def set_art(self, new_art_filename):
         if self.art:
@@ -294,32 +195,27 @@ class GameObject:
         elif vel_dy > 0:
             self.vel_y += min(vel_dy, max_speed)
     
+    def update_move(self):
+        # apply friction and move
+        if self.vel_x == 0 and self.vel_y == 0 and self.vel_z == 0:
+            return
+        self.vel_x *= 1 - self.friction
+        self.vel_y *= 1 - self.friction
+        self.vel_z *= 1 - self.friction
+        self.x += self.vel_x
+        self.y += self.vel_y
+        self.z += self.vel_z
+        if self.log_move:
+            debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
+            self.app.ui.debug_text.post_lines(debug)
+    
     def update(self):
-        # edit mode might have changed art_src, set it proper if so
-        if not self.generate_art and self.art.filename != self.art_src:
-            self.set_art(self.art_src)
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
-        # apply friction and move
-        if self.vel_x != 0 or self.vel_y != 0 or self.vel_z != 0:
-            self.vel_x *= 1 - self.friction
-            self.vel_y *= 1 - self.friction
-            self.vel_z *= 1 - self.friction
-            self.x += self.vel_x
-            self.y += self.vel_y
-            self.z += self.vel_z
-            if self.log_move:
-                debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
-                self.app.ui.debug_text.post_lines(debug)
-        # update physics: shape's surface velocity, body's position
-        if self.collision_shape_type != CST_NONE and self.col_shapes and self.col_body:
-            self.update_physics()
-    
-    def update_physics(self):
-        # default behavior: object's location shadows that of its phy body
-        #self.x, self.y = self.col_body.position.x, self.col_body.position.y
-        self.col_body.position.x, self.col_body.position.y = self.x, self.y
+        self.update_move()
+        # update collision shape before CollisionLord resolves any collisions
+        self.collision.update()
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
@@ -327,8 +223,8 @@ class GameObject:
             self.origin_renderable.update()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.update()
-        if self.collision_renderable and self.show_collision:
-            self.collision_renderable.update()
+        if self.show_collision:
+            self.collision.renderable.update()
         self.renderable.update()
     
     def render_debug(self):
@@ -336,8 +232,8 @@ class GameObject:
             self.origin_renderable.render()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.render()
-        if self.show_collision and self.collision_renderable:
-            self.collision_renderable.render()
+        if self.show_collision:
+            self.collision.renderable.render()
     
     def render(self, layer, z_override=None):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
@@ -367,8 +263,7 @@ class GameObject:
         self.world.renderables.remove(self.renderable)
         self.origin_renderable.destroy()
         self.bounds_renderable.destroy()
-        if self.collision_renderable:
-            self.collision_renderable.destroy()
+        self.collision.destroy()
         if len(self.col_shapes) > 0:
             for shape in self.col_shapes:
                 self.world.space.remove(shape)
@@ -410,17 +305,6 @@ class Player(GameObject):
     log_move = True
     collision_shape_type = CST_CIRCLE
     collision_type = CT_PLAYER
-    
-    def update_physics(self):
-        for shape in self.col_shapes:
-            #shape.surface_velocity = self.vel_x, self.vel_y
-            #print(shape.surface_velocity)
-            #shape.position.x = self.x + self.col_offset_x
-            #shape.position.y = self.y + self.col_offset_y
-            pass
-        #self.col_body.velocity = self.vel_x * 50, self.vel_y * 50
-        self.col_body.position.x, self.col_body.position.y = self.x, self.y
-        #self.x, self.y = self.col_body.position.x, self.col_body.position.y
 
 
 class NSEWPlayer(Player):

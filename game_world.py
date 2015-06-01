@@ -10,16 +10,6 @@ DEFAULT_STATE_FILENAME = 'start'
 STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
 
-# collision types
-CT_NONE = 0
-CT_PLAYER = 1
-CT_GENERIC_STATIC = 2
-CT_GENERIC_DYNAMIC = 3
-
-# collision type groups, eg static and dynamic
-CTG_STATIC = [CT_GENERIC_STATIC]
-CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
-
 # import after game_object has done its imports from us
 import game_object
 
@@ -47,12 +37,6 @@ class GameWorld:
         self.objects = []
         self.space = pymunk.Space()
         self.space.gravity = self.gravity_x, self.gravity_y
-        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_DYNAMIC,
-                                         begin=collision.player_vs_dynamic_begin,
-                                         pre_solve=collision.player_vs_dynamic_pre_solve)
-        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_STATIC,
-                                         begin=collision.player_vs_static_begin,
-                                         pre_solve=collision.player_vs_static_pre_solve)
         self.art_loaded, self.renderables = [], []
         # player is edit-dragging an object
         self.dragging_object = False
@@ -231,7 +215,7 @@ class GameWorld:
                 continue
             for i,z in enumerate(obj.art.layers_z):
                 # only draw collision layer if show collision is set
-                if obj.collision_shape_type == game_object.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == collision.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
@@ -249,7 +233,7 @@ class GameWorld:
         for obj in y_objects:
             items = []
             for i,z in enumerate(obj.art.layers_z):
-                if obj.collision_shape_type == game_object.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == collision.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)

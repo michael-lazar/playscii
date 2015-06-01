@@ -35,8 +35,7 @@ class EditObjectPropertyDialog(UIDialog):
         # set property for selected object(s)
         new_value = self.field0_type(self.get_field_text(0))
         for obj in self.ui.app.gw.selected_objects:
-            if hasattr(obj, self.item.prop_name):
-                setattr(obj, self.item.prop_name, new_value)
+            obj.set_object_property(self.item.prop_name, new_value)
         self.dismiss()
 
 
@@ -120,10 +119,10 @@ class EditObjectPanel(GamePanel):
             for obj in self.world.selected_objects:
                 # if multiple object values vary, set it True
                 if item.prop_value == PropertyItem.multi_value_text:
-                    setattr(obj, item.prop_name, True)
+                    obj.set_object_property(item.prop_name, True)
                 else:
                     val = getattr(obj, item.prop_name)
-                    setattr(obj, item.prop_name, not val)
+                    obj.set_object_property(item.prop_name, not val)
             return
         # set dialog values appropriate to property being edited
         EditObjectPropertyDialog.title = EditObjectPropertyDialog.base_title % item.prop_name
