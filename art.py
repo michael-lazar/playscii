@@ -631,6 +631,8 @@ class Art:
     def write_string(self, frame, layer, x, y, text, fg_color_index=None,
                      bg_color_index=None, right_justify=False):
         "writes out each char of a string to specified tiles"
+        if y >= self.height:
+            return
         x %= self.width
         if right_justify:
             x_offset = -len(text)

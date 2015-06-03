@@ -96,7 +96,7 @@ class Collideable:
     def update_renderables(self):
         for r in self.renderables:
             r.update()
-
+    
     def render(self):
         for r in self.renderables:
             r.render()
