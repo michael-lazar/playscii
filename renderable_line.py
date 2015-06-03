@@ -279,55 +279,45 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
 
 class CollisionRenderable(WorldLineRenderable):
     
-    use_art_offset = False
+    # green = dynamic, blue = static
+    dynamic_color = (0, 1, 0, 1)
+    static_color = (0, 0, 1, 1)
     
-    def __init__(self, app, game_object):
-        # green = dynamic, blue = static
-        self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
-        WorldLineRenderable.__init__(self, app, None, game_object)
+    def __init__(self, shape):
+        self.color = self.dynamic_color if shape.game_object.is_dynamic() else self.static_color
+        self.shape = shape
+        WorldLineRenderable.__init__(self, shape.game_object.app, None,
+                                     shape.game_object)
+    
+    def update(self):
+        self.update_transform_from_object(self.shape)
     
     def update_transform_from_object(self, obj):
-        TileRenderable.update_transform_from_object(self, obj)
-        self.x += obj.col_offset_x * obj.scale_x
-        self.y += obj.col_offset_y * obj.scale_y
-    
-    def build_geo(self):
-        "for objects comprised of segment shapes, use the actual seg data"
-        verts, elems = [], []
-        for i,seg in enumerate(self.game_object.col_shapes):
-            verts += [(seg.a.x, seg.a.y), (seg.b.x, seg.b.y)]
-            elems += [i*2, i*2+1]
-        self.vert_array = np.array(verts, dtype=np.float32)
-        self.elem_array = np.array(elems, dtype=np.uint32)
-        self.color_array = np.array([self.color * len(elems)], dtype=np.float32)
-        # set line width based on segment thickness
-        if len(self.game_object.col_shapes) > 0:
-            self.line_width = self.game_object.col_shapes[0].radius * 50
+        self.x = obj.x
+        self.y = obj.y
 
 
-class BoxCollisionRenderable(CollisionRenderable):
-    
-    def get_quad_size(self):
-        # size is baked into vert locations
-        return 1, 1
-    
-    def get_size(self):
-        w = self.game_object.col_box_right_x - self.game_object.col_box_left_x
-        w *= self.game_object.scale_x
-        h = self.game_object.col_box_bottom_y - self.game_object.col_box_top_y
-        h *= self.game_object.scale_y
-        return w, h
+def get_circle_points(radius, steps=24):
+    angle = 0
+    points = [(radius, 0)]
+    for i in range(steps):
+        angle += math.radians(360 / steps)
+        x = math.cos(angle) * radius
+        y = math.sin(angle) * radius
+        points.append((x, y))
+    return points
+
 
 class CircleCollisionRenderable(CollisionRenderable):
     
-    segments = 24
     line_width = 2
+    segments = 24
     
     def get_quad_size(self):
-        return self.game_object.col_radius, self.game_object.col_radius
+        return self.shape.radius, self.shape.radius
     
     def get_size(self):
-        w = h = self.game_object.col_radius * 2
+        w = h = self.shape.radius * 2
         w *= self.game_object.scale_x
         h *= self.game_object.scale_y
         return w, h
@@ -351,7 +341,28 @@ class CircleCollisionRenderable(CollisionRenderable):
         self.elem_array = np.array(elements, dtype=np.uint32)
         self.color_array = np.array(colors, dtype=np.float32)
 
+class TileCircleCollisionRenderable(CircleCollisionRenderable):
+    "circle for each tile in a CST_TILE object"
+    line_width = 1
+    segments = 8
 
+
+# TODO: rewrite once AABB collision exists
+class BoxCollisionRenderable(CollisionRenderable):
+    
+    def get_quad_size(self):
+        # size is baked into vert locations
+        return 1, 1
+    
+    def get_size(self):
+        w = self.game_object.col_box_right_x - self.game_object.col_box_left_x
+        w *= self.game_object.scale_x
+        h = self.game_object.col_box_bottom_y - self.game_object.col_box_top_y
+        h *= self.game_object.scale_y
+        return w, h
+
+
+# TODO: rewrite once/if tile collision doesn't use circles
 class TileCollisionRenderable(CollisionRenderable):
     
     def __init__(self, app, game_object):

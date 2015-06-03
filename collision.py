@@ -1,7 +1,7 @@
 import math
 
 from renderable import TileRenderable
-from renderable_line import CircleCollisionRenderable, BoxCollisionRenderable, TileCollisionRenderable
+from renderable_line import CircleCollisionRenderable, TileCircleCollisionRenderable
 
 # collision shape types
 CST_NONE = 0
@@ -36,7 +36,7 @@ class Collideable:
     def __init__(self, obj):
         self.game_object = obj
         self.cl = self.game_object.world.cl
-        self.renderable = None
+        self.renderables = []
         self.shapes = []
         if self.game_object.collision_shape_type == CST_NONE:
             return
@@ -52,12 +52,10 @@ class Collideable:
         shape = self.cl.add_circle_shape(x, y, self.game_object.col_radius,
                                          self.game_object)
         self.shapes = [shape]
-        self.renderable = CircleCollisionRenderable(self.game_object.app,
-                                                    self.game_object)
+        self.renderables = [CircleCollisionRenderable(shape)]
     
     def create_tiles(self):
         # fill shapes list with one circle for each solid tile
-        # TODO: somethin about this is broken, fix soon
         obj = self.game_object
         frame = obj.renderable.frame
         if not obj.col_layer_name in obj.art.layer_names:
@@ -73,13 +71,15 @@ class Collideable:
                     continue
                 # get world space coordinates of this tile's center
                 wx = (x * obj.art.quad_width) + (0.5 * obj.art.quad_width)
-                wx *= obj.art_off_pct_x
-                wx += obj.x
-                wy = (y * obj.art.quad_height) - (0.5 * obj.art.quad_height)
-                wy *= obj.art_off_pct_y
-                wy -= obj.y
+                wx += obj.x - (obj.renderable.width * obj.art_off_pct_x)
+                wy = (y * -obj.art.quad_height) - (0.5 * obj.art.quad_height)
+                wy -= -obj.y - (obj.renderable.height * obj.art_off_pct_y)
                 shape = self.cl.add_circle_shape(wx, wy, radius, obj)
                 self.shapes.append(shape)
+                r = TileCircleCollisionRenderable(shape)
+                # update renderable once to set location correctly
+                r.update()
+                self.renderables.append(r)
     
     def update(self):
         if self.game_object and self.game_object.is_dynamic():
@@ -93,9 +93,17 @@ class Collideable:
                 shape.x = obj.x + obj.col_offset_x
                 shape.y = obj.y + obj.col_offset_y
     
+    def update_renderables(self):
+        for r in self.renderables:
+            r.update()
+
+    def render(self):
+        for r in self.renderables:
+            r.render()
+    
     def destroy(self):
-        if self.renderable:
-            self.renderable.destroy()
+        for r in self.renderables:
+            r.destroy()
 
 
 class CollisionLord:
@@ -151,14 +159,20 @@ def collide_circles(a, b):
         obj_a, obj_b = a.game_object, b.game_object
         total_mass = obj_a.inv_mass + obj_b.inv_mass
         if obj_a.is_dynamic():
-            a_push = (a.inv_mass / total_mass) * pdist
+            if not obj_b.is_dynamic():
+                a_push = pdist
+            else:
+                a_push = (a.inv_mass / total_mass) * pdist
             # move parent object, not shape
             obj_a.x += a_push * dx
             obj_a.y += a_push * dy
             # update all shapes based on object's new position
             obj_a.collision.update_transform_from_object()
         if obj_b.is_dynamic():
-            b_push = (b.inv_mass / total_mass) * pdist
+            if not obj_a.is_dynamic():
+                b_push = pdist
+            else:
+                b_push = (b.inv_mass / total_mass) * pdist
             obj_b.x -= b_push * dx
             obj_b.y -= b_push * dy
             obj_b.collision.update_transform_from_object()
