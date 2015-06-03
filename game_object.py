@@ -218,8 +218,8 @@ class GameObject:
             self.origin_renderable.update()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.update()
-        if self.show_collision and self.collision.renderable:
-            self.collision.renderable.update()
+        if self.show_collision and self.is_dynamic():
+            self.collision.update_renderables()
         self.renderable.update()
     
     def render_debug(self):
@@ -227,8 +227,8 @@ class GameObject:
             self.origin_renderable.render()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.render()
-        if self.show_collision and self.collision.renderable:
-            self.collision.renderable.render()
+        if self.show_collision:
+            self.collision.render()
     
     def render(self, layer, z_override=None):
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))

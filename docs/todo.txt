@@ -1,24 +1,11 @@
 TODO
 
-separate "editable" list of property names, for stuff that doesn't need to be serialized but should be exposed in object edit UI
-- move GO's y_sort, art_off_pct_x, art_off_pct_y to this list
-
-
-collision:
-- rip out pymunk: label GO functions that pertain to it with a """ comment block until ready to remove it
-- keep idea of separate collision component-like object that's attached to object
-- start with just circle-circle collisions!  on overlap, create contact object?  more generally, see what concepts from the 2D collision libs are useful
-- debug viz for contacts (create on contact start, destroy on contact end)
-- "Collideable" component-like thing?
--- updates based on object transform much like Renderable
--- after each object updates, CollisionLord resolves all collisions, updating their collisions
-
+- separate "editable" list of property names, for stuff that doesn't need to be serialized but should be exposed in object edit UI
+-- move GO's y_sort, art_off_pct_x, art_off_pct_y to this list
 
 game edit panel buttons:
 - duplicate object
 - toggle player camera lock
-
-consider using http://contributor-covenant.org officially
 
 ---
 
