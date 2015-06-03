@@ -154,7 +154,11 @@ class EditObjectPanel(GamePanel):
         # get list of unique properties across all selected objects
         propnames = []
         for obj in self.world.selected_objects:
-            for propname in obj.serialized:
+            # sometimes object deselect puts None into this list
+            # TODO: understand why, fix if needed
+            if obj is None:
+                continue
+            for propname in obj.serialized + obj.editable:
                 if not propname in propnames:
                     propnames.append(propname)
         # build list of items from properties

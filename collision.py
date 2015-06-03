@@ -36,8 +36,11 @@ class Collideable:
     def __init__(self, obj):
         self.game_object = obj
         self.cl = self.game_object.world.cl
-        self.renderables = []
-        self.shapes = []
+        self.renderables, self.shapes = [], []
+        self.create_shapes()
+    
+    def create_shapes(self):
+        self.clear_shapes()
         if self.game_object.collision_shape_type == CST_NONE:
             return
         elif self.game_object.collision_shape_type == CST_CIRCLE:
@@ -45,6 +48,14 @@ class Collideable:
         elif self.game_object.collision_shape_type == CST_TILE:
             self.create_tiles()
         # TODO: AABB creation
+    
+    def clear_shapes(self):
+        for r in self.renderables:
+            r.destroy()
+        self.renderables = []
+        for shape in self.shapes:
+            self.cl.remove_shape(shape)
+        self.shapes = []
     
     def create_circle(self):
         x = self.game_object.x + self.game_object.col_offset_x
@@ -131,14 +142,22 @@ class CollisionLord:
         for i in range(iterations):
             # push all dynamic circles out of each other
             for a in self.dynamic_shapes:
+                if a.game_object.collision_type == CT_NONE:
+                    continue
                 for b in self.dynamic_shapes:
+                    if b.game_object.collision_type == CT_NONE:
+                        continue
                     if a is b:
                         continue
                     # TODO: handle different shape type combinations
                     collide_circles(a, b)
             # now push all dynamic circles out of all static circles
             for a in self.dynamic_shapes:
+                if a.game_object.collision_type == CT_NONE:
+                    continue
                 for b in self.static_shapes:
+                    if b.game_object.collision_type == CT_NONE:
+                        continue
                     collide_circles(a, b)
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):

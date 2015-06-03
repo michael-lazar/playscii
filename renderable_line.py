@@ -347,35 +347,5 @@ class TileCircleCollisionRenderable(CircleCollisionRenderable):
     segments = 8
 
 
-# TODO: rewrite once AABB collision exists
-class BoxCollisionRenderable(CollisionRenderable):
-    
-    def get_quad_size(self):
-        # size is baked into vert locations
-        return 1, 1
-    
-    def get_size(self):
-        w = self.game_object.col_box_right_x - self.game_object.col_box_left_x
-        w *= self.game_object.scale_x
-        h = self.game_object.col_box_bottom_y - self.game_object.col_box_top_y
-        h *= self.game_object.scale_y
-        return w, h
-
-
-# TODO: rewrite once/if tile collision doesn't use circles
-class TileCollisionRenderable(CollisionRenderable):
-    
-    def __init__(self, app, game_object):
-        # green = dynamic, blue = static
-        self.color = (0, 1, 0, 1) if game_object.is_dynamic() else (0, 0, 1, 1)
-        # pass in object's art for quad_size_ref
-        WorldLineRenderable.__init__(self, app, game_object.art, game_object)
-    
-    def update_transform_from_object(self, obj):
-        TileRenderable.update_transform_from_object(self, obj)
-    
-    def get_size(self):
-        art = self.game_object.art
-        w = (art.width * art.quad_width) * self.game_object.scale_x
-        h = (art.height * art.quad_height) * self.game_object.scale_y
-        return w, h
+# TODO: rewrite BoxCollisionRenderable once AABB collision exists
+# TODO: rewrite TileCollisionRenderable once/if tile collision doesn't use circles

@@ -56,7 +56,7 @@ class GameWorld:
         for obj in objects_reversed:
             # only allow selecting of visible objects
             # (can still be selected via edit panel)
-            if obj.visible and obj.is_point_inside(x, y):
+            if obj.visible and not obj.locked and obj.is_point_inside(x, y):
                 objects.append(obj)
         return objects
     
@@ -118,8 +118,8 @@ class GameWorld:
             for obj in self.selected_objects:
                 if not self.dragging_object:
                     obj.start_dragging()
-                # check "location locked" flag
-                if not obj.location_locked:
+                # check "locked" flag
+                if not obj.locked:
                     obj.x += world_dx
                     obj.y += world_dy
             self.dragging_object = True

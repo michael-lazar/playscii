@@ -1,9 +1,8 @@
 TODO
 
-- separate "editable" list of property names, for stuff that doesn't need to be serialized but should be exposed in object edit UI
--- move GO's y_sort, art_off_pct_x, art_off_pct_y to this list
-
-regenerate collision for dragged CST_TILE objects when drag stops
+collision:
+- broadphase!
+- AABB and/or capsule shape support
 
 game edit panel buttons:
 - duplicate object

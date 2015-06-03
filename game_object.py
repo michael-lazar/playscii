@@ -27,8 +27,8 @@ class GameObject:
     log_load = False
     log_spawn = False
     visible = True
-    # location is protected from edit mode drags
-    location_locked = False
+    # location is protected from edit mode drags, can't click to select
+    locked = False
     show_origin = False
     show_bounds = False
     show_collision = False
@@ -49,8 +49,11 @@ class GameObject:
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
     # list of members to serialize (no weak refs!)
-    serialized = ['x', 'y', 'z', 'art_src', 'visible', 'location_locked',
-                  'y_sort', 'art_off_pct_x', 'art_off_pct_y']
+    serialized = ['x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
+                  'art_off_pct_x', 'art_off_pct_y']
+    # members that don't need to be serialized, but should be exposed to
+    # object edit UI
+    editable = ['show_collision']
     # if setting a given property should run some logic, specify method here
     set_methods = {'art_src': 'set_art'}
     
@@ -119,20 +122,20 @@ class GameObject:
         return self.collision_type in CTG_DYNAMIC
     
     def start_dragging(self):
-        # TODO: disable collision, remember prior collision type
-        pass
+        self.disable_collision()
     
     def stop_dragging(self):
-        # TODO: re-enable collision
-        pass
+        self.enable_collision()
+        if self.collision_shape_type == CST_TILE:
+            self.collision.create_shapes()
     
     def enable_collision(self):
-        # TODO
-        pass
+        self.collision_type = self.orig_collision_type
     
     def disable_collision(self):
-        # TODO
-        pass
+        # remember prior collision type
+        self.orig_collision_type = self.collision_type
+        self.collision_type = CT_NONE
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -167,9 +170,6 @@ class GameObject:
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
         self.z = z or 0
-        # TODO: tell collision to update its loc
-        # TODO: if collision is tile-based, rebuild shapes based on tiles
-        # (assuming it doesn't move dynamically)
     
     def set_scale(self, x, y, z):
         self.scale_x, self.scale_y, self.scale_z = x, y, z
@@ -291,7 +291,7 @@ class Player(GameObject):
     move_accel_rate = 0.1
     max_move_speed = 0.8
     friction = 0.25
-    inv_mass = 0
+    inv_mass = 0.1
     log_move = True
     collision_shape_type = CST_CIRCLE
     collision_type = CT_PLAYER
