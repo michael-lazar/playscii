@@ -1,3 +1,4 @@
+import math
 
 from renderable import TileRenderable
 from renderable_line import CircleCollisionRenderable, BoxCollisionRenderable, TileCollisionRenderable
@@ -19,153 +20,145 @@ CTG_STATIC = [CT_GENERIC_STATIC]
 CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 
 
+class CircleCollisionShape:
+    def __init__(self, loc_x, loc_y, radius, gobj):
+        self.x, self.y = loc_x, loc_y
+        self.radius = radius
+        self.game_object = gobj
+        self.inv_mass = self.game_object.inv_mass
+
+
 class Collideable:
+    
+    # use game object's art_off_pct values
+    use_art_offset = False
     
     def __init__(self, obj):
         self.game_object = obj
-        self.shape_type = self.game_object.collision_shape_type
-        self.renderable = TileRenderable(obj.app, obj.art, obj)
-        if self.game_object.collision_shape_type != CST_NONE:
-            pass
-        #self.create_collision()
+        self.cl = self.game_object.world.cl
+        self.renderable = None
+        self.shapes = []
+        if self.game_object.collision_shape_type == CST_NONE:
+            return
+        elif self.game_object.collision_shape_type == CST_CIRCLE:
+            self.create_circle()
+        elif self.game_object.collision_shape_type == CST_TILE:
+            self.create_tiles()
+        # TODO: AABB creation
     
-    def set_type(self, new_type):
-        self.collision_type = new_type
-        for shape in self.col_shapes:
-            shape.collision_type = self.collision_type
+    def create_circle(self):
+        x = self.game_object.x + self.game_object.col_offset_x
+        y = self.game_object.y + self.game_object.col_offset_y
+        shape = self.cl.add_circle_shape(x, y, self.game_object.col_radius,
+                                         self.game_object)
+        self.shapes = [shape]
+        self.renderable = CircleCollisionRenderable(self.game_object.app,
+                                                    self.game_object)
+    
+    def create_tiles(self):
+        # fill shapes list with one circle for each solid tile
+        # TODO: somethin about this is broken, fix soon
+        obj = self.game_object
+        frame = obj.renderable.frame
+        if not obj.col_layer_name in obj.art.layer_names:
+            obj.app.log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
+            return
+        layer = obj.art.layer_names.index(obj.col_layer_name)
+        # for this circle version, no support for non-square tiles - largest
+        # dimension will be used; better to have padding than gaps
+        radius = max(obj.art.quad_width, obj.art.quad_height) / 2
+        for y in range(obj.art.height):
+            for x in range(obj.art.width):
+                if obj.art.get_char_index_at(frame, layer, x, y) == 0:
+                    continue
+                # get world space coordinates of this tile's center
+                wx = (x * obj.art.quad_width) + (0.5 * obj.art.quad_width)
+                wx *= obj.art_off_pct_x
+                wx += obj.x
+                wy = (y * obj.art.quad_height) - (0.5 * obj.art.quad_height)
+                wy *= obj.art_off_pct_y
+                wy -= obj.y
+                shape = self.cl.add_circle_shape(wx, wy, radius, obj)
+                self.shapes.append(shape)
     
     def update(self):
-        # TODO: update transform based on our object
-        pass
+        if self.game_object and self.game_object.is_dynamic():
+            self.update_transform_from_object()
     
-    def create_collision(self):
-        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
-            # TODO: calculate moment depending on type of shape
-            self.col_body = pymunk.Body(self.mass, 1)
-        else:
-            if self.collision_shape_type == CT_GENERIC_STATIC:
-                self.col_body = self.world.space.static_body
-            else:
-                self.col_body = pymunk.Body()
-        self.col_body.position.x, self.col_body.position.y = self.x, self.y
-        # give our body a link back to us
-        self.col_body.gobj = self
-        # create shapes in a separate method so shapes can be regen'd independently
-        self.create_collision_shapes()
-        # static bodies should always be "rogue" ie not added to world space
-        if self.is_dynamic():# and self.collision_type != CT_PLAYER:
-            self.world.space.add(self.col_body)
-            pass
-        if self.collision_shape_type == CST_CIRCLE:
-            self.collision_renderable = CircleCollisionRenderable(self.app, self)
-        elif self.collision_shape_type == CST_AABB:
-            self.collision_renderable = BoxCollisionRenderable(self.app, self)
-        elif self.collision_shape_type == CST_TILE:
-            self.collision_renderable = TileCollisionRenderable(self.app, self)
-    
-    def create_collision_shapes(self):
-        # create different shapes based on collision type
-        if self.collision_shape_type == CST_NONE:
-            return
-        elif self.collision_shape_type == CST_CIRCLE:
-            self.col_shapes = [pymunk.Circle(self.col_body, self.col_radius, (self.col_offset_x, self.col_offset_y))]
-        elif self.collision_shape_type == CST_AABB:
-            self.col_shapes = self.get_box_segs()
-        elif self.collision_shape_type == CST_TILE:
-            self.col_shapes = self.get_tile_segs()
-        # always add shapes to world space, even if they're part of rogue bodies
-        for shape in self.col_shapes:
-            shape.gobj = self
-            shape.collision_type = self.collision_type
-            self.world.space.add(shape)
-    
-    def destroy_collision_shapes(self):
-        # it would be simpler to check for CST_NONE here, but that would miss
-        # objects with collision that's temporarily disabled!
-        if len(self.col_shapes) > 0:
-            for shape in self.col_shapes:
-                self.world.space.remove(shape)
-        self.col_shapes = []
-    
-    def get_box_segs(self):
-        left = self.col_box_left_x + self.col_offset_x
-        right = self.col_box_right_x + self.col_offset_x
-        top = self.col_box_top_y + self.col_offset_y
-        bottom = self.col_box_bottom_y + self.col_offset_y
-        left_shape = self.get_seg(left, top, left, bottom)
-        right_shape = self.get_seg(right, top, right, bottom)
-        top_shape = self.get_seg(left, top, right, top)
-        bottom_shape = self.get_seg(left, bottom, right, bottom)
-        return [left_shape, right_shape, top_shape, bottom_shape]
-    
-    def get_seg(self, x1, y1, x2, y2):
-        return pymunk.Segment(self.col_body, (x1, y1), (x2, y2), self.seg_thickness)
-    
-    def get_tile_segs(self):
-        segs = []
-        frame = self.renderable.frame
-        if not self.col_layer_name in self.art.layer_names:
-            self.app.log("%s: Couldn't find collision layer with name '%s'" % (self.name, self.col_layer_name))
-            return []
-        layer = self.art.layer_names.index(self.col_layer_name)
-        def is_dir_empty(x, y):
-            return self.art.get_char_index_at(frame, layer, x, y) == 0
-        for y in range(self.art.height):
-            for x in range(self.art.width):
-                if is_dir_empty(x, y):
-                    continue
-                left = (x * self.art.quad_width) - (self.renderable.width * self.art_off_pct_x)
-                right = left + self.art.quad_width
-                # TODO: railing in cronotest is offset, fix!
-                top = (self.renderable.height * self.art_off_pct_y) - (y * self.art.quad_height)
-                bottom = top - self.art.quad_height
-                # only create segs for 0/>0 tile boundaries
-                # empty space to left = left seg
-                if x == 0 or is_dir_empty(x-1, y):
-                    segs += [self.get_seg(left, top, left, bottom)]
-                if x == self.art.width - 1 or is_dir_empty(x+1, y):
-                    segs += [self.get_seg(right, top, right, bottom)]
-                if y == 0 or is_dir_empty(x, y-1):
-                    segs += [self.get_seg(left, top, right, top)]
-                if y == self.art.height - 1 or is_dir_empty(x, y+1):
-                    segs += [self.get_seg(left, bottom, right, bottom)]
-        return segs
-    
-    def is_dynamic(self):
-        return self.collision_type in CTG_DYNAMIC
+    def update_transform_from_object(self, obj=None):
+        obj = obj or self.game_object
+        # CST_TILE shouldn't run here, it's static-only
+        if obj.collision_shape_type == CST_CIRCLE:
+            for shape in self.shapes:
+                shape.x = obj.x + obj.col_offset_x
+                shape.y = obj.y + obj.col_offset_y
     
     def destroy(self):
-        self.renderable.destroy()
+        if self.renderable:
+            self.renderable.destroy()
 
 
-def a_push_b(a, b, contact):
-    x = b.x + contact.normal.x * contact.distance
-    y = b.y + contact.normal.y * contact.distance
-    b.set_loc(x, y)
-    #b.vel_x = 0
-    #b.vel_y = 0
+class CollisionLord:
+    
+    def __init__(self, world):
+        self.world = world
+        self.dynamic_shapes, self.static_shapes = [], []
+    
+    def add_circle_shape(self, x, y, radius, gobj):
+        shape = CircleCollisionShape(x, y, radius, gobj)
+        if gobj.is_dynamic():
+            self.dynamic_shapes.append(shape)
+        else:
+            self.static_shapes.append(shape)
+        return shape
+    
+    def remove_shape(self, shape):
+        if shape in self.dynamic_shapes:
+            self.dynamic_shapes.remove(shape)
+        elif shape in self.static_shapes:
+            self.static_shapes.remove(shape)
+    
+    def resolve_overlaps(self):
+        iterations = 8
+        for i in range(iterations):
+            # push all dynamic circles out of each other
+            for a in self.dynamic_shapes:
+                for b in self.dynamic_shapes:
+                    if a is b:
+                        continue
+                    # TODO: handle different shape type combinations
+                    collide_circles(a, b)
+            # now push all dynamic circles out of all static circles
+            for a in self.dynamic_shapes:
+                for b in self.static_shapes:
+                    collide_circles(a, b)
 
-def player_vs_dynamic_begin(space, arbiter):
-    obj1 = arbiter.shapes[0].gobj
-    obj2 = arbiter.shapes[1].gobj
-    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
-    a_push_b(obj1, obj2, arbiter.contacts[0])
-    return True
+def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
+    "returns normalized penetration x, y, and distance"
+    dx, dy = circle_x - point_x, circle_y - point_y
+    pdist = math.sqrt(dx ** 2 + dy ** 2)
+    # point is center of circle, arbitrarily project out in +X
+    if pdist == 0:
+        return 1, 0, -radius
+    return dx / pdist, dy / pdist, pdist - radius
 
-def player_vs_dynamic_pre_solve(space, arbiter):
-    player_vs_dynamic_begin(space, arbiter)
-    return False
-
-def player_vs_static_begin(space, arbiter):
-    obj1 = arbiter.shapes[0].gobj
-    obj2 = arbiter.shapes[1].gobj
-    #print('pymunk: %s collided with %s' % (obj1.name, obj2.name))
-    a_push_b(obj2, obj1, arbiter.contacts[0])
-    return True
-
-def player_vs_static_pre_solve(space, arbiter):
-    player_vs_static_begin(space, arbiter)
-    return False
-
-def always_collide(space, arbiter):
-    return True
+def collide_circles(a, b):
+    "resolves collision between two CircleCollisionShapes"
+    dx, dy, pdist = point_circle_penetration(a.x, a.y, b.x, b.y,
+                                             a.radius + b.radius)
+    if pdist < 0:
+        # TODO: create/update contact object?
+        obj_a, obj_b = a.game_object, b.game_object
+        total_mass = obj_a.inv_mass + obj_b.inv_mass
+        if obj_a.is_dynamic():
+            a_push = (a.inv_mass / total_mass) * pdist
+            # move parent object, not shape
+            obj_a.x += a_push * dx
+            obj_a.y += a_push * dy
+            # update all shapes based on object's new position
+            obj_a.collision.update_transform_from_object()
+        if obj_b.is_dynamic():
+            b_push = (b.inv_mass / total_mass) * pdist
+            obj_b.x -= b_push * dx
+            obj_b.y -= b_push * dy
+            obj_b.collision.update_transform_from_object()

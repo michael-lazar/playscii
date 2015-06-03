@@ -1,9 +1,7 @@
 TODO
 
-
-wrap setattr(gameobject, propertyname, newvalue) in GameObject.set_value, give GO a dict of setter methods, newvalue is passed to setter if present, else setattr is used
-
-this way, collision values can be declared and tuned on GO side, and whatever logic needs to run on Collideable can do so when value changes
+separate "editable" list of property names, for stuff that doesn't need to be serialized but should be exposed in object edit UI
+- move GO's y_sort, art_off_pct_x, art_off_pct_y to this list
 
 
 collision:

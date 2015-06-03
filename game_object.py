@@ -1,5 +1,4 @@
 import os
-import pymunk
 
 from art import Art
 from renderable import TileRenderable
@@ -22,8 +21,8 @@ class GameObject:
     # normal movement will accelerate up to this, final velocity is uncapped
     max_move_speed = 0.4
     friction = 0.1
-    # mass - only used by pymunk
-    mass = 1
+    # inverse mass: 0 = infinitely dense
+    inv_mass = 1
     log_move = False
     log_load = False
     log_spawn = False
@@ -116,25 +115,24 @@ class GameObject:
         max_y = self.y + (self.renderable.height * self.art_off_pct_y)
         return min_x <= x <= max_x and min_y <= y <= max_y
     
+    def is_dynamic(self):
+        return self.collision_type in CTG_DYNAMIC
+    
     def start_dragging(self):
-        if self.collision_type != CT_NONE:
-            self.disable_collision()
+        # TODO: disable collision, remember prior collision type
+        pass
     
     def stop_dragging(self):
-        if self.orig_collision_type is not None:
-            self.enable_collision()
-        # recreate shapes if stopping dragging a tile collision object
-        if self.collision_shape_type == CST_TILE:
-            self.destroy_collision_shapes()
-            self.create_collision_shapes()
+        # TODO: re-enable collision
+        pass
     
     def enable_collision(self):
-        self.set_collision_type(self.orig_collision_type)
-        self.orig_collision_type = None
+        # TODO
+        pass
     
     def disable_collision(self):
-        self.orig_collision_type = self.collision_type
-        self.set_collision_type(CT_NONE)
+        # TODO
+        pass
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -169,12 +167,9 @@ class GameObject:
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
         self.z = z or 0
-        if self.col_body and self.col_body is not self.world.space.static_body:
-            self.col_body.position.x = self.x + self.col_offset_x
-            self.col_body.position.y = self.y + self.col_offset_y
-        if self.collision_shape_type == CST_TILE:
-            self.destroy_collision_shapes()
-            self.create_collision_shapes()
+        # TODO: tell collision to update its loc
+        # TODO: if collision is tile-based, rebuild shapes based on tiles
+        # (assuming it doesn't move dynamically)
     
     def set_scale(self, x, y, z):
         self.scale_x, self.scale_y, self.scale_z = x, y, z
@@ -223,7 +218,7 @@ class GameObject:
             self.origin_renderable.update()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.update()
-        if self.show_collision:
+        if self.show_collision and self.collision.renderable:
             self.collision.renderable.update()
         self.renderable.update()
     
@@ -232,7 +227,7 @@ class GameObject:
             self.origin_renderable.render()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.render()
-        if self.show_collision:
+        if self.show_collision and self.collision.renderable:
             self.collision.renderable.render()
     
     def render(self, layer, z_override=None):
@@ -264,12 +259,6 @@ class GameObject:
         self.origin_renderable.destroy()
         self.bounds_renderable.destroy()
         self.collision.destroy()
-        if len(self.col_shapes) > 0:
-            for shape in self.col_shapes:
-                self.world.space.remove(shape)
-        if self.col_body:
-            #self.world.space.remove(self.col_body)
-            pass
         self.renderable.destroy()
 
 
@@ -302,6 +291,7 @@ class Player(GameObject):
     move_accel_rate = 0.1
     max_move_speed = 0.8
     friction = 0.25
+    inv_mass = 0
     log_move = True
     collision_shape_type = CST_CIRCLE
     collision_type = CT_PLAYER

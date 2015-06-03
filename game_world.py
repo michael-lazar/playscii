@@ -1,5 +1,4 @@
 import os, sys, time, json, importlib, inspect
-import pymunk
 
 import collision
 from camera import Camera
@@ -35,8 +34,7 @@ class GameWorld:
         self.modules = {'game_object': game_object}
         self.classname_to_spawn = None
         self.objects = []
-        self.space = pymunk.Space()
-        self.space.gravity = self.gravity_x, self.gravity_y
+        self.cl = collision.CollisionLord(self)
         self.art_loaded, self.renderables = [], []
         # player is edit-dragging an object
         self.dragging_object = False
@@ -198,7 +196,7 @@ class GameWorld:
         # update objects based on movement, then resolve collisions
         for obj in self.objects:
             obj.update()
-        self.space.step(1 / self.app.framerate)
+        self.cl.resolve_overlaps()
     
     def render(self):
         for obj in self.objects:
