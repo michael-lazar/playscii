@@ -295,6 +295,11 @@ class Player(GameObject):
     log_move = True
     collision_shape_type = CST_CIRCLE
     collision_type = CT_PLAYER
+    
+    def __init__(self, world, obj_data=None):
+        GameObject.__init__(self, world, obj_data)
+        if self.world.player is None:
+            self.world.player = self
 
 
 class NSEWPlayer(Player):
@@ -327,6 +332,16 @@ class NSEWPlayer(Player):
         self.anim_walk_fwd = world.app.load_art(walk_fwd_anim_name)
         self.anim_walk_back = world.app.load_art(walk_back_anim_name)
         self.anim_walk_right = world.app.load_art(walk_right_anim_name)
+        anims = {stand_fwd_anim_name: self.anim_stand_fwd,
+                 stand_back_anim_name: self.anim_stand_back,
+                 stand_right_anim_name: self.anim_stand_right,
+                 walk_fwd_anim_name: self.anim_walk_fwd,
+                 walk_back_anim_name: self.anim_walk_back,
+                 walk_right_anim_name:self.anim_walk_right}
+        for anim_name,anim in anims.items():
+            if anim is None:
+                print("NSEWPlayer animation not found: %s" % anim_name)
+                return
         self.last_move_dir = (0, 0)
         # provide valid art_src so rest of init doesn't get confused
         self.art_src = stand_fwd_anim_name
