@@ -127,7 +127,10 @@ class EditObjectPanel(GamePanel):
         # set dialog values appropriate to property being edited
         EditObjectPropertyDialog.title = EditObjectPropertyDialog.base_title % item.prop_name
         EditObjectPropertyDialog.field0_label = EditObjectPropertyDialog.field0_base_label % (item.prop_type.__name__, item.prop_name)
-        EditObjectPropertyDialog.field0_type = item.prop_type or str
+        EditObjectPropertyDialog.field0_type = item.prop_type
+        # if None, assume string
+        if EditObjectPropertyDialog.field0_type is type(None):
+            EditObjectPropertyDialog.field0_type = str
         tile_x = self.ui.width_tiles - self.tile_width
         tile_x -= EditObjectPropertyDialog.tile_width
         # give dialog a handle to item
