@@ -452,13 +452,16 @@ class Application:
         pixel_bytes = pixels.flatten().tobytes()
         src_img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
         src_img = src_img.transpose(Image.FLIP_TOP_BOTTOM)
-        # TODO: just write RGBA if palette has more than one color with <1 alpha
-        # convert to RGB before palettization
-        src_img = src_img.convert('RGB')
-        # convert to current palette
-        output_img = art.palette.set_for_image(src_img)
-        output_img.save(output_filename, 'PNG', transparency=0)
-        self.log('%s exported' % output_filename)
+        # just write RGBA if palette has more than one color with <1 alpha
+        if not art.palette.all_colors_opaque():
+            src_img.save(output_filename, 'PNG')
+            output_format = '32-bit w/ alpha'
+        # else convert to current palette
+        else:
+            output_img = art.palette.get_palettized_image(src_img)
+            output_img.save(output_filename, 'PNG', transparency=0)
+            output_format = '8-bit palettized w/ transparency'
+        self.log('%s exported (%s)' % (output_filename, output_format))
     
     def enter_game_mode(self):
         self.game_mode = True
