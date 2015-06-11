@@ -71,6 +71,12 @@ class FilePNGExportMenuItem(PulldownMenuItem):
     def should_dim(app):
         return app.ui.active_art is None
 
+class FileGIFExportMenuItem(PulldownMenuItem):
+    label = 'Export animated GIF'
+    command = 'export_anim'
+    def should_dim(app):
+        return app.ui.active_art is None
+
 class FileQuitMenuItem(PulldownMenuItem):
     label = 'Quit'
     command = 'quit'
@@ -437,7 +443,7 @@ class PulldownMenuData:
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
              FileCloseMenuItem, FileConvertImageMenuItem, FilePNGExportMenuItem,
-             SeparatorMenuItem, FileQuitMenuItem]
+             FileGIFExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
     items = [EditUndoMenuItem, EditRedoMenuItem, SeparatorMenuItem,

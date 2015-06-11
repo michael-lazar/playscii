@@ -9,6 +9,8 @@ from key_shifts import shift_map
 from image_convert import ImageConverter
 from palette import PaletteFromFile
 
+from image_export import export_still_image, export_animation
+
 CONSOLE_HISTORY_FILENAME = 'console_history'
 
 class ConsoleCommand:
@@ -64,8 +66,11 @@ class LoadCharSetCommand(ConsoleCommand):
 
 class ImageExportCommand(ConsoleCommand):
     def execute(console, args):
-        console.ui.app.export_image(console.ui.active_art)
+        export_still_image(console.ui.app, console.ui.active_art)
 
+class AnimExportCommand(ConsoleCommand):
+    def execute(console, args):
+        export_animation(console.ui.app, console.ui.active_art)
 
 class ConvertImageCommand(ConsoleCommand):
     def execute(console, args):
@@ -115,6 +120,13 @@ class SpawnObjectCommand(ConsoleCommand):
         class_name = ' '.join(args)
         console.ui.app.gw.spawn_object_of_class(class_name)
 
+class CommandListCommand(ConsoleCommand):
+    def execute(console, args):
+        # TODO: print a command with usage if available
+        console.ui.app.log('Commands:')
+        for command in commands:
+            console.ui.app.log(' %s' % command)
+
 # map strings to command classes for ConsoleUI.parse
 commands = {
     'exit': QuitCommand,
@@ -124,12 +136,14 @@ commands = {
     'char': LoadCharSetCommand,
     'pal': LoadPaletteCommand,
     'export': ImageExportCommand,
+    'animexport': AnimExportCommand,
     'conv': ConvertImageCommand,
     'getpal': PaletteFromImageCommand,
     'setgame': SetGameDirCommand,
     'game': LoadGameStateCommand,
     'savegame': SaveGameStateCommand,
-    'spawn': SpawnObjectCommand
+    'spawn': SpawnObjectCommand,
+    'help': CommandListCommand
 }
 
 
