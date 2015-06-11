@@ -17,7 +17,8 @@ menu bar - when alt pressed, grey/darker bg on character that is an item's accel
 PNG export:
 - CRT off/on affects PNG output, according to a scale factor.
 -- arg 1 of export console command = scale factor override, default is Nx
-- aniGIF export for animations - lead: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
+- aniGIF export for animations - lead:
+https://github.com/python-pillow/Pillow/blob/master/Scripts/gifmaker.py
 
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks

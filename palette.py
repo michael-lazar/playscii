@@ -94,6 +94,21 @@ class Palette:
         img_filename = PALETTE_DIR + self.name + '.png'
         img.save(img_filename)
     
+    def set_for_image(self, src_img):
+        pal_img = Image.new('P', (1, 1))
+        # Image.putpalette needs a flat tuple :/
+        colors = []
+        for i,color in enumerate(self.colors):
+            # ignore alpha for palettized image output
+            for channel in color[:-1]:
+                colors.append(channel)
+        # PIL will fill out <256 color palettes with bogus values :/
+        while len(colors) < 256 * 3:
+            for i in range(3):
+                colors.append(0)
+        pal_img.putpalette(tuple(colors))
+        return src_img.quantize(palette=pal_img)
+    
     def get_random_color_index(self):
         # exclude transparent first index
         return randint(1, len(self.colors))
