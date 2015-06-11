@@ -94,8 +94,18 @@ class Palette:
         img_filename = PALETTE_DIR + self.name + '.png'
         img.save(img_filename)
     
-    def set_for_image(self, src_img):
+    def all_colors_opaque(self):
+        "returns True if we have any non-opaque (<1 alpha) colors"
+        for color in self.colors[1:]:
+            if color[3] < 255:
+                return False
+        return True
+    
+    def get_palettized_image(self, src_img):
+        "returns a copy of source image quantized to this palette"
         pal_img = Image.new('P', (1, 1))
+        # source must be in RGB (no alpha) format
+        out_img = src_img.convert('RGB')
         # Image.putpalette needs a flat tuple :/
         colors = []
         for i,color in enumerate(self.colors):
@@ -107,7 +117,7 @@ class Palette:
             for i in range(3):
                 colors.append(0)
         pal_img.putpalette(tuple(colors))
-        return src_img.quantize(palette=pal_img)
+        return out_img.quantize(palette=pal_img)
     
     def get_random_color_index(self):
         # exclude transparent first index
