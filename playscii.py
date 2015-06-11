@@ -450,9 +450,14 @@ class Application:
         GL.glDeleteRenderbuffers(1, [render_buffer])
         # GL pixel data as numpy array -> bytes for PIL image export
         pixel_bytes = pixels.flatten().tobytes()
-        img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
-        img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        img.save(output_filename)
+        src_img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
+        src_img = src_img.transpose(Image.FLIP_TOP_BOTTOM)
+        # TODO: just write RGBA if palette has more than one color with <1 alpha
+        # convert to RGB before palettization
+        src_img = src_img.convert('RGB')
+        # convert to current palette
+        output_img = art.palette.set_for_image(src_img)
+        output_img.save(output_filename, 'PNG', transparency=0)
         self.log('%s exported' % output_filename)
     
     def enter_game_mode(self):
