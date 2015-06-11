@@ -9,6 +9,7 @@ from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDia
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 from collision import CT_NONE
+from image_export import export_still_image, export_animation
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -304,7 +305,12 @@ class InputLord:
     def BIND_export_image(self):
         if not self.ui.active_art:
             return
-        self.app.export_image(self.ui.active_art)
+        export_still_image(self.app, self.ui.active_art)
+    
+    def BIND_export_anim(self):
+        if not self.ui.active_art:
+            return
+        export_animation(self.app, self.ui.active_art)
     
     def BIND_decrease_ui_scale(self):
         if self.ui.scale > SCALE_INCREMENT * 2:
