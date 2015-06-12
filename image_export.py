@@ -1,13 +1,9 @@
 import os
 from OpenGL import GL
-from PIL import Image
+from PIL import Image, ImageChops, GifImagePlugin
 
-def export_animation(app, art):
-    # TODO
-    pass
-
-def export_still_image(app, art):
-    output_filename = '%s.png' % os.path.splitext(art.filename)[0]
+def get_frame_image(app, art, frame):
+    "returns a PIL image of given frame of given art"
     # determine art's native size in pixels
     w = art.charset.char_width * art.width
     h = art.charset.char_height * art.height
@@ -25,7 +21,7 @@ def export_still_image(app, art):
     GL.glClearColor(0, 0, 0, 0)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
     # render to it
-    art.renderables[0].render_for_export()
+    art.renderables[0].render_frame_for_export(frame)
     #export_fb.render(app.elapsed_time)
     GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0)
     # read pixels from it
@@ -40,6 +36,48 @@ def export_still_image(app, art):
     pixel_bytes = pixels.flatten().tobytes()
     src_img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
     src_img = src_img.transpose(Image.FLIP_TOP_BOTTOM)
+    return src_img
+
+def export_animation(app, art):
+    output_filename = '%s.gif' % os.path.splitext(art.filename)[0]
+    # get list of rendered frame images
+    frames = []
+    for frame in range(art.frames):
+        frame_img = get_frame_image(app, art, frame)
+        frame_img = art.palette.get_palettized_image(frame_img)
+        frames.append(frame_img)
+    # compile frames into animated GIF with proper frame delays
+    # technique thanks to:
+    # https://github.com/python-pillow/Pillow/blob/master/Scripts/gifmaker.py
+    output_img = open(output_filename, 'wb')
+    for i,img in enumerate(frames):
+        delay = art.frame_delays[i] * 1000
+        if i == 0:
+            data = GifImagePlugin.getheader(img)[0]
+            # PIL only wants to write GIF87a for some reason...
+            # welcome to 1989 B]
+            data[0] = data[0].replace(b'7', b'9')
+            # TODO: loop doesn't work
+            data += GifImagePlugin.getdata(img, duration=delay, transparency=0,
+                                           loop=0)
+            for b in data:
+                output_img.write(b)
+            continue
+        delta = ImageChops.subtract_modulo(img, frames[i-1])
+        bbox = delta.getbbox()
+        for b in GifImagePlugin.getdata(img.crop(bbox), offset=bbox[:2],
+                                        duration=delay, transparency=0,
+                                        loop=0):
+            output_img.write(b)
+    output_img.write(b';')
+    output_img.close()
+    output_format = 'Animated GIF'
+    app.log('%s exported (%s)' % (output_filename, output_format))
+
+
+def export_still_image(app, art):
+    output_filename = '%s.png' % os.path.splitext(art.filename)[0]
+    src_img = get_frame_image(app, art, art.active_frame)
     # just write RGBA if palette has more than one color with <1 alpha
     if not art.palette.all_colors_opaque():
         src_img.save(output_filename, 'PNG')
