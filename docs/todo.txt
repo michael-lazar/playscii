@@ -12,13 +12,14 @@ game edit panel buttons:
 
 further work on existing features:
 
+char picker: if FG color is same as UI BG color and BG color is transparent, draw a slightly tinted box beneath the char swatch
+
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
 PNG export:
 - CRT off/on affects PNG output, according to a scale factor.
 -- arg 1 of export console command = scale factor override, default is Nx
-- aniGIF export for animations - lead:
-https://github.com/python-pillow/Pillow/blob/master/Scripts/gifmaker.py
+- fix looping / proper GIF89a status on exported GIFs
 
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
