@@ -119,6 +119,19 @@ class Palette:
         pal_img.putpalette(tuple(colors))
         return out_img.quantize(palette=pal_img)
     
+    def are_colors_similar(self, color_index_a, palette_b, color_index_b,
+                           tolerance=50):
+        """
+        returns True if color index A is similar to color index B from
+        another palette.
+        """
+        color_a = self.colors[color_index_a]
+        color_b = palette_b.colors[color_index_b % len(palette_b.colors)]
+        r_diff = abs(color_a[0] - color_b[0])
+        g_diff = abs(color_a[1] - color_b[1])
+        b_diff = abs(color_a[2] - color_b[2])
+        return (r_diff + g_diff + b_diff) <= tolerance
+    
     def get_random_color_index(self):
         # exclude transparent first index
         return randint(1, len(self.colors))
