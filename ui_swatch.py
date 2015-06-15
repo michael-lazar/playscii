@@ -98,7 +98,22 @@ class CharacterSetSwatch(UISwatch):
         UISwatch.reset(self)
         self.selection_box = SwatchSelectionBoxRenderable(self.ui.app, self.art)
         self.grid = CharacterGridRenderable(self.ui.app, self.art)
-        self.renderables += self.selection_box, self.grid
+        self.create_shade()
+        self.renderables = [self.renderable, self.selection_box, self.grid,
+                            self.shade]
+    
+    def create_shade(self):
+        # shaded box neath chars in case selected colors make em hard to see
+        self.shade_art = UIArt('charset_shade', self.ui.app,
+                               self.ui.active_art.charset, self.ui.palette,
+                               self.tile_width, self.tile_height)
+        self.shade_art.clear_frame_layer(0, 0, self.ui.colors.black)
+        self.shade = UIRenderable(self.ui.app, self.shade_art)
+        self.shade_art.quad_width = self.art.quad_width
+        self.shade_art.quad_height = self.art.quad_height
+        self.shade_art.update()
+        self.shade.ui = self.ui
+        self.shade.alpha = 0.2
     
     def get_size(self):
         art = self.ui.active_art
@@ -128,6 +143,7 @@ class CharacterSetSwatch(UISwatch):
         self.renderable.x, self.renderable.y = self.x, self.y
         self.grid.x, self.grid.y = self.x, self.y
         self.grid.y -= self.art.quad_height
+        self.shade.x, self.shade.y = self.x, self.y
     
     def set_xform(self, new_xform):
         for y in range(self.art.height):
@@ -182,9 +198,20 @@ class CharacterSetSwatch(UISwatch):
         selection_y = (self.ui.selected_char - selection_x) / charset.map_width
         self.selection_box.y -= selection_y * self.art.quad_height
     
+    def render_bg(self):
+        # draw shaded box beneath swatch if selected color(s) too similar to BG
+        def is_hard_to_see(other_color_index):
+            return self.ui.palette.are_colors_similar(self.popup.bg_color,
+                                                      self.art.palette,
+                                                      other_color_index)
+        fg, bg = self.ui.selected_fg_color, self.ui.selected_bg_color
+        if is_hard_to_see(fg) or is_hard_to_see(bg):
+            self.shade.render()
+    
     def render(self):
         if not self.popup.visible:
             return
+        self.render_bg()
         UISwatch.render(self)
         self.grid.render()
         self.selection_box.render()
