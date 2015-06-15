@@ -12,7 +12,7 @@ game edit panel buttons:
 
 further work on existing features:
 
-char picker: if FG color is same as UI BG color and BG color is transparent, draw a slightly tinted box beneath the char swatch
+status bar: red X stopped drawing?
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 

@@ -109,9 +109,6 @@ class CharacterSetSwatch(UISwatch):
                                self.tile_width, self.tile_height)
         self.shade_art.clear_frame_layer(0, 0, self.ui.colors.black)
         self.shade = UIRenderable(self.ui.app, self.shade_art)
-        self.shade_art.quad_width = self.art.quad_width
-        self.shade_art.quad_height = self.art.quad_height
-        self.shade_art.update()
         self.shade.ui = self.ui
         self.shade.alpha = 0.2
     
@@ -184,6 +181,11 @@ class CharacterSetSwatch(UISwatch):
             for x in range(charset.map_width):
                 self.art.set_tile_at(0, 0, x, y, None, fg, bg)
         self.art.update()
+        if self.shade_art.quad_width != self.art.quad_width or self.shade_art.quad_height != self.art.quad_height:
+            self.shade_art.quad_width = self.art.quad_width
+            self.shade_art.quad_height = self.art.quad_height
+            self.shade_art.geo_changed = True
+        self.shade_art.update()
         # selection box color
         elapsed_time = self.ui.app.elapsed_time
         color = 0.75 + (math.sin(elapsed_time / 100) / 2)
