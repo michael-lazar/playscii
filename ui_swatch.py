@@ -225,7 +225,8 @@ class PaletteSwatch(UISwatch):
         self.art.quad_height = (self.art.charset.map_width / self.art.width) * cqh
         self.art.clear_frame_layer(0, 0, 0)
         palette = self.ui.active_art.palette
-        i = 0
+        # clear color is index 0, start after that
+        i = 1
         for y in range(self.tile_height):
             for x in range(self.tile_width):
                 if i >= len(palette.colors):
@@ -242,9 +243,12 @@ class PaletteSwatch(UISwatch):
         # adjust Y for palette caption and character scale
         self.y -= self.popup.art.quad_height * 2
         self.renderable.x, self.renderable.y = self.x, self.y
-        # first color in palette (top left) always transparent
+        # color 0 is always transparent, but draw it at the end
+        w, h = self.get_size()
         self.transparent_x.x = self.renderable.x
+        self.transparent_x.x += (len(self.art.palette.colors) % w - 1) * self.art.quad_width
         self.transparent_x.y = self.renderable.y - self.art.quad_height
+        self.transparent_x.y -= (h - 1) * self.art.quad_height
         # set f/b_art's quad size
         self.f_art.quad_width, self.f_art.quad_height = self.b_art.quad_width, self.b_art.quad_height = self.popup.art.quad_width, self.popup.art.quad_height
         self.f_art.geo_changed = True
@@ -254,7 +258,7 @@ class PaletteSwatch(UISwatch):
         return index < len(self.art.palette.colors)
     
     def set_cursor_selection_index(self, index):
-        self.popup.cursor_color = index
+        self.popup.cursor_color = index + 1
         self.popup.cursor_char = -1
     
     def move_cursor(self, cursor, dx, dy):
@@ -273,14 +277,19 @@ class PaletteSwatch(UISwatch):
         self.bg_selection_box.color = (color, color) * 2
         # fg selection box position
         self.fg_selection_box.x = self.renderable.x
-        self.fg_selection_box.x += self.art.quad_width * (self.ui.selected_fg_color % self.art.width)
+        # draw transparent color last (even tho it's first in color list)
+        fg_x = (self.ui.selected_fg_color - 1) % self.art.width
+        self.fg_selection_box.x += fg_x * self.art.quad_width
         self.fg_selection_box.y = self.renderable.y
-        self.fg_selection_box.y -= self.art.quad_height * math.floor(self.ui.selected_fg_color / self.art.width)
+        fg_y = math.floor((self.ui.selected_fg_color - 1) / self.art.width)
+        self.fg_selection_box.y -= fg_y * self.art.quad_height
         # bg box position
+        bg_x = (self.ui.selected_bg_color - 1) % self.art.width
         self.bg_selection_box.x = self.renderable.x
-        self.bg_selection_box.x += self.art.quad_width * (self.ui.selected_bg_color % self.art.width)
+        self.bg_selection_box.x += bg_x * self.art.quad_width
         self.bg_selection_box.y = self.renderable.y
-        self.bg_selection_box.y -= self.art.quad_height * math.floor(self.ui.selected_bg_color / self.art.width)
+        bg_y = math.floor((self.ui.selected_bg_color - 1) / self.art.width)
+        self.bg_selection_box.y -= bg_y * self.art.quad_height
         # FG label position
         self.f_renderable.alpha = 1 - color
         self.f_renderable.x = self.fg_selection_box.x
