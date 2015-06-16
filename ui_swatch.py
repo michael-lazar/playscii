@@ -98,7 +98,19 @@ class CharacterSetSwatch(UISwatch):
         UISwatch.reset(self)
         self.selection_box = SwatchSelectionBoxRenderable(self.ui.app, self.art)
         self.grid = CharacterGridRenderable(self.ui.app, self.art)
-        self.renderables += self.selection_box, self.grid
+        self.create_shade()
+        self.renderables = [self.renderable, self.selection_box, self.grid,
+                            self.shade]
+    
+    def create_shade(self):
+        # shaded box neath chars in case selected colors make em hard to see
+        self.shade_art = UIArt('charset_shade', self.ui.app,
+                               self.ui.active_art.charset, self.ui.palette,
+                               self.tile_width, self.tile_height)
+        self.shade_art.clear_frame_layer(0, 0, self.ui.colors.black)
+        self.shade = UIRenderable(self.ui.app, self.shade_art)
+        self.shade.ui = self.ui
+        self.shade.alpha = 0.2
     
     def get_size(self):
         art = self.ui.active_art
@@ -128,6 +140,7 @@ class CharacterSetSwatch(UISwatch):
         self.renderable.x, self.renderable.y = self.x, self.y
         self.grid.x, self.grid.y = self.x, self.y
         self.grid.y -= self.art.quad_height
+        self.shade.x, self.shade.y = self.x, self.y
     
     def set_xform(self, new_xform):
         for y in range(self.art.height):
@@ -168,6 +181,11 @@ class CharacterSetSwatch(UISwatch):
             for x in range(charset.map_width):
                 self.art.set_tile_at(0, 0, x, y, None, fg, bg)
         self.art.update()
+        if self.shade_art.quad_width != self.art.quad_width or self.shade_art.quad_height != self.art.quad_height:
+            self.shade_art.quad_width = self.art.quad_width
+            self.shade_art.quad_height = self.art.quad_height
+            self.shade_art.geo_changed = True
+        self.shade_art.update()
         # selection box color
         elapsed_time = self.ui.app.elapsed_time
         color = 0.75 + (math.sin(elapsed_time / 100) / 2)
@@ -182,9 +200,20 @@ class CharacterSetSwatch(UISwatch):
         selection_y = (self.ui.selected_char - selection_x) / charset.map_width
         self.selection_box.y -= selection_y * self.art.quad_height
     
+    def render_bg(self):
+        # draw shaded box beneath swatch if selected color(s) too similar to BG
+        def is_hard_to_see(other_color_index):
+            return self.ui.palette.are_colors_similar(self.popup.bg_color,
+                                                      self.art.palette,
+                                                      other_color_index)
+        fg, bg = self.ui.selected_fg_color, self.ui.selected_bg_color
+        if is_hard_to_see(fg) or is_hard_to_see(bg):
+            self.shade.render()
+    
     def render(self):
         if not self.popup.visible:
             return
+        self.render_bg()
         UISwatch.render(self)
         self.grid.render()
         self.selection_box.render()
@@ -225,7 +254,8 @@ class PaletteSwatch(UISwatch):
         self.art.quad_height = (self.art.charset.map_width / self.art.width) * cqh
         self.art.clear_frame_layer(0, 0, 0)
         palette = self.ui.active_art.palette
-        i = 0
+        # clear color is index 0, start after that
+        i = 1
         for y in range(self.tile_height):
             for x in range(self.tile_width):
                 if i >= len(palette.colors):
@@ -242,9 +272,12 @@ class PaletteSwatch(UISwatch):
         # adjust Y for palette caption and character scale
         self.y -= self.popup.art.quad_height * 2
         self.renderable.x, self.renderable.y = self.x, self.y
-        # first color in palette (top left) always transparent
+        # color 0 is always transparent, but draw it at the end
+        w, h = self.get_size()
         self.transparent_x.x = self.renderable.x
+        self.transparent_x.x += (len(self.art.palette.colors) % w - 1) * self.art.quad_width
         self.transparent_x.y = self.renderable.y - self.art.quad_height
+        self.transparent_x.y -= (h - 1) * self.art.quad_height
         # set f/b_art's quad size
         self.f_art.quad_width, self.f_art.quad_height = self.b_art.quad_width, self.b_art.quad_height = self.popup.art.quad_width, self.popup.art.quad_height
         self.f_art.geo_changed = True
@@ -254,7 +287,7 @@ class PaletteSwatch(UISwatch):
         return index < len(self.art.palette.colors)
     
     def set_cursor_selection_index(self, index):
-        self.popup.cursor_color = index
+        self.popup.cursor_color = index + 1
         self.popup.cursor_char = -1
     
     def move_cursor(self, cursor, dx, dy):
@@ -273,14 +306,19 @@ class PaletteSwatch(UISwatch):
         self.bg_selection_box.color = (color, color) * 2
         # fg selection box position
         self.fg_selection_box.x = self.renderable.x
-        self.fg_selection_box.x += self.art.quad_width * (self.ui.selected_fg_color % self.art.width)
+        # draw transparent color last (even tho it's first in color list)
+        fg_x = (self.ui.selected_fg_color - 1) % self.art.width
+        self.fg_selection_box.x += fg_x * self.art.quad_width
         self.fg_selection_box.y = self.renderable.y
-        self.fg_selection_box.y -= self.art.quad_height * math.floor(self.ui.selected_fg_color / self.art.width)
+        fg_y = math.floor((self.ui.selected_fg_color - 1) / self.art.width)
+        self.fg_selection_box.y -= fg_y * self.art.quad_height
         # bg box position
+        bg_x = (self.ui.selected_bg_color - 1) % self.art.width
         self.bg_selection_box.x = self.renderable.x
-        self.bg_selection_box.x += self.art.quad_width * (self.ui.selected_bg_color % self.art.width)
+        self.bg_selection_box.x += bg_x * self.art.quad_width
         self.bg_selection_box.y = self.renderable.y
-        self.bg_selection_box.y -= self.art.quad_height * math.floor(self.ui.selected_bg_color / self.art.width)
+        bg_y = math.floor((self.ui.selected_bg_color - 1) / self.art.width)
+        self.bg_selection_box.y -= bg_y * self.art.quad_height
         # FG label position
         self.f_renderable.alpha = 1 - color
         self.f_renderable.x = self.fg_selection_box.x

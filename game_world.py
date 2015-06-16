@@ -1,5 +1,4 @@
-import os, sys, time, json, importlib
-import pymunk
+import os, sys, time, json, importlib, inspect
 
 import collision
 from camera import Camera
@@ -9,16 +8,6 @@ TOP_GAME_DIR = 'games/'
 DEFAULT_STATE_FILENAME = 'start'
 STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
-
-# collision types
-CT_NONE = 0
-CT_PLAYER = 1
-CT_GENERIC_STATIC = 2
-CT_GENERIC_DYNAMIC = 3
-
-# collision type groups, eg static and dynamic
-CTG_STATIC = [CT_GENERIC_STATIC]
-CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 
 # import after game_object has done its imports from us
 import game_object
@@ -34,6 +23,7 @@ class GameWorld:
     
     "holds global state for game mode"
     gravity_x, gravity_y = 0, 0
+    last_click_on_ui = False
     
     def __init__(self, app):
         self.app = app
@@ -42,15 +32,9 @@ class GameWorld:
         self.camera = Camera(self.app)
         self.player = None
         self.modules = {'game_object': game_object}
+        self.classname_to_spawn = None
         self.objects = []
-        self.space = pymunk.Space()
-        self.space.gravity = self.gravity_x, self.gravity_y
-        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_DYNAMIC,
-                                         begin=collision.player_vs_dynamic_begin,
-                                         pre_solve=collision.player_vs_dynamic_pre_solve)
-        self.space.add_collision_handler(CT_PLAYER, CT_GENERIC_STATIC,
-                                         begin=collision.player_vs_static_begin,
-                                         pre_solve=collision.player_vs_static_pre_solve)
+        self.cl = collision.CollisionLord(self)
         self.art_loaded, self.renderables = [], []
         # player is edit-dragging an object
         self.dragging_object = False
@@ -70,14 +54,27 @@ class GameWorld:
         objects_reversed = self.objects[:]
         objects_reversed.reverse()
         for obj in objects_reversed:
-            if obj.is_point_inside(x, y):
+            # only allow selecting of visible objects
+            # (can still be selected via edit panel)
+            if obj.visible and not obj.locked and obj.is_point_inside(x, y):
                 objects.append(obj)
         return objects
     
     def clicked(self, button):
-        pass
+        if self.classname_to_spawn:
+            x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
+                                                      self.app.mouse_y)
+            self.spawn_object_of_class(self.classname_to_spawn, x, y)
     
     def unclicked(self, button):
+        # clicks on UI are consumed and flag world to not accept unclicks
+        # (keeps unclicks after dialog dismiss from deselecting objects)
+        if self.last_click_on_ui:
+            self.last_click_on_ui = False
+            return
+        # if we're clicking to spawn something, don't drag/select
+        if self.classname_to_spawn:
+            return
         x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                   self.app.mouse_y)
         was_dragging = self.dragging_object
@@ -106,6 +103,11 @@ class GameWorld:
         self.select_object(next_obj)
     
     def mouse_moved(self, dx, dy):
+        if self.app.ui.active_dialog:
+            return
+        # if last onclick was a UI element, don't drag
+        if self.last_click_on_ui:
+            return
         # get mouse delta in world space
         mx1, my1, mz1 = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                         self.app.mouse_y)
@@ -116,35 +118,31 @@ class GameWorld:
             for obj in self.selected_objects:
                 if not self.dragging_object:
                     obj.start_dragging()
-                obj.x += world_dx
-                obj.y += world_dy
+                # check "locked" flag
+                if not obj.locked:
+                    obj.x += world_dx
+                    obj.y += world_dy
             self.dragging_object = True
     
     def select_object(self, obj):
         if not obj in self.selected_objects:
             self.selected_objects.append(obj)
-            self.app.ui.selection_panel.set_object(obj)
     
     def deselect_object(self, obj):
         if obj in self.selected_objects:
             self.selected_objects.remove(obj)
-        if len(self.selected_objects) > 0:
-            self.app.ui.selection_panel.set_object(self.selected_objects[0])
-        else:
-            self.app.ui.selection_panel.set_object(None)
     
     def deselect_all(self):
         self.selected_objects = []
-        self.app.ui.selection_panel.set_object(None)
     
     def unload_game(self):
         for obj in self.objects:
             obj.destroy()
+        self.cl.reset()
         self.objects = []
         self.renderables = []
         self.art_loaded = []
         self.selected_objects = []
-        self.app.ui.selection_panel.set_object(None)
     
     def set_for_all_objects(self, name, value):
         for obj in self.objects:
@@ -180,6 +178,8 @@ class GameWorld:
                 self.load_game_state(DEFAULT_STATE_FILENAME)
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
+        if self.app.ui:
+            self.app.ui.edit_game_panel.draw_titlebar()
     
     def import_all(self):
         module_suffix = TOP_GAME_DIR[:-1] + '.'
@@ -197,7 +197,7 @@ class GameWorld:
         # update objects based on movement, then resolve collisions
         for obj in self.objects:
             obj.update()
-        self.space.step(1 / self.app.framerate)
+        self.cl.resolve_overlaps()
     
     def render(self):
         for obj in self.objects:
@@ -214,13 +214,16 @@ class GameWorld:
                 continue
             for i,z in enumerate(obj.art.layers_z):
                 # only draw collision layer if show collision is set
-                if obj.collision_shape_type == game_object.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == collision.CST_TILE and \
+                   obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                item = RenderItem(obj, i, z + obj.z)
-                draw_order.append(item)
+                # respect object's "should render at all" flag
+                if obj.visible:
+                    item = RenderItem(obj, i, z + obj.z)
+                    draw_order.append(item)
         draw_order.sort(key=lambda item: item.sort_value, reverse=False)
         #
         # process "Y sort" objects
@@ -230,13 +233,15 @@ class GameWorld:
         for obj in y_objects:
             items = []
             for i,z in enumerate(obj.art.layers_z):
-                if obj.collision_shape_type == game_object.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == collision.CST_TILE and \
+                   obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                item = RenderItem(obj, i, z)
-                items.append(item)
+                if obj.visible:
+                    item = RenderItem(obj, i, z)
+                    items.append(item)
             items.sort(key=lambda item: item.sort_value, reverse=False)
             for item in items:
                 draw_order.append(item)
@@ -272,10 +277,12 @@ class GameWorld:
             timestamp = int(time.time())
             filename = '%s/%s_%s.%s' % (self.game_dir, timestamp,
                                         STATE_FILE_EXTENSION)
-        json.dump(d, open(TOP_GAME_DIR + filename, 'w'), sort_keys=True, indent=1)
+        json.dump(d, open(TOP_GAME_DIR + filename, 'w'),
+                  sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
     
     def find_module(self, module_name):
+        "returns module object with given name, importing/reloading if needed"
         if module_name in self.modules:
             return importlib.reload(self.modules[module_name])
         try:
@@ -302,6 +309,19 @@ class GameWorld:
             if class_name in module.__dict__:
                 return module_name
         return None
+    
+    def get_all_loaded_classes(self):
+        "returns classname,class dict of all classes in loaded modules"
+        classes = {}
+        for module_name,module in self.modules.items():
+            for k,v in module.__dict__.items():
+                # skip anything that's not a class
+                if not type(v) is type:
+                    continue
+                # use inspect module to get /all/ parent classes
+                if game_object.GameObject in inspect.getmro(v):
+                    classes[k] = v
+        return classes
     
     def reset_object_in_place(self, obj):
         x, y = obj.x, obj.y
@@ -347,7 +367,8 @@ class GameWorld:
         return new_object
     
     def load_game_state(self, filename):
-        filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir, filename, STATE_FILE_EXTENSION)
+        filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir,
+                                  filename, STATE_FILE_EXTENSION)
         self.app.enter_game_mode()
         self.unload_game()
         try:
@@ -371,3 +392,15 @@ class GameWorld:
         self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
         self.set_for_all_objects('show_origin', self.app.show_origin_all)
         self.app.update_window_title()
+    
+    def toggle_all_origin_viz(self):
+        self.app.show_origin_all = not self.app.show_origin_all
+        self.set_for_all_objects('show_origin', self.app.show_origin_all)
+    
+    def toggle_all_bounds_viz(self):
+        self.app.show_bounds_all = not self.app.show_bounds_all
+        self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+    
+    def toggle_all_collision_viz(self):
+        self.app.show_collision_all = not self.app.show_collision_all
+        self.set_for_all_objects('show_collision', self.app.show_collision_all)

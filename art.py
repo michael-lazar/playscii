@@ -620,6 +620,7 @@ class Art:
     
     def clear_line(self, frame, layer, line_y, fg_color_index=None,
                    bg_color_index=None):
+        # TODO: use numpy slicing to do this much more quickly!
         for x in range(self.width):
             self.set_char_index_at(frame, layer, x, line_y, 0)
             if fg_color_index:
@@ -630,6 +631,8 @@ class Art:
     def write_string(self, frame, layer, x, y, text, fg_color_index=None,
                      bg_color_index=None, right_justify=False):
         "writes out each char of a string to specified tiles"
+        if y >= self.height:
+            return
         x %= self.width
         if right_justify:
             x_offset = -len(text)
@@ -662,7 +665,13 @@ class ArtFromDisk(Art):
         self.width = d['width']
         self.height = d['height']
         self.charset = self.app.load_charset(d['charset'])
+        if not self.charset:
+            self.app.log('Character set %s not found!' % d['charset'])
+            return
         self.palette = self.app.load_palette(d['palette'])
+        if not self.palette:
+            self.app.log('Palette %s not found!' % d['palette'])
+            return
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
         if not self.app.override_saved_camera:

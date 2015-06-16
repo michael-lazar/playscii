@@ -57,6 +57,8 @@ class UIDialog(UIElement):
     confirm_caption = None
     other_caption = None
     cancel_caption = None
+    # center in window vs use tile_x/y to place
+    center_in_window = True
     
     def __init__(self, ui):
         self.confirm_button = ConfirmButton(self)
@@ -98,10 +100,10 @@ class UIDialog(UIElement):
         if resize:
             self.tile_height = self.get_height(msg_lines)
             self.art.resize(self.tile_width, self.tile_height)
-            # center in window
-            qw, qh = self.art.quad_width, self.art.quad_height
-            self.x = -(self.tile_width * qw) / 2
-            self.y = (self.tile_height * qh) / 2
+            if self.center_in_window:
+                qw, qh = self.art.quad_width, self.art.quad_height
+                self.x = -(self.tile_width * qw) / 2
+                self.y = (self.tile_height * qh) / 2
         # draw window
         self.art.clear_frame_layer(0, 0, self.bg_color, self.fg_color)
         s = ' ' + self.title.ljust(self.tile_width - 1)
@@ -706,6 +708,7 @@ class SetGameDirDialog(UIDialog):
     field0_label = 'Directory to load game data from:'
     confirm_caption = 'Set'
     game_mode_visible = True
+    all_modes_visible = True
     
     # TODO: only allow valid game directory
     
@@ -720,6 +723,7 @@ class LoadGameStateDialog(UIDialog):
     field0_label = 'Game state file to open:'
     confirm_caption = 'Open'
     game_mode_visible = True
+    all_modes_visible = True
     
     # TODO: only allow valid game state file in current game directory
     
@@ -734,6 +738,7 @@ class SaveGameStateDialog(UIDialog):
     field0_label = 'New filename for game state:'
     confirm_caption = 'Save'
     game_mode_visible = True
+    all_modes_visible = True
     
     def confirm_pressed(self):
         SaveGameStateCommand.execute(self.ui.console, [self.field0_text])

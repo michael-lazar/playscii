@@ -94,6 +94,44 @@ class Palette:
         img_filename = PALETTE_DIR + self.name + '.png'
         img.save(img_filename)
     
+    def all_colors_opaque(self):
+        "returns True if we have any non-opaque (<1 alpha) colors"
+        for color in self.colors[1:]:
+            if color[3] < 255:
+                return False
+        return True
+    
+    def get_palettized_image(self, src_img):
+        "returns a copy of source image quantized to this palette"
+        pal_img = Image.new('P', (1, 1))
+        # source must be in RGB (no alpha) format
+        out_img = src_img.convert('RGB')
+        # Image.putpalette needs a flat tuple :/
+        colors = []
+        for i,color in enumerate(self.colors):
+            # ignore alpha for palettized image output
+            for channel in color[:-1]:
+                colors.append(channel)
+        # PIL will fill out <256 color palettes with bogus values :/
+        while len(colors) < 256 * 3:
+            for i in range(3):
+                colors.append(0)
+        pal_img.putpalette(tuple(colors))
+        return out_img.quantize(palette=pal_img)
+    
+    def are_colors_similar(self, color_index_a, palette_b, color_index_b,
+                           tolerance=50):
+        """
+        returns True if color index A is similar to color index B from
+        another palette.
+        """
+        color_a = self.colors[color_index_a]
+        color_b = palette_b.colors[color_index_b % len(palette_b.colors)]
+        r_diff = abs(color_a[0] - color_b[0])
+        g_diff = abs(color_a[1] - color_b[1])
+        b_diff = abs(color_a[2] - color_b[2])
+        return (r_diff + g_diff + b_diff) <= tolerance
+    
     def get_random_color_index(self):
         # exclude transparent first index
         return randint(1, len(self.colors))

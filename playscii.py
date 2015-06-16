@@ -43,7 +43,7 @@ LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_SUBDIR = 'screenshots'
 
-VERSION = '0.5.2'
+VERSION = '0.6.0'
 
 MAX_ONION_FRAMES = 3
 
@@ -96,7 +96,9 @@ class Application:
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
         sdl2.ext.init()
-        flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
+        # TODO: SDL_WINDOW_ALLOW_HIGHDPI doesn't seem to work right,
+        # determine whether we're using it wrong or it's broken
+        flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE# | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
         self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
@@ -337,7 +339,7 @@ class Application:
         if new_charset.init_success:
             self.charsets.append(new_charset)
             return new_charset
-        else:
+        elif self.ui and self.ui.active_art:
             # if init failed (eg bad filename) return something safe
             return self.ui.active_art.charset
     
@@ -349,7 +351,7 @@ class Application:
         if new_palette.init_success:
             self.palettes.append(new_palette)
             return new_palette
-        else:
+        elif self.ui and self.ui.active_art:
             # if init failed (eg bad filename) return something safe
             return self.ui.active_art.palette
     
@@ -415,43 +417,6 @@ class Application:
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         img.save('%s/%s' % (SCREENSHOT_SUBDIR, output_filename))
         self.log('Saved screenshot %s' % output_filename)
-    
-    def export_image(self, art):
-        output_filename = '%s.png' % os.path.splitext(art.filename)[0]
-        # determine art's native size in pixels
-        w = art.charset.char_width * art.width
-        h = art.charset.char_height * art.height
-        # TODO: if CRT is on, use that shader for output w/ a scale factor!
-        scale = 2 if self.fb.crt and not self.fb.disable_crt else 1
-        # create render target
-        framebuffer = GL.glGenFramebuffers(1)
-        render_buffer = GL.glGenRenderbuffers(1)
-        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, render_buffer)
-        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_RGBA8, w, h)
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, framebuffer)
-        GL.glFramebufferRenderbuffer(GL.GL_DRAW_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0,
-                                     GL.GL_RENDERBUFFER, render_buffer)
-        GL.glViewport(0, 0, w, h)
-        GL.glClearColor(0, 0, 0, 0)
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        # render to it
-        art.renderables[0].render_for_export()
-        #export_fb.render(self.elapsed_time)
-        GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0)
-        # read pixels from it
-        pixels = GL.glReadPixels(0, 0, w, h, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,
-                                 outputType=None)
-        # cleanup / deinit of GL stuff
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-        GL.glViewport(0, 0, self.window_width, self.window_height)
-        GL.glDeleteFramebuffers(1, [framebuffer])
-        GL.glDeleteRenderbuffers(1, [render_buffer])
-        # GL pixel data as numpy array -> bytes for PIL image export
-        pixel_bytes = pixels.flatten().tobytes()
-        img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
-        img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        img.save(output_filename)
-        self.log('%s exported' % output_filename)
     
     def enter_game_mode(self):
         self.game_mode = True

@@ -48,27 +48,16 @@ class ImageConverter:
         h = math.floor((h * ratio) / self.char_h) * self.char_h
         self.src_img = self.src_img.resize((w, h), resample=Image.NEAREST)
         # convert source image to art's palette
-        pal_img = Image.new("P", (1, 1))
-        # Image.putpalette needs a flat tuple :/
-        colors = []
-        # while we're iterating through palette, build table of color diffs
+        self.src_img = self.art.palette.set_for_image(self.src_img)
+        # build table of color diffs
         unique_colors = len(self.art.palette.colors)
         self.color_diffs = np.zeros((unique_colors, unique_colors), dtype=np.float32)
         # option: L*a*b color space conversion for greater accuracy
         get_color_diff = self.get_lab_color_diff if self.lab_color_comparison else self.get_rgb_color_diff
         #get_color_diff = self.get_nonlinear_rgb_color_diff
         for i,color in enumerate(self.art.palette.colors):
-            # skip alpha
-            for channel in color[:-1]:
-                colors.append(channel)
             for j,other_color in enumerate(self.art.palette.colors):
                 self.color_diffs[i][j] = get_color_diff(color, other_color)
-        # PIL will fill out <256 color palettes with bogus values :/
-        while len(colors) < 256 * 3:
-            for i in range(3):
-                colors.append(0)
-        pal_img.putpalette(tuple(colors))
-        self.src_img = self.src_img.quantize(palette=pal_img)
         # convert palettized source image to an array for fast comparisons
         self.src_array = np.fromstring(self.src_img.tostring(), dtype=np.uint8)
         src_w, src_h = self.src_img.size
@@ -77,7 +66,7 @@ class ImageConverter:
         # block comparison
         self.char_img = self.art.charset.image_data.copy().convert('RGB')
         self.char_img = self.char_img.transpose(Image.FLIP_TOP_BOTTOM)
-        bw_pal_img = Image.new("P", (1, 1))
+        bw_pal_img = Image.new('P', (1, 1))
         bw_pal = [0, 0, 0, 255, 255, 255]
         while len(bw_pal) < 256 * 3:
             bw_pal.append(0)
