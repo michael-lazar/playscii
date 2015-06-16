@@ -287,7 +287,6 @@ class Pickup(GameObject):
 
 class Player(GameObject):
     
-    y_sort = True
     move_accel_rate = 0.1
     max_move_speed = 0.8
     friction = 0.25
@@ -300,12 +299,16 @@ class Player(GameObject):
         GameObject.__init__(self, world, obj_data)
         if self.world.player is None:
             self.world.player = self
+    
+    def button_pressed(self, button_index):
+        pass
 
 
 class NSEWPlayer(Player):
     
     "top-down player character that can face & travel in 4 directions"
     
+    y_sort = True
     anim_stand_base = 'stand'
     anim_walk_base = 'walk'
     anim_forward_base = 'fwd'

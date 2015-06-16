@@ -142,6 +142,8 @@ class InputLord:
             elif event.type == sdl2.SDL_WINDOWEVENT:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
                     app.resize_window(event.window.data1, event.window.data2)
+            elif event.type == sdl2.SDL_JOYBUTTONDOWN:
+                app.gw.player.button_pressed(event.jbutton.button)
             elif event.type == sdl2.SDL_KEYDOWN:
                 # if console is up, pass input to it
                 if self.ui.console.visible:
@@ -410,7 +412,7 @@ class InputLord:
     
     def BIND_cancel(self):
         # context-dependent:
-        # game mode: 
+        # game mode: deselect
         # normal painting mode: cancel current selection
         # menu bar active: bail out of current menu
         # either way: bail on image conversion if it's happening

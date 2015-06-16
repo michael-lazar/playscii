@@ -339,7 +339,7 @@ class Application:
         if new_charset.init_success:
             self.charsets.append(new_charset)
             return new_charset
-        else:
+        elif self.ui and self.ui.active_art:
             # if init failed (eg bad filename) return something safe
             return self.ui.active_art.charset
     
@@ -351,7 +351,7 @@ class Application:
         if new_palette.init_success:
             self.palettes.append(new_palette)
             return new_palette
-        else:
+        elif self.ui and self.ui.active_art:
             # if init failed (eg bad filename) return something safe
             return self.ui.active_art.palette
     

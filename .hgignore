@@ -7,6 +7,7 @@ console_history
 playscii.cfg
 binds.cfg
 ^art/.+\.png
+^art/.+\.gif
 ^art/.+\.psci
 ^art/.+\.ed
 ^art/.+\.jpg
