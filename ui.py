@@ -3,12 +3,14 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, ObjectPropertiesPanel
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
 from ui_menu_bar import MenuBar
 from ui_menu_pulldown import PulldownMenu
+from ui_edit_panel import EditGamePanel, EditListPanel
+from ui_object_panel import EditObjectPanel
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
@@ -45,6 +47,7 @@ class UI:
     affects_xform_on_log = 'will affect character rotation/flip'
     affects_xform_off_log = 'will not affect character rotation/flip'
     xform_selected_log = 'Selected character transform:'
+    show_edit_ui_log = 'Edit UI hidden, press %s to unhide.'
     
     def __init__(self, app, active_art):
         self.app = app
@@ -99,7 +102,9 @@ class UI:
         self.pulldown = PulldownMenu(self)
         self.menu_bar = None
         self.menu_bar = MenuBar(self)
-        self.selection_panel = ObjectPropertiesPanel(self)
+        self.edit_list_panel = EditListPanel(self)
+        self.edit_game_panel = EditGamePanel(self)
+        self.edit_object_panel = EditObjectPanel(self)
         self.elements.append(self.fps_counter)
         self.elements.append(self.status_bar)
         self.elements.append(self.popup)
@@ -107,7 +112,9 @@ class UI:
         self.elements.append(self.debug_text)
         self.elements.append(self.pulldown)
         self.elements.append(self.menu_bar)
-        self.elements.append(self.selection_panel)
+        self.elements.append(self.edit_list_panel)
+        self.elements.append(self.edit_game_panel)
+        self.elements.append(self.edit_object_panel)
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
@@ -469,7 +476,7 @@ class UI:
         self.hovered_elements = []
         for e in self.elements:
             # only check visible elements
-            if e.visible and e.can_hover and e.is_inside(mx, my):
+            if e.is_visible() and e.can_hover and e.is_inside(mx, my):
                 self.hovered_elements.append(e)
                 # only hover if we weren't last update
                 if not e in was_hovering:
@@ -479,20 +486,29 @@ class UI:
                 e.unhovered()
         # update all elements, regardless of whether they're being hovered etc
         for e in self.elements:
-            e.update()
-            # art update: tell renderables to refresh buffers
-            e.art.update()
+            # don't update invisible items
+            if e.is_visible():
+                e.update()
+                # art update: tell renderables to refresh buffers
+                e.art.update()
         self.tool_settings_changed = False
     
     def clicked(self, button):
+        handled = False
+        # return True if any button handled the input
         for e in self.hovered_elements:
-            e.clicked(button)
+            if e.clicked(button):
+                handled = True
         if self.pulldown.visible and not self.pulldown in self.hovered_elements and not self.menu_bar in self.hovered_elements:
             self.menu_bar.close_active_menu()
+        return handled
     
     def unclicked(self, button):
+        handled = False
         for e in self.hovered_elements:
-            e.unclicked(button)
+            if e.unclicked(button):
+                handled = True
+        return handled
     
     def quick_grab(self):
         if self.app.game_mode:
@@ -520,6 +536,19 @@ class UI:
         # insert dialog at index 0 so it draws first instead of last
         self.elements.insert(0, dialog)
     
+    def toggle_game_edit_ui(self):
+        if not self.app.game_mode:
+            return
+        self.edit_list_panel.visible = not self.edit_list_panel.visible
+        self.edit_game_panel.visible = not self.edit_game_panel.visible
+        self.edit_object_panel.visible = not self.edit_object_panel.visible
+        # if hiding, show tip on how to get it back
+        if not self.edit_game_panel.visible:
+            bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
+            self.message_line.post_line(self.show_edit_ui_log % bind, 10)
+        else:
+            self.message_line.post_line('')
+    
     def destroy(self):
         for e in self.elements:
             e.destroy()
@@ -527,5 +556,5 @@ class UI:
     
     def render(self):
         for e in self.elements:
-            if not self.app.game_mode or (self.app.game_mode and e.game_mode_visible):
+            if e.is_visible():
                 e.render()

@@ -85,17 +85,22 @@ Torbjørn Grønnevik Dahle, Holger Dors,
 Matthew Duhamel, Jaron Eldon, Jacques Frechet,
 Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
 Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
-Jeremy Lonien, Rohit Nirmal, James Noble,
-David Pittman, Richard Porczak, Dan Sanderson,
-Shannon Smith, Pablo López Soriano, Jack Turner,
-Chris Welch, Andrew Yoder
+Pat LaBine, Jeremy Lonien, Rohit Nirmal,
+James Noble, David Pittman, Richard Porczak,
+Dan Sanderson, Shannon Smith, Pablo López Soriano,
+Jack Turner, Chris Welch, Andrew Yoder
 """,
 """
-      Programming Help and Contributions:
+           Programming Contributions:
+
+Mattias Gustavsson, Rohit Nirmal, Sean Gubelman,
+Erin Congden, Tin Tvrtković
+
+                Technical Advice:
 
 Shawn Walker, Sean Barrett, Mark Wonnacott,
-Ian MacLarty, Goldbuick, Rohit Nirmal,
-Tin Tvrtković, Sean Gubelman, Erin Congden
+Ian MacLarty, Goldbuick, Chevy Ray Johnston,
+Raigan Burns
 
             Tool Design Inspiration:
 

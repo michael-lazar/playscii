@@ -279,8 +279,9 @@ class TileRenderable:
         y = 2 / (self.art.height * self.art.quad_height)
         return (x, y, 1)
     
-    def render_for_export(self):
+    def render_frame_for_export(self, frame):
         self.exporting = True
+        self.set_frame(frame)
         # cursor might be hovering, undo any preview changes
         for edit in self.art.app.cursor.preview_edits:
             edit.undo()

@@ -8,7 +8,8 @@ from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
 from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
-from game_world import CT_NONE
+from collision import CT_NONE
+from image_export import export_still_image, export_animation
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -141,6 +142,8 @@ class InputLord:
             elif event.type == sdl2.SDL_WINDOWEVENT:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
                     app.resize_window(event.window.data1, event.window.data2)
+            elif event.type == sdl2.SDL_JOYBUTTONDOWN:
+                app.gw.player.button_pressed(event.jbutton.button)
             elif event.type == sdl2.SDL_KEYDOWN:
                 # if console is up, pass input to it
                 if self.ui.console.visible:
@@ -191,7 +194,11 @@ class InputLord:
                     else:
                         app.camera.zoom(3)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
-                self.ui.unclicked(event.button.button)
+                # "consume" input if UI handled it
+                ui_unclicked = self.ui.unclicked(event.button.button)
+                if ui_unclicked:
+                    sdl2.SDL_PumpEvents()
+                    return
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
                     # in game mode, select stuff
@@ -202,13 +209,15 @@ class InputLord:
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         app.cursor.finish_paint()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
-                self.ui.clicked(event.button.button)
+                ui_clicked = self.ui.clicked(event.button.button)
                 # don't register edit commands if a menu is up
-                if self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                if ui_clicked or self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
+                    sdl2.SDL_PumpEvents()
+                    self.app.gw.last_click_on_ui = True
                     return
                 # LMB down: start text entry, start select drag, or paint
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if self.app.game_mode:
+                    if self.app.game_mode and not ui_clicked:
                         self.app.gw.clicked(event.button.button)
                     elif not self.ui.active_art:
                         return
@@ -298,7 +307,12 @@ class InputLord:
     def BIND_export_image(self):
         if not self.ui.active_art:
             return
-        self.app.export_image(self.ui.active_art)
+        export_still_image(self.app, self.ui.active_art)
+    
+    def BIND_export_anim(self):
+        if not self.ui.active_art:
+            return
+        export_animation(self.app, self.ui.active_art)
     
     def BIND_decrease_ui_scale(self):
         if self.ui.scale > SCALE_INCREMENT * 2:
@@ -314,9 +328,11 @@ class InputLord:
     
     def BIND_decrease_brush_size(self):
         self.ui.selected_tool.decrease_brush_size()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_increase_brush_size(self):
         self.ui.selected_tool.increase_brush_size()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_cycle_char_forward(self):
         self.ui.select_char(self.ui.selected_char+1)
@@ -344,15 +360,19 @@ class InputLord:
     
     def BIND_toggle_affects_char(self):
         self.ui.selected_tool.toggle_affects_char()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_affects_fg(self):
         self.ui.selected_tool.toggle_affects_fg()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_affects_bg(self):
         self.ui.selected_tool.toggle_affects_bg()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_affects_xform(self):
         self.ui.selected_tool.toggle_affects_xform()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_crt(self):
         self.app.fb.toggle_crt()
@@ -392,6 +412,7 @@ class InputLord:
     
     def BIND_cancel(self):
         # context-dependent:
+        # game mode: deselect
         # normal painting mode: cancel current selection
         # menu bar active: bail out of current menu
         # either way: bail on image conversion if it's happening
@@ -399,6 +420,8 @@ class InputLord:
             self.app.converter.finished(True)
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
+        elif self.app.game_mode:
+            self.ui.edit_game_panel.cancel()
         else:
             self.ui.select_none()
     
@@ -411,7 +434,9 @@ class InputLord:
     def BIND_erase_selection_or_art(self):
         # if in game mode, delete selected objects
         if self.app.game_mode:
-            for obj in self.app.gw.selected_objects:
+            # operate on a copy of selected objects list,
+            # as obj.destroy() removes itself from original
+            for obj in self.app.gw.selected_objects[:]:
                 obj.destroy()
         else:
             self.ui.erase_selection_or_art()
@@ -740,22 +765,19 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_collision_viz(self):
-        if not self.app.game_mode:
-            return
-        self.app.show_collision_all = not self.app.show_collision_all
-        self.app.gw.set_for_all_objects('show_collision', self.app.show_collision_all)
+        if self.app.game_mode:
+            self.app.gw.toggle_all_collision_viz()
+            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_all_bounds_viz(self):
-        if not self.app.game_mode:
-            return
-        self.app.show_bounds_all = not self.app.show_bounds_all
-        self.app.gw.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+        if self.app.game_mode:
+            self.app.gw.toggle_all_bounds_viz()
+            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_all_origin_viz(self):
-        if not self.app.game_mode:
-            return
-        self.app.show_origin_all = not self.app.show_origin_all
-        self.app.gw.set_for_all_objects('show_origin', self.app.show_origin_all)
+        if self.app.game_mode:
+            self.app.gw.toggle_all_origin_viz()
+            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:
@@ -765,3 +787,6 @@ class InputLord:
             elif obj.collision_type != CT_NONE:
                 obj.disable_collision()
                 self.ui.message_line.post_line('Collision disabled for %s' % obj.name)
+    
+    def BIND_toggle_game_edit_ui(self):
+        self.ui.toggle_game_edit_ui()

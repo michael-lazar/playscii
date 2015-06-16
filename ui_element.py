@@ -22,6 +22,7 @@ class UIElement:
     buttons = []
     # renders in "game mode"
     game_mode_visible = False
+    all_modes_visible = False
     
     def __init__(self, ui):
         self.ui = ui
@@ -85,18 +86,28 @@ class UIElement:
                         b.callback(b.cb_arg)
                     else:
                         b.callback()
-                    handled = True
+                handled = True
         return handled
     
     def unclicked(self, button):
         self.log_event('unclicked', button)
+        handled = False
         for b in self.hovered_buttons:
             b.unclick()
+            handled = True
+        return handled
     
     def log_event(self, event_type, mouse_button=None):
         mouse_button = mouse_button or '[n/a]'
         if self.ui.logg:
             self.ui.app.log('UIElement: %s %s with mouse button %s' % (self.__class__.__name__, event_type, mouse_button))
+    
+    def is_visible(self):
+        if not self.ui.app.game_mode and self.game_mode_visible and not self.all_modes_visible:
+            return False
+        elif self.ui.app.game_mode and not self.game_mode_visible:
+            return False
+        return self.visible
     
     def reset_loc(self):
         if self.snap_top:
@@ -136,8 +147,8 @@ class UIElement:
         self.art.update()
     
     def render(self):
-        if self.visible:
-            self.renderable.render()
+        # "is visible" check happens in UI.render, calls our is_visible
+        self.renderable.render()
     
     def destroy(self):
         for r in self.renderables:
@@ -168,6 +179,7 @@ class FPSCounterUI(UIElement):
     tile_width, tile_height = 12, 2
     snap_right = True
     game_mode_visible = True
+    all_modes_visible = True
     visible = False
     
     def update(self):
@@ -203,6 +215,7 @@ class MessageLineUI(UIElement):
     default_hold_time = 1
     fade_rate = 0.025
     game_mode_visible = True
+    all_modes_visible = True
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
@@ -279,48 +292,3 @@ class DebugTextUI(UIElement):
         if self.clear_lines_after_render:
             self.lines = []
             #self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
-
-
-class ObjectPropertiesPanel(UIElement):
-    
-    "panel showing info for selected game object"
-    
-    tile_width = 30
-    tile_height = 3
-    tile_y = 5
-    snap_right = True
-    game_mode_visible = True
-    
-    def __init__(self, ui):
-        self.game_object = None
-        UIElement.__init__(self, ui)
-    
-    def reset_art(self):
-        self.art.clear_frame_layer(0, 0, self.ui.colors.white,
-                                   self.ui.colors.black)
-        self.art.write_string(0, 0, -1, 0, '[nothing selected]',
-                              None, None, True)
-        if not self.game_object:
-            return
-        self.art.clear_line(0, 0, 0, self.ui.colors.white, self.ui.colors.black)
-        label = self.game_object.name
-        self.art.write_string(0, 0, -1, 0, label, None, None, True)
-        loc = '%s, %s' % (self.game_object.x, self.game_object.y)
-        self.art.write_string(0, 0, -1, 1, loc, None, None, True)
-        UIElement.reset_art(self)
-    
-    def set_object(self, new_obj):
-        self.game_object = new_obj
-        self.reset_art()
-    
-    def update(self):
-        if self.game_object:
-            # update position line
-            self.art.clear_line(0, 0, 1)
-            loc = '%.2f, %.2f' % (self.game_object.x, self.game_object.y)
-            self.art.write_string(0, 0, -1, 1, loc, None, None, True)
-        UIElement.update(self)
-    
-    def render(self):
-        if self.ui.app.game_mode and self.game_object:
-            UIElement.render(self)

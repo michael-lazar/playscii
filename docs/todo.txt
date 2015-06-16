@@ -1,42 +1,25 @@
 TODO
 
-is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
-
 collision:
-- write up specific question(s) for next video
-- debug viz for contacts (create on contact start, destroy on contact end)
-- fix player->static collisions - shouldn't jitter
-- fix player->dynamicBB collisions
+- broadphase!
+- AABB and/or capsule shape support
 
-edit mode:
-- right panel: generic properties view to edit selected instance's properties
--- if multiple selected, show only title bar "3 Selected" etc
--- reset to class defaults
--- toggle lock/unlock location
--- toggle object visible
-- left panel of edit mode buttons:
--- return to art mode
--- hide edit UI (shows message with key to unhide)
--- load state
--- save state
--- reset to start state
--- spawn something (dialog to specify class) (mouse pick location?)
--- set game dir
--- select a particular object (chooser UI?)
-- key to toggle this UI?  think about overall "edit quasimode" design
+game edit panel buttons:
+- duplicate object
+- toggle player camera lock
 
 ---
 
 further work on existing features:
 
-Tools menu: after separator, same tool settings as can be accessed in popup
+status bar: red X stopped drawing?
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
 PNG export:
 - CRT off/on affects PNG output, according to a scale factor.
 -- arg 1 of export console command = scale factor override, default is Nx
-- aniGIF export for animations - lead: http://compgroups.net/comp.lang.python/save-animated-gif-in-python-image-library/1632384
+- fix looping / proper GIF89a status on exported GIFs
 
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
@@ -48,3 +31,5 @@ shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 human-readable errors if charset/palette not found
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+
+state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
