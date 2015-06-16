@@ -138,6 +138,7 @@ class GameWorld:
     def unload_game(self):
         for obj in self.objects:
             obj.destroy()
+        self.cl.reset()
         self.objects = []
         self.renderables = []
         self.art_loaded = []
@@ -213,7 +214,8 @@ class GameWorld:
                 continue
             for i,z in enumerate(obj.art.layers_z):
                 # only draw collision layer if show collision is set
-                if obj.collision_shape_type == collision.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == collision.CST_TILE and \
+                   obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
@@ -231,7 +233,8 @@ class GameWorld:
         for obj in y_objects:
             items = []
             for i,z in enumerate(obj.art.layers_z):
-                if obj.collision_shape_type == collision.CST_TILE and obj.col_layer_name == obj.art.layer_names[i]:
+                if obj.collision_shape_type == collision.CST_TILE and \
+                   obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
@@ -274,7 +277,8 @@ class GameWorld:
             timestamp = int(time.time())
             filename = '%s/%s_%s.%s' % (self.game_dir, timestamp,
                                         STATE_FILE_EXTENSION)
-        json.dump(d, open(TOP_GAME_DIR + filename, 'w'), sort_keys=True, indent=1)
+        json.dump(d, open(TOP_GAME_DIR + filename, 'w'),
+                  sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
     
     def find_module(self, module_name):
@@ -308,15 +312,16 @@ class GameWorld:
     
     def get_all_loaded_classes(self):
         "returns classname,class dict of all classes in loaded modules"
-        cd = {}
+        classes = {}
         for module_name,module in self.modules.items():
             for k,v in module.__dict__.items():
+                # skip anything that's not a class
                 if not type(v) is type:
                     continue
                 # use inspect module to get /all/ parent classes
                 if game_object.GameObject in inspect.getmro(v):
-                    cd[k] = v
-        return cd
+                    classes[k] = v
+        return classes
     
     def reset_object_in_place(self, obj):
         x, y = obj.x, obj.y
@@ -362,7 +367,8 @@ class GameWorld:
         return new_object
     
     def load_game_state(self, filename):
-        filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir, filename, STATE_FILE_EXTENSION)
+        filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir,
+                                  filename, STATE_FILE_EXTENSION)
         self.app.enter_game_mode()
         self.unload_game()
         try:

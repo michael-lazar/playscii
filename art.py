@@ -665,7 +665,13 @@ class ArtFromDisk(Art):
         self.width = d['width']
         self.height = d['height']
         self.charset = self.app.load_charset(d['charset'])
+        if not self.charset:
+            self.app.log('Character set %s not found!' % d['charset'])
+            return
         self.palette = self.app.load_palette(d['palette'])
+        if not self.palette:
+            self.app.log('Palette %s not found!' % d['palette'])
+            return
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
         if not self.app.override_saved_camera:
