@@ -311,7 +311,9 @@ class GameWorld:
         return None
     
     def get_all_loaded_classes(self):
-        "returns classname,class dict of all classes in loaded modules"
+        """
+        returns classname,class dict of all GameObject classes in loaded modules
+        """
         classes = {}
         for module_name,module in self.modules.items():
             for k,v in module.__dict__.items():
@@ -319,8 +321,12 @@ class GameWorld:
                 if not type(v) is type:
                     continue
                 # use inspect module to get /all/ parent classes
-                if game_object.GameObject in inspect.getmro(v):
-                    classes[k] = v
+                for c in inspect.getmro(v):
+                    # string compare class name, because in / issubclass fails!
+                    # TODO: understand why
+                    if c.__name__ == 'GameObject':
+                        classes[k] = v
+                        break
         return classes
     
     def reset_object_in_place(self, obj):
