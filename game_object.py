@@ -1,10 +1,23 @@
-import os
+import os, math
 
 from art import Art
 from renderable import TileRenderable
 from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
 from collision import Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
+
+
+class GameObjectRenderable(TileRenderable):
+    
+    def get_loc(self):
+        x, y, z = self.x, self.y, self.z
+        if self.game_object:
+            off_x, off_y, off_z = self.game_object.get_render_offset()
+            x += off_x
+            y += off_y
+            z += off_z
+        return x, y, z
+
 
 class GameObject:
     
@@ -96,7 +109,7 @@ class GameObject:
         if not self.art:
             self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
             return
-        self.renderable = TileRenderable(self.app, self.art, self)
+        self.renderable = GameObjectRenderable(self.app, self.art, self)
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
         # 1px LineRenderable showing object's bounding box
         self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
@@ -117,6 +130,15 @@ class GameObject:
         min_y = self.y - (self.renderable.height * self.art_off_pct_y)
         max_y = self.y + (self.renderable.height * self.art_off_pct_y)
         return min_x <= x <= max_x and min_y <= y <= max_y
+    
+    def distance_to_object(self, other):
+        dx = self.x - other.x
+        dy = self.y - other.y
+        return math.sqrt(dx ** 2 + dy ** 2)
+    
+    def get_render_offset(self):
+        # allow subclasses to provide offsets based on stuff, eg "fake Z"
+        return 0, 0, 0
     
     def is_dynamic(self):
         return self.collision_type in CTG_DYNAMIC
@@ -357,6 +379,12 @@ class NSEWPlayer(Player):
     def move(self, dx, dy):
         Player.move(self, dx, dy)
         self.last_move_dir = (dx, dy)
+    
+    def get_facing_dir(self):
+        lmd = self.last_move_dir
+        x = 1 if lmd[0] > 0 else -1 if lmd[0] < 0 else 0
+        y = 1 if lmd[1] > 0 else -1 if lmd[1] < 0 else 0
+        return x, y
     
     def set_anim(self, new_anim):
         if self.art is not new_anim:

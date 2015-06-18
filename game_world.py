@@ -22,7 +22,7 @@ class RenderItem:
 class GameWorld:
     
     "holds global state for game mode"
-    gravity_x, gravity_y = 0, 0
+    gravity_x, gravity_y, gravity_z = 0, 0, 0
     last_click_on_ui = False
     
     def __init__(self, app):
@@ -260,6 +260,7 @@ class GameWorld:
         d = {}
         d['gravity_x'] = self.gravity_x
         d['gravity_y'] = self.gravity_y
+        d['gravity_z'] = self.gravity_z
         d['camera_x'] = self.camera.x
         d['camera_y'] = self.camera.y
         d['camera_z'] = self.camera.z
@@ -386,6 +387,7 @@ class GameWorld:
             return
         self.gravity_x = d['gravity_x']
         self.gravity_y = d['gravity_y']
+        self.gravity_z = d.get('gravity_z', self.gravity_z)
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
