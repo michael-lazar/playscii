@@ -17,7 +17,7 @@ class Chest(DynamicBoxObject):
 class Urn(Pickup):
     art_src = 'urn'
     col_radius = 2
-    col_offset_y = -1.5
+    art_off_pct_y = 0.85
 
 class Bed(StaticTileObject):
     art_src = 'bed'

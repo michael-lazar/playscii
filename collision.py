@@ -123,6 +123,9 @@ class Collideable:
     def destroy(self):
         for r in self.renderables:
             r.destroy()
+        # remove our shapes from CollisionLord's shape list
+        for shape in self.shapes:
+            self.cl.remove_shape(shape)
 
 
 class CollisionLord:

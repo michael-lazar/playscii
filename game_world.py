@@ -43,7 +43,7 @@ class GameWorld:
     def pick_next_object_at(self, x, y):
         # TODO: cycle through objects at point til an unselected one is found
         for obj in self.get_objects_at(x, y):
-            if not obj in self.selected_objects:
+            if obj.selectable and not obj in self.selected_objects:
                 return obj
         return None
     
@@ -125,7 +125,7 @@ class GameWorld:
             self.dragging_object = True
     
     def select_object(self, obj):
-        if not obj in self.selected_objects:
+        if obj and obj.selectable and not obj in self.selected_objects:
             self.selected_objects.append(obj)
     
     def deselect_object(self, obj):
@@ -198,6 +198,11 @@ class GameWorld:
         for obj in self.objects:
             obj.update()
         self.cl.resolve_overlaps()
+        # display debug text for selected object(s)
+        for obj in self.selected_objects:
+            s = obj.get_debug_text()
+            if s:
+                self.app.ui.debug_text.post_lines(s)
     
     def render(self):
         for obj in self.objects:
@@ -266,7 +271,8 @@ class GameWorld:
         d['camera_z'] = self.camera.z
         objects = []
         for obj in self.objects:
-            objects.append(obj.get_state_dict())
+            if obj.should_save:
+                objects.append(obj.get_state_dict())
         d['objects'] = objects
         if filename:
             if not filename.endswith(STATE_FILE_EXTENSION):

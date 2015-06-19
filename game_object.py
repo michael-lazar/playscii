@@ -35,11 +35,16 @@ class GameObject:
     max_move_speed = 0.4
     friction = 0.1
     # inverse mass: 0 = infinitely dense
-    inv_mass = 1
+    inv_mass = 1.
+    # bounciness aka restitution, % of velocity reflected on bounce
+    bounciness = 0.25
+    # near-zero point at which velocity
+    stop_velocity = 0.001
     log_move = False
     log_load = False
     log_spawn = False
     visible = True
+    alpha = 1.
     # location is protected from edit mode drags, can't click to select
     locked = False
     show_origin = False
@@ -54,42 +59,49 @@ class GameObject:
     col_layer_name = 'collision'
     # collision circle/box offset from origin
     col_offset_x, col_offset_y = 0., 0.
-    col_radius = 1
+    col_radius = 1.
     # AABB top left / bottom right coordinates
     col_box_left_x, col_box_right_x = -1, 1
     col_box_top_y, col_box_bottom_y = -1, 1
     # art offset from pivot: renderable's origin_pct set to this if !None
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
+    # if True, write this object to state save files
+    should_save = True
     # list of members to serialize (no weak refs!)
     serialized = ['x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
-                  'art_off_pct_x', 'art_off_pct_y']
+                  'art_off_pct_x', 'art_off_pct_y', 'alpha']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
-    editable = ['show_collision']
+    editable = ['show_collision', 'inv_mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
-    set_methods = {'art_src': 'set_art'}
+    set_methods = {'art_src': 'set_art', 'alpha': 'set_alpha'}
+    # can select in edit mode
+    selectable = True
+    # objects to spawn as attachments: key is member name, value is class
+    attachment_classes = {}
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
         # apply serialized data before most of init happens
         # properties that need non-None defaults should be declared above
-        for v in self.serialized:
-            if not hasattr(self, v):
-                if self.log_load:
-                    self.app.dev_log("Unknown serialized property '%s' for %s" % (v, self.name))
-                continue
-            elif not v in obj_data:
-                if self.log_load:
-                    self.app.dev_log("Serialized property '%s' not found for %s" % (v, self.name))
-                continue
-            # match type of variable as declared, eg loc might be written as
-            # an int in the JSON so preserve its floatness
-            if getattr(self, v) is not None:
-                src_type = type(getattr(self, v))
-                setattr(self, v, src_type(obj_data[v]))
-            else:
-                setattr(self, v, obj_data[v])
+        if obj_data:
+            for v in self.serialized:
+                if not hasattr(self, v):
+                    if self.log_load:
+                        self.app.dev_log("Unknown serialized property '%s' for %s" % (v, self.name))
+                    continue
+                elif not v in obj_data:
+                    if self.log_load:
+                        self.app.dev_log("Serialized property '%s' not found for %s" % (v, self.name))
+                    continue
+                # match type of variable as declared, eg loc might be written as
+                # an int in the JSON so preserve its floatness
+                if getattr(self, v) is not None:
+                    src_type = type(getattr(self, v))
+                    setattr(self, v, src_type(obj_data[v]))
+                else:
+                    setattr(self, v, obj_data[v])
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
@@ -110,6 +122,7 @@ class GameObject:
             self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
             return
         self.renderable = GameObjectRenderable(self.app, self.art, self)
+        self.renderable.alpha = self.alpha
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
         # 1px LineRenderable showing object's bounding box
         self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
@@ -120,6 +133,12 @@ class GameObject:
         self.orig_collision_type = None
         self.collision = Collideable(self)
         self.world.objects.append(self)
+        self.attachments = []
+        for atch_name,atch_class in self.attachment_classes.items():
+            attachment = atch_class(self.world)
+            self.attachments.append(attachment)
+            attachment.attach_to(self)
+            setattr(self, atch_name, attachment)
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
@@ -196,6 +215,9 @@ class GameObject:
     def set_scale(self, x, y, z):
         self.scale_x, self.scale_y, self.scale_z = x, y, z
     
+    def set_alpha(self, new_alpha):
+        self.renderable.alpha = self.alpha = new_alpha
+    
     def move(self, dx, dy):
         m = 1 + self.friction
         vel_dx = dx * self.move_accel_rate * m
@@ -219,6 +241,10 @@ class GameObject:
         self.vel_x *= 1 - self.friction
         self.vel_y *= 1 - self.friction
         self.vel_z *= 1 - self.friction
+        # zero velocity if it's nearly zero
+        self.vel_x = self.vel_x if abs(self.vel_x) > self.stop_velocity else 0
+        self.vel_y = self.vel_y if abs(self.vel_y) > self.stop_velocity else 0
+        self.vel_z = self.vel_z if abs(self.vel_z) > self.stop_velocity else 0
         self.x += self.vel_x
         self.y += self.vel_y
         self.z += self.vel_z
@@ -244,12 +270,16 @@ class GameObject:
             self.collision.update_renderables()
         self.renderable.update()
     
+    def get_debug_text(self):
+        "subclass logic can return a string to display in debug line"
+        return None
+    
     def render_debug(self):
         if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.render()
         if self.show_bounds or self in self.world.selected_objects:
             self.bounds_renderable.render()
-        if self.show_collision:
+        if self.show_collision and self.collision_type != CT_NONE:
             self.collision.render()
     
     def render(self, layer, z_override=None):
@@ -281,8 +311,35 @@ class GameObject:
         self.origin_renderable.destroy()
         self.bounds_renderable.destroy()
         self.collision.destroy()
+        for attachment in self.attachments:
+            attachment.destroy()
         self.renderable.destroy()
 
+
+class GameObjectAttachment(GameObject):
+    
+    "GameObject that doesn't think about anything, just renders"
+    
+    collision_type = CT_NONE
+    should_save = False
+    selectable = False
+    # offset from parent object's origin
+    offset_x, offset_y, offset_z = 0, 0, 0
+    
+    def attach_to(self, gobj):
+        self.parent = gobj
+    
+    def update(self):
+        if not self.art.updated_this_tick:
+            self.art.update()
+        self.x = self.parent.x + self.offset_x
+        self.y = self.parent.y + self.offset_y
+        self.z = self.parent.z + self.offset_z
+
+
+class BlobShadow(GameObjectAttachment):
+    art_src = 'blob_shadow'
+    alpha = 0.5
 
 class StaticTileBG(GameObject):
     collision_shape_type = CST_TILE
@@ -306,6 +363,7 @@ class Pickup(GameObject):
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
     y_sort = True
+    attachment_classes = { 'shadow': BlobShadow }
 
 class Player(GameObject):
     
@@ -313,7 +371,7 @@ class Player(GameObject):
     max_move_speed = 0.8
     friction = 0.25
     inv_mass = 0.1
-    log_move = True
+    log_move = False
     collision_shape_type = CST_CIRCLE
     collision_type = CT_PLAYER
     
@@ -336,6 +394,7 @@ class NSEWPlayer(Player):
     anim_forward_base = 'fwd'
     anim_back_base = 'back'
     anim_right_base = 'right'
+    attachment_classes = { 'shadow': BlobShadow }
     
     def __init__(self, world, obj_data=None):
         # load animations

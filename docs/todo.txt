@@ -4,15 +4,17 @@ collision:
 - broadphase!
 - AABB and/or capsule shape support
 
-game edit panel buttons:
-- duplicate object
-- toggle player camera lock
-
 ---
 
 further work on existing features:
 
-status bar: red X stopped drawing?
+game edit panel buttons:
+- duplicate object
+- toggle player camera lock
+
+status bar:
+- red X stopped drawing?
+- make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
@@ -27,8 +29,6 @@ main popup
 - arrow keys navigate between char and color pickers properly
 
 shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
-
-human-readable errors if charset/palette not found
 
 if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
 
