@@ -4,6 +4,7 @@
  "camera_z": 24.918933315020546,
  "gravity_x": 0,
  "gravity_y": 0,
+ "gravity_z": 0,
  "objects": [
   {
    "art_off_pct_x": 0.5,
@@ -46,19 +47,6 @@
   },
   {
    "art_off_pct_x": 0.5,
-   "art_off_pct_y": 0.5,
-   "art_src": "games/cronotest/art/urn.psci",
-   "class_name": "Urn",
-   "locked": false,
-   "module_name": "games.cronotest.scripts.cronotest_classes",
-   "visible": true,
-   "x": -6.002785870079216,
-   "y": -6.6930952442337555,
-   "y_sort": true,
-   "z": 0.0
-  },
-  {
-   "art_off_pct_x": 0.5,
    "art_off_pct_y": 1.0,
    "art_src": "games/cronotest/art/railing.psci",
    "class_name": "StaticTileBG",
@@ -94,6 +82,19 @@
    "visible": true,
    "x": 0.29548660434491913,
    "y": -1.8182171605321618,
+   "y_sort": true,
+   "z": 0.0
+  },
+  {
+   "art_off_pct_x": 0.5,
+   "art_off_pct_y": 0.85,
+   "art_src": "urn",
+   "class_name": "Urn",
+   "locked": false,
+   "module_name": "games.cronotest.scripts.cronotest_classes",
+   "visible": true,
+   "x": -6.002785870079216,
+   "y": -6.6930952442337555,
    "y_sort": true,
    "z": 0.0
   }
