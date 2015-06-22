@@ -384,6 +384,10 @@ class Player(GameObject):
         pass
 
 
+class TopDownObject(GameObject):
+    anims = {}
+
+
 class NSEWPlayer(Player):
     
     "top-down player character that can face & travel in 4 directions"

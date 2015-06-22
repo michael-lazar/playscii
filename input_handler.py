@@ -535,6 +535,9 @@ class InputLord:
     
     def BIND_select_or_paint(self):
         if self.app.game_mode:
+            # joystick button 0 press
+            if not self.ui.active_dialog:
+                self.app.gw.player.button_pressed(0)
             return
         # select menu item if navigating pulldown
         if self.ui.menu_bar.active_menu_name:
