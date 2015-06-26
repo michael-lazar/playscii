@@ -6,6 +6,27 @@ from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
 from collision import Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
 
+# facings
+GOF_LEFT = 0
+GOF_RIGHT = 1
+GOF_FRONT = 2
+GOF_BACK = 3
+
+FACINGS = {
+    GOF_LEFT: 'left',
+    GOF_RIGHT: 'right',
+    GOF_FRONT: 'front',
+    GOF_BACK: 'back'
+}
+
+FACING_DIRS = {
+    GOF_LEFT: (-1, 0),
+    GOF_RIGHT: (1, 0),
+    GOF_FRONT: (0, -1),
+    GOF_BACK: (0, 1)
+}
+
+DEFAULT_STATE = 'stand'
 
 class GameObjectRenderable(TileRenderable):
     
@@ -21,8 +42,18 @@ class GameObjectRenderable(TileRenderable):
 
 class GameObject:
     
-    # if specified, this art will be loaded from disk
+    # if specified, this art will be loaded from disk and used as object's
+    # default appearance. if object has states/facings, this is the "base"
+    # filename prefix, eg "hero" in "hero_stand_front.psci"
     art_src = None
+    # if true, art will change with current state; depends on file naming
+    state_changes_art = False
+    # if true, object will go to stand state any time velocity is zero
+    stand_if_not_moving = False
+    # list of valid states for this object, used to find anims
+    valid_states = [DEFAULT_STATE]
+    # if true, art will change with facing AND state
+    facing_changes_art = False
     # if generate_art is True, blank art will be created with these
     # dimensions, charset, and palette
     generate_art = False
@@ -66,16 +97,16 @@ class GameObject:
     # art offset from pivot: renderable's origin_pct set to this if !None
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
-    # if True, write this object to state save files
+    # if True, write this object to save files
     should_save = True
     # list of members to serialize (no weak refs!)
     serialized = ['x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
-                  'art_off_pct_x', 'art_off_pct_y', 'alpha']
+                  'art_off_pct_x', 'art_off_pct_y', 'alpha', 'state', 'facing']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
     editable = ['show_collision', 'inv_mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
-    set_methods = {'art_src': 'set_art', 'alpha': 'set_alpha'}
+    set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha'}
     # can select in edit mode
     selectable = True
     # objects to spawn as attachments: key is member name, value is class
@@ -83,6 +114,9 @@ class GameObject:
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
+        # every object gets a state and facing, even if it never changes
+        self.state = DEFAULT_STATE
+        self.facing = GOF_FRONT
         # apply serialized data before most of init happens
         # properties that need non-None defaults should be declared above
         if obj_data:
@@ -110,6 +144,8 @@ class GameObject:
         self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         self.world = world
         self.app = self.world.app
+        # load/create assets
+        self.arts = {}
         # if art_src not specified, create a new art according to dimensions
         if self.generate_art:
             self.art_src = '%s_art' % self.name
@@ -117,8 +153,8 @@ class GameObject:
                                         self.art_height, self.art_charset,
                                         self.art_palette)
         else:
-            self.art = self.app.load_art(self.art_src)
-        if not self.art:
+            self.load_arts()
+        if not self.art and len(self.arts) == 0:
             self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
             return
         self.renderable = GameObjectRenderable(self.app, self.art, self)
@@ -126,8 +162,9 @@ class GameObject:
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
         # 1px LineRenderable showing object's bounding box
         self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
-        if not self.art in self.world.art_loaded:
-            self.world.art_loaded.append(self.art)
+        for art in self.arts:
+            if art in self.world.art_loaded:
+                self.world.art_loaded.append(art)
         self.world.renderables.append(self.renderable)
         # remember previous collision type for enable/disable
         self.orig_collision_type = None
@@ -141,6 +178,30 @@ class GameObject:
             setattr(self, atch_name, attachment)
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
+    
+    def load_arts(self):
+        "fill self.arts dict with art assets: states, facings"
+        self.art = self.app.load_art(self.art_src, False)
+        # if no states, use a single art always
+        if not self.state_changes_art:
+            self.arts[self.art_src] = self.art
+            return
+        for state in self.valid_states:
+            if self.facing_changes_art:
+                # load each facing for each state
+                for facing in FACINGS.values():
+                    art_name = '%s_%s_%s' % (self.art_src, state, facing)
+                    art = self.app.load_art(art_name, False)
+                    if art:
+                        self.arts[art_name] = art
+            else:
+                # load each state
+                art_name = '%s_%s' % (self.art_src, state)
+                art = self.app.load_art(art_name, False)
+                if art:
+                    self.arts[art_name] = art
+        # get reasonable default pose
+        self.art, self.flip_x = self.get_art_for_state()
     
     def is_point_inside(self, x, y):
         "returns True if given point is inside our bounds"
@@ -180,7 +241,7 @@ class GameObject:
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
-        return [self.art]
+        return list(self.arts.keys())
     
     def start_animating(self):
         self.renderable.start_animating()
@@ -197,16 +258,86 @@ class GameObject:
         else:
             setattr(self, prop_name, new_value)
     
-    def set_art(self, new_art_filename):
-        if self.art:
-            old_art = self.art
-        self.art = self.app.load_art(new_art_filename)
-        if not self.art:
-            self.art = old_art
+    def get_art_for_state(self, state=None):
+        "returns art (and 'flip X' bool) that best represents current state"
+        # use current state if none specified
+        state = self.state if state is None else state
+        art_state_name = '%s_%s' % (self.art_src, self.state)
+        # simple case: no facing, just state
+        if not self.facing_changes_art:
+            # return art for current state, use default if not available
+            if art_state_name in self.arts:
+                return self.arts[art_state_name], False
+            else:
+                default_name = '%s_%s' % (self.art_src, DEFAULT_STATE)
+                assert(default_name in self.arts)
+                return self.arts[default_name], False
+        # more complex case: art determined by both state and facing
+        facing_suffix = FACINGS[self.facing]
+        # first see if anim exists for this exact state, skip subsequent logic
+        exact_name = '%s_%s' % (art_state_name, facing_suffix)
+        if exact_name in self.arts:
+            return self.arts[exact_name], False
+        # see what anims are available and try to choose best for facing
+        has_state = False
+        for anim in self.arts:
+            if anim.startswith(art_state_name):
+                has_state = True
+                break
+        # if NO anims for current state, fall back to default
+        if not has_state:
+            default_name = '%s_%s' % (self.art_src, DEFAULT_STATE)
+            art_state_name = default_name
+        front_name = '%s_%s' % (art_state_name, FACINGS[GOF_FRONT])
+        left_name = '%s_%s' % (art_state_name, FACINGS[GOF_LEFT])
+        right_name = '%s_%s' % (art_state_name, FACINGS[GOF_RIGHT])
+        back_name = '%s_%s' % (art_state_name, FACINGS[GOF_BACK])
+        has_front = front_name in self.arts
+        has_left = left_name in self.arts
+        has_right = right_name in self.arts
+        has_sides = has_left or has_right
+        # throw an error if nothing basic is available
+        assert(has_front or has_sides)
+        # if left/right opposite available, flip it
+        if self.facing == GOF_LEFT and has_right:
+            return self.arts[right_name], True
+        elif self.facing == GOF_RIGHT and has_left:
+            return self.arts[left_name], True
+        # if left or right but neither, use front
+        elif self.facing in [GOF_LEFT, GOF_RIGHT] and not has_sides:
+            return self.arts[front_name], False
+        # if no front but sides, use either
+        elif self.facing == GOF_FRONT and has_sides:
+            if has_right:
+                return self.arts[right_name], False
+            elif has_left:
+                return self.arts[left_name], False
+        # if no back, use sides or, as last resort, front
+        elif self.facing == GOF_BACK and has_sides:
+            if has_right:
+                return self.arts[right_name], False
+            elif has_left:
+                return self.arts[left_name], False
+            else:
+                return self.arts[front_name], False
+        # fall-through: keep using current art
+        return self.art, False
+    
+    def set_art(self, new_art, start_animating=True):
+        if new_art is self.art:
             return
-        self.art_src = new_art_filename
+        self.art = new_art
         self.renderable.set_art(self.art)
         self.bounds_renderable.art = self.art
+        if start_animating and new_art.frames > 1:
+            self.renderable.start_animating()
+    
+    def set_art_src(self, new_art_filename):
+        new_art = self.app.load_art(new_art_filename)
+        if not new_art:
+            return
+        self.art_src = new_art_filename
+        self.set_art(new_art)
     
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
@@ -233,10 +364,18 @@ class GameObject:
             self.vel_y += max(vel_dy, -max_speed)
         elif vel_dy > 0:
             self.vel_y += min(vel_dy, max_speed)
+        # update facing
+        # TODO: flag for "side view only" objects
+        if abs(self.vel_y) >= abs(self.vel_x):
+            self.facing = GOF_BACK if self.vel_y > 0 else GOF_FRONT
+        else:
+            self.facing = GOF_RIGHT if self.vel_x > 0 else GOF_LEFT
     
     def update_move(self):
         # apply friction and move
         if self.vel_x == 0 and self.vel_y == 0 and self.vel_z == 0:
+            if self.stand_if_not_moving:
+                self.state = DEFAULT_STATE
             return
         self.vel_x *= 1 - self.friction
         self.vel_y *= 1 - self.friction
@@ -257,6 +396,11 @@ class GameObject:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         self.update_move()
+        # update art based on state (and possibly facing too)
+        if self.state_changes_art:
+            new_art, flip_x = self.get_art_for_state()
+            self.set_art(new_art)
+            self.flip_x = flip_x
         # update collision shape before CollisionLord resolves any collisions
         self.collision.update()
     
@@ -286,8 +430,8 @@ class GameObject:
         #print('GameObject %s layer %s has Z %s' % (self.art.filename, layer, self.art.layers_z[layer]))
         self.renderable.render(layer, z_override)
     
-    def get_state_dict(self):
-        "return a dict that GameWorld.save_state_to_file can dump to JSON"
+    def get_dict(self):
+        "return a dict that GameWorld.save_to_file can dump to JSON"
         d = {
             'class_name': type(self).__name__,
             'module_name': type(self).__module__,
@@ -365,14 +509,22 @@ class Pickup(GameObject):
     y_sort = True
     attachment_classes = { 'shadow': BlobShadow }
 
-class Player(GameObject):
+class GameCharacter(GameObject):
     
+    state_changes_art = True
+    facing_changes_art = True
+    stand_if_not_moving = True
+    valid_states = [DEFAULT_STATE, 'walk']
     move_accel_rate = 0.1
     max_move_speed = 0.8
     friction = 0.25
     inv_mass = 0.1
-    log_move = False
     collision_shape_type = CST_CIRCLE
+    collision_type = CT_GENERIC_DYNAMIC
+
+
+class Player(GameCharacter):
+    log_move = False
     collision_type = CT_PLAYER
     
     def __init__(self, world, obj_data=None):
@@ -384,102 +536,17 @@ class Player(GameObject):
         pass
 
 
-class TopDownObject(GameObject):
-    anims = {}
-
-
 class NSEWPlayer(Player):
     
     "top-down player character that can face & travel in 4 directions"
     
     y_sort = True
-    anim_stand_base = 'stand'
-    anim_walk_base = 'walk'
-    anim_forward_base = 'fwd'
-    anim_back_base = 'back'
-    anim_right_base = 'right'
     attachment_classes = { 'shadow': BlobShadow }
     
-    def __init__(self, world, obj_data=None):
-        # load animations
-        stand_fwd_anim_name = '%s_%s_%s' % (self.art_src, self.anim_stand_base,
-                                            self.anim_forward_base)
-        stand_back_anim_name = '%s_%s_%s' % (self.art_src, self.anim_stand_base,
-                                             self.anim_back_base)
-        stand_right_anim_name = '%s_%s_%s' % (self.art_src, self.anim_stand_base,
-                                              self.anim_right_base)
-        walk_fwd_anim_name = '%s_%s_%s' % (self.art_src, self.anim_walk_base,
-                                           self.anim_forward_base)
-        walk_back_anim_name = '%s_%s_%s' % (self.art_src, self.anim_walk_base,
-                                            self.anim_back_base)
-        walk_right_anim_name = '%s_%s_%s' % (self.art_src, self.anim_walk_base,
-                                             self.anim_right_base)
-        self.anim_stand_fwd = world.app.load_art(stand_fwd_anim_name)
-        self.anim_stand_back = world.app.load_art(stand_back_anim_name)
-        self.anim_stand_right = world.app.load_art(stand_right_anim_name)
-        self.anim_walk_fwd = world.app.load_art(walk_fwd_anim_name)
-        self.anim_walk_back = world.app.load_art(walk_back_anim_name)
-        self.anim_walk_right = world.app.load_art(walk_right_anim_name)
-        anims = {stand_fwd_anim_name: self.anim_stand_fwd,
-                 stand_back_anim_name: self.anim_stand_back,
-                 stand_right_anim_name: self.anim_stand_right,
-                 walk_fwd_anim_name: self.anim_walk_fwd,
-                 walk_back_anim_name: self.anim_walk_back,
-                 walk_right_anim_name:self.anim_walk_right}
-        for anim_name,anim in anims.items():
-            if anim is None:
-                print("NSEWPlayer animation not found: %s" % anim_name)
-                return
-        self.last_move_dir = (0, 0)
-        # provide valid art_src so rest of init doesn't get confused
-        self.art_src = stand_fwd_anim_name
-        Player.__init__(self, world, obj_data)
-    
-    def get_all_art(self):
-        return [self.anim_stand_fwd, self.anim_stand_back, self.anim_stand_right,
-                self.anim_walk_fwd, self.anim_walk_back, self.anim_walk_right]
-    
-    def move(self, dx, dy):
-        Player.move(self, dx, dy)
-        self.last_move_dir = (dx, dy)
+    def update_move(self):
+        Player.update_move(self)
+        if abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
+            self.state = 'walk'
     
     def get_facing_dir(self):
-        lmd = self.last_move_dir
-        x = 1 if lmd[0] > 0 else -1 if lmd[0] < 0 else 0
-        y = 1 if lmd[1] > 0 else -1 if lmd[1] < 0 else 0
-        return x, y
-    
-    def set_anim(self, new_anim):
-        if self.art is not new_anim:
-            self.art = new_anim
-            self.renderable.set_art(self.art)
-            self.bounds_renderable.art = self.art
-            self.renderable.start_animating()
-    
-    def update(self):
-        Player.update(self)
-        # set art and frame based on move direction/velocity
-        if -0.01 < self.vel_x < 0.01 and -0.01 < self.vel_y < 0.01:
-            self.renderable.stop_animating()
-            # stand fwd/left/right/back based on last travel dir
-            if self.last_move_dir[0] > 0:
-                self.set_anim(self.anim_stand_right)
-                self.flip_x = False
-            elif self.last_move_dir[0] < 0:
-                self.set_anim(self.anim_stand_right)
-                self.flip_x = True
-            elif self.last_move_dir[1] > 0:
-                self.set_anim(self.anim_stand_back)
-            else:
-                self.set_anim(self.anim_stand_fwd)
-            self.renderable.set_art(self.art)
-        elif self.last_move_dir[0] > 0:
-            self.set_anim(self.anim_walk_right)
-            self.flip_x = False
-        elif self.last_move_dir[0] < 0:
-            self.set_anim(self.anim_walk_right)
-            self.flip_x = True
-        elif self.last_move_dir[1] > 0:
-            self.set_anim(self.anim_walk_back)
-        elif self.last_move_dir[1] < 0:
-            self.set_anim(self.anim_walk_fwd)
+        return FACING_DIRS[self.facing]
