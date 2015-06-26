@@ -244,7 +244,7 @@ class Application:
         palette = self.load_palette(palette or self.starting_palette)
         return Art(filename, self, charset, palette, width, height)
     
-    def load_art(self, filename):
+    def load_art(self, filename, autocreate=True):
         """
         determine a viable filename and load it from disk;
         create new file if unsuccessful
@@ -262,8 +262,10 @@ class Application:
         elif not os.path.exists(filename):
             filename = '%s%s' % (ART_DIR, filename)
         art = None
+        if not os.path.exists(filename) and not autocreate:
+            return None
         # use given path + file name even if it doesn't exist; use as new file's name
-        if not os.path.exists(filename):
+        elif not os.path.exists(filename):
             text = 'Creating new document %s' % filename
             if orig_filename:
                 text = "Couldn't find file %s, %s" % (orig_filename, text)

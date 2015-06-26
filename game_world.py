@@ -261,7 +261,7 @@ class GameWorld:
         for obj in self.objects:
             obj.render_debug()
     
-    def save_state_to_file(self, filename=None):
+    def save_to_file(self, filename=None):
         d = {}
         d['gravity_x'] = self.gravity_x
         d['gravity_y'] = self.gravity_y
@@ -272,7 +272,7 @@ class GameWorld:
         objects = []
         for obj in self.objects:
             if obj.should_save:
-                objects.append(obj.get_state_dict())
+                objects.append(obj.get_dict())
         d['objects'] = objects
         if filename:
             if not filename.endswith(STATE_FILE_EXTENSION):
