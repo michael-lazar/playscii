@@ -364,12 +364,6 @@ class GameObject:
             self.vel_y += max(vel_dy, -max_speed)
         elif vel_dy > 0:
             self.vel_y += min(vel_dy, max_speed)
-        # update facing
-        # TODO: flag for "side view only" objects
-        if abs(self.vel_y) >= abs(self.vel_x):
-            self.facing = GOF_BACK if self.vel_y > 0 else GOF_FRONT
-        else:
-            self.facing = GOF_RIGHT if self.vel_x > 0 else GOF_LEFT
     
     def update_move(self):
         # apply friction and move
@@ -391,11 +385,22 @@ class GameObject:
             debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
             self.app.ui.debug_text.post_lines(debug)
     
+    def update_facing(self):
+        dx, dy = self.x - self.last_x, self.y - self.last_y
+        if dx == 0 and dy == 0:
+            return
+        # TODO: flag for "side view only" objects
+        if abs(dy) > abs(dx):
+            self.facing = GOF_BACK if dy >= 0 else GOF_FRONT
+        else:
+            self.facing = GOF_RIGHT if dx >= 0 else GOF_LEFT
+    
     def update(self):
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         self.update_move()
+        self.update_facing()
         # update art based on state (and possibly facing too)
         if self.state_changes_art:
             new_art, flip_x = self.get_art_for_state()
