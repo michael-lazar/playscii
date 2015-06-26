@@ -1,8 +1,8 @@
 import math
 
-from game_object import NSEWPlayer, StaticTileBG, StaticTileObject, DynamicBoxObject, Pickup
+from game_object import TopDownPlayer, StaticTileBG, StaticTileObject, DynamicBoxObject, Pickup
 
-class CronoPlayer(NSEWPlayer):
+class CronoPlayer(TopDownPlayer):
     art_src = 'crono'
     col_offset_x, col_offset_y = 0, 1.25
     col_radius = 1.5

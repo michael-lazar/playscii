@@ -74,7 +74,7 @@
   {
    "art_off_pct_x": 0.5,
    "art_off_pct_y": 0.9,
-   "art_src": "crono_stand_fwd",
+   "art_src": "crono",
    "class_name": "CronoPlayer",
    "is_player": true,
    "locked": false,
