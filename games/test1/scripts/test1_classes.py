@@ -4,6 +4,10 @@ from random import randint
 from art import Art
 from game_object import GameObject, Player
 
+class TestPlayer(Player):
+    state_changes_art = False
+    facing_changes_art = False
+
 class WobblyThing(GameObject):
     
     serialized = GameObject.serialized + ['origin_x', 'origin_y', 'origin_z']
