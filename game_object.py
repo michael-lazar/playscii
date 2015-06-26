@@ -528,7 +528,7 @@ class Player(GameCharacter):
     collision_type = CT_PLAYER
     
     def __init__(self, world, obj_data=None):
-        GameObject.__init__(self, world, obj_data)
+        GameCharacter.__init__(self, world, obj_data)
         if self.world.player is None:
             self.world.player = self
     
@@ -536,9 +536,7 @@ class Player(GameCharacter):
         pass
 
 
-class NSEWPlayer(Player):
-    
-    "top-down player character that can face & travel in 4 directions"
+class TopDownPlayer(Player):
     
     y_sort = True
     attachment_classes = { 'shadow': BlobShadow }
