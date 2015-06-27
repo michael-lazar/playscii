@@ -353,6 +353,10 @@ class GameObject:
         self.renderable.alpha = self.alpha = new_alpha
     
     def move(self, dx, dy):
+        # don't handle moves while game paused
+        # (add override flag if this becomes necessary)
+        if self.world.paused:
+            return
         m = 1 + self.friction
         vel_dx = dx * self.move_accel_rate * m
         vel_dy = dy * self.move_accel_rate * m
