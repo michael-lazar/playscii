@@ -239,6 +239,9 @@ class GameObject:
         self.orig_collision_type = self.collision_type
         self.collision_type = CT_NONE
     
+    def collided(self, other):
+        pass
+    
     def get_all_art(self):
         "returns a list of all Art used by this object"
         return list(self.arts.keys())

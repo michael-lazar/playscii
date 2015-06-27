@@ -1,6 +1,7 @@
 TODO
 
 collision:
+- "collided" + "started/stopped overlapping" callbacks for objects
 - broadphase!
 - AABB and/or capsule shape support
 
@@ -9,6 +10,7 @@ collision:
 further work on existing features:
 
 game edit panel buttons:
+- pause/unpause game
 - duplicate object
 - toggle player camera lock
 

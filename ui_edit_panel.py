@@ -25,6 +25,22 @@ class ResetStateButton(UIButton):
     def selected(button):
         button.element.world.reset_game()
 
+
+class PauseGameButton(UIButton):
+    
+    caption = 'blah'
+    clear_before_caption_draw = True
+    
+    def refresh_caption(button):
+        captions = ['Pause game', 'Unpause game']
+        button.caption = ' %s' % captions[button.element.world.paused]
+        button.draw_caption()
+    
+    def selected(button):
+        button.element.world.toggle_pause()
+        button.refresh_caption()
+
+
 class SetGameDirButton(UIButton):
     caption = 'Set new game dir...'
     def selected(button):
@@ -174,10 +190,10 @@ class EditGamePanel(GamePanel):
     tile_y = 5
     snap_left = True
     button_classes = [ToggleEditUIButton, ToggleGameModeButton,
-                      SetGameDirButton, ResetStateButton, LoadStateButton,
-                      SaveStateButton, SpawnObjectButton, SelectObjectsButton,
-                      ToggleOriginVizButton, ToggleBoundsVizButton,
-                      ToggleCollisionVizButton]
+                      SetGameDirButton, ResetStateButton, PauseGameButton,
+                      LoadStateButton, SaveStateButton, SpawnObjectButton,
+                      SelectObjectsButton, ToggleOriginVizButton,
+                      ToggleBoundsVizButton, ToggleCollisionVizButton]
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):

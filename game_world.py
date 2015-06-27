@@ -31,6 +31,7 @@ class GameWorld:
         self.selected_objects = []
         self.camera = Camera(self.app)
         self.player = None
+        self.paused = False
         self.modules = {'game_object': game_object}
         self.classname_to_spawn = None
         self.objects = []
@@ -192,12 +193,18 @@ class GameWorld:
                 if not module_name in self.modules:
                     self.modules[module_name] = importlib.import_module(module_name)
     
+    def toggle_pause(self):
+        self.paused = not self.paused
+        s = 'Game %spaused.' % ['un', ''][self.paused]
+        self.app.ui.message_line.post_line(s)
+    
     def update(self):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
-        # update objects based on movement, then resolve collisions
-        for obj in self.objects:
-            obj.update()
-        self.cl.resolve_overlaps()
+        if not self.paused:
+            # update objects based on movement, then resolve collisions
+            for obj in self.objects:
+                obj.update()
+            self.cl.resolve_overlaps()
         # display debug text for selected object(s)
         for obj in self.selected_objects:
             s = obj.get_debug_text()
