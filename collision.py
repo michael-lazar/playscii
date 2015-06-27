@@ -29,6 +29,7 @@ class CircleCollisionShape:
 
 class AxisAlignedRoundedRectangle:
     # AAAARRRR matey
+    # TODO: AARR-on-AARR collision detection and resolution!
     def __init__(self, loc_x, loc_y, radius, halfwidth_x, halfwidth_y, gobj):
         self.x, self.y = loc_x, loc_y
         self.radius = radius
@@ -190,6 +191,8 @@ def collide_circles(a, b):
     if pdist < 0:
         # TODO: create/update contact object?
         obj_a, obj_b = a.game_object, b.game_object
+        obj_a.collided(obj_b)
+        obj_b.collided(obj_a)
         total_mass = obj_a.inv_mass + obj_b.inv_mass
         if obj_a.is_dynamic():
             if not obj_b.is_dynamic():

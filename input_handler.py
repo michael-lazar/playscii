@@ -490,6 +490,10 @@ class InputLord:
         self.ui.set_active_frame(self.ui.active_art.active_frame + 1)
     
     def BIND_toggle_anim_playback(self):
+        # if game mode, pause/unpause
+        if self.app.game_mode:
+            self.app.gw.toggle_pause()
+            return
         for r in self.ui.active_art.renderables:
             if r.animating:
                 r.stop_animating()
