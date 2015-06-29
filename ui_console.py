@@ -111,7 +111,7 @@ class SaveGameStateCommand(ConsoleCommand):
     def execute(console, args):
         "Usage: savegame [game state filename]"
         gs_name = ' '.join(args)
-        console.ui.app.gw.save_state_to_file(gs_name)
+        console.ui.app.gw.save_to_file(gs_name)
 
 class SpawnObjectCommand(ConsoleCommand):
     def execute(console, args):
