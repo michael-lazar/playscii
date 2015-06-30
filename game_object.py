@@ -331,7 +331,8 @@ class GameObject:
             return
         self.art = new_art
         self.renderable.set_art(self.art)
-        self.bounds_renderable.art = self.art
+        self.bounds_renderable.set_art(self.art)
+        self.collision.create_shapes()
         if start_animating and new_art.frames > 1:
             self.renderable.start_animating()
     

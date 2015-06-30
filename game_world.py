@@ -24,10 +24,13 @@ class GameWorld:
     "holds global state for game mode"
     gravity_x, gravity_y, gravity_z = 0, 0, 0
     last_click_on_ui = False
+    player_camera_lock = True
+    object_grid_snap = True
     
     def __init__(self, app):
         self.app = app
         self.game_dir = None
+        self.top_game_dir = TOP_GAME_DIR
         self.selected_objects = []
         self.camera = Camera(self.app)
         self.player = None
@@ -123,6 +126,10 @@ class GameWorld:
                 if not obj.locked:
                     obj.x += world_dx
                     obj.y += world_dy
+                    if self.object_grid_snap:
+                        # TODO: this feels crappy, work out a better way
+                        obj.x = round(obj.x)
+                        obj.y = round(obj.y)
             self.dragging_object = True
     
     def select_object(self, obj):
@@ -197,6 +204,17 @@ class GameWorld:
         self.paused = not self.paused
         s = 'Game %spaused.' % ['un', ''][self.paused]
         self.app.ui.message_line.post_line(s)
+    
+    def toggle_player_camera_lock(self):
+        self.player_camera_lock = not self.player_camera_lock
+        if self.player_camera_lock:
+            if self.player:
+                self.camera.focus_object = self.player
+        else:
+            self.camera.focus_object = None
+    
+    def toggle_grid_snap(self):
+        self.object_grid_snap = not self.object_grid_snap
     
     def update(self):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
@@ -352,6 +370,25 @@ class GameWorld:
             if obj is self.player:
                 self.player = spawned
             obj.destroy()
+    
+    def duplicate_selected_objects(self):
+        new_objects = []
+        for obj in self.selected_objects:
+            new_objects.append(self.duplicate_object(obj))
+        # report on objects created
+        if len(new_objects) == 1:
+            self.app.log('%s created from %s' % (obj.name, new_objects[0].name))
+        elif len(new_objects) > 1:
+            self.app.log('%s new objects created' % len(new_objects))
+    
+    def duplicate_object(self, obj):
+        d = obj.get_dict()
+        # offset new object's location
+        x, y = d['x'], d['y']
+        x += obj.renderable.width
+        y -= obj.renderable.height
+        d['x'], d['y'] = x, y
+        return self.spawn_object_from_data(d)
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
         module_name = self.get_module_name_for_class(class_name)
