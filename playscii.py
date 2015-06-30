@@ -240,6 +240,10 @@ class Application:
         filename = filename or 'new'
         if not filename.startswith(ART_DIR):
             filename = '%s%s' % (ART_DIR, filename)
+        # if a game dir is loaded, use that
+        if self.gw.game_dir is not None:
+            filename = '%s%s%s' % (self.gw.top_game_dir,
+                                   self.gw.game_dir, filename)
         charset = self.load_charset(charset or self.starting_charset)
         palette = self.load_palette(palette or self.starting_palette)
         return Art(filename, self, charset, palette, width, height)

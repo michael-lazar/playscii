@@ -327,8 +327,8 @@ class NewArtDialog(UIDialog):
     def confirm_pressed(self):
         name = self.get_field_text(0)
         w, h = int(self.get_field_text(1)), int(self.get_field_text(2))
-        self.ui.app.log('Created %s.psci with size %s x %s' % (name, w, h))
         self.ui.app.new_art_for_edit(name, w, h)
+        self.ui.app.log('Created %s.psci with size %s x %s' % (name, w, h))
         self.dismiss()
 
 

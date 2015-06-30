@@ -254,6 +254,10 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         self.art = game_object.renderable.art
         LineRenderable.__init__(self, app, None, game_object)
     
+    def set_art(self, new_art):
+        self.art = new_art
+        self.reset_size()
+    
     def get_size(self):
         art = self.game_object.art
         w = (art.width * art.quad_width) * self.game_object.scale_x

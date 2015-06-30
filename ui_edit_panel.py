@@ -68,6 +68,11 @@ class SpawnObjectButton(UIButton):
         button.element.list_panel.list_classes()
         button.element.highlight_button(button)
 
+class DuplicateObjectButton(UIButton):
+    caption = 'Duplicate selected objects'
+    def selected(button):
+        button.element.world.duplicate_selected_objects()
+
 class SelectObjectsButton(UIButton):
     caption = 'Select objects...'
     def selected(button):
@@ -91,6 +96,24 @@ class GameEditToggleButton(UIButton):
         button.caption = ' %s ' % button.base_caption
         button.caption += [button.caption_true, button.caption_false][not button.get_caption_value()]
         button.draw_caption()
+
+class TogglePlayerCameraLockButton(GameEditToggleButton):
+    base_caption = 'Player camera lock:'
+    caption_true, caption_false = 'On', 'Off'
+    def get_caption_value(button):
+        return button.element.world.player_camera_lock
+    def selected(button):
+        button.element.world.toggle_player_camera_lock()
+        button.refresh_caption()
+
+class ToggleGridSnapButton(GameEditToggleButton):
+    base_caption = 'Object grid snap:'
+    caption_true, caption_false = 'On', 'Off'
+    def get_caption_value(button):
+        return button.element.world.object_grid_snap
+    def selected(button):
+        button.element.world.toggle_grid_snap()
+        button.refresh_caption()
 
 class ToggleOriginVizButton(GameEditToggleButton):
     base_caption = 'Object origins:'
@@ -186,13 +209,15 @@ class GamePanel(UIElement):
 LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES = 0, 1, 2, 3
 
 class EditGamePanel(GamePanel):
-    tile_width = 26
+    tile_width = 28
     tile_y = 5
     snap_left = True
     button_classes = [ToggleEditUIButton, ToggleGameModeButton,
                       SetGameDirButton, ResetStateButton, PauseGameButton,
                       LoadStateButton, SaveStateButton, SpawnObjectButton,
-                      SelectObjectsButton, ToggleOriginVizButton,
+                      DuplicateObjectButton, SelectObjectsButton,
+                      TogglePlayerCameraLockButton, ToggleGridSnapButton,
+                      ToggleOriginVizButton,
                       ToggleBoundsVizButton, ToggleCollisionVizButton]
     tile_height = len(button_classes) + 1
     

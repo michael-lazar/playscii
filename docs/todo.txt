@@ -1,18 +1,15 @@
 TODO
 
+"no draw" layer?  maybe each layer has its own "visible" flag.  if so, invisible layers should never draw in game mode, and a layer menu toggle sets their visibility in art mode
+
 collision:
-- "collided" + "started/stopped overlapping" callbacks for objects
+- "started/stopped overlapping" callbacks for objects - Contact object to handle lifetime of contacts between objects
 - broadphase!
 - AABB and/or capsule shape support
 
 ---
 
 further work on existing features:
-
-game edit panel buttons:
-- pause/unpause game
-- duplicate object
-- toggle player camera lock
 
 status bar:
 - red X stopped drawing?
