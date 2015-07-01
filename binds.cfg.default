@@ -104,6 +104,8 @@ self.edit_bind_src = {
     '_readme'       : 'open_readme',
     '_switch_art'   : 'art_switch_to',
     '_switch_layer' : 'layer_switch_to',
+	'_layer_viz'    : 'toggle_layer_visibility',
+	'_hidden_layers': 'toggle_hidden_layers_visible',
     '_website'      : 'open_website',
     '_dup_frame'    : 'duplicate_frame',
     '_frame_delay'  : 'change_frame_delay',

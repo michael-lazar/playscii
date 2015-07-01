@@ -243,6 +243,9 @@ class GameWorld:
                 y_objects.append(obj)
                 continue
             for i,z in enumerate(obj.art.layers_z):
+                # ignore invisible layers
+                if not obj.art.layers_visibility[i]:
+                    continue
                 # only draw collision layer if show collision is set
                 if obj.collision_shape_type == collision.CST_TILE and \
                    obj.col_layer_name == obj.art.layer_names[i]:
@@ -263,6 +266,8 @@ class GameWorld:
         for obj in y_objects:
             items = []
             for i,z in enumerate(obj.art.layers_z):
+                if not obj.art.layers_visibility[i]:
+                    continue
                 if obj.collision_shape_type == collision.CST_TILE and \
                    obj.col_layer_name == obj.art.layer_names[i]:
                     if obj.show_collision:

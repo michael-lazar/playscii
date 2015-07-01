@@ -101,6 +101,7 @@ class Art:
         self.active_layer = 0
         # lists of layer Z values and names
         self.layers_z = [DEFAULT_LAYER_Z]
+        self.layers_visibility = [True]
         self.layer_names = ['Layer 1']
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
@@ -228,8 +229,9 @@ class Art:
             self.bg_colors[frame] = duplicate_layer_array(self.bg_colors[frame])
             self.uv_mods[frame] = duplicate_layer_array(self.uv_mods[frame])
         self.layers += 1
-        z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
+        z = z or self.layers_z
         self.layers_z.append(z)
+        self.layers_visibility.append(True)
         new_name = new_name or 'Copy of %s' % self.layer_names[src_index]
         self.layer_names.append(new_name)
         # rebuild geo with added verts for new layer
@@ -264,6 +266,7 @@ class Art:
             self.bg_colors[frame] = np.delete(self.bg_colors[frame], index, 0)
             self.uv_mods[frame] = np.delete(self.uv_mods[frame], index, 0)
         self.layers_z.pop(index)
+        self.layers_visibility.pop(index)
         self.layer_names.pop(index)
         self.layers -= 1
         self.geo_changed = True
@@ -518,6 +521,7 @@ class Art:
             layers = []
             for layer_index in range(self.layers):
                 layer = { 'z': self.layers_z[layer_index] }
+                layer['visible'] = int(self.layers_visibility[layer_index])
                 layer['name'] = self.layer_names[layer_index]
                 tiles = []
                 for y in range(self.height):
@@ -691,11 +695,13 @@ class ArtFromDisk(Art):
         self.layers = len(frames[0]['layers'])
         # get layer z depths from first frame's data
         self.layers_z = []
+        self.layers_visibility = []
         self.layer_names = []
         # active frame will be set properly near end of init
         self.active_layer = 0
         for i,layer in enumerate(frames[0]['layers']):
             self.layers_z.append(layer['z'])
+            self.layers_visibility.append(bool(layer.get('visible', 1)))
             layer_num = str(i + 1)
             self.layer_names.append(layer.get('name', 'Layer %s' % layer_num))
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
@@ -784,6 +790,7 @@ class ArtFromEDSCII(Art):
         self.active_frame = 0
         self.layers = 1
         self.layers_z = [DEFAULT_LAYER_Z]
+        self.layers_visibility = [True]
         self.layer_names = ['Layer 1']
         self.active_layer = 0
         shape = (self.layers, self.height, self.width, 4)
