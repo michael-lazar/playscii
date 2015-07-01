@@ -335,6 +335,13 @@ class LayerSetZMenuItem(PulldownMenuItem):
     label = "Change this layer's Z-depth..."
     command = 'change_layer_z'
 
+class LayerToggleVisibleMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'toggle_layer_visibility'
+    def get_label(app):
+        visible = app.ui.active_art.layers_visibility[app.ui.active_art.active_layer]
+        return ['Show', 'Hide'][visible] + ' this layer (Game Mode)'
+
 class LayerDeleteMenuItem(PulldownMenuItem):
     label = "Delete this layer"
     command = 'delete_layer'
@@ -352,6 +359,14 @@ class LayerSetInactiveVizMenuItem(PulldownMenuItem):
             return l + 'Dim'
         elif app.inactive_layer_visibility == LAYER_VIS_NONE:
             return l + 'Invisible'
+
+class LayerToggleVizMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'toggle_hidden_layers_visible'
+    def get_label(app):
+        l = 'Art Mode-only layers: '
+        l += ['Hidden', 'Visible'][app.show_hidden_layers]
+        return l
 
 class LayerPreviousMenuItem(PulldownMenuItem):
     label = 'Previous layer'
@@ -508,7 +523,8 @@ class FrameMenuData(PulldownMenuData):
 class LayerMenuData(PulldownMenuData):
     
     items = [LayerAddMenuItem, LayerDuplicateMenuItem, LayerSetNameMenuItem,
-             LayerSetZMenuItem, LayerDeleteMenuItem, SeparatorMenuItem,
+             LayerSetZMenuItem, LayerToggleVisibleMenuItem, LayerDeleteMenuItem,
+             SeparatorMenuItem, LayerToggleVizMenuItem,
              LayerSetInactiveVizMenuItem, LayerPreviousMenuItem,
              LayerNextMenuItem, SeparatorMenuItem]
     
@@ -539,6 +555,8 @@ class LayerMenuData(PulldownMenuData):
             item = TempMenuItemClass
             # leave spaces for mark
             item.label = '  %s' % layer_name
+            if not app.ui.active_art.layers_visibility[i]:
+                item.label += ' (hidden)'
             # pad, put Z depth on far right
             item.label = item.label.ljust(longest_line)
             # trim to keep below a max length

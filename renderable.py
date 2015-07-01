@@ -337,6 +337,9 @@ class TileRenderable:
             layers = [layers]
         layer_size = int(len(self.art.elem_array) / self.art.layers)
         for i in layers:
+            # skip game mode-hidden layers
+            if not self.app.show_hidden_layers and not self.art.layers_visibility[i]:
+                continue
             layer_start = i * layer_size
             layer_end = layer_start + layer_size
             # for active art, dim all but active layer based on UI setting

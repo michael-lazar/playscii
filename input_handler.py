@@ -722,6 +722,16 @@ class InputLord:
     def BIND_change_layer_z(self):
         self.ui.open_dialog(SetLayerZDialog)
     
+    def BIND_toggle_layer_visibility(self):
+        art = self.ui.active_art
+        is_visible = art.layers_visibility[art.active_layer]
+        art.layers_visibility[art.active_layer] = not is_visible
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_toggle_hidden_layers_visible(self):
+        self.app.show_hidden_layers = not self.app.show_hidden_layers
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_delete_layer(self):
         self.ui.active_art.delete_layer(self.ui.active_art.active_layer)
         self.ui.menu_bar.refresh_active_menu()
