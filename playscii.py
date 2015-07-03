@@ -444,8 +444,7 @@ class Application:
         while not self.should_quit:
             # set all arts to "not updated"
             if self.game_mode:
-                for game_object in self.gw.objects:
-                    game_object.art.updated_this_tick = False
+                self.gw.pre_update()
             else:
                 for art in self.art_loaded_for_edit:
                     art.updated_this_tick = False
@@ -551,8 +550,7 @@ class Application:
             self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
-            for obj in self.gw.objects:
-                obj.destroy()
+            self.gw.unload_game()
             self.fb.destroy()
             self.ui.destroy()
             for charset in self.charsets:

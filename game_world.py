@@ -37,7 +37,8 @@ class GameWorld:
         self.paused = False
         self.modules = {'game_object': game_object}
         self.classname_to_spawn = None
-        self.objects = []
+        # table of objects by name:object
+        self.objects = {}
         self.cl = collision.CollisionLord(self)
         self.art_loaded, self.renderables = [], []
         # player is edit-dragging an object
@@ -52,12 +53,9 @@ class GameWorld:
         return None
     
     def get_objects_at(self, x, y):
-        "returns all objects whose bounds fall within given point"
+        "returns list of all objects whose bounds fall within given point"
         objects = []
-        # reverse object list, helps in (common) case where BG spawns first
-        objects_reversed = self.objects[:]
-        objects_reversed.reverse()
-        for obj in objects_reversed:
+        for obj in self.objects:
             # only allow selecting of visible objects
             # (can still be selected via edit panel)
             if obj.visible and not obj.locked and obj.is_point_inside(x, y):
@@ -144,16 +142,16 @@ class GameWorld:
         self.selected_objects = []
     
     def unload_game(self):
-        for obj in self.objects:
+        for obj in self.objects.values():
             obj.destroy()
         self.cl.reset()
-        self.objects = []
+        self.objects = {}
         self.renderables = []
         self.art_loaded = []
         self.selected_objects = []
     
     def set_for_all_objects(self, name, value):
-        for obj in self.objects:
+        for obj in self.objects.values():
             setattr(obj, name, value)
     
     def move_selected(self, move_x, move_y, move_z):
@@ -216,11 +214,16 @@ class GameWorld:
     def toggle_grid_snap(self):
         self.object_grid_snap = not self.object_grid_snap
     
+    def pre_update(self):
+        "runs at start of game loop iteration, before input/update/render"
+        for obj in self.objects.values():
+            obj.art.updated_this_tick = False
+    
     def update(self, dt):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
         if not self.paused:
             # update objects based on movement, then resolve collisions
-            for obj in self.objects:
+            for obj in self.objects.values():
                 obj.update(dt)
             self.cl.resolve_overlaps()
         # display debug text for selected object(s)
@@ -230,7 +233,7 @@ class GameWorld:
                 self.app.ui.debug_text.post_lines(s)
     
     def render(self):
-        for obj in self.objects:
+        for obj in self.objects.values():
             obj.update_renderables()
         #
         # process non "Y sort" objects first
@@ -238,7 +241,7 @@ class GameWorld:
         draw_order = []
         collision_items = []
         y_objects = []
-        for obj in self.objects:
+        for obj in self.objects.values():
             if obj.y_sort:
                 y_objects.append(obj)
                 continue
@@ -288,7 +291,7 @@ class GameWorld:
         for item in collision_items:
             # draw all tile collision at z 0
             item.obj.render(item.layer, 0)
-        for obj in self.objects:
+        for obj in self.objects.values():
             obj.render_debug()
     
     def save_to_file(self, filename=None):
@@ -300,7 +303,7 @@ class GameWorld:
         d['camera_y'] = self.camera.y
         d['camera_z'] = self.camera.z
         objects = []
-        for obj in self.objects:
+        for obj in self.objects.values():
             if obj.should_save:
                 objects.append(obj.get_dict())
         d['objects'] = objects
