@@ -178,16 +178,8 @@ class CollisionLord:
                         continue
                     collide_circles(a, b)
         # check which objects stopped colliding
-        for a in self.dynamic_shapes + self.static_shapes:
-            for b in self.dynamic_shapes + self.static_shapes:
-                if b is a:
-                    continue
-                obj_a, obj_b = a.game_object, b.game_object
-                if not obj_b.name in obj_a.collision.contacts:
-                    continue
-                if obj_a.collision.contacts[obj_b.name][2] < self.ticks:
-                    obj_a.stopped_colliding(obj_b)
-                    obj_b.stopped_colliding(obj_a)
+        for obj in self.world.objects.values():
+            obj.check_finished_contacts()
         self.ticks += 1
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):

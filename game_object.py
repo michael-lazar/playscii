@@ -117,6 +117,9 @@ class GameObject:
         # every object gets a state and facing, even if it never changes
         self.state = DEFAULT_STATE
         self.facing = GOF_FRONT
+        # generate, somewhat human-readable unique name for object
+        name = str(self)
+        self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         # apply serialized data before most of init happens
         # properties that need non-None defaults should be declared above
         if obj_data:
@@ -139,9 +142,6 @@ class GameObject:
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
-        # generate unique name for object
-        name = str(self)
-        self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
         self.world = world
         self.app = self.world.app
         # load/create assets
@@ -169,7 +169,7 @@ class GameObject:
         # remember previous collision type for enable/disable
         self.orig_collision_type = None
         self.collision = Collideable(self)
-        self.world.objects.append(self)
+        self.world.objects[self.name] = self
         self.attachments = []
         for atch_name,atch_class in self.attachment_classes.items():
             attachment = atch_class(self.world)
@@ -243,11 +243,26 @@ class GameObject:
         pass
     
     def stopped_colliding(self, other):
+        # called from check_finished_contacts
         self.collision.contacts.pop(other.name)
+    
+    def check_finished_contacts(self):
+        """
+        updates our collideable's contacts table for contacts that were
+        happening last update but not this one, and call stopped_colliding
+        """
+        # put stopped-colliding objects in a list to process after checks
+        finished = []
+        for obj_name,contact in self.collision.contacts.items():
+            if contact[2] < self.world.cl.ticks:
+                finished.append(self.world.objects[obj_name])
+        for obj in finished:
+            self.stopped_colliding(obj)
+            obj.stopped_colliding(self)
     
     def collided(self, other, dx, dy):
         started = not other.name in self.collision.contacts
-        # create or update contact info
+        # create or update contact info: (depth_x, depth_y, timestamp)
         # TODO: maybe use a named tuple here
         self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
         if started:
@@ -472,7 +487,7 @@ class GameObject:
         self.world.reset_object_in_place(self)
     
     def destroy(self):
-        self.world.objects.remove(self)
+        self.world.objects.pop(self.name)
         if self in self.world.selected_objects:
             self.world.selected_objects.remove(self)
         self.world.renderables.remove(self.renderable)

@@ -785,7 +785,7 @@ class InputLord:
         self.ui.fps_counter.visible = not self.ui.fps_counter.visible
     
     def BIND_open_all_game_assets(self):
-        for game_obj in self.app.gw.objects:
+        for game_obj in self.app.gw.objects.values():
             for art_filename in game_obj.get_all_art():
                 self.app.load_art_for_edit(art_filename)
         self.ui.menu_bar.refresh_active_menu()
