@@ -239,8 +239,19 @@ class GameObject:
         self.orig_collision_type = self.collision_type
         self.collision_type = CT_NONE
     
-    def collided(self, other):
+    def started_colliding(self, other):
         pass
+    
+    def stopped_colliding(self, other):
+        self.collision.contacts.pop(other.name)
+    
+    def collided(self, other, dx, dy):
+        started = not other.name in self.collision.contacts
+        # create or update contact info
+        # TODO: maybe use a named tuple here
+        self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
+        if started:
+            self.started_colliding(other)
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -403,7 +414,7 @@ class GameObject:
         else:
             self.facing = GOF_RIGHT if dx >= 0 else GOF_LEFT
     
-    def update(self):
+    def update(self, dt):
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
@@ -486,7 +497,7 @@ class GameObjectAttachment(GameObject):
     def attach_to(self, gobj):
         self.parent = gobj
     
-    def update(self):
+    def update(self, dt):
         if not self.art.updated_this_tick:
             self.art.update()
         self.x = self.parent.x + self.offset_x
@@ -546,6 +557,9 @@ class Player(GameCharacter):
             self.world.player = self
     
     def button_pressed(self, button_index):
+        pass
+    
+    def button_unpressed(self, button_index):
         pass
 
 

@@ -145,6 +145,9 @@ class InputLord:
             elif event.type == sdl2.SDL_JOYBUTTONDOWN:
                 if not app.gw.paused:
                     app.gw.player.button_pressed(event.jbutton.button)
+            elif event.type == sdl2.SDL_JOYBUTTONUP:
+                if not app.gw.paused:
+                    self.app.gw.player.button_unpressed(event.jbutton.button)
             elif event.type == sdl2.SDL_KEYDOWN:
                 # if console is up, pass input to it
                 if self.ui.console.visible:
@@ -169,7 +172,12 @@ class InputLord:
             elif event.type == sdl2.SDL_KEYUP:
                 # dismiss selector popup
                 f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
-                if f == self.BIND_toggle_picker:
+                if f == self.BIND_select_or_paint:
+                    if self.app.game_mode:
+                        if not self.ui.active_dialog:
+                            self.app.gw.player.button_unpressed(0)
+                        return
+                elif f == self.BIND_toggle_picker:
                     # ..but only for default hold-to-show setting
                     if self.ui.popup_hold_to_show:
                         self.ui.popup.hide()

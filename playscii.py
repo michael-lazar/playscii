@@ -451,7 +451,7 @@ class Application:
                     art.updated_this_tick = False
             tick_time = sdl2.timer.SDL_GetTicks()
             self.input()
-            self.update()
+            self.update(self.delta_time / 1000)
             self.render()
             self.sl.check_hot_reload()
             elapsed_time = sdl2.timer.SDL_GetTicks()
@@ -476,7 +476,7 @@ class Application:
     def input(self):
         self.il.input()
     
-    def update(self):
+    def update(self, dt):
         for art in self.art_loaded_for_edit:
             art.update()
         for renderable in self.edit_renderables:
@@ -484,7 +484,7 @@ class Application:
         if self.converter:
             self.converter.update()
         if self.game_mode:
-            self.gw.update()
+            self.gw.update(dt)
         self.camera.update()
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
