@@ -216,12 +216,12 @@ class GameWorld:
     def toggle_grid_snap(self):
         self.object_grid_snap = not self.object_grid_snap
     
-    def update(self):
+    def update(self, dt):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
         if not self.paused:
             # update objects based on movement, then resolve collisions
             for obj in self.objects:
-                obj.update()
+                obj.update(dt)
             self.cl.resolve_overlaps()
         # display debug text for selected object(s)
         for obj in self.selected_objects:

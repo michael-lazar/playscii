@@ -46,6 +46,8 @@ class Collideable:
         self.game_object = obj
         self.cl = self.game_object.world.cl
         self.renderables, self.shapes = [], []
+        # contacts with other objects
+        self.contacts = {}
         self.create_shapes()
     
     def create_shapes(self):
@@ -133,6 +135,7 @@ class CollisionLord:
     
     def __init__(self, world):
         self.world = world
+        self.ticks = 0
         self.reset()
     
     def reset(self):
@@ -174,6 +177,18 @@ class CollisionLord:
                     if b.game_object.collision_type == CT_NONE:
                         continue
                     collide_circles(a, b)
+        # check which objects stopped colliding
+        for a in self.dynamic_shapes + self.static_shapes:
+            for b in self.dynamic_shapes + self.static_shapes:
+                if b is a:
+                    continue
+                obj_a, obj_b = a.game_object, b.game_object
+                if not obj_b.name in obj_a.collision.contacts:
+                    continue
+                if obj_a.collision.contacts[obj_b.name][2] < self.ticks:
+                    obj_a.stopped_colliding(obj_b)
+                    obj_b.stopped_colliding(obj_a)
+        self.ticks += 1
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     "returns normalized penetration x, y, and distance"
@@ -189,10 +204,10 @@ def collide_circles(a, b):
     dx, dy, pdist = point_circle_penetration(a.x, a.y, b.x, b.y,
                                              a.radius + b.radius)
     if pdist < 0:
-        # TODO: create/update contact object?
         obj_a, obj_b = a.game_object, b.game_object
-        obj_a.collided(obj_b)
-        obj_b.collided(obj_a)
+        # tell objects they've collided, pass penetration vector
+        obj_a.collided(obj_b, dx, dy)
+        obj_b.collided(obj_a, dx, dy)
         total_mass = obj_a.inv_mass + obj_b.inv_mass
         if obj_a.is_dynamic():
             if not obj_b.is_dynamic():
