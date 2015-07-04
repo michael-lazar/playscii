@@ -197,9 +197,15 @@ def collide_circles(a, b):
                                              a.radius + b.radius)
     if pdist < 0:
         obj_a, obj_b = a.game_object, b.game_object
-        # tell objects they've collided, pass penetration vector
-        obj_a.collided(obj_b, dx, dy)
-        obj_b.collided(obj_a, dx, dy)
+        # tell objects they're overlapping, pass penetration vector
+        a_coll_b = obj_a.overlapped(obj_b, dx, dy)
+        shoulds = ["shouldn't", 'should']
+        #print('%s %s collide with %s' % (obj_a.name, shoulds[a_coll_b], obj_b.name))
+        b_coll_a = obj_b.overlapped(obj_a, dx, dy)
+        #print('%s %s collide with %s' % (obj_b.name, shoulds[b_coll_a], obj_a.name))
+        # if either object says it shouldn't collide with other, don't
+        if not a_coll_b or not b_coll_a:
+            return
         total_mass = obj_a.inv_mass + obj_b.inv_mass
         if obj_a.is_dynamic():
             if not obj_b.is_dynamic():

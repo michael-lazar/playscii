@@ -374,7 +374,7 @@ class EditListPanel(GamePanel):
     def list_objects(self):
         self.items = []
         self.clear_buttons(self.list_buttons)
-        for obj in self.world.objects:
+        for obj in self.world.objects.values():
             li = self.ListItem(obj.name, obj)
             self.items.append(li)
         self.titlebar = 'Objects:'
@@ -415,7 +415,7 @@ class EditListPanel(GamePanel):
         # prune any objects that have been deleted from items
         if self.list_mode == LIST_OBJECTS:
             for item in self.items:
-                if not item.obj in self.world.objects:
+                if not item.obj in self.world.objects.values():
                     self.items.remove(item)
         for i,b in enumerate(self.list_buttons):
             if i >= len(self.items):

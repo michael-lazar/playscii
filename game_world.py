@@ -1,4 +1,4 @@
-import os, sys, time, json, importlib, inspect
+import os, sys, time, json, importlib
 
 import collision
 from camera import Camera
@@ -55,7 +55,7 @@ class GameWorld:
     def get_objects_at(self, x, y):
         "returns list of all objects whose bounds fall within given point"
         objects = []
-        for obj in self.objects:
+        for obj in self.objects.values():
             # only allow selecting of visible objects
             # (can still be selected via edit panel)
             if obj.visible and not obj.locked and obj.is_point_inside(x, y):
@@ -360,13 +360,8 @@ class GameWorld:
                 # skip anything that's not a class
                 if not type(v) is type:
                     continue
-                # use inspect module to get /all/ parent classes
-                for c in inspect.getmro(v):
-                    # string compare class name, because in / issubclass fails!
-                    # TODO: understand why
-                    if c.__name__ == 'GameObject':
-                        classes[k] = v
-                        break
+                if issubclass(v, game_object.GameObject):
+                    classes[k] = v
         return classes
     
     def reset_object_in_place(self, obj):
@@ -420,6 +415,9 @@ class GameWorld:
         if not module:
             self.app.log("Couldn't import module %s" % module_name)
             return
+        for obj in self.objects.values():
+            for ncc in obj.noncolliding_classes:
+                pass
         self.modules[module.__name__] = module
         # spawn classes
         obj_class = module.__dict__[class_name]
@@ -449,6 +447,11 @@ class GameWorld:
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
+        # refresh class references, which may be out of date causing
+        # checks like issubclass/isinstance to fail
+        classes = self.get_all_loaded_classes()
+        for obj in self.objects.values():
+            obj.update_class_references(classes)
         # restore camera settings
         if 'camera_x' in d and 'camera_y' in d and 'camera_z' in d:
             self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])

@@ -111,6 +111,8 @@ class GameObject:
     selectable = True
     # objects to spawn as attachments: key is member name, value is class
     attachment_classes = {}
+    # class blacklist for collisions
+    noncolliding_classes = []
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
@@ -154,9 +156,15 @@ class GameObject:
                                         self.art_palette)
         else:
             self.load_arts()
-        if not self.art and len(self.arts) == 0:
-            self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
-            return
+        if not self.art:
+            # grab first available art
+            if len(self.arts) > 0:
+                for art in self.arts:
+                    self.art = self.arts[art]
+                    break
+            else:
+                self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
+                return
         self.renderable = GameObjectRenderable(self.app, self.art, self)
         self.renderable.alpha = self.alpha
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
@@ -260,13 +268,21 @@ class GameObject:
             self.stopped_colliding(obj)
             obj.stopped_colliding(self)
     
-    def collided(self, other, dx, dy):
+    def overlapped(self, other, dx, dy):
         started = not other.name in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
         # TODO: maybe use a named tuple here
         self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
         if started:
             self.started_colliding(other)
+        # return False if we shouldn't collide with this class
+        for ncc in self.noncolliding_classes:
+            print('%s: %s' % (ncc, hash(ncc)))
+            print('%s: %s' % (type(other), hash(type(other))))
+            print('-----')
+            if isinstance(other, ncc):
+                return False
+        return True
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
@@ -286,6 +302,14 @@ class GameObject:
             method(new_value)
         else:
             setattr(self, prop_name, new_value)
+    
+    def update_class_references(self, new_class_table):
+        """
+        called when eg game state is loaded, update class definitions that might
+        have been reloaded, else issubclass/isinstance checks will fail!
+        """
+        for i,ncc in enumerate(self.noncolliding_classes):
+            self.noncolliding_classes[i] = new_class_table[ncc.__name__]
     
     def get_art_for_state(self, state=None):
         "returns art (and 'flip X' bool) that best represents current state"
@@ -487,10 +511,8 @@ class GameObject:
         self.world.reset_object_in_place(self)
     
     def destroy(self):
-        self.world.objects.pop(self.name)
         if self in self.world.selected_objects:
             self.world.selected_objects.remove(self)
-        self.world.renderables.remove(self.renderable)
         self.origin_renderable.destroy()
         self.bounds_renderable.destroy()
         self.collision.destroy()
