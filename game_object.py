@@ -111,7 +111,7 @@ class GameObject:
     selectable = True
     # objects to spawn as attachments: key is member name, value is class
     attachment_classes = {}
-    # class blacklist for collisions
+    # class blacklist for collisions - string names of classes, not class defs
     noncolliding_classes = []
     
     def __init__(self, world, obj_data=None):
@@ -276,10 +276,8 @@ class GameObject:
         if started:
             self.started_colliding(other)
         # return False if we shouldn't collide with this class
-        for ncc in self.noncolliding_classes:
-            print('%s: %s' % (ncc, hash(ncc)))
-            print('%s: %s' % (type(other), hash(type(other))))
-            print('-----')
+        for ncc_name in self.noncolliding_classes:
+            ncc = self.world.classes[ncc_name]
             if isinstance(other, ncc):
                 return False
         return True
@@ -302,14 +300,6 @@ class GameObject:
             method(new_value)
         else:
             setattr(self, prop_name, new_value)
-    
-    def update_class_references(self, new_class_table):
-        """
-        called when eg game state is loaded, update class definitions that might
-        have been reloaded, else issubclass/isinstance checks will fail!
-        """
-        for i,ncc in enumerate(self.noncolliding_classes):
-            self.noncolliding_classes[i] = new_class_table[ncc.__name__]
     
     def get_art_for_state(self, state=None):
         "returns art (and 'flip X' bool) that best represents current state"
@@ -495,10 +485,7 @@ class GameObject:
     
     def get_dict(self):
         "return a dict that GameWorld.save_to_file can dump to JSON"
-        d = {
-            'class_name': type(self).__name__,
-            'module_name': type(self).__module__,
-        }
+        d = { 'class_name': type(self).__name__ }
         if self is self.world.player:
             d['is_player'] = True
         # serialize whatever other vars are declared in self.serialized

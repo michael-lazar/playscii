@@ -64,7 +64,6 @@ self.edit_bind_src = {
     'shift t'  : 'toggle_camera_tilt',
     'return'   : 'select_or_paint',
     'f12'      : 'screenshot',
-    'ctrl t'   : 'run_game_mode_test',
     'ctrl shift m'   : 'run_test_mutate',
     'up'       : 'arrow_up',
     'down'     : 'arrow_down',

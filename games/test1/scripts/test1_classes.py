@@ -19,7 +19,7 @@ class WobblyThing(GameObject):
         self.origin_z = randint(-5, 5)
         self.start_animating()
     
-    def update(self):
+    def update(self, dt):
         x_off = math.sin(self.app.elapsed_time / 1000) * self.origin_x
         y_off = math.sin(self.app.elapsed_time / 500) * self.origin_y
         z_off = math.sin(self.app.elapsed_time / 750) * self.origin_z
@@ -29,7 +29,7 @@ class WobblyThing(GameObject):
         scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
         scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
         self.set_scale(scale_x, scale_y, 1)
-        GameObject.update(self)
+        GameObject.update(self, dt)
 
 class ParticleThing(GameObject):
     
