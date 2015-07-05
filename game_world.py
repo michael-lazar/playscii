@@ -43,7 +43,7 @@ class GameWorld:
         self.art_loaded, self.renderables = [], []
         # player is edit-dragging an object
         self.dragging_object = False
-        self.last_state_loaded = None
+        self.last_state_loaded = DEFAULT_STATE_FILENAME
     
     def pick_next_object_at(self, x, y):
         # TODO: cycle through objects at point til an unselected one is found
@@ -163,7 +163,7 @@ class GameWorld:
     
     def reset_game(self):
         if self.game_dir:
-            self.set_game_dir(self.game_dir, True)
+            self.load_game_state(self.last_state_loaded)
     
     def get_game_dir(self):
         return TOP_GAME_DIR + self.game_dir
@@ -177,11 +177,13 @@ class GameWorld:
             if not dir_name.endswith('/'):
                 self.game_dir += '/'
             self.app.log('Game data directory is now %s' % dir_name)
-            # import all submodules to get them in namespace from the get-go
-            self.import_all()
-            # load in a default state, eg start.gs
             if reset:
+                # load in a default state, eg start.gs
                 self.load_game_state(DEFAULT_STATE_FILENAME)
+            else:
+                # if no reset load submodules into namespace from the get-go
+                self.import_all()
+                self.classes = self.get_all_loaded_classes()
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
         if self.app.ui:
@@ -192,8 +194,11 @@ class GameWorld:
         module_suffix += self.game_dir[:-1] + '.'
         module_suffix += GAME_SCRIPTS_DIR[:-1] + '.'
         module_path = TOP_GAME_DIR + self.game_dir + GAME_SCRIPTS_DIR
+        self.modules = {}
+        self.modules['game_object'] = game_object
         for filename in os.listdir(module_path):
-            if filename.endswith('.py'):
+            # exclude emacs temp files :/
+            if filename.endswith('.py') and not filename.startswith('.#'):
                 module_name = module_suffix + filename[:-3]
                 if not module_name in self.modules:
                     self.modules[module_name] = importlib.import_module(module_name)
@@ -321,41 +326,12 @@ class GameWorld:
                   sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
     
-    def find_module(self, module_name):
-        "returns module object with given name, importing/reloading if needed"
-        if module_name in self.modules:
-            return importlib.reload(self.modules[module_name])
-        try:
-            return importlib.import_module(module_name)
-        except:
-            # not found in global namespace, check in scripts dir
-            module_name = '%s.%s.%s.%s' % (TOP_GAME_DIR[:-1],
-                                           self.game_dir[:-1],
-                                           GAME_SCRIPTS_DIR[:-1], module_name)
-        if module_name in self.modules:
-            try:
-                return importlib.reload(self.modules[module_name])
-            except:
-                # log exception info
-                #self.app.log(sys.exc_info())
-                return None
-        else:
-            return importlib.import_module(module_name)
-    
-    def get_module_name_for_class(self, class_name):
-        if '.' in class_name:
-            return class_name[:class_name.rfind('.')]
-        for module_name,module in self.modules.items():
-            if class_name in module.__dict__:
-                return module_name
-        return None
-    
     def get_all_loaded_classes(self):
         """
         returns classname,class dict of all GameObject classes in loaded modules
         """
         classes = {}
-        for module_name,module in self.modules.items():
+        for module in self.modules.values():
             for k,v in module.__dict__.items():
                 # skip anything that's not a class
                 if not type(v) is type:
@@ -394,11 +370,10 @@ class GameWorld:
         return self.spawn_object_from_data(d)
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
-        module_name = self.get_module_name_for_class(class_name)
-        if not module_name:
-            self.app.log("Couldn't find module for class %s" % class_name)
+        if not class_name in self.classes:
+            self.app.log("Couldn't find class %s" % class_name)
             return
-        d = {'class_name': class_name, 'module_name': module_name}
+        d = {'class_name': class_name}
         if x is not None and y is not None:
             d['x'], d['y'] = x, y
         return self.spawn_object_from_data(d)
@@ -406,21 +381,10 @@ class GameWorld:
     def spawn_object_from_data(self, object_data):
         # load module and class
         class_name = object_data.get('class_name', None)
-        module_name = object_data.get('module_name', None)
-        if not class_name or not module_name:
-            self.app.log("Couldn't parse class %s in module %s" % (class_name,
-                                                                   module_name))
+        if not class_name or not class_name in self.classes:
+            self.app.log("Couldn't parse class %s" % class_name)
             return
-        module = self.find_module(module_name)
-        if not module:
-            self.app.log("Couldn't import module %s" % module_name)
-            return
-        for obj in self.objects.values():
-            for ncc in obj.noncolliding_classes:
-                pass
-        self.modules[module.__name__] = module
-        # spawn classes
-        obj_class = module.__dict__[class_name]
+        obj_class = self.classes[class_name]
         # pass in object data
         new_object = obj_class(self, object_data)
         # special handling if object is player
@@ -434,6 +398,9 @@ class GameWorld:
                                   filename, STATE_FILE_EXTENSION)
         self.app.enter_game_mode()
         self.unload_game()
+        # import all submodules and catalog classes
+        self.import_all()
+        self.classes = self.get_all_loaded_classes()
         try:
             d = json.load(open(filename))
             #self.app.log('Loading game state file %s...' % filename)
@@ -447,11 +414,6 @@ class GameWorld:
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
-        # refresh class references, which may be out of date causing
-        # checks like issubclass/isinstance to fail
-        classes = self.get_all_loaded_classes()
-        for obj in self.objects.values():
-            obj.update_class_references(classes)
         # restore camera settings
         if 'camera_x' in d and 'camera_y' in d and 'camera_z' in d:
             self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])

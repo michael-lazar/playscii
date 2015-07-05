@@ -574,9 +574,6 @@ class InputLord:
     def BIND_screenshot(self):
         self.app.screenshot()
     
-    def BIND_run_game_mode_test(self):
-        self.app.load_game('test1')
-    
     def BIND_run_test_mutate(self):
         if self.ui.active_art.is_script_running('conway'):
             self.ui.active_art.stop_script('conway')
