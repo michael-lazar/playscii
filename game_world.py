@@ -194,14 +194,20 @@ class GameWorld:
         module_suffix += self.game_dir[:-1] + '.'
         module_suffix += GAME_SCRIPTS_DIR[:-1] + '.'
         module_path = TOP_GAME_DIR + self.game_dir + GAME_SCRIPTS_DIR
-        self.modules = {}
-        self.modules['game_object'] = game_object
+        # build list of module files
+        modules_list = ['game_object']
         for filename in os.listdir(module_path):
             # exclude emacs temp files :/
             if filename.endswith('.py') and not filename.startswith('.#'):
-                module_name = module_suffix + filename[:-3]
-                if not module_name in self.modules:
-                    self.modules[module_name] = importlib.import_module(module_name)
+                modules_list.append(module_suffix + filename[:-3])
+        # make copy of old modules table for import vs reload check
+        old_modules = self.modules.copy()
+        self.modules = {}
+        for module_name in modules_list:
+            if module_name in old_modules:
+                self.modules[module_name] = importlib.reload(old_modules[module_name])
+            else:
+                self.modules[module_name] = importlib.import_module(module_name)
     
     def toggle_pause(self):
         self.paused = not self.paused
@@ -394,8 +400,10 @@ class GameWorld:
         return new_object
     
     def load_game_state(self, filename):
-        filename = '%s%s%s.%s' % (TOP_GAME_DIR, self.game_dir,
-                                  filename, STATE_FILE_EXTENSION)
+        if not os.path.exists(filename):
+            filename = '%s%s%s' % (TOP_GAME_DIR, self.game_dir, filename)
+        if not filename.endswith(STATE_FILE_EXTENSION):
+            filename += '.%s' % STATE_FILE_EXTENSION
         self.app.enter_game_mode()
         self.unload_game()
         # import all submodules and catalog classes
