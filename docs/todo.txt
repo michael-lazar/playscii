@@ -26,6 +26,8 @@ main popup
 
 shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 
-if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+- if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
+-- or just create a binary format that isn't broken like EDSCII's was? probably best to do once file format has stabilized
+--- don't save "blank" tiles at all - determine a global/default FG/BG for majority of tiles
 
 state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?

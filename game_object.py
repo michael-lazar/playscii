@@ -173,17 +173,18 @@ class GameObject:
         for art in self.arts:
             if art in self.world.art_loaded:
                 self.world.art_loaded.append(art)
-        self.world.renderables.append(self.renderable)
         # remember previous collision type for enable/disable
         self.orig_collision_type = None
         self.collision = Collideable(self)
         self.world.objects[self.name] = self
         self.attachments = []
-        for atch_name,atch_class in self.attachment_classes.items():
+        for atch_name,atch_class_name in self.attachment_classes.items():
+            atch_class = self.world.classes[atch_class_name]
             attachment = atch_class(self.world)
             self.attachments.append(attachment)
             attachment.attach_to(self)
             setattr(self, atch_name, attachment)
+        self.should_destroy = False
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
@@ -235,6 +236,9 @@ class GameObject:
         self.disable_collision()
     
     def stop_dragging(self):
+        if self.world.object_grid_snap:
+            self.x = round(self.x)
+            self.y = round(self.y)
         self.enable_collision()
         if self.collision_shape_type == CST_TILE:
             self.collision.create_shapes()
@@ -372,7 +376,8 @@ class GameObject:
         self.art = new_art
         self.renderable.set_art(self.art)
         self.bounds_renderable.set_art(self.art)
-        self.collision.create_shapes()
+        if self.collision_shape_type == CST_TILE:
+            self.collision.create_shapes()
         if start_animating and new_art.frames > 1:
             self.renderable.start_animating()
     
@@ -506,6 +511,7 @@ class GameObject:
         for attachment in self.attachments:
             attachment.destroy()
         self.renderable.destroy()
+        self.should_destroy = True
 
 
 class GameObjectAttachment(GameObject):
@@ -555,7 +561,7 @@ class Pickup(GameObject):
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
     y_sort = True
-    attachment_classes = { 'shadow': BlobShadow }
+    attachment_classes = { 'shadow': 'BlobShadow' }
 
 class GameCharacter(GameObject):
     
@@ -590,7 +596,7 @@ class Player(GameCharacter):
 class TopDownPlayer(Player):
     
     y_sort = True
-    attachment_classes = { 'shadow': BlobShadow }
+    attachment_classes = { 'shadow': 'BlobShadow' }
     
     def update_move(self):
         Player.update_move(self)

@@ -40,7 +40,7 @@ class GameWorld:
         # table of objects by name:object
         self.objects = {}
         self.cl = collision.CollisionLord(self)
-        self.art_loaded, self.renderables = [], []
+        self.art_loaded = []
         # player is edit-dragging an object
         self.dragging_object = False
         self.last_state_loaded = DEFAULT_STATE_FILENAME
@@ -122,12 +122,9 @@ class GameWorld:
                     obj.start_dragging()
                 # check "locked" flag
                 if not obj.locked:
+                    # note: grid snap is set in object.stopped_dragging()
                     obj.x += world_dx
                     obj.y += world_dy
-                    if self.object_grid_snap:
-                        # TODO: this feels crappy, work out a better way
-                        obj.x = round(obj.x)
-                        obj.y = round(obj.y)
             self.dragging_object = True
     
     def select_object(self, obj):
@@ -242,6 +239,13 @@ class GameWorld:
             s = obj.get_debug_text()
             if s:
                 self.app.ui.debug_text.post_lines(s)
+        # remove objects marked for destruction
+        to_destroy = []
+        for obj in self.objects.values():
+            if obj.should_destroy:
+                to_destroy.append(obj.name)
+        for obj in to_destroy:
+            self.objects.pop(obj)
     
     def render(self):
         for obj in self.objects.values():

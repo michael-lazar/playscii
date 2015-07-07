@@ -282,7 +282,7 @@ class EditListPanel(GamePanel):
     tile_y = EditGamePanel.tile_y + EditGamePanel.tile_height + 1
     scrollbar_shade_char = 54
     # height will change based on how many items in list
-    tile_height = 16
+    tile_height = 12
     snap_left = True
     spawn_msg = 'Click anywhere in the world view to spawn a %s'
     # transient state

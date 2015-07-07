@@ -48,11 +48,18 @@ class InputLord:
             bind = self.parse_key_bind(bind_string)
             if not bind:
                 continue
-            bind_function_name = 'BIND_%s' % self.edit_bind_src[bind_string]
-            if not hasattr(self, bind_function_name):
-                continue
-            bind_function = getattr(self, bind_function_name)
-            self.edit_binds[bind] = bind_function
+            # bind data could be a single item (string) or a list/tuple
+            bind_data = self.edit_bind_src[bind_string]
+            if type(bind_data) is str:
+                bind_fnames = ['BIND_%s' % bind_data]
+            else:
+                bind_fnames = ['BIND_%s' % s for s in bind_data]
+            bind_functions = []
+            for bind_fname in bind_fnames:
+                if not hasattr(self, bind_fname):
+                    continue
+                bind_functions.append(getattr(self, bind_fname))
+            self.edit_binds[bind] = bind_functions
         # get controller(s)
         # TODO: use kewl SDL2 gamepad system
         js_init = sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_JOYSTICK)
@@ -89,8 +96,8 @@ class InputLord:
                 key = i
         return (key, shift, alt, ctrl)
     
-    def get_bind_function(self, event, shift, alt, ctrl):
-        "returns a method for the given event + mods if one exists"
+    def get_bind_functions(self, event, shift, alt, ctrl):
+        "returns a list of methods for the given event + mods if one exists"
         keystr = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode().lower()
         key_data = (keystr, shift, alt, ctrl)
         return self.edit_binds.get(key_data, None)
@@ -163,25 +170,27 @@ class InputLord:
                         self.shift_pressed, self.ctrl_pressed, self.alt_pressed)
                 # see if there's a function for this bind and run it
                 else:
-                    f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
-                    if f:
-                        f()
+                    flist = self.get_bind_functions(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    if flist:
+                        for f in flist:
+                            f()
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
             elif event.type == sdl2.SDL_KEYUP:
                 # dismiss selector popup
-                f = self.get_bind_function(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
-                if f == self.BIND_select_or_paint:
-                    if self.app.game_mode:
-                        if not self.ui.active_dialog:
-                            self.app.gw.player.button_unpressed(0)
+                flist = self.get_bind_functions(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                if not flist:
+                    break
+                if self.BIND_game_grab in flist:
+                    if self.app.game_mode and not self.ui.active_dialog:
+                        self.app.gw.player.button_unpressed(0)
                         return
-                elif f == self.BIND_toggle_picker:
+                elif self.BIND_toggle_picker in flist:
                     # ..but only for default hold-to-show setting
                     if self.ui.popup_hold_to_show:
                         self.ui.popup.hide()
-                elif f == self.BIND_select_or_paint:
+                elif self.BIND_select_or_paint in flist:
                     app.keyboard_editing = True
                     if not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.app.cursor.finish_paint()
@@ -547,11 +556,6 @@ class InputLord:
             self.ui.message_line.post_line('Camera tilt engaged.')
     
     def BIND_select_or_paint(self):
-        if self.app.game_mode:
-            # joystick button 0 press
-            if not self.ui.active_dialog:
-                self.app.gw.player.button_pressed(0)
-            return
         # select menu item if navigating pulldown
         if self.ui.menu_bar.active_menu_name:
             self.ui.pulldown.keyboard_select_item()
@@ -813,3 +817,17 @@ class InputLord:
     
     def BIND_toggle_game_edit_ui(self):
         self.ui.toggle_game_edit_ui()
+    
+    #
+    # game mode binds
+    #
+    def accept_normal_game_input(self):
+        return self.app.game_mode and self.app.gw.player and not self.ui.active_dialog
+    
+    def BIND_game_frob(self):
+        if self.accept_normal_game_input():
+            self.app.gw.player.button_pressed(1)
+    
+    def BIND_game_grab(self):
+        if self.accept_normal_game_input():
+            self.app.gw.player.button_pressed(0)

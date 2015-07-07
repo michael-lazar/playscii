@@ -255,6 +255,8 @@ class TileRenderable:
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(6, [self.vert_buffer, self.elem_buffer, self.char_buffer, self.uv_buffer, self.fg_buffer, self.bg_buffer])
+        if self.art and self in self.art.renderables:
+            self.art.renderables.remove(self)
         if self.log_create_destroy:
             self.app.log('destroyed: %s' % self)
     
