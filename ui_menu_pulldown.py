@@ -146,21 +146,22 @@ class PulldownMenu(UIElement):
             return '', null
         binds = self.ui.app.il.edit_binds
         for bind_tuple in binds:
-            command_function = binds[bind_tuple]
-            if command_function.__name__ == 'BIND_%s' % menu_item.command:
-                shortcut = ''
-                # shift, alt, ctrl
-                if bind_tuple[1]:
-                    shortcut += 'Shift-'
-                if bind_tuple[2]:
-                    shortcut += 'Alt-'
-                if bind_tuple[3]:
-                    # TODO: cmd vs ctrl for mac vs non
-                    shortcut += 'C-'
-                # bind strings that start with _ will be disregarded
-                if not (bind_tuple[0].startswith('_') and len(bind_tuple[0]) > 1):
-                    shortcut += bind_tuple[0]
-                return shortcut, command_function
+            command_functions = binds[bind_tuple]
+            for f in command_functions:
+                if f.__name__ == 'BIND_%s' % menu_item.command:
+                    shortcut = ''
+                    # shift, alt, ctrl
+                    if bind_tuple[1]:
+                        shortcut += 'Shift-'
+                    if bind_tuple[2]:
+                        shortcut += 'Alt-'
+                    if bind_tuple[3]:
+                        # TODO: cmd vs ctrl for mac vs non
+                        shortcut += 'C-'
+                    # bind strings that start with _ will be disregarded
+                    if not (bind_tuple[0].startswith('_') and len(bind_tuple[0]) > 1):
+                        shortcut += bind_tuple[0]
+                    return shortcut, f
         self.ui.app.log('Shortcut/command not found: %s' % menu_item.command)
         return '', null
     

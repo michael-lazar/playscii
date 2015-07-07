@@ -25,7 +25,9 @@ self.edit_bind_src = {
     'c'        : 'toggle_affects_char',
     'f'        : 'toggle_affects_fg',
     'b'        : 'toggle_affects_bg',
-    'x'        : 'toggle_affects_xform',
+	# bind can also be a tuple of function names
+    'x'        : ('toggle_affects_xform', 'game_frob'),
+	'z'        : 'game_grab',
     'shift r'  : 'toggle_crt',
     'a'        : 'select_pencil_tool',
     'e'        : 'select_erase_tool',

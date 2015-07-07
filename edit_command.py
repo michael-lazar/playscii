@@ -78,6 +78,8 @@ class EditCommandTile:
         return self.a_char == self.b_char and self.a_fg == self.b_fg and self.a_bg == self.b_bg and self.a_xform == self.b_xform
     
     def undo(self):
+        if self.x >= self.art.width or self.y >= self.art.height:
+            return
         self.art.set_tile_at(self.frame, self.layer, self.x, self.y,
                              self.b_char, self.b_fg, self.b_bg, self.b_xform)
     
