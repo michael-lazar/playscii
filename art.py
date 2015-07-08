@@ -1,8 +1,6 @@
 import os.path, json
 import numpy as np
 
-from random import randint
-
 from edit_command import CommandStack
 
 # X, Y, Z
@@ -504,25 +502,24 @@ class Art:
         # cursor might be hovering, undo any preview changes
         for edit in self.app.cursor.preview_edits:
             edit.undo()
-        d = {}
-        d['width'] = self.width
-        d['height'] = self.height
+        d = {'width': self.width, 'height': self.height,
+             'charset': self.charset.name, 'palette': self.palette.name,
+             'active_frame': self.active_frame,
+             'active_layer': self.active_layer,
+             'camera': (self.app.camera.x, self.app.camera.y, self.app.camera.z)
+        }
         # preferred character set and palette, default used if not found
-        d['charset'] = self.charset.name
-        d['palette'] = self.palette.name
-        d['active_frame'] = self.active_frame
-        d['active_layer'] = self.active_layer
         # remember camera location
-        d['camera'] = self.app.camera.x, self.app.camera.y, self.app.camera.z
         # frames and layers are dicts w/ lists of their data + a few properties
         frames = []
         for frame_index in range(self.frames):
             frame = { 'delay': self.frame_delays[frame_index] }
             layers = []
             for layer_index in range(self.layers):
-                layer = { 'z': self.layers_z[layer_index] }
-                layer['visible'] = int(self.layers_visibility[layer_index])
-                layer['name'] = self.layer_names[layer_index]
+                layer = {'z': self.layers_z[layer_index],
+                         'visible': int(self.layers_visibility[layer_index]),
+                         'name': self.layer_names[layer_index]
+                }
                 tiles = []
                 for y in range(self.height):
                     for x in range(self.width):

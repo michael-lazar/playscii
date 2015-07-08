@@ -1,4 +1,4 @@
-import math, ctypes, time
+import math, ctypes
 import numpy as np
 from OpenGL import GL
 

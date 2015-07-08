@@ -247,6 +247,8 @@ class GameObject:
         self.collision_type = self.orig_collision_type
     
     def disable_collision(self):
+        if self.collision_type == CT_NONE:
+            return
         # remember prior collision type
         self.orig_collision_type = self.collision_type
         self.collision_type = CT_NONE

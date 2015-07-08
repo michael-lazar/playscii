@@ -79,7 +79,7 @@ class Shader:
         file_to_reload = self.vert_source_file
         if shader_type == GL.GL_FRAGMENT_SHADER:
             file_to_reload = self.frag_source_file
-        new_shader_source = self.get_shader_soruce(file_to_reload)
+        new_shader_source = self.get_shader_source(file_to_reload)
         try:
             new_shader = shaders.compileShader(new_shader_source, shader_type)
             self.sl.app.log('success: reloaded shader file %s' % file_to_reload)
