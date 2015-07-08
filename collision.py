@@ -156,7 +156,7 @@ class CollisionLord:
             self.static_shapes.remove(shape)
     
     def resolve_overlaps(self):
-        iterations = 8
+        iterations = 5
         for i in range(iterations):
             # push all dynamic circles out of each other
             for a in self.dynamic_shapes:

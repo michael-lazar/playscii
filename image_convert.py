@@ -48,7 +48,7 @@ class ImageConverter:
         h = math.floor((h * ratio) / self.char_h) * self.char_h
         self.src_img = self.src_img.resize((w, h), resample=Image.NEAREST)
         # convert source image to art's palette
-        self.src_img = self.art.palette.set_for_image(self.src_img)
+        self.src_img = self.art.palette.get_palettized_image(self.src_img)
         # build table of color diffs
         unique_colors = len(self.art.palette.colors)
         self.color_diffs = np.zeros((unique_colors, unique_colors), dtype=np.float32)
