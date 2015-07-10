@@ -791,6 +791,9 @@ class InputLord:
         for game_obj in self.app.gw.objects.values():
             for art_filename in game_obj.get_all_art():
                 self.app.load_art_for_edit(art_filename)
+        # open all hud assets too
+        for art in self.app.gw.hud.arts:
+            self.app.load_art_for_edit(art.filename)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_collision_viz(self):

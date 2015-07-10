@@ -44,7 +44,7 @@ self.edit_bind_src = {
     'ctrl i'   : 'select_invert',
     'delete'   : 'erase_selection_or_art',
     'g'        : 'toggle_game_mode',
-	'shift d'  : 'toggle_game_edit_ui',
+	'shift e'  : 'toggle_game_edit_ui',
 	'ctrl shift g': 'set_game_dir',
 	'ctrl g'   : 'load_game_state',
 	'f2'       : 'reset_game',

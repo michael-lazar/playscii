@@ -11,6 +11,7 @@ GAME_SCRIPTS_DIR = 'scripts/'
 
 # import after game_object has done its imports from us
 import game_object
+import game_hud
 
 class RenderItem:
     "quickie class to debug render order"
@@ -19,6 +20,7 @@ class RenderItem:
     def __str__(self):
         return '%s layer %s sort %s' % (self.obj.art.filename, self.layer, self.sort_value)
 
+
 class GameWorld:
     
     "holds global state for game mode"
@@ -26,6 +28,7 @@ class GameWorld:
     last_click_on_ui = False
     player_camera_lock = True
     object_grid_snap = True
+    hud_class_name = 'GameHUD'
     
     def __init__(self, app):
         self.app = app
@@ -35,11 +38,12 @@ class GameWorld:
         self.camera = Camera(self.app)
         self.player = None
         self.paused = False
-        self.modules = {'game_object': game_object}
+        self.modules = {'game_object': game_object, 'game_hud': game_hud}
         self.classname_to_spawn = None
         # table of objects by name:object
         self.objects = {}
         self.cl = collision.CollisionLord(self)
+        self.hud = None
         self.art_loaded = []
         # player is edit-dragging an object
         self.dragging_object = False
@@ -192,7 +196,7 @@ class GameWorld:
         module_suffix += GAME_SCRIPTS_DIR[:-1] + '.'
         module_path = TOP_GAME_DIR + self.game_dir + GAME_SCRIPTS_DIR
         # build list of module files
-        modules_list = ['game_object']
+        modules_list = ['game_object', 'game_hud']
         for filename in os.listdir(module_path):
             # exclude emacs temp files :/
             if filename.endswith('.py') and not filename.startswith('.#'):
@@ -246,6 +250,8 @@ class GameWorld:
                 to_destroy.append(obj.name)
         for obj in to_destroy:
             self.objects.pop(obj)
+        if self.hud:
+            self.hud.update(dt)
     
     def render(self):
         for obj in self.objects.values():
@@ -308,6 +314,8 @@ class GameWorld:
             item.obj.render(item.layer, 0)
         for obj in self.objects.values():
             obj.render_debug()
+        if self.hud:
+            self.hud.render()
     
     def save_to_file(self, filename=None):
         d = {
@@ -316,7 +324,8 @@ class GameWorld:
             'gravity_z': self.gravity_z,
             'camera_x': self.camera.x,
             'camera_y': self.camera.y,
-            'camera_z': self.camera.z
+            'camera_z': self.camera.z,
+            'hud_class': self.hud_class_name
         }
         objects = []
         for obj in self.objects.values():
@@ -347,7 +356,8 @@ class GameWorld:
                 # skip anything that's not a class
                 if not type(v) is type:
                     continue
-                if issubclass(v, game_object.GameObject):
+                if issubclass(v, game_object.GameObject) or \
+                   issubclass(v, game_hud.GameHUD):
                     classes[k] = v
         return classes
     
@@ -427,6 +437,9 @@ class GameWorld:
         self.gravity_x = d['gravity_x']
         self.gravity_y = d['gravity_y']
         self.gravity_z = d.get('gravity_z', self.gravity_z)
+        # spawn hud
+        hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
+        self.hud = hud_class(self)
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)

@@ -401,6 +401,7 @@ class ConsoleUI(UIElement):
                 player = app.gw.player
                 sel = None if len(app.gw.selected_objects) == 0 else app.gw.selected_objects[0]
                 world = app.gw
+                hud = app.gw.hud
                 # special handling of assignment statements, eg x = 3:
                 # detect strings that pattern-match, send them to exec(),
                 # send all other strings to eval()
