@@ -126,14 +126,13 @@ class GameObject:
         # properties that need non-None defaults should be declared above
         if obj_data:
             for v in self.serialized:
-                if not hasattr(self, v):
-                    if self.log_load:
-                        self.app.dev_log("Unknown serialized property '%s' for %s" % (v, self.name))
-                    continue
-                elif not v in obj_data:
+                if not v in obj_data:
                     if self.log_load:
                         self.app.dev_log("Serialized property '%s' not found for %s" % (v, self.name))
                     continue
+                # if value is in data and serialized list but undeclared, do so
+                if not hasattr(self, v):
+                    setattr(self, v, None)
                 # match type of variable as declared, eg loc might be written as
                 # an int in the JSON so preserve its floatness
                 if getattr(self, v) is not None:
@@ -176,7 +175,7 @@ class GameObject:
         # remember previous collision type for enable/disable
         self.orig_collision_type = None
         self.collision = Collideable(self)
-        self.world.objects[self.name] = self
+        self.world.new_objects[self.name] = self
         self.attachments = []
         for atch_name,atch_class_name in self.attachment_classes.items():
             atch_class = self.world.classes[atch_class_name]

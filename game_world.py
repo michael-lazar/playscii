@@ -42,6 +42,8 @@ class GameWorld:
         self.classname_to_spawn = None
         # table of objects by name:object
         self.objects = {}
+        # table of just-spawned objects, added to above on update() after spawn
+        self.new_objects = {}
         self.cl = collision.CollisionLord(self)
         self.hud = None
         self.art_loaded = []
@@ -232,6 +234,9 @@ class GameWorld:
             obj.art.updated_this_tick = False
     
     def update(self, dt):
+        # add newly spawned objects to table
+        self.objects.update(self.new_objects)
+        self.new_objects = {}
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
         if not self.paused:
             # update objects based on movement, then resolve collisions
@@ -248,8 +253,8 @@ class GameWorld:
         for obj in self.objects.values():
             if obj.should_destroy:
                 to_destroy.append(obj.name)
-        for obj in to_destroy:
-            self.objects.pop(obj)
+        for obj_name in to_destroy:
+            self.objects.pop(obj_name)
         if self.hud:
             self.hud.update(dt)
     
