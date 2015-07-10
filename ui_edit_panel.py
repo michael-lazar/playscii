@@ -335,7 +335,7 @@ class EditListPanel(GamePanel):
     def scroll_list_down(self):
         max_scroll = len(self.items) - self.tile_height
         #max_scroll = len(self.element.items) - self.element.items_in_view
-        if self.list_scroll_index < max_scroll:
+        if self.list_scroll_index <= max_scroll:
             self.list_scroll_index += 1
     
     def clicked_item(self, item):
@@ -443,6 +443,5 @@ class EditListPanel(GamePanel):
         self.refresh_items()
         GamePanel.update(self)
     
-    def render(self):
-        if self.list_mode != LIST_NONE:
-            GamePanel.render(self)
+    def is_visible(self):
+        return GamePanel.is_visible(self) and self.list_mode != LIST_NONE

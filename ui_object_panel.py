@@ -210,6 +210,5 @@ class EditObjectPanel(GamePanel):
         self.refresh_items()
         GamePanel.update(self)
     
-    def render(self):
-        if len(self.world.selected_objects) > 0:
-            GamePanel.render(self)
+    def is_visible(self):
+        return GamePanel.is_visible(self) and len(self.world.selected_objects) > 0

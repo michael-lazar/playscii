@@ -538,10 +538,12 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_undo(self):
-        self.ui.undo()
+        if not self.app.game_mode:
+            self.ui.undo()
     
     def BIND_redo(self):
-        self.ui.redo()
+        if not self.app.game_mode:
+            self.ui.redo()
     
     def BIND_quick_grab(self):
         self.app.keyboard_editing = True

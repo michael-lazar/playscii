@@ -310,13 +310,14 @@ class GameWorld:
             obj.render_debug()
     
     def save_to_file(self, filename=None):
-        d = {}
-        d['gravity_x'] = self.gravity_x
-        d['gravity_y'] = self.gravity_y
-        d['gravity_z'] = self.gravity_z
-        d['camera_x'] = self.camera.x
-        d['camera_y'] = self.camera.y
-        d['camera_z'] = self.camera.z
+        d = {
+            'gravity_x': self.gravity_x,
+            'gravity_y': self.gravity_y,
+            'gravity_z': self.gravity_z,
+            'camera_x': self.camera.x,
+            'camera_y': self.camera.y,
+            'camera_z': self.camera.z
+        }
         objects = []
         for obj in self.objects.values():
             if obj.should_save:
@@ -349,6 +350,9 @@ class GameWorld:
                 if issubclass(v, game_object.GameObject):
                     classes[k] = v
         return classes
+    
+    def get_class_by_name(self, class_name):
+        return self.classes.get(class_name, None)
     
     def reset_object_in_place(self, obj):
         x, y = obj.x, obj.y
