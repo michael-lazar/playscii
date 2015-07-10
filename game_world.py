@@ -332,7 +332,7 @@ class GameWorld:
             if obj.should_save:
                 objects.append(obj.get_dict())
         d['objects'] = objects
-        if filename:
+        if filename and filename != '':
             if not filename.endswith(STATE_FILE_EXTENSION):
                 filename += '.' + STATE_FILE_EXTENSION
             filename = '%s%s' % (self.game_dir, filename)
@@ -340,8 +340,8 @@ class GameWorld:
             # state filename example:
             # games/mytestgame2/1431116386.gs
             timestamp = int(time.time())
-            filename = '%s/%s_%s.%s' % (self.game_dir, timestamp,
-                                        STATE_FILE_EXTENSION)
+            filename = '%s%s.%s' % (self.game_dir, timestamp,
+                                     STATE_FILE_EXTENSION)
         json.dump(d, open(TOP_GAME_DIR + filename, 'w'),
                   sort_keys=True, indent=1)
         self.app.log('Saved game state file %s to disk.' % filename)
@@ -440,6 +440,7 @@ class GameWorld:
         # spawn hud
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
+        self.hud_class_name = hud_class.__name__
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
