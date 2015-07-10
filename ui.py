@@ -497,6 +497,8 @@ class UI:
         handled = False
         # return True if any button handled the input
         for e in self.hovered_elements:
+            if not e.is_visible():
+                continue
             if e.clicked(button):
                 handled = True
         if self.pulldown.visible and not self.pulldown in self.hovered_elements and not self.menu_bar in self.hovered_elements:

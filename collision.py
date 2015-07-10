@@ -48,6 +48,8 @@ class Collideable:
         self.renderables, self.shapes = [], []
         # contacts with other objects
         self.contacts = {}
+        # list of objects processed for collision this frame
+        self.collisions_this_frame = []
         self.create_shapes()
     
     def create_shapes(self):
@@ -58,7 +60,10 @@ class Collideable:
             self.create_circle()
         elif self.game_object.collision_shape_type == CST_TILE:
             self.create_tiles()
-        # TODO: AABB creation
+        # TODO: AARR creation
+        # update renderables once if static
+        if not self.game_object.is_dynamic():
+            self.update_renderables()
     
     def clear_shapes(self):
         for r in self.renderables:
@@ -181,6 +186,31 @@ class CollisionLord:
         for obj in self.world.objects.values():
             obj.check_finished_contacts()
         self.ticks += 1
+        self.collisions_this_frame = []
+    
+    def resolve_momentum(self, obj_a, obj_b):
+        # don't resolve a pair twice
+        if obj_a in self.collisions_this_frame:
+            return
+        # determine new direction and velocity
+        total_vel = obj_a.vel_x + obj_a.vel_y + obj_b.vel_x + obj_b.vel_y
+        total_mass = obj_a.inv_mass + obj_b.inv_mass
+        if obj_b.name not in obj_a.collision.contacts or \
+           obj_a.name not in obj_b.collision.contacts:
+            return
+        # redistribute velocity based on mass we're colliding with
+        if obj_a.is_dynamic():
+            ax, ay = obj_a.collision.contacts[obj_b.name][:2]
+            a_vel = total_vel * (obj_a.inv_mass / total_mass)
+            obj_a.vel_x, obj_a.vel_y = -ax * a_vel, -ay * a_vel
+        if obj_b.is_dynamic():
+            bx, by = obj_b.collision.contacts[obj_a.name][:2]
+            b_vel = total_vel * (obj_b.inv_mass / total_mass)
+            obj_b.vel_x, obj_b.vel_y = -bx * b_vel, -by * b_vel
+        # mark objects as resolved
+        self.collisions_this_frame.append(obj_a)
+        self.collisions_this_frame.append(obj_b)
+
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     "returns normalized penetration x, y, and distance"

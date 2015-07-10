@@ -225,6 +225,15 @@ class GameObject:
         dy = self.y - other.y
         return math.sqrt(dx ** 2 + dy ** 2)
     
+    def normal_to_object(self, other):
+        "returns tuple normal pointing in direction of given object"
+        dist = self.distance_to_object(other)
+        dx, dy = other.x - self.x, other.y - self.y
+        if dist == 0:
+            return 0, 0
+        inv_dist = 1 / dist
+        return dx * inv_dist, dy * inv_dist
+    
     def get_render_offset(self):
         # allow subclasses to provide offsets based on stuff, eg "fake Z"
         return 0, 0, 0
@@ -267,15 +276,24 @@ class GameObject:
         """
         # put stopped-colliding objects in a list to process after checks
         finished = []
+        # keep separate list of names of objects no longer present
+        destroyed = []
         for obj_name,contact in self.collision.contacts.items():
             if contact[2] < self.world.cl.ticks:
-                finished.append(self.world.objects[obj_name])
+                # object might have been destroyed
+                obj = self.world.objects.get(obj_name, None)
+                if obj:
+                    finished.append(obj)
+                else:
+                    destroyed.append(obj_name)
+        for obj_name in destroyed:
+            self.collision.contacts.pop(obj_name)
         for obj in finished:
             self.stopped_colliding(obj)
             obj.stopped_colliding(self)
     
     def overlapped(self, other, dx, dy):
-        started = not other.name in self.collision.contacts
+        started = not other.name not in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
         # TODO: maybe use a named tuple here
         self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
