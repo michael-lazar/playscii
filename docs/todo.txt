@@ -8,6 +8,8 @@ collision:
 
 further work on existing features:
 
+"save as" should create a new editable art in the session, not replace current one
+
 status bar:
 - red X stopped drawing?
 - make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
