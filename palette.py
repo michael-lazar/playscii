@@ -64,6 +64,7 @@ class Palette:
         # debug: save out generated palette texture
         #img.save('palette.png')
         self.texture = Texture(img.tostring(), MAX_COLORS, 1)
+        self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
         if log and not self.app.game_mode:
             self.app.log("loaded palette '%s' from %s:" % (self.name, self.filename))
             self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
