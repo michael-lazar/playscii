@@ -169,8 +169,8 @@ class GameObject:
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
         # 1px LineRenderable showing object's bounding box
         self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
-        for art in self.arts:
-            if art in self.world.art_loaded:
+        for art in self.arts.values():
+            if not art in self.world.art_loaded:
                 self.world.art_loaded.append(art)
         # remember previous collision type for enable/disable
         self.orig_collision_type = None

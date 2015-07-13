@@ -1,4 +1,4 @@
-import os, sys, time, json, importlib
+import os, sys, time, importlib, json
 
 import collision
 from camera import Camera
@@ -150,7 +150,7 @@ class GameWorld:
         self.cl.reset()
         self.objects = {}
         self.renderables = []
-        self.art_loaded = []
+        # art_loaded is cleared when game dir is set
         self.selected_objects = []
     
     def set_for_all_objects(self, name, value):
@@ -175,6 +175,7 @@ class GameWorld:
         if dir_name == self.game_dir:
             self.load_game_state(DEFAULT_STATE_FILENAME)
             return
+        self.art_loaded = []
         if os.path.exists(TOP_GAME_DIR + dir_name):
             self.game_dir = dir_name
             if not dir_name.endswith('/'):
@@ -422,7 +423,7 @@ class GameWorld:
             self.camera.focus_object = self.player
         return new_object
     
-    def load_game_state(self, filename):
+    def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
         if not os.path.exists(filename):
             filename = '%s%s%s' % (TOP_GAME_DIR, self.game_dir, filename)
         if not filename.endswith(STATE_FILE_EXTENSION):
@@ -470,3 +471,7 @@ class GameWorld:
     def toggle_all_collision_viz(self):
         self.app.show_collision_all = not self.app.show_collision_all
         self.set_for_all_objects('show_collision', self.app.show_collision_all)
+    
+    def destroy(self):
+        self.unload_game()
+        self.art_loaded = []

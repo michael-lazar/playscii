@@ -76,6 +76,8 @@ class CharacterSet:
         # any pixel that isn't will be opaque + tinted FG color
         for y in range(self.image_height):
             for x in range(self.image_width):
+                # TODO: PIL pixel access shows up in profiler, use numpy array
+                # assignment instead
                 color = img.getpixel((x, y))
                 if color[:3] == self.transparent_color[:3]:
                     # MAYBE-TODO: does keeping non-alpha color improve sampling?
@@ -88,6 +90,8 @@ class CharacterSet:
         self.char_height = int(self.image_height / self.map_height)
         self.u_width = self.char_width / self.image_width
         self.v_height = self.char_height / self.image_height
+        # store base filename for easy comparisons with not-yet-loaded sets
+        self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
         # report
         if log and not self.app.game_mode:
             self.app.log("loaded charmap '%s' from %s:" % (self.name, self.filename))

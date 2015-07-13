@@ -202,7 +202,7 @@ class Application:
             if state_to_load:
                 self.gw.load_game_state(state_to_load)
             else:
-                self.gw.reset_game()
+                self.gw.load_game_state()
         else:
             self.ui.message_line.post_line(self.welcome_message, 10)
         if not self.can_edit:
@@ -341,7 +341,7 @@ class Application:
         "creates and returns a character set with the given name"
         # already loaded?
         for charset in self.charsets:
-            if charset.filename == charset_to_load:
+            if charset.base_filename == charset_to_load:
                 return charset
         new_charset = CharacterSet(self, charset_to_load, log)
         if new_charset.init_success:
@@ -353,7 +353,7 @@ class Application:
     
     def load_palette(self, palette_to_load, log=True):
         for palette in self.palettes:
-            if palette.filename == palette_to_load:
+            if palette.base_filename == palette_to_load:
                 return palette
         new_palette = Palette(self, palette_to_load, log)
         if new_palette.init_success:
@@ -550,7 +550,7 @@ class Application:
             self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
-            self.gw.unload_game()
+            self.gw.destroy()
             self.fb.destroy()
             self.ui.destroy()
             for charset in self.charsets:
