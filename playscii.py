@@ -48,7 +48,8 @@ VERSION = '0.6.0'
 MAX_ONION_FRAMES = 3
 
 class Application:
-    
+
+    # Default window dimensions, may be updated in __init__
     window_width, window_height = 800, 600
     fullscreen = False
     # framerate: uncapped if -1
@@ -97,16 +98,28 @@ class Application:
         self.version = VERSION
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
+        # set ui None so other objects can check it None, eg load_art check
+        # for its active art on later runs
+        self.ui = None
         sdl2.ext.init()
+        # Determine screen resolution
+        self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
+        max_height = ctypes.c_int(0)
+        max_width = ctypes.c_int(0)
+        sdl2.SDL_HideWindow(self.window)
+        sdl2.SDL_GetWindowSize(self.window, ctypes.pointer(max_width), ctypes.pointer(max_height))
+        sdl2.SDL_DestroyWindow(self.window)
+        max_width = max_width.value
+        max_height = max_height.value
+        self.log('Screen Resolution (WxH): %i x %i' % (max_width, max_height))
+        self.window_width = int(max_width/2)
+        self.window_height = int(max_height/2)
         # TODO: SDL_WINDOW_ALLOW_HIGHDPI doesn't seem to work right,
         # determine whether we're using it wrong or it's broken
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE# | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
         self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
-        # set ui None so other objects can check it None, eg load_art check
-        # for its active art on later runs
-        self.ui = None
         # force GL2.1 'core' before creating context
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, 2)
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, 1)
