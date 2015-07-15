@@ -280,26 +280,26 @@ class InputLord:
                 # shift = move selected
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(0, 1, 0)
-                else:
+                elif app.gw.player:
                     app.gw.player.move(0, 1)
             if pressing_down(ks):
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(0, -1, 0)
-                else:
+                elif app.gw.player:
                     app.gw.player.move(0, -1)
             if pressing_left(ks):
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(-1, 0, 0)
-                else:
+                elif app.gw.player:
                     app.gw.player.move(-1, 0)
             if pressing_right(ks):
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(1, 0, 0)
-                else:
+                elif app.gw.player:
                     app.gw.player.move(1, 0)
-            if abs(self.gamepad_left_x) > 0.15:
+            if abs(self.gamepad_left_x) > 0.15 and app.gw.player:
                 app.gw.player.move(self.gamepad_left_x, 0)
-            if abs(self.gamepad_left_y) > 0.15:
+            if abs(self.gamepad_left_y) > 0.15 and app.gw.player:
                 app.gw.player.move(0, self.gamepad_left_y)
         sdl2.SDL_PumpEvents()
     #
@@ -592,7 +592,7 @@ class InputLord:
         elif self.ui.menu_bar.active_menu_name:
             self.ui.pulldown.keyboard_navigate(-1)
         else:
-            self.app.cursor.move(0, 1)
+            self.app.cursor.keyboard_move(0, 1)
     
     def BIND_arrow_down(self):
         if self.ui.popup.visible:
@@ -600,7 +600,7 @@ class InputLord:
         elif self.ui.menu_bar.active_menu_name:
             self.ui.pulldown.keyboard_navigate(1)
         else:
-            self.app.cursor.move(0, -1)
+            self.app.cursor.keyboard_move(0, -1)
     
     def BIND_arrow_left(self):
         if self.ui.popup.visible:
@@ -609,7 +609,7 @@ class InputLord:
         elif self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.previous_menu()
         else:
-            self.app.cursor.move(-1, 0)
+            self.app.cursor.keyboard_move(-1, 0)
     
     def BIND_arrow_right(self):
         if self.ui.popup.visible:
@@ -617,7 +617,7 @@ class InputLord:
         elif self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.next_menu()
         else:
-            self.app.cursor.move(1, 0)
+            self.app.cursor.keyboard_move(1, 0)
     
     def BIND_cycle_inactive_layer_visibility(self):
         if not self.ui.active_art:

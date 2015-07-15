@@ -116,12 +116,13 @@ class Cursor:
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glBindVertexArray(0)
     
-    def move(self, delta_x, delta_y):
+    def keyboard_move(self, delta_x, delta_y):
         self.x += delta_x
         self.y += delta_y
+        self.moved = True
+        self.app.keyboard_editing = True
         if self.logg:
             self.app.log('Cursor: %s,%s,%s scale %.2f,%.2f' % (self.x, self.y, self.z, self.scale_x, self.scale_y))
-        self.moved = True
     
     def set_scale(self, new_scale):
         self.scale_x = self.scale_y = new_scale
@@ -221,10 +222,11 @@ class Cursor:
         if not self.moved and not self.app.ui.tool_settings_changed:
             return
         # snap to tile
-        w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
-        char_aspect = w / h
-        self.x = math.floor(self.x / w) * w
-        self.y = math.ceil(self.y / h) * h * char_aspect
+        if not self.app.keyboard_editing:
+            w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
+            char_aspect = w / h
+            self.x = math.floor(self.x / w) * w
+            self.y = math.ceil(self.y / h) * h * char_aspect
         # adjust for brush size
         if self.app.ui.selected_tool.brush_size:
             size = self.app.ui.selected_tool.brush_size

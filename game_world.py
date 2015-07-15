@@ -149,7 +149,6 @@ class GameWorld:
             obj.destroy()
         self.cl.reset()
         self.objects = {}
-        self.renderables = []
         # art_loaded is cleared when game dir is set
         self.selected_objects = []
     
@@ -459,6 +458,40 @@ class GameWorld:
         self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
         self.set_for_all_objects('show_origin', self.app.show_origin_all)
         self.app.update_window_title()
+        #self.report()
+    
+    def report(self):
+        print('--------------\n%s report:' % self)
+        obj_arts, obj_rends, obj_dbg_rends, obj_cols, obj_col_rends = 0, 0, 0, 0, 0
+        attachments = 0
+        # create merged dict of existing and just-spawned objects
+        all_objects = self.objects.copy()
+        all_objects.update(self.new_objects)
+        print('%s objects:' % len(all_objects))
+        for obj in all_objects.values():
+            obj_arts += len(obj.arts)
+            if obj.renderable is not None:
+                obj_rends += 1
+            if obj.origin_renderable is not None:
+                obj_dbg_rends += 1
+            if obj.bounds_renderable is not None:
+                obj_dbg_rends += 1
+            if obj.collision:
+                obj_cols += 1
+                obj_col_rends += len(obj.collision.renderables)
+            attachments += len(obj.attachments)
+        print("""%s arts in objects, %s arts loaded,
+        %s HUD arts, %s HUD renderables,
+        %s renderables, %s debug renderables,
+        %s collideables, %s collideable viz renderables,
+        %s attachments""" % (obj_arts, len(self.art_loaded), len(self.hud.arts),
+                             len(self.hud.renderables),
+                             obj_rends, obj_dbg_rends,
+                             obj_cols, obj_col_rends, attachments))
+        self.cl.report()
+        print('%s charsets loaded, %s palettes' % (len(self.app.charsets),
+                                                   len(self.app.palettes)))
+        print('%s arts loaded for edit' % len(self.app.art_loaded_for_edit))
     
     def toggle_all_origin_viz(self):
         self.app.show_origin_all = not self.app.show_origin_all
