@@ -224,26 +224,27 @@ class TextTool(UITool):
         art = self.ui.active_art
         frame, layer = art.active_frame, art.active_layer
         x, y = self.cursor.x, -self.cursor.y
+        char_w, char_h = art.quad_width, art.quad_height
         # TODO: if cursor isn't inside selection, bail early
         if keystr == 'Return':
             if self.cursor.y < art.width:
                 self.cursor.x = self.start_x
-                self.cursor.y -= 1
+                self.cursor.y -= char_h
         elif keystr == 'Backspace':
             if self.cursor.x > self.start_x:
-                self.cursor.x -= 1
+                self.cursor.x -= char_w
             # undo command on previous tile
             self.cursor.current_command.undo_commands_for_tile(frame, layer, x-1, y)
         elif keystr == 'Space':
             keystr = ' '
         elif keystr == 'Up':
-            self.cursor.y += 1
+            self.cursor.y += char_h
         elif keystr == 'Down':
-            self.cursor.y -= 1
+            self.cursor.y -= char_h
         elif keystr == 'Left':
-            self.cursor.x -= 1
+            self.cursor.x -= char_w
         elif keystr == 'Right':
-            self.cursor.x += 1
+            self.cursor.x += char_w
         elif keystr == 'Escape':
             self.finish_entry()
             return
@@ -270,10 +271,10 @@ class TextTool(UITool):
         else:
             self.ui.app.log('DEV WARNING: Cursor current command was expected')
         new_tile_command.apply()
-        self.cursor.x += 1
+        self.cursor.x += char_w
         if self.cursor.x >= self.ui.active_art.width:
             self.cursor.x = self.start_x
-            self.cursor.y -= 1
+            self.cursor.y -= char_h
         if -self.cursor.y >= self.ui.active_art.height:
             self.finish_entry()
 

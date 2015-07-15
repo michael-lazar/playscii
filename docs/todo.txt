@@ -4,6 +4,10 @@ collision:
 - broadphase!
 - AABB and/or capsule shape support
 
+fix: codepath for EDSCII loading is skipped entirely, maybe just make "Import EDSCII..." its own File menu item?
+
+fix: keyboard cursor movement is broken in Y axis for non-square charsets eg UI
+
 ---
 
 further work on existing features:
