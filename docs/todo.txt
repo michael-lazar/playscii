@@ -4,9 +4,21 @@ collision:
 - broadphase!
 - AABB and/or capsule shape support
 
-fix: codepath for EDSCII loading is skipped entirely, maybe just make "Import EDSCII..." its own File menu item?
+generalized (works for any type of file, not just arts) file chooser:
+- unify with existing ChooserDialog class, clean up as needed
+- clickable GUI list with scroll arrows, allows directory traversal as well
+-- filter for valid files, eg psci for art, jpg/png/bmp for image convert, ed for edscii
+-- list directories first
+-- sort files by name or last modified?
+-- up/down arrows move up and down (like scrollbar buttons), left and right go up and into selected dir where applicable (how to tell if we're in a root?)
+-- get dir list every update so FS changes show up immediately?
+- text pathname field, clicking a new file in list fills it in (clicking again opens it)
+-- hitting enter with a valid filename opens it, hitting enter with a valid pathname navigates list view to that dir
+- thumbnail preview - cache thumbnails in a new playscii/ subdir
+- text beneath thumbnail: art dimensions, layer and frame #s, charset and palette
+- for non-arts (eg convert image) show image preview
 
-fix: keyboard cursor movement is broken in Y axis for non-square charsets eg UI
+fix: codepath for EDSCII loading is skipped entirely, maybe just make "Import EDSCII..." its own File menu item?
 
 ---
 

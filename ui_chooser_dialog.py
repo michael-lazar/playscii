@@ -285,6 +285,7 @@ class PaletteChooserDialog(ChooserDialog):
         for item in self.items:
             if item.data is self.ui.active_art.palette:
                 return item.index
+        print("couldn't find initial selection for %s, returning 0" % self.__class__.__name__)
         return 0
     
     def set_preview(self):

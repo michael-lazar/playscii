@@ -108,7 +108,7 @@ class InputLord:
                 return bind
         return ''
     
-    def input(self):
+    def handle_input(self):
         app = self.app
         # get and store mouse state
         # (store everything in parent app object so stuff can access it easily)
