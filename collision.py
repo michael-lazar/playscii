@@ -143,6 +143,11 @@ class CollisionLord:
         self.ticks = 0
         self.reset()
     
+    def report(self):
+        print('%s: %s dynamic shapes, %s static shapes' % (self,
+                                                           len(self.dynamic_shapes),
+                                                           len(self.static_shapes)))
+    
     def reset(self):
         self.dynamic_shapes, self.static_shapes = [], []
     
