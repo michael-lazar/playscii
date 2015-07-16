@@ -229,7 +229,7 @@ class TextTool(UITool):
         if keystr == 'Return':
             if self.cursor.y < art.width:
                 self.cursor.x = self.start_x
-                self.cursor.y -= char_h
+                self.cursor.y -= 1
         elif keystr == 'Backspace':
             if self.cursor.x > self.start_x:
                 self.cursor.x -= char_w
@@ -238,9 +238,9 @@ class TextTool(UITool):
         elif keystr == 'Space':
             keystr = ' '
         elif keystr == 'Up':
-            self.cursor.y += char_h
+            self.cursor.y += 1
         elif keystr == 'Down':
-            self.cursor.y -= char_h
+            self.cursor.y -= 1
         elif keystr == 'Left':
             self.cursor.x -= char_w
         elif keystr == 'Right':
