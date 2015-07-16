@@ -340,8 +340,10 @@ class Application:
     def load_charset(self, charset_to_load, log=True):
         "creates and returns a character set with the given name"
         # already loaded?
+        base_charset_to_load = os.path.basename(charset_to_load)
+        base_charset_to_load = os.path.splitext(base_charset_to_load)[0]
         for charset in self.charsets:
-            if charset.base_filename == charset_to_load:
+            if charset.base_filename == base_charset_to_load:
                 return charset
         new_charset = CharacterSet(self, charset_to_load, log)
         if new_charset.init_success:
@@ -352,8 +354,10 @@ class Application:
             return self.ui.active_art.charset
     
     def load_palette(self, palette_to_load, log=True):
+        base_palette_to_load = os.path.basename(palette_to_load)
+        base_palette_to_load = os.path.splitext(base_palette_to_load)[0]
         for palette in self.palettes:
-            if palette.base_filename == palette_to_load:
+            if palette.base_filename == base_palette_to_load:
                 return palette
         new_palette = Palette(self, palette_to_load, log)
         if new_palette.init_success:
@@ -449,7 +453,7 @@ class Application:
                 for art in self.art_loaded_for_edit:
                     art.updated_this_tick = False
             tick_time = sdl2.timer.SDL_GetTicks()
-            self.input()
+            self.handle_input()
             self.update(self.delta_time / 1000)
             self.render()
             self.sl.check_hot_reload()
@@ -472,8 +476,8 @@ class Application:
             self.last_tick_time = tick_time
         return 1
     
-    def input(self):
-        self.il.input()
+    def handle_input(self):
+        self.il.handle_input()
     
     def update(self, dt):
         for art in self.art_loaded_for_edit:
