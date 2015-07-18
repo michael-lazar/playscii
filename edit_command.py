@@ -8,6 +8,14 @@ class EditCommand:
         self.finish_time = None
         self.tile_commands = []
     
+    def __str__(self):
+        # get unique-ish ID from memory address
+        addr = self.__repr__()
+        addr = addr[addr.find('0'):-1]
+        s = 'EditCommand_%s: %s tiles, time %s' % (addr, len(self.tile_commands),
+                                                   self.finish_time)
+        return s
+    
     def add_command_tiles(self, new_command_tiles):
         "add one or more command tiles"
         # check type to support one command or a list of commands
@@ -115,6 +123,7 @@ class CommandStack:
         if len(self.undo_commands) == 0:
             return
         command = self.undo_commands.pop()
+        self.art.app.cursor.undo_preview_edits()
         command.undo()
         self.redo_commands.append(command)
         self.art.app.cursor.update_cursor_preview()
@@ -123,9 +132,12 @@ class CommandStack:
         if len(self.redo_commands) == 0:
             return
         command = self.redo_commands.pop()
-        # FIXME: if cursor is over tile(s) touched by redo,
-        # preview commands "stick" and can't be undone
+        # un-apply cursor preview before applying redo, else preview edits
+        # edits will "stick"
+        self.art.app.cursor.undo_preview_edits()
         command.apply()
+        # add to end of undo stack
+        self.undo_commands.append(command)
         self.art.app.cursor.update_cursor_preview()
     
     def clear_redo(self):

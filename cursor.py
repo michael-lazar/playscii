@@ -171,10 +171,11 @@ class Cursor:
         y += self.app.camera.y_tilt
         return x, y, z
     
-    def update_cursor_preview(self):
-        # undo previous edits
+    def undo_preview_edits(self):
         for edit in self.preview_edits:
             edit.undo()
+    
+    def update_cursor_preview(self):
         # rebuild list of cursor preview commands
         if self.app.ui.selected_tool.show_preview:
             self.preview_edits = self.app.ui.selected_tool.get_paint_commands()
@@ -191,6 +192,7 @@ class Cursor:
         self.current_command.add_command_tiles(self.preview_edits)
         self.preview_edits = []
         self.app.ui.active_art.set_unsaved_changes(True)
+        #print(self.app.ui.active_art.command_stack)
     
     def finish_paint(self):
         "invoked by mouse button up and undo"
@@ -202,6 +204,7 @@ class Cursor:
         self.current_command.finish_time = self.app.elapsed_time
         self.app.ui.active_art.command_stack.commit_commands(self.current_command)
         self.current_command = None
+        #print(self.app.ui.active_art.command_stack)
     
     def moved_this_frame(self):
         return self.moved or self.last_x != self.x or self.last_y != self.y
@@ -238,6 +241,7 @@ class Cursor:
                 self.y += size_offset
         else:
             self.scale_x = self.scale_y = 1
+        self.undo_preview_edits()
         self.update_cursor_preview()
         if self.moved_this_frame():
             self.entered_new_tile()

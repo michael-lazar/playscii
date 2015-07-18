@@ -48,8 +48,7 @@ VERSION = '0.6.0'
 MAX_ONION_FRAMES = 3
 
 class Application:
-
-    # Default window dimensions, may be updated in __init__
+    # default window dimensions, may be updated during screen res detection
     window_width, window_height = 800, 600
     fullscreen = False
     # framerate: uncapped if -1
@@ -102,24 +101,32 @@ class Application:
         # for its active art on later runs
         self.ui = None
         sdl2.ext.init()
-        # Determine screen resolution
-        self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
-        max_height = ctypes.c_int(0)
-        max_width = ctypes.c_int(0)
-        sdl2.SDL_HideWindow(self.window)
-        sdl2.SDL_GetWindowSize(self.window, ctypes.pointer(max_width), ctypes.pointer(max_height))
-        sdl2.SDL_DestroyWindow(self.window)
-        max_width = max_width.value
-        max_height = max_height.value
-        self.log('Screen Resolution (WxH): %i x %i' % (max_width, max_height))
-        self.window_width = int(max_width/2)
-        self.window_height = int(max_height/2)
+        # determine screen resolution
+        winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
+        test_window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'),
+                                            winpos, winpos,
+                                            64, 64,
+                                            sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
+        screen_width = ctypes.c_int(0)
+        screen_height = ctypes.c_int(0)
+        sdl2.SDL_HideWindow(test_window)
+        sdl2.SDL_GetWindowSize(test_window, ctypes.pointer(screen_width),
+                               ctypes.pointer(screen_height))
+        sdl2.SDL_DestroyWindow(test_window)
+        # make sure main window won't be too big for screen
+        max_width = int(screen_width.value * 0.8)
+        max_height = int(screen_height.value * 0.8)
+        self.window_width = min(self.window_width, max_width)
+        self.window_height = min(self.window_height, max_height)
         # TODO: SDL_WINDOW_ALLOW_HIGHDPI doesn't seem to work right,
         # determine whether we're using it wrong or it's broken
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE# | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
-        self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'), sdl2.SDL_WINDOWPOS_UNDEFINED, sdl2.SDL_WINDOWPOS_UNDEFINED, self.window_width, self.window_height, flags)
+        self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'),
+                                            winpos, winpos,
+                                            self.window_width, self.window_height,
+                                            flags)
         # force GL2.1 'core' before creating context
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, 2)
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, 1)
@@ -130,6 +137,7 @@ class Application:
         self.log('OS: %s' % platform.platform())
         self.log('CPU: %s' % platform.processor())
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
+        self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width.value, screen_height.value, self.window_width, self.window_height))
         # report GL version, vendor, GLSL version etc
         # try single-argument GL2.0 version first
         gl_ver = GL.glGetString(GL.GL_VERSION)

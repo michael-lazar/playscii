@@ -105,16 +105,10 @@ class UI:
         self.edit_list_panel = EditListPanel(self)
         self.edit_game_panel = EditGamePanel(self)
         self.edit_object_panel = EditObjectPanel(self)
-        self.elements.append(self.fps_counter)
-        self.elements.append(self.status_bar)
-        self.elements.append(self.popup)
-        self.elements.append(self.message_line)
-        self.elements.append(self.debug_text)
-        self.elements.append(self.pulldown)
-        self.elements.append(self.menu_bar)
-        self.elements.append(self.edit_list_panel)
-        self.elements.append(self.edit_game_panel)
-        self.elements.append(self.edit_object_panel)
+        self.elements += [self.fps_counter, self.status_bar, self.popup,
+                          self.message_line, self.debug_text, self.pulldown,
+                          self.menu_bar, self.edit_list_panel,
+                          self.edit_game_panel, self.edit_object_panel]
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
