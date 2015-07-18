@@ -4,6 +4,9 @@ collision:
 - broadphase!
 - AABB and/or capsule shape support
 
+lingering undo bugs:
+- log command stack in cursor.start/finish_paint
+
 generalized (works for any type of file, not just arts) file chooser:
 - unify with existing ChooserDialog class, clean up as needed
 - clickable GUI list with scroll arrows, allows directory traversal as well
@@ -27,7 +30,6 @@ further work on existing features:
 "save as" should create a new editable art in the session, not replace current one
 
 status bar:
-- red X stopped drawing?
 - make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator

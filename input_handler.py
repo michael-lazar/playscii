@@ -148,7 +148,10 @@ class InputLord:
                 app.should_quit = True
             elif event.type == sdl2.SDL_WINDOWEVENT:
                 if event.window.event == sdl2.SDL_WINDOWEVENT_RESIZED:
-                    app.resize_window(event.window.data1, event.window.data2)
+                    # test window we create on init to detect resolution makes
+                    # SDL think we've resized main app window on first tick!
+                    if app.elapsed_time > 0:
+                        app.resize_window(event.window.data1, event.window.data2)
             elif event.type == sdl2.SDL_JOYBUTTONDOWN:
                 if not app.gw.paused:
                     app.gw.player.button_pressed(event.jbutton.button)
