@@ -21,7 +21,7 @@ from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet
 from palette import Palette
-from art import Art, ArtFromDisk, ArtFromEDSCII
+from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION
 from renderable import TileRenderable, OnionTileRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION
@@ -276,6 +276,20 @@ class Application:
         determine a viable filename and load it from disk;
         create new file if unsuccessful
         """
+        
+        """
+        TODO: finish on desktop
+        valid_filename = self.find_filename_path(filename, ART_DIR, ART_FILE_EXTENSION)
+        art = None
+        if not valid_filename:
+            if autocreate:
+                self.log('Creating new document %s' % filename)
+                art = self.new_art(filename)
+            else:
+                self.log("Couldn't find file %s" % filename)
+                return None
+        """
+        
         orig_filename = filename
         filename = filename or 'new'
         # if not found, try adding extension
@@ -306,8 +320,6 @@ class Application:
             if not self.game_mode:
                 self.log('Loading file %s...' % filename)
             art = ArtFromDisk(filename, self)
-            if not art or not art.valid:
-                art = ArtFromEDSCII(filename, self)
             # if file failed to load, create a new file with that name
             # TODO: this may be foolish, ensure this never overwrites user data
             if not art or not art.valid:
@@ -349,9 +361,50 @@ class Application:
             self.ui.set_active_art(self.art_loaded_for_edit[0])
         self.update_window_title()
     
-    def recover_edscii(self, filename, width_override):
-        "recovers an incorrectly-saved EDSCII file using the given width"
-        art = ArtFromEDSCII(filename, self, width_override)
+    def find_filename_path(self, filename, subdir, extensions=[]):
+        "returns a valid path for given file, extension, subdir (art/ etc)"
+        # build list of all permutations of filename in all paths,
+        # with/without extensions
+        filenames = []
+        # accept list or single item
+        if extensions is None:
+            extensions = []
+        elif not type(extensions) is list:
+            extensions = [extensions]
+        # if game dir is set, try: game dir + file, game dir + file + extension
+        if self.gw.game_dir:
+            f_gamedir = '%s%s/%s' % (self.gw.game_dir, subdir, filename)
+            filenames += [f_gamedir]
+            for ext in extensions:
+                filenames.append(f_gamedir + extension)
+        # bare file, file + extensions, subdir + file + extensions, subdir + file
+        filenames.append(filename)
+        for ext in extensions:
+            filenames.append('%s.%s' % (filename, ext))
+        f_dir = '%s/%s' % (subdir, filename)
+        filenames.append(f_dir)
+        for ext in extensions:
+            filenames.append('%s.%s' % (f_dir, ext))
+        # return first one we find
+        for f in filenames:
+            if os.path.exists(f):
+                return f
+        return None
+    
+    def import_edscii(self, filename, width_override=None):
+        """
+        imports an EDSCII legacy file for edit
+        use width_override to recover an incorrectly-saved file
+        """
+        valid_filename = self.find_filename_path(filename, ART_DIR,
+                                                 EDSCII_FILE_EXTENSION)
+        if not valid_filename:
+            self.log("Couldn't find file %s" % filename)
+        art = ArtFromEDSCII(valid_filename, self, width_override)
+        if not art.valid:
+            self.log('Failed to load %s' % valid_filename)
+            return
+        art.time_loaded = time.time()
         self.art_loaded_for_edit.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)

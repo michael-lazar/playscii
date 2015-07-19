@@ -18,6 +18,7 @@ DEFAULT_LAYER_Z_OFFSET = 0.5
 
 ART_DIR = 'art/'
 ART_FILE_EXTENSION = 'psci'
+EDSCII_FILE_EXTENSION = 'ed'
 
 SCRIPT_DIR = 'scripts/'
 SCRIPT_FILE_EXTENSION = 'arsc'
@@ -668,6 +669,7 @@ class ArtFromDisk(Art):
             return
         self.filename = filename
         self.app = app
+        self.time_loaded = 0
         self.width = d['width']
         self.height = d['height']
         self.charset = self.app.load_charset(d['charset'])
@@ -768,6 +770,7 @@ class ArtFromEDSCII(Art):
             return
         self.filename = '%s.%s' % (os.path.splitext(filename)[0], ART_FILE_EXTENSION)
         self.app = app
+        self.time_loaded = 0
         # document width = find longest stretch before a \n
         longest_line = 0
         for line in data.splitlines():

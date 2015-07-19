@@ -59,6 +59,12 @@ class FileCloseMenuItem(PulldownMenuItem):
     def should_dim(app):
         return app.ui.active_art is None
 
+class FileEDSCIIImportMenuItem(PulldownMenuItem):
+    label = 'Import from EDSCII...'
+    command = 'import_edscii'
+    def should_dim(app):
+        return False
+
 class FileConvertImageMenuItem(PulldownMenuItem):
     label = 'Convert Image...'
     command = 'convert_image'
@@ -457,8 +463,9 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewMenuItem, FileOpenMenuItem, FileSaveMenuItem, FileSaveAsMenuItem,
-             FileCloseMenuItem, FileConvertImageMenuItem, FilePNGExportMenuItem,
-             FileGIFExportMenuItem, SeparatorMenuItem, FileQuitMenuItem]
+             FileCloseMenuItem, FileEDSCIIImportMenuItem, FileConvertImageMenuItem,
+             FilePNGExportMenuItem, FileGIFExportMenuItem, SeparatorMenuItem,
+             FileQuitMenuItem]
 
 class EditMenuData(PulldownMenuData):
     items = [EditUndoMenuItem, EditRedoMenuItem, SeparatorMenuItem,
