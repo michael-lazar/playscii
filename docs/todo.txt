@@ -1,31 +1,13 @@
 TODO
 
-collision:
-- broadphase!
-- AABB and/or capsule shape support
-
-lingering undo bugs:
-- log command stack in cursor.start/finish_paint
-
-generalized (works for any type of file, not just arts) file chooser:
-- unify with existing ChooserDialog class, clean up as needed
-- clickable GUI list with scroll arrows, allows directory traversal as well
--- filter for valid files, eg psci for art, jpg/png/bmp for image convert, ed for edscii
--- list directories first
--- sort files by name or last modified?
--- up/down arrows move up and down (like scrollbar buttons), left and right go up and into selected dir where applicable (how to tell if we're in a root?)
--- get dir list every update so FS changes show up immediately?
-- text pathname field, clicking a new file in list fills it in (clicking again opens it)
--- hitting enter with a valid filename opens it, hitting enter with a valid pathname navigates list view to that dir
-- thumbnail preview - cache thumbnails in a new playscii/ subdir
-- text beneath thumbnail: art dimensions, layer and frame #s, charset and palette
-- for non-arts (eg convert image) show image preview
-
-fix: codepath for EDSCII loading is skipped entirely, maybe just make "Import EDSCII..." its own File menu item?
+fixes for 0.6.0:
+- codepath for EDSCII loading is skipped entirely, maybe just make "Import EDSCII..." its own File menu item?
 
 ---
 
-further work on existing features:
+collision:
+- broadphase!
+- AABB and/or capsule shape support
 
 "save as" should create a new editable art in the session, not replace current one
 
@@ -51,3 +33,17 @@ shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 --- don't save "blank" tiles at all - determine a global/default FG/BG for majority of tiles
 
 state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
+
+generalized (works for any type of file, not just arts) file chooser:
+- unify with existing ChooserDialog class, clean up as needed
+- clickable GUI list with scroll arrows, allows directory traversal as well
+-- filter for valid files, eg psci for art, jpg/png/bmp for image convert, ed for edscii
+-- list directories first
+-- sort files by name or last modified?
+-- up/down arrows move up and down (like scrollbar buttons), left and right go up and into selected dir where applicable (how to tell if we're in a root?)
+-- get dir list every update so FS changes show up immediately?
+- text pathname field, clicking a new file in list fills it in (clicking again opens it)
+-- hitting enter with a valid filename opens it, hitting enter with a valid pathname navigates list view to that dir
+- thumbnail preview - cache thumbnails in a new playscii/ subdir
+- text beneath thumbnail: art dimensions, layer and frame #s, charset and palette
+- for non-arts (eg convert image) show image preview

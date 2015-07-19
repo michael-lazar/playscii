@@ -357,6 +357,34 @@ class SaveAsDialog(UIDialog):
         self.dismiss()
 
 
+class ImportEDSCIIDialog(UIDialog):
+    title = 'Import EDSCII (legacy format) art'
+    field0_label = 'Filename of EDSCII art to open:'
+    fields = 2
+    field1_label = 'Width override (leave 0 to guess):'
+    field1_type = int
+    confirm_caption = 'Import'
+    invalid_width_error = 'Invalid width override.'
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        self.field1_text = '0'
+    
+    def is_input_valid(self):
+        try: int(self.field1_text)
+        except: return False, self.invalid_width_error
+        if int(self.field1_text) < 0:
+            return False, self.invalid_width_error
+        return True, None
+    
+    def confirm_pressed(self):
+        filename = self.field0_text
+        width = int(self.get_field_text(1))
+        width = width if width > 0 else None
+        self.ui.app.import_edscii(filename, width)
+        self.dismiss()
+
+
 class ConvertImageDialog(UIDialog):
     
     title = 'Convert raster image'
