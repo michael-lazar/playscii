@@ -1,4 +1,6 @@
 
+from random import randint
+
 # mutate!
 # change a random tile on a random layer
 
