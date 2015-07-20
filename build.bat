@@ -6,7 +6,6 @@ REM Build needs to know where your python and SDL2 dll are, modify
 REM the two lines below as needed:
 set PYTHONPATH="c:\Python34"
 set SDLPATH=".\"
-set MUNKPATH=".\"
 
 echo Removing old build...
 rmdir /S /Q dist\
@@ -23,9 +22,6 @@ del /s /Q dist\OpenGL\*.pyo
 
 echo Copying SDL2.dll...
 copy %SDLPATH%\SDL2.dll dist\
-
-echo Copying chipmunk.dll...
-copy %MUNKPATH%\chipmunk.dll dist\
 
 echo Copying Playscii data files...
 mkdir dist\art
