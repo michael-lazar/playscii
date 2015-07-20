@@ -80,6 +80,7 @@ class Art:
     
     def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
+        self.valid = False
         if filename and not filename.endswith('.%s' % ART_FILE_EXTENSION):
             filename += '.%s' % ART_FILE_EXTENSION
         self.filename = filename
@@ -133,6 +134,7 @@ class Art:
             self.app.log('  width/height: %s x %s' % (self.width, self.height))
             self.app.log('  frames: %s' % self.frames)
             self.app.log('  layers: %s' % self.layers)
+        self.valid = True
     
     def insert_frame_before_index(self, index, delay=DEFAULT_FRAME_DELAY, log=True):
         "adds a blank frame at the specified index (len+1 to add to end)"
