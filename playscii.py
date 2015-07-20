@@ -101,21 +101,28 @@ class Application:
         # for its active art on later runs
         self.ui = None
         sdl2.ext.init()
-        # determine screen resolution
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
+        # determine screen resolution
         test_window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'),
                                             winpos, winpos,
-                                            64, 64,
+                                            128, 128,
                                             sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
-        screen_width = ctypes.c_int(0)
-        screen_height = ctypes.c_int(0)
         sdl2.SDL_HideWindow(test_window)
-        sdl2.SDL_GetWindowSize(test_window, ctypes.pointer(screen_width),
-                               ctypes.pointer(screen_height))
+        # SDL2 windows behavior differs, won't create window at desktop res :[
+        if platform.system() == 'Windows':
+            desktop = sdl2.video.SDL_DisplayMode()
+            sdl2.SDL_GetDesktopDisplayMode(0, desktop)
+            screen_width, screen_height = desktop.w, desktop.h
+        else:
+            screen_width, screen_height = ctypes.c_int(0), ctypes.c_int(0)
+            sdl2.SDL_GetWindowSize(test_window, ctypes.pointer(screen_width),
+                                   ctypes.pointer(screen_height))
+            screen_width = screen_width.value
+            screen_height = screen_height.value
         sdl2.SDL_DestroyWindow(test_window)
         # make sure main window won't be too big for screen
-        max_width = int(screen_width.value * 0.8)
-        max_height = int(screen_height.value * 0.8)
+        max_width = int(screen_width * 0.8)
+        max_height = int(screen_height * 0.8)
         self.window_width = min(self.window_width, max_width)
         self.window_height = min(self.window_height, max_height)
         # TODO: SDL_WINDOW_ALLOW_HIGHDPI doesn't seem to work right,
@@ -137,7 +144,7 @@ class Application:
         self.log('OS: %s' % platform.platform())
         self.log('CPU: %s' % platform.processor())
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
-        self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width.value, screen_height.value, self.window_width, self.window_height))
+        self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL version, vendor, GLSL version etc
         # try single-argument GL2.0 version first
         gl_ver = GL.glGetString(GL.GL_VERSION)
