@@ -653,8 +653,8 @@ if __name__ == "__main__":
         else:
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
-    app = Application(log_file, log_lines, file_to_load, game_dir_to_load,
-                      state_to_load)
+    app = Application(log_file, log_lines, file_to_load or 'new',
+                      game_dir_to_load, state_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)
