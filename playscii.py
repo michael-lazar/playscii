@@ -41,9 +41,9 @@ CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
-SCREENSHOT_SUBDIR = 'screenshots'
+SCREENSHOT_SUBDIR = 'screenshots/'
 
-VERSION = '0.6.0'
+VERSION = '0.6.1'
 
 MAX_ONION_FRAMES = 3
 
@@ -366,7 +366,7 @@ class Application:
         filenames += ['%s.%s' % (f_dir, ext) for ext in extensions]
         # return first one we find
         for f in filenames:
-            if os.path.exists(f) and os.path.isfile(f):
+            if f is not None and os.path.exists(f) and os.path.isfile(f):
                 return f
         return None
     
@@ -480,7 +480,7 @@ class Application:
         pixel_bytes = pixels.flatten().tobytes()
         img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        img.save('%s/%s' % (SCREENSHOT_SUBDIR, output_filename))
+        img.save('%s%s' % (SCREENSHOT_SUBDIR, output_filename))
         self.log('Saved screenshot %s' % output_filename)
     
     def enter_game_mode(self):
