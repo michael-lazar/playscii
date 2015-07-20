@@ -40,6 +40,7 @@ mkdir dist\scripts
 copy /v scripts\*.* dist\scripts\
 mkdir dist\shaders
 copy /v shaders\*.* dist\shaders\
+REM test game content
 mkdir dist\games
 mkdir dist\games\test1
 mkdir dist\games\test1\art
@@ -49,6 +50,14 @@ copy /v games\test1\*.* dist\games\test1\
 copy /v games\test1\art\*.* dist\games\test1\art\
 copy /v games\test1\palettes\*.* dist\games\test1\palettes\
 copy /v games\test1\scripts\*.* dist\games\test1\scripts\
+mkdir dist\games\cronotest
+mkdir dist\games\cronotest\art
+mkdir dist\games\cronotest\palettes
+mkdir dist\games\cronotest\scripts
+copy /v games\cronotest\*.* dist\games\cronotest\
+copy /v games\cronotest\art\*.* dist\games\cronotest\art\
+copy /v games\cronotest\palettes\*.* dist\games\cronotest\palettes\
+copy /v games\cronotest\scripts\*.* dist\games\cronotest\scripts\
 REM ignore ui art source assets (eg .xcf)
 mkdir dist\ui
 copy /v ui\*.png dist\ui\
