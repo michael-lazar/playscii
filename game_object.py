@@ -155,7 +155,7 @@ class GameObject:
                                         self.art_palette)
         else:
             self.load_arts()
-        if not self.art:
+        if self.art is None or not self.art.valid:
             # grab first available art
             if len(self.arts) > 0:
                 for art in self.arts:

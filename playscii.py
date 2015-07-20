@@ -260,7 +260,7 @@ class Application:
                 charset=None, palette=None):
         width = width or self.new_art_width
         height = height or self.new_art_height
-        filename = filename or 'new'
+        filename = filename if filename and filename != '' else 'new'
         if not filename.startswith(ART_DIR):
             filename = '%s%s' % (ART_DIR, filename)
         # if a game dir is loaded, use that
@@ -269,61 +269,33 @@ class Application:
                                    self.gw.game_dir, filename)
         charset = self.load_charset(charset or self.starting_charset)
         palette = self.load_palette(palette or self.starting_palette)
-        return Art(filename, self, charset, palette, width, height)
+        art = Art(filename, self, charset, palette, width, height)
+        art.time_loaded = time.time()
+        return art
     
     def load_art(self, filename, autocreate=True):
         """
-        determine a viable filename and load it from disk;
-        create new file if unsuccessful
+        load given file from disk; by default autocreate new file if it
+        couldn't be found
         """
-        
-        """
-        TODO: finish on desktop
-        valid_filename = self.find_filename_path(filename, ART_DIR, ART_FILE_EXTENSION)
+        valid_filename = self.find_filename_path(filename, ART_DIR,
+                                                 ART_FILE_EXTENSION)
         art = None
         if not valid_filename:
             if autocreate:
-                self.log('Creating new document %s' % filename)
-                art = self.new_art(filename)
+                self.log('Creating new art %s' % filename)
+                return self.new_art(filename)
             else:
-                self.log("Couldn't find file %s" % filename)
+                #self.log("Couldn't find art file %s" % filename)
                 return None
-        """
-        
-        orig_filename = filename
-        filename = filename or 'new'
-        # if not found, try adding extension
-        if not os.path.exists(filename):
-            filename += '.%s' % ART_FILE_EXTENSION
-        # if a game is loaded, check in its art dir
-        game_art_filename = self.gw.get_game_dir() + ART_DIR + filename if self.gw.game_dir else None
-        if game_art_filename and os.path.exists(game_art_filename):
-            filename = game_art_filename
-        # try adding art subdir
-        elif not os.path.exists(filename):
-            filename = '%s%s' % (ART_DIR, filename)
-        art = None
-        if not os.path.exists(filename) and not autocreate:
-            return None
-        # use given path + file name even if it doesn't exist; use as new file's name
-        elif not os.path.exists(filename):
-            text = 'Creating new document %s' % filename
-            if orig_filename:
-                text = "Couldn't find file %s, %s" % (orig_filename, text)
-            self.log(text)
-            art = self.new_art(filename)
-        else:
-            for a in self.art_loaded_for_edit + self.gw.art_loaded:
-                # TODO: this check doesn't work on EDSCII imports b/c its name changes
-                if a.filename == filename:
-                    return a
-            if not self.game_mode:
-                self.log('Loading file %s...' % filename)
-            art = ArtFromDisk(filename, self)
-            # if file failed to load, create a new file with that name
-            # TODO: this may be foolish, ensure this never overwrites user data
-            if not art or not art.valid:
-                art = self.new_art(filename)
+        # if already loaded, return that
+        for a in self.art_loaded_for_edit + self.gw.art_loaded:
+            if a.filename == valid_filename:
+                return a
+        art = ArtFromDisk(valid_filename, self)
+        # if loading failed, create new file
+        if not art or not art.valid:
+            return self.new_art(valid_filename)
         # remember time loaded for UI list sorting
         art.time_loaded = time.time()
         return art
@@ -364,30 +336,30 @@ class Application:
     def find_filename_path(self, filename, subdir, extensions=[]):
         "returns a valid path for given file, extension, subdir (art/ etc)"
         # build list of all permutations of filename in all paths,
-        # with/without extensions
+        # with/without extensions. first items in list checked first.
         filenames = []
-        # accept list or single item
+        # accept list or single item, empty list if None is passed
         if extensions is None:
             extensions = []
         elif not type(extensions) is list:
             extensions = [extensions]
+        if not subdir.endswith('/') and not subdir.endswith('\\'):
+            subdir += '/'
         # if game dir is set, try: game dir + file, game dir + file + extension
         if self.gw.game_dir:
-            f_gamedir = '%s%s/%s' % (self.gw.game_dir, subdir, filename)
-            filenames += [f_gamedir]
-            for ext in extensions:
-                filenames.append(f_gamedir + extension)
-        # bare file, file + extensions, subdir + file + extensions, subdir + file
+            f_gamedir = '%s%s%s' % (self.gw.get_game_dir(), subdir, filename)
+            filenames.append(f_gamedir)
+            filenames += ['%s.%s' % (f_gamedir, ext) for ext in extensions]
+        # bare file, file + extensions
         filenames.append(filename)
-        for ext in extensions:
-            filenames.append('%s.%s' % (filename, ext))
-        f_dir = '%s/%s' % (subdir, filename)
+        filenames += ['%s.%s' % (filename, ext) for ext in extensions]
+        # subdir + file + extensions, subdir + file
+        f_dir = '%s%s' % (subdir, filename)
         filenames.append(f_dir)
-        for ext in extensions:
-            filenames.append('%s.%s' % (f_dir, ext))
+        filenames += ['%s.%s' % (f_dir, ext) for ext in extensions]
         # return first one we find
         for f in filenames:
-            if os.path.exists(f):
+            if os.path.exists(f) and os.path.isfile(f):
                 return f
         return None
     
