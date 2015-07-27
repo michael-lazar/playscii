@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog
+from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 from collision import CT_NONE
@@ -680,6 +680,12 @@ class InputLord:
         if not self.ui.active_art:
             return
         self.ui.open_dialog(SaveAsDialog)
+    
+    def BIND_revert_art(self):
+        if not self.ui.active_art:
+            return
+        if self.ui.active_art.unsaved_changes:
+            self.ui.open_dialog(RevertChangesDialog)
     
     def BIND_close_art(self):
         if not self.ui.active_art:

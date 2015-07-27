@@ -225,14 +225,15 @@ class Application:
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
-        if game_dir_to_load or self.start_game:
+        if (game_dir_to_load or self.start_game) and self.gw.game_dir:
             # set initial game state
             if state_to_load:
                 self.gw.load_game_state(state_to_load)
             else:
                 self.gw.load_game_state()
         else:
-            self.ui.message_line.post_line(self.welcome_message, 10)
+            #self.ui.message_line.post_line(self.welcome_message, 10)
+            pass
         if not self.can_edit:
             self.enter_game_mode()
     
@@ -390,7 +391,7 @@ class Application:
         if self.ui:
             self.ui.set_active_art(art)
     
-    def load_charset(self, charset_to_load, log=True):
+    def load_charset(self, charset_to_load, log=False):
         "creates and returns a character set with the given name"
         # already loaded?
         base_charset_to_load = os.path.basename(charset_to_load)
@@ -406,7 +407,7 @@ class Application:
             # if init failed (eg bad filename) return something safe
             return self.ui.active_art.charset
     
-    def load_palette(self, palette_to_load, log=True):
+    def load_palette(self, palette_to_load, log=False):
         base_palette_to_load = os.path.basename(palette_to_load)
         base_palette_to_load = os.path.splitext(base_palette_to_load)[0]
         for palette in self.palettes:
