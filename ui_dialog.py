@@ -438,6 +438,24 @@ class CloseUnsavedChangesDialog(QuitUnsavedChangesDialog):
         self.ui.app.il.BIND_close_art()
 
 
+class RevertChangesDialog(UIDialog):
+    
+    title = 'Revert changes'
+    message = 'Revert changes to %s?'
+    confirm_caption = 'Revert'
+    fields = 0
+    
+    def confirm_pressed(self):
+        filename = self.ui.active_art.filename
+        self.ui.app.close_art(self.ui.active_art)
+        self.ui.app.load_art_for_edit(filename)
+        self.dismiss()
+    
+    def get_message(self):
+        filename = os.path.basename(self.ui.active_art.filename)
+        return [self.message % filename]
+
+
 class ResizeArtDialog(UIDialog):
     
     title = 'Resize art'

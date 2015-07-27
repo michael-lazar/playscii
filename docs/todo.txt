@@ -1,7 +1,7 @@
 TODO
 
-fixes for 0.6.0:
-- codepath for EDSCII loading is skipped entirely, maybe just make "Import EDSCII..." its own File menu item?
+- Art.copy() so that "save as" can create a duplicate?
+-- also helps art instance scripting for game objects?
 
 ---
 

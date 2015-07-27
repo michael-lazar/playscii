@@ -580,6 +580,7 @@ class Art:
         return script_filename and script_filename in self.scripts
     
     def get_valid_script_filename(self, script_filename):
+        if not type(script_filename) is str: return None
         if os.path.exists(script_filename): return script_filename
         # try adding scripts/ subdir
         script_filename = '%s%s' % (SCRIPT_DIR, script_filename)
@@ -618,6 +619,10 @@ class Art:
         self.scripts.pop(script_index)
         self.script_rates.pop(script_index)
         self.scripts_next_exec_time.pop(script_index)
+    
+    def stop_all_scripts(self):
+        for script_filename in self.scripts:
+            self.stop_script(script_filename)
     
     def update_scripts(self):
         if len(self.scripts) == 0:

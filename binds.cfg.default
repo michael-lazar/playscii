@@ -121,5 +121,6 @@ self.edit_bind_src = {
 	'_cycle_onion_display': 'cycle_onion_ahead_behind',
 	'_open_game_assets' : 'open_all_game_assets',
 	'_export_anim'  : 'export_anim',
-	'_import_edscii': 'import_edscii'
+	'_import_edscii': 'import_edscii',
+	'_revert'   : 'revert_art'
 }

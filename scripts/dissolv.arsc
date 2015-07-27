@@ -1,0 +1,21 @@
+
+frame, layer = 0, 0
+
+left_x = int(self.width / 2)
+top_y = int(self.height / 2)
+
+for x in range(int(self.width / 2)):
+    for y in range(self.height):
+        char = self.get_char_index_at(frame, layer, x, y)
+        char = max(0, char - 1)
+        if x > 0:
+            self.set_char_index_at(frame, layer, x - 1, y, char)
+            self.set_char_index_at(frame, layer, x, y, 0)
+
+for x in range(self.width, int(self.width / 2), -1):
+    for y in range(self.height):
+        char = self.get_char_index_at(frame, layer, x, y)
+        char = max(0, char - 1)
+        if x < self.width - 1:
+            self.set_char_index_at(frame, layer, x + 1, y, char)
+            self.set_char_index_at(frame, layer, x, y, 0)

@@ -124,8 +124,32 @@ class CommandListCommand(ConsoleCommand):
     def execute(console, args):
         # TODO: print a command with usage if available
         console.ui.app.log('Commands:')
-        for command in commands:
+        # alphabetize command list
+        command_list = list(commands.keys())
+        command_list.sort()
+        for command in command_list:
             console.ui.app.log(' %s' % command)
+
+class RunArtScriptCommand(ConsoleCommand):
+    def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: src [art script filename]'
+        filename = ' '.join(args)
+        console.ui.active_art.run_script(filename)
+
+class RunEveryArtScriptCommand(ConsoleCommand):
+    def execute(console, args):
+        if len(args) < 2:
+            return 'Usage: srcev [rate] [art script filename]'
+        rate = float(args[0])
+        filename = ' '.join(args[1:])
+        console.ui.active_art.run_script_every(filename, rate)
+        # hide so user can immediately see what script is doing
+        console.hide()
+
+class StopArtScriptsCommand(ConsoleCommand):
+    def execute(console, args):
+        console.ui.active_art.stop_all_scripts()
 
 # map strings to command classes for ConsoleUI.parse
 commands = {
@@ -143,7 +167,10 @@ commands = {
     'game': LoadGameStateCommand,
     'savegame': SaveGameStateCommand,
     'spawn': SpawnObjectCommand,
-    'help': CommandListCommand
+    'help': CommandListCommand,
+    'scr': RunArtScriptCommand,
+    'screv': RunEveryArtScriptCommand,
+    'scrstop': StopArtScriptsCommand
 }
 
 
