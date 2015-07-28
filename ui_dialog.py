@@ -446,9 +446,7 @@ class RevertChangesDialog(UIDialog):
     fields = 0
     
     def confirm_pressed(self):
-        filename = self.ui.active_art.filename
-        self.ui.app.close_art(self.ui.active_art)
-        self.ui.app.load_art_for_edit(filename)
+        self.ui.app.revert_active_art()
         self.dismiss()
     
     def get_message(self):

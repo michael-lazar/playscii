@@ -341,6 +341,11 @@ class Application:
             self.ui.set_active_art(self.art_loaded_for_edit[0])
         self.update_window_title()
     
+    def revert_active_art(self):
+        filename = self.ui.active_art.filename
+        self.close_art(self.ui.active_art)
+        self.load_art_for_edit(filename)
+    
     def find_filename_path(self, filename, subdir, extensions=[]):
         "returns a valid path for given file, extension, subdir (art/ etc)"
         # build list of all permutations of filename in all paths,

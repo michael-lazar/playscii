@@ -12,7 +12,7 @@ for x in range(int(self.width / 2)):
             self.set_char_index_at(frame, layer, x - 1, y, char)
             self.set_char_index_at(frame, layer, x, y, 0)
 
-for x in range(self.width, int(self.width / 2), -1):
+for x in range(self.width - 1, int(self.width / 2), -1):
     for y in range(self.height):
         char = self.get_char_index_at(frame, layer, x, y)
         char = max(0, char - 1)

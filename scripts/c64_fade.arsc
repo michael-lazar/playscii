@@ -1,0 +1,28 @@
+
+# palette-specific (c64 original) fade to black
+
+color_ramps = {
+    2: 16,
+    3: 10,
+    4: 15,
+    5: 12,
+    6: 12,
+    7: 12,
+    8: 9,
+    9: 10,
+    10: 12,
+    11: 3,
+    12: 1,
+    13: 12,
+    14: 6,
+    15: 7,
+    16: 13
+}
+
+for frame, layer, x, y in TileIter(self):
+    fg = self.get_fg_color_index_at(frame, layer, x, y)
+    fg = color_ramps.get(fg, 1)
+    self.set_color_at(frame, layer, x, y, fg, fg=True)
+    bg = self.get_bg_color_index_at(frame, layer, x, y)
+    bg = color_ramps.get(bg, 1)
+    self.set_color_at(frame, layer, x, y, bg, fg=False)
