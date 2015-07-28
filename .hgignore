@@ -1,4 +1,3 @@
-./*.orig
 dist/*.*
 __pycache__/*.*
 .idea/*.*

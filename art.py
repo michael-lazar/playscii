@@ -573,6 +573,8 @@ class Art:
         if not script_filename:
             return
         exec(open(script_filename).read())
+        # assume script will change art
+        self.unsaved_changes = True
         self.app.log('Executed %s' % script_filename)
     
     def is_script_running(self, script_filename):
@@ -630,6 +632,7 @@ class Art:
         for i,script in enumerate(self.scripts):
             if (self.app.elapsed_time / 1000) > self.scripts_next_exec_time[i]:
                 exec(open(script).read())
+                self.unsaved_changes = True
                 self.scripts_next_exec_time[i] += self.script_rates[i]
     
     def clear_line(self, frame, layer, line_y, fg_color_index=None,
@@ -850,3 +853,31 @@ class ArtFromEDSCII(Art):
             self.app.log('EDSCII file %s loaded from disk:' % filename)
             self.app.log('  width/height: %s x %s' % (self.width, self.height))
         self.valid = True
+
+
+class TileIter:
+    
+    def __init__(self, art):
+        self.width, self.height = art.width, art.height
+        self.frames, self.layers = art.frames, art.layers
+    
+    def __iter__(self):
+        self.frame, self.layer = 0, 0
+        self.x, self.y = 0, 0
+        return self
+    
+    def __next__(self):
+        frame, layer, x, y = self.frame, self.layer, self.x, self.y
+        self.x += 1
+        if self.x >= self.width:
+            self.x = 0
+            self.y += 1
+        if self.y >= self.height:
+            self.y = 0
+            self.layer += 1
+        if self.layer >= self.layers:
+            self.layer = 0
+            self.frame += 1
+        if self.frame >= self.frames:
+            raise StopIteration
+        return frame, layer, x, y

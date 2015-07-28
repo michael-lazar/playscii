@@ -42,6 +42,9 @@ class OpenCommand(ConsoleCommand):
         filename = ' '.join(args)
         console.ui.app.load_art_for_edit(filename)
 
+class RevertArtCommand(ConsoleCommand):
+    def execute(console, args):
+        console.ui.app.revert_active_art()
 
 class LoadPaletteCommand(ConsoleCommand):
     def execute(console, args):
@@ -170,7 +173,8 @@ commands = {
     'help': CommandListCommand,
     'scr': RunArtScriptCommand,
     'screv': RunEveryArtScriptCommand,
-    'scrstop': StopArtScriptsCommand
+    'scrstop': StopArtScriptsCommand,
+    'revert': RevertArtCommand
 }
 
 
@@ -361,8 +365,10 @@ class ConsoleUI(UIElement):
         elif keystr == 'Return':
             line = '%s %s' % (self.prompt, self.current_line)
             self.ui.app.log(line)
-            self.command_history.append(self.current_line)
-            self.history_file.write(self.current_line + '\n')
+            # if command is same as last, don't repeat it
+            if len(self.command_history) > 0 and self.current_line != self.command_history[-1]:
+                self.command_history.append(self.current_line)
+                self.history_file.write(self.current_line + '\n')
             self.parse(self.current_line)
             self.current_line = ''
             self.history_index = 0

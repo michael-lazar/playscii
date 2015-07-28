@@ -1,0 +1,29 @@
+
+# convert from C64 EDSCII to C64 original color palettes
+
+color_map = {
+    1: 1,
+    2: 3,
+    3: 5,
+    4: 7,
+    5: 6,
+    6: 8,
+    7: 12,
+    8: 16,
+    9: 10,
+    10: 9,
+    11: 11,
+    12: 15,
+    13: 14,
+    14: 4,
+    15: 13,
+    16: 2
+}
+
+for frame, layer, x, y in TileIter(self):
+    fg = self.get_fg_color_index_at(frame, layer, x, y)
+    fg = color_map[fg]
+    self.set_color_at(frame, layer, x, y, fg, fg=True)
+    bg = self.get_bg_color_index_at(frame, layer, x, y)
+    bg = color_map[bg]
+    self.set_color_at(frame, layer, x, y, bg, fg=False)
