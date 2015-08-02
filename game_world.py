@@ -29,6 +29,7 @@ class GameWorld:
     player_camera_lock = True
     object_grid_snap = True
     hud_class_name = 'GameHUD'
+    collision_enabled = True
     
     def __init__(self, app):
         self.app = app
@@ -242,7 +243,8 @@ class GameWorld:
             # update objects based on movement, then resolve collisions
             for obj in self.objects.values():
                 obj.update(dt)
-            self.cl.resolve_overlaps()
+            if self.collision_enabled:
+                self.cl.resolve_overlaps()
         # display debug text for selected object(s)
         for obj in self.selected_objects:
             s = obj.get_debug_text()

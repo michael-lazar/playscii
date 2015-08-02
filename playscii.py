@@ -351,6 +351,10 @@ class Application:
         # build list of all permutations of filename in all paths,
         # with/without extensions. first items in list checked first.
         filenames = []
+        
+        # TODO: build dirs list of dirs to check: ., subdir, game + subdir,
+        # documents + subdir
+        
         # accept list or single item, empty list if None is passed
         if extensions is None:
             extensions = []
