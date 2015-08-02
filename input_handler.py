@@ -10,6 +10,7 @@ from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 from collision import CT_NONE
 from image_export import export_still_image, export_animation
+from art import ART_DIR, ART_FILE_EXTENSION
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
@@ -499,7 +500,12 @@ class InputLord:
         if self.app.game_mode:
             self.ui.open_dialog(SaveGameStateDialog)
         elif self.ui.active_art:
-            self.ui.active_art.save_to_file()
+            # if new document, ask for a name
+            default_name = ART_DIR + 'new.' + ART_FILE_EXTENSION
+            if self.ui.active_art.filename == default_name:
+                self.ui.open_dialog(SaveAsDialog)
+            else:
+                self.ui.active_art.save_to_file()
     
     def BIND_toggle_ui_visibility(self):
         self.ui.visible = not self.ui.visible
