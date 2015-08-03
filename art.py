@@ -556,12 +556,10 @@ class Art:
         # if no dir given, assume art/ dir
         #if not '/' in new_filename:
         if os.path.basename(new_filename) == new_filename:
-            game_dir = self.app.gw.game_dir
-            if game_dir is not None:
-                new_filename = '%s%s%s%s' % (self.app.gw.top_game_dir,
-                                             game_dir, ART_DIR, new_filename)
-            else:
-                new_filename = '%s%s' % (ART_DIR, new_filename)
+            new_filename = self.app.documents_dir
+            if self.app.gw.game_dir is not None:
+                new_filename += self.app.gw.get_game_dir()
+            new_filename += ART_DIR, new_filename
         # TODO: check if file already exists?
         self.filename = new_filename
     
@@ -756,7 +754,7 @@ class ArtFromDisk(Art):
         self.set_active_layer(active_layer)
         self.update()
         if self.log_creation and not self.app.game_mode:
-            self.app.log('loaded %s from disk:' % filename)
+            self.app.log('Loaded %s from disk:' % filename)
             self.app.log('  character set: %s' % self.charset.name)
             self.app.log('  palette: %s' % self.palette.name)
             self.app.log('  width/height: %s x %s' % (self.width, self.height))

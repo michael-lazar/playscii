@@ -30,13 +30,13 @@ class SeparatorMenuItem(PulldownMenuItem):
     pass
 
 class FileNewMenuItem(PulldownMenuItem):
-    label = 'New...'
+    label = 'New…'
     command = 'new_art'
     def should_dim(app):
         return False
 
 class FileOpenMenuItem(PulldownMenuItem):
-    label = 'Open...'
+    label = 'Open…'
     command = 'open_art'
     def should_dim(app):
         return False
@@ -48,7 +48,7 @@ class FileSaveMenuItem(PulldownMenuItem):
         return not app.ui.active_art or not app.ui.active_art.unsaved_changes
 
 class FileSaveAsMenuItem(PulldownMenuItem):
-    label = 'Save As...'
+    label = 'Save As…'
     command = 'save_art_as'
     def should_dim(app):
         return app.ui.active_art is None
@@ -66,13 +66,13 @@ class FileRevertMenuItem(PulldownMenuItem):
         return app.ui.active_art is None or not app.ui.active_art.unsaved_changes
 
 class FileEDSCIIImportMenuItem(PulldownMenuItem):
-    label = 'Import from EDSCII...'
+    label = 'Import from EDSCII'
     command = 'import_edscii'
     def should_dim(app):
         return False
 
 class FileConvertImageMenuItem(PulldownMenuItem):
-    label = 'Convert Image...'
+    label = 'Convert Image…'
     command = 'convert_image'
     def should_dim(app):
         return app.ui.active_art is None
@@ -251,7 +251,7 @@ class ArtCropToSelectionMenuItem(PulldownMenuItem):
         return len(app.ui.select_tool.selected_tiles) == 0
 
 class ArtResizeMenuItem(PulldownMenuItem):
-    label = 'Resize...'
+    label = 'Resize…'
     command = 'resize_art'
 
 class FramePreviousMenuItem(PulldownMenuItem):
@@ -309,19 +309,19 @@ class FrameCycleOnionDisplayMenuItem(PulldownMenuItem):
         return 'Onion frames show: %s' % display
 
 class FrameAddFrameMenuItem(PulldownMenuItem):
-    label = 'Add frame...'
+    label = 'Add frame…'
     command = 'add_frame'
 
 class FrameDuplicateFrameMenuItem(PulldownMenuItem):
-    label = 'Duplicate this frame...'
+    label = 'Duplicate this frame…'
     command = 'duplicate_frame'
 
 class FrameChangeDelayMenuItem(PulldownMenuItem):
-    label = "Change this frame's hold time..."
+    label = "Change this frame's hold time…"
     command = 'change_frame_delay'
 
 class FrameChangeIndexMenuItem(PulldownMenuItem):
-    label = "Change this frame's index..."
+    label = "Change this frame's index…"
     command = 'change_frame_index'
 
 class FrameDeleteFrameMenuItem(PulldownMenuItem):
@@ -332,19 +332,19 @@ class FrameDeleteFrameMenuItem(PulldownMenuItem):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
 class LayerAddMenuItem(PulldownMenuItem):
-    label = "Add layer..."
+    label = "Add layer…"
     command = 'add_layer'
 
 class LayerDuplicateMenuItem(PulldownMenuItem):
-    label = "Duplicate this layer..."
+    label = "Duplicate this layer…"
     command = 'duplicate_layer'
 
 class LayerSetNameMenuItem(PulldownMenuItem):
-    label = "Change this layer's name..."
+    label = "Change this layer's name…"
     command = 'change_layer_name'
 
 class LayerSetZMenuItem(PulldownMenuItem):
-    label = "Change this layer's Z-depth..."
+    label = "Change this layer's Z-depth…"
     command = 'change_layer_z'
 
 class LayerToggleVisibleMenuItem(PulldownMenuItem):
@@ -393,15 +393,15 @@ class LayerNextMenuItem(PulldownMenuItem):
         return not app.ui.active_art or app.ui.active_art.layers < 2
 
 class ChooseCharSetMenuItem(PulldownMenuItem):
-    label = 'Choose character set...'
+    label = 'Choose character set…'
     command = 'choose_charset'
 
 class ChoosePaletteMenuItem(PulldownMenuItem):
-    label = 'Choose palette...'
+    label = 'Choose palette…'
     command = 'choose_palette'
 
 class PaletteFromFileMenuItem(PulldownMenuItem):
-    label = 'Palette from file...'
+    label = 'Palette from file…'
     command = 'palette_from_file'
 
 class ToggleGameModeMenuItem(PulldownMenuItem):
@@ -409,17 +409,17 @@ class ToggleGameModeMenuItem(PulldownMenuItem):
     command = 'toggle_game_mode'
 
 class SetGameDirItem(PulldownMenuItem):
-    label = 'Set game dir...'
+    label = 'Set game dir…'
     command = 'set_game_dir'
 
 class LoadGameStateItem(PulldownMenuItem):
-    label = 'Load game state...'
+    label = 'Load game state…'
     command = 'load_game_state'
     def should_dim(app):
         return app.gw.game_dir is None
 
 class SaveGameStateMenuItem(PulldownMenuItem):
-    label = 'Save game state...'
+    label = 'Save game state…'
     command = 'save_current'
     def should_dim(app):
         return app.gw.game_dir is None
@@ -436,7 +436,7 @@ class ResetGameItem(PulldownMenuItem):
         return l
 
 class HelpScreenMenuItem(PulldownMenuItem):
-    label = 'Help...'
+    label = 'Help…'
     command = 'open_help_screen'
     def should_dim(app):
         # there is always help <3

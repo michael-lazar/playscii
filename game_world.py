@@ -175,12 +175,18 @@ class GameWorld:
         if dir_name == self.game_dir:
             self.load_game_state(DEFAULT_STATE_FILENAME)
             return
+        # loading a new game, wipe art list
         self.art_loaded = []
-        if os.path.exists(TOP_GAME_DIR + dir_name):
-            self.game_dir = dir_name
-            if not dir_name.endswith('/'):
+        # check in user documents dir first
+        game_dir = TOP_GAME_DIR + dir_name
+        doc_game_dir = self.app.documents_dir + game_dir
+        for d in [doc_game_dir, game_dir]:
+            if not os.path.exists(d):
+                continue
+            self.game_dir = d
+            if not d.endswith('/'):
                 self.game_dir += '/'
-            self.app.log('Game data directory is now %s' % dir_name)
+            self.app.log('Game data directory is now %s' % d)
             if reset:
                 # load in a default state, eg start.gs
                 self.load_game_state(DEFAULT_STATE_FILENAME)
@@ -188,12 +194,17 @@ class GameWorld:
                 # if no reset load submodules into namespace from the get-go
                 self.import_all()
                 self.classes = self.get_all_loaded_classes()
+            break
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
         if self.app.ui:
             self.app.ui.edit_game_panel.draw_titlebar()
     
     def import_all(self):
+        
+        # TODO: if game is loading from user document dir, what does import path
+        # look like?
+        
         module_suffix = TOP_GAME_DIR[:-1] + '.'
         module_suffix += self.game_dir[:-1] + '.'
         module_suffix += GAME_SCRIPTS_DIR[:-1] + '.'

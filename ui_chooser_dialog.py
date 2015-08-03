@@ -4,7 +4,7 @@ import sdl2
 from renderable_sprite import SpriteRenderable
 from ui_dialog import UIDialog
 from ui_button import UIButton
-from palette import Palette, PALETTE_DIR
+from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
 from ui_console import LoadCharSetCommand, LoadPaletteCommand
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
@@ -270,14 +270,58 @@ class ChooserDialog(UIDialog):
         self.preview_renderable.render()
 
 
-class PaletteChooserDialog(ChooserDialog):
+class FileChooserDialog(ChooserDialog):
+    
+    "base class for choosers whose items correspond with files"
+    
+    def get_filenames(self):
+        "subclasses override: get list of desired filenames"
+        return []
+    
+    def get_description_filename(self, item):
+        "returns a description-appropriate filename for given item"
+        filename = item.filename
+        # truncate from start to fit in description area if needed
+        max_width = self.tile_width
+        max_width -= self.item_start_x + ChooserItemButton.width + 5
+        if len(filename) > max_width - 1:
+            filename = '…' + filename[-max_width:]
+        return filename
+    
+    def load_item(self, item_name):
+        "subclasses override: return loaded item"
+        return {}
+    
+    def get_items(self):
+        "populatea and return items from list of files, loading as needed"
+        items = []
+        # find all suitable files (images)
+        filenames = self.get_filenames()
+        filenames.sort()
+        # use manual counter, as we skip past some files that don't fit
+        i = 0
+        for filename in filenames:
+            item = ChooserItem()
+            item.index = i
+            # load item from filename
+            item.data = self.load_item(filename)
+            # data might be bad, bail
+            if not hasattr(item.data, 'init_success') or not item.data.init_success:
+                continue
+            item.label = item.data.name
+            items.append(item)
+            i += 1
+        return items
+
+
+class PaletteChooserDialog(FileChooserDialog):
     title = 'Choose palette'
     message = 'Available palettes:'
     
     def get_selected_description_lines(self):
         item = self.get_selected_data()
         # display source filename and # of unique colors
-        lines = [item.filename]
+        lines = [self.get_description_filename(item)]
         lines += ['Unique colors: %s' % str(len(item.colors) - 1)]
         return lines
     
@@ -292,34 +336,18 @@ class PaletteChooserDialog(ChooserDialog):
         pal = self.get_selected_data()
         self.preview_renderable.texture = pal.src_texture
     
-    def get_items(self):
-        items = []
-        # find all suitable files (images)
+    def get_filenames(self):
         filenames = []
-        for filename in os.listdir(PALETTE_DIR):
-            filenames.append(PALETTE_DIR + filename)
-        # check loaded game dir as well, if it exists
-        if self.ui.app.gw.game_dir:
-            game_palette_dir = self.ui.app.gw.get_game_dir() + PALETTE_DIR
-            if os.path.exists(game_palette_dir):
-                for filename in os.listdir(game_palette_dir):
-                    filenames.append(game_palette_dir + filename)
-        # use manual counter, as we skip past some files that don't fit
-        i = 0
-        for filename in filenames:
-            if not filename.lower().endswith('.png'):
-                continue
-            item = ChooserItem()
-            item.index = i
-            # load the actual palette
-            item.data = self.ui.app.load_palette(filename, False)
-            # data might be bad, bail
-            if not item.data.init_success:
-                continue
-            item.label = item.data.name
-            items.append(item)
-            i += 1
-        return items
+        # search all files in dirs with appropriate extensions
+        for dirname in self.ui.app.get_dirnames(PALETTE_DIR, False):
+            for filename in os.listdir(dirname):
+                for ext in PALETTE_EXTENSIONS:
+                    if filename.lower().endswith(ext):
+                        filenames.append(filename)
+        return filenames
+    
+    def load_item(self, item_name):
+        return self.ui.app.load_palette(item_name, False)
     
     def confirm_pressed(self):
         new_pal = self.get_selected_data()
@@ -327,14 +355,14 @@ class PaletteChooserDialog(ChooserDialog):
         self.ui.popup.set_active_palette(new_pal)
 
 
-class CharSetChooserDialog(ChooserDialog):
+class CharSetChooserDialog(FileChooserDialog):
     title = 'Choose character set'
     message = 'Available sets:'
     flip_preview_y = False
     
     def get_selected_description_lines(self):
         item = self.get_selected_data()
-        lines = [item.filename]
+        lines = [self.get_description_filename(item)]
         lines += ['Characters: %s' % str(item.last_index)]
         return lines
     
@@ -349,33 +377,17 @@ class CharSetChooserDialog(ChooserDialog):
         charset = self.get_selected_data()
         self.preview_renderable.texture = charset.texture
     
-    def get_items(self):
-        items = []
+    def get_filenames(self):
         filenames = []
-        for filename in os.listdir(CHARSET_DIR):
-            filenames.append(CHARSET_DIR + filename)
-        # check loaded game dir as well, if it exists
-        if self.ui.app.gw.game_dir:
-            game_charset_dir = self.ui.app.gw.get_game_dir() + CHARSET_DIR
-            if os.path.exists(game_charset_dir):
-                for filename in os.listdir(game_charset_dir):
-                    filenames.append(game_charset_dir + filename)
-        # use manual counter, as we skip past some files that don't fit
-        i = 0
-        for filename in filenames:
-            if not filename.lower().endswith(CHARSET_FILE_EXTENSION):
-                continue
-            item = ChooserItem()
-            item.index = i
-            # load the character set
-            item.data = self.ui.app.load_charset(filename, False)
-            # data might be bad, bail
-            if not item.data.init_success:
-                continue
-            item.label = item.data.name
-            items.append(item)
-            i += 1
-        return items
+        # search all files in dirs with appropriate extensions
+        for dirname in self.ui.app.get_dirnames(CHARSET_DIR, False):
+            for filename in os.listdir(dirname):
+                if filename.lower().endswith(CHARSET_FILE_EXTENSION):
+                    filenames.append(filename)
+        return filenames
+    
+    def load_item(self, item_name):
+        return self.ui.app.load_charset(item_name, False)
     
     def confirm_pressed(self):
         new_set = self.get_selected_data()

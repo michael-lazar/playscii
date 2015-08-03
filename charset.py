@@ -13,18 +13,10 @@ class CharacterSet:
     def __init__(self, app, src_filename, log):
         self.init_success = False
         self.app = app
-        self.filename = src_filename
-        # small chance we have a filename that == a dir name, eg "ui"
-        if not os.path.exists(self.filename) or os.path.isdir(self.filename):
-            self.filename += '.%s' % CHARSET_FILE_EXTENSION
-        if self.app.gw.game_dir:
-            game_charset_filename = self.app.gw.get_game_dir() + CHARSET_DIR + self.filename
-            if os.path.exists(game_charset_filename):
-                self.filename = game_charset_filename
-        if not os.path.exists(self.filename):
-            self.filename = CHARSET_DIR + self.filename
-        if not os.path.exists(self.filename):
-            self.app.log("Couldn't find character set data file %s" % self.filename)
+        self.filename = self.app.find_filename_path(src_filename, CHARSET_DIR,
+                                                    CHARSET_FILE_EXTENSION)
+        if not self.filename:
+            self.app.log("Couldn't find character set data %s" % self.filename)
             return
         self.name = os.path.basename(self.filename)
         self.name = os.path.splitext(self.name)[0]
@@ -36,18 +28,11 @@ class CharacterSet:
             if not line.startswith('//'):
                 char_data.append(line)
         # first line = image file
-        image_filename = char_data.pop(0).strip()
-        image_filename = os.path.splitext(image_filename)[0]
-        if not os.path.exists(image_filename) or os.path.isdir(image_filename):
-            image_filename = CHARSET_DIR + image_filename
-            if not os.path.exists(image_filename):
-                image_filename += '.png'
-                if not os.path.exists(image_filename):
-                    # if no image found, try name of data file w/ png extension
-                    image_filename = self.filename.replace('.%s' % CHARSET_FILE_EXTENSION, '.png')
-                if not os.path.exists(image_filename):
-                    self.app.log("Couldn't find character set image file %s" % image_filename)
-                    return
+        image_filename = self.app.find_filename_path(char_data.pop(0).strip(),
+                                                     CHARSET_DIR, 'png')
+        if not image_filename:
+            self.app.log("Couldn't find character set image %s" % image_filename)
+            return
         # second line = character set dimensions
         second_line = char_data.pop(0).strip().split(',')
         self.map_width, self.map_height = int(second_line[0]), int(second_line[1])

@@ -30,15 +30,17 @@ class InputLord:
         # if the template is newer than it
         # TODO: better solution is find any binds in template but not binds.cfg
         # and add em
-        binds_outdated = not os.path.exists(BINDS_FILENAME) or os.path.getmtime(BINDS_FILENAME) < os.path.getmtime(BINDS_TEMPLATE_FILENAME)
-        if not binds_outdated and os.path.exists(BINDS_FILENAME):
-            exec(open(BINDS_FILENAME).read())
+        binds_filename = self.app.config_dir + BINDS_FILENAME
+        binds_outdated = not os.path.exists(binds_filename) or os.path.getmtime(binds_filename) < os.path.getmtime(BINDS_TEMPLATE_FILENAME)
+        if not binds_outdated and os.path.exists(binds_filename):
+            exec(open(binds_filename).read())
+            self.app.log('Loaded key binds from %s' % binds_filename)
         else:
             default_data = open(BINDS_TEMPLATE_FILENAME).readlines()[1:]
-            new_binds = open(BINDS_FILENAME, 'w')
+            new_binds = open(binds_filename, 'w')
             new_binds.writelines(default_data)
             new_binds.close()
-            self.app.log('Created new binds file %s' % BINDS_FILENAME)
+            self.app.log('Created new key binds file %s' % binds_filename)
             exec(''.join(default_data))
         if not self.edit_bind_src:
             self.app.log('No bind data found, Is binds.cfg.default present?')
