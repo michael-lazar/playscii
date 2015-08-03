@@ -7,11 +7,13 @@ if platform.system() == 'Windows':
     # set env variable so pysdl2 can find sdl2.dll
     os.environ['PYSDL2_DLL_PATH'] = '.'
     sys.path += ['.']
+    import winshell
 
 # app imports
 import ctypes, time
 import sdl2
 import sdl2.ext
+import appdirs
 from sdl2 import video
 from OpenGL import GL
 from PIL import Image
@@ -19,12 +21,12 @@ from PIL import Image
 # submodules - set here so cfg file can modify them all easily
 from shader import ShaderLord
 from camera import Camera
-from charset import CharacterSet
-from palette import Palette
+from charset import CharacterSet, CHARSET_DIR
+from palette import Palette, PALETTE_DIR
 from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION
 from renderable import TileRenderable, OnionTileRenderable
 from framebuffer import Framebuffer
-from art import ART_DIR, ART_FILE_EXTENSION
+from art import ART_DIR, ART_FILE_EXTENSION, SCRIPT_DIR
 from ui import UI
 from cursor import Cursor
 from grid import Grid
@@ -34,16 +36,17 @@ from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
 from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
-from game_world import GameWorld
+from game_world import GameWorld, TOP_GAME_DIR
 from game_object import GameObject
 
+APP_NAME = 'Playscii'
+VERSION = '0.6.1'
+
 CONFIG_FILENAME = 'playscii.cfg'
-CONFIG_TEMPLATE_FILENAME = 'playscii.cfg.default'
+CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
-SCREENSHOT_SUBDIR = 'screenshots/'
-
-VERSION = '0.6.1'
+SCREENSHOT_DIR = 'screenshots/'
 
 MAX_ONION_FRAMES = 3
 
@@ -53,7 +56,6 @@ class Application:
     fullscreen = False
     # framerate: uncapped if -1
     framerate = 60
-    base_title = 'Playscii'
     # force to run even if we can't get an OpenGL 2.1 context
     run_if_opengl_incompatible = False
     # starting document defaults
@@ -83,12 +85,16 @@ class Application:
     # start_game: if set, load this game on start no matter what
     start_game = None
     
-    def __init__(self, log_file, log_lines, art_filename, game_dir_to_load,
-                 state_to_load):
+    def __init__(self, config_dir, documents_dir, log_lines, art_filename,
+                 game_dir_to_load, state_to_load):
         self.init_success = False
+        self.config_dir = config_dir
+        self.documents_dir = documents_dir
         # log fed in from __main__, might already have stuff in it
-        self.log_file = log_file
         self.log_lines = log_lines
+        self.log_file = open(self.config_dir + LOG_FILENAME, 'w')
+        for line in self.log_lines:
+            self.log_file.write('%s\n' % line)
         self.elapsed_time = 0
         self.delta_time = 0
         self.should_quit = False
@@ -103,7 +109,7 @@ class Application:
         sdl2.ext.init()
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
         # determine screen resolution
-        test_window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'),
+        test_window = sdl2.SDL_CreateWindow(bytes(APP_NAME, 'utf-8'),
                                             winpos, winpos,
                                             128, 128,
                                             sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
@@ -130,7 +136,7 @@ class Application:
         flags = sdl2.SDL_WINDOW_OPENGL | sdl2.SDL_WINDOW_RESIZABLE# | sdl2.SDL_WINDOW_ALLOW_HIGHDPI
         if self.fullscreen:
             flags = flags | sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP
-        self.window = sdl2.SDL_CreateWindow(bytes(self.base_title, 'utf-8'),
+        self.window = sdl2.SDL_CreateWindow(bytes(APP_NAME, 'utf-8'),
                                             winpos, winpos,
                                             self.window_width, self.window_height,
                                             flags)
@@ -270,11 +276,11 @@ class Application:
         height = height or self.new_art_height
         filename = filename if filename and filename != '' else 'new'
         if not filename.startswith(ART_DIR):
-            filename = '%s%s' % (ART_DIR, filename)
+            filename = ART_DIR + filename
         # if a game dir is loaded, use that
         if self.gw.game_dir is not None:
-            filename = '%s%s%s' % (self.gw.top_game_dir,
-                                   self.gw.game_dir, filename)
+            filename = self.gw.get_game_dir() + filename
+        filename = self.documents_dir + filename
         charset = self.load_charset(charset or self.starting_charset)
         palette = self.load_palette(palette or self.starting_palette)
         art = Art(filename, self, charset, palette, width, height)
@@ -346,34 +352,47 @@ class Application:
         self.close_art(self.ui.active_art)
         self.load_art_for_edit(filename)
     
+    def get_dirnames(self, subdir, include_base=True):
+        "returns list of suitable directory names across app and user dirs"
+        dirnames = []
+        # build list of dirs to check, by priority:
+        # gamedir/subdir if it exists, then ./subdir, then ./
+        if self.gw.game_dir:
+            game_dir = self.gw.get_game_dir() + subdir
+            if os.path.exists(game_dir):
+                dirnames.append(game_dir)
+        if subdir is not None and subdir != '':
+            dirnames.append(subdir)
+        if include_base:
+            dirnames.append('')
+        # add duplicate set of dirs in user documents path
+        doc_dirs = []
+        for dirname in dirnames:
+            doc_dir = self.documents_dir + dirname
+            if os.path.exists(doc_dir):
+                doc_dirs.append(doc_dir)
+        # check in user document dirs first
+        return doc_dirs + dirnames
+    
     def find_filename_path(self, filename, subdir, extensions=[]):
         "returns a valid path for given file, extension, subdir (art/ etc)"
-        # build list of all permutations of filename in all paths,
-        # with/without extensions. first items in list checked first.
+        dirnames = self.get_dirnames(subdir)
+        # build list of filenames from each dir, first w/ extension then w/o
         filenames = []
-        
-        # TODO: build dirs list of dirs to check: ., subdir, game + subdir,
-        # documents + subdir
-        
-        # accept list or single item, empty list if None is passed
+        # extensions: accept list or single item, empty list if None is passed
         if extensions is None:
-            extensions = []
+            extensions = ['']
         elif not type(extensions) is list:
             extensions = [extensions]
-        if not subdir.endswith('/') and not subdir.endswith('\\'):
-            subdir += '/'
-        # if game dir is set, try: game dir + file, game dir + file + extension
-        if self.gw.game_dir:
-            f_gamedir = '%s%s%s' % (self.gw.get_game_dir(), subdir, filename)
-            filenames.append(f_gamedir)
-            filenames += ['%s.%s' % (f_gamedir, ext) for ext in extensions]
-        # bare file, file + extensions
-        filenames.append(filename)
-        filenames += ['%s.%s' % (filename, ext) for ext in extensions]
-        # subdir + file + extensions, subdir + file
-        f_dir = '%s%s' % (subdir, filename)
-        filenames.append(f_dir)
-        filenames += ['%s.%s' % (f_dir, ext) for ext in extensions]
+        for dirname in dirnames:
+            for ext in extensions:
+                f = '%s%s' % (dirname, filename)
+                # filename passed in might already have intended extension,
+                # eg from a directory listing
+                if ext != '' and not filename.endswith(ext):
+                    f += '.' + ext
+                filenames.append(f)
+        #print('checking %s' % (filenames))
         # return first one we find
         for f in filenames:
             if f is not None and os.path.exists(f) and os.path.isfile(f):
@@ -431,7 +450,7 @@ class Application:
             return self.ui.active_art.palette
     
     def set_window_title(self, text=None):
-        new_title = self.base_title
+        new_title = APP_NAME
         if text:
             new_title += ' - %s' % text
         new_title = bytes(new_title, 'utf-8')
@@ -479,9 +498,6 @@ class Application:
     
     def screenshot(self):
         "saves a date + time-stamped screenshot"
-        # create screenshot subdir if it doesn't exist
-        if not os.path.exists(SCREENSHOT_SUBDIR):
-            os.mkdir(SCREENSHOT_SUBDIR)
         timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
         output_filename = 'playscii_%s.png' % timestamp
         w, h = self.window_width, self.window_height
@@ -490,7 +506,7 @@ class Application:
         pixel_bytes = pixels.flatten().tobytes()
         img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        img.save('%s%s' % (SCREENSHOT_SUBDIR, output_filename))
+        img.save('%s%s' % (self.documents_dir + SCREENSHOT_DIR, output_filename))
         self.log('Saved screenshot %s' % output_filename)
     
     def enter_game_mode(self):
@@ -630,29 +646,54 @@ class Application:
         sdl2.SDL_Quit()
         self.log_file.close()
 
+def get_paths():
+    # all dir variables should end in /
+    config_dir = appdirs.user_config_dir(APP_NAME) + '/'
+    if not os.path.exists(config_dir):
+        os.mkdir(config_dir)
+    DOCUMENTS_SUBDIR = '/Documents'
+    if platform.system() == 'Windows':
+        documents_dir = winshell.my_documents()
+    elif platform.system() == 'Darwin':
+        documents_dir = os.path.expanduser('~') + DOCUMENTS_SUBDIR
+    elif platform.system() == 'Linux':
+        # XDG spec doesn't cover any concept of a documents folder :[
+        # if ~/Documents exists use that, else just use ~/Playscii
+        documents_dir = os.path.expanduser('~')
+        if os.path.exists(documents_dir + DOCUMENTS_SUBDIR):
+            documents_dir += DOCUMENTS_SUBDIR
+    # add Playscii/ to documents path
+    documents_dir += '/%s/' % APP_NAME
+    # create Playscii dir AND subdirs for user art, charsets etc if not present
+    for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR,
+                   SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
+        if not os.path.exists(documents_dir + subdir):
+            os.mkdir(documents_dir + subdir)
+    return config_dir, documents_dir
 
 if __name__ == "__main__":
-    # start log file even before Application has initialized so we can write to it
-    log_file = open(LOG_FILENAME, 'w')
-    log_lines = []
+    # start log even before Application has initialized so we can write to it
     # startup message: application and version #
-    line = '%s v%s' % (Application.base_title, VERSION)
-    log_file.write('%s\n' % line)
-    log_lines.append(line)
+    line = '%s v%s' % (APP_NAME, VERSION)
+    log_lines = [line]
     print(line)
+    # get paths for config file, later to be passed into Application
+    config_dir, documents_dir = get_paths()
     # load in config - may change above values and submodule class defaults
-    if os.path.exists(CONFIG_FILENAME):
-        exec(open(CONFIG_FILENAME).read())
+    if os.path.exists(config_dir + CONFIG_FILENAME):
+        exec(open(config_dir + CONFIG_FILENAME).read())
+        line = 'Loaded config from %s' % config_dir + CONFIG_FILENAME
+        log_lines.append(line)
+        print(line)
     # if cfg file doesn't exist, copy a new one from playscii.cfg.default
     else:
         # snip first "this is a template" line
         default_data = open(CONFIG_TEMPLATE_FILENAME).readlines()[1:]
-        new_cfg = open(CONFIG_FILENAME, 'w')
+        new_cfg = open(config_dir + CONFIG_FILENAME, 'w')
         new_cfg.writelines(default_data)
         new_cfg.close()
         exec(''.join(default_data))
-        line = 'Created new config file %s' % CONFIG_FILENAME
-        log_file.write('%s\n' % line)
+        line = 'Created new config file %s' % config_dir + CONFIG_FILENAME
         log_lines.append(line)
         print(line)
     file_to_load, game_dir_to_load, state_to_load = None, None, None
@@ -670,8 +711,8 @@ if __name__ == "__main__":
         else:
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
-    app = Application(log_file, log_lines, file_to_load or 'new',
-                      game_dir_to_load, state_to_load)
+    app = Application(config_dir, documents_dir, log_lines,
+                      file_to_load or 'new', game_dir_to_load, state_to_load)
     error = app.main_loop()
     app.quit()
     sys.exit(error)

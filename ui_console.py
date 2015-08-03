@@ -209,15 +209,16 @@ class ConsoleUI(UIElement):
         self.renderable.y = self.y = 2
         # user input and log
         self.last_lines = []
-        if os.path.exists(CONSOLE_HISTORY_FILENAME):
-            self.history_file = open(CONSOLE_HISTORY_FILENAME, 'r')
+        self.history_filename = self.ui.app.config_dir + CONSOLE_HISTORY_FILENAME
+        if os.path.exists(self.history_filename):
+            self.history_file = open(self.history_filename, 'r')
             try:
                 self.command_history = self.history_file.readlines()
             except:
                 self.command_history = []
-            self.history_file = open(CONSOLE_HISTORY_FILENAME, 'a')
+            self.history_file = open(self.history_filename, 'a')
         else:
-            self.history_file = open(CONSOLE_HISTORY_FILENAME, 'w+')
+            self.history_file = open(self.history_filename, 'w+')
             self.command_history = []
         self.history_index = 0
         # junk data in last user line so it changes on first update

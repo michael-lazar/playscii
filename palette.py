@@ -5,6 +5,7 @@ from PIL import Image
 from texture import Texture
 
 PALETTE_DIR = 'palettes/'
+PALETTE_EXTENSIONS = ['png', 'gif', 'bmp']
 MAX_COLORS = 255
 
 class Palette:
@@ -12,18 +13,10 @@ class Palette:
     def __init__(self, app, src_filename, log):
         self.init_success = False
         self.app = app
-        self.filename = src_filename
-        # auto-guess filename, but assume PNG
-        if not os.path.exists(self.filename):
-            self.filename += '.png'
-        if self.app.gw.game_dir:
-            game_palette_filename = self.app.gw.get_game_dir() + PALETTE_DIR + self.filename
-            if os.path.exists(game_palette_filename):
-                self.filename = game_palette_filename
-        if not os.path.exists(self.filename) or os.path.isdir(self.filename):
-            self.filename = PALETTE_DIR + self.filename
-        if not os.path.exists(self.filename):
-            self.app.log("Couldn't find palette image file %s" % self.filename)
+        self.filename = self.app.find_filename_path(src_filename, PALETTE_DIR,
+                                                    PALETTE_EXTENSIONS)
+        if self.filename is None:
+            self.app.log("Couldn't find palette image file %s" % src_filename)
             return
         self.name = os.path.basename(self.filename)
         self.name = os.path.splitext(self.name)[0]
@@ -92,7 +85,7 @@ class Palette:
         img = img.resize((width * block_size, height * block_size),
                          resample=Image.NEAREST)
         # write to file
-        img_filename = PALETTE_DIR + self.name + '.png'
+        img_filename = self.app.documents_dir + PALETTE_DIR + self.name + '.png'
         img.save(img_filename)
     
     def all_colors_opaque(self):
