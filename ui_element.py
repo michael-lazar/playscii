@@ -73,6 +73,10 @@ class UIElement:
     def unhovered(self):
         self.log_event('unhovered')
     
+    def wheel_moved(self, wheel_y):
+        handled = False
+        return handled
+    
     def clicked(self, button):
         self.log_event('clicked', button)
         # return if a button did something

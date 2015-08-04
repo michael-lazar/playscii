@@ -359,6 +359,14 @@ class EditListPanel(GamePanel):
         elif self.list_mode == LIST_STATES:
             self.world.load_game_state(item.name)
     
+    def wheel_moved(self, wheel_y):
+        if wheel_y > 0:
+            self.scroll_list_up()
+            return True
+        if wheel_y < 0:
+            self.scroll_list_down()
+            return True
+    
     def list_classes(self):
         self.items = []
         # get list of available classes from GameWorld
@@ -426,7 +434,7 @@ class EditListPanel(GamePanel):
                 index = self.list_scroll_index + i
                 item = self.items[index]
                 b.cb_arg = item
-                b.caption = item.name[:self.tile_width]
+                b.caption = item.name[:self.tile_width - 1]
                 b.can_hover = True
                 # change button appearance if this item should remain
                 # highlighted/selected

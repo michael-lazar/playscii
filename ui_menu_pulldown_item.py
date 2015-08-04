@@ -431,8 +431,8 @@ class ResetGameItem(PulldownMenuItem):
         return app.gw.game_dir is None
     def get_label(app):
         l = 'Reset game'
-        if app.gw.game_dir:
-            l = '%s "%s"' % (l, app.gw.game_dir[:-1])
+        if app.gw.game_name:
+            l = '%s "%s"' % (l, app.gw.game_name)
         return l
 
 class HelpScreenMenuItem(PulldownMenuItem):
