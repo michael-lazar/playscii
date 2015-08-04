@@ -274,8 +274,15 @@ class PaletteSwatch(UISwatch):
         self.renderable.x, self.renderable.y = self.x, self.y
         # color 0 is always transparent, but draw it at the end
         w, h = self.get_size()
+        colors = len(self.art.palette.colors)
+        if colors % w == 0:
+            transparent_x_tile = w - 1
+        elif h == 1:
+            transparent_x_tile = colors - 1
+        else:
+            transparent_x_tile = colors % w - 1
         self.transparent_x.x = self.renderable.x
-        self.transparent_x.x += (len(self.art.palette.colors) % w - 1) * self.art.quad_width
+        self.transparent_x.x += transparent_x_tile * self.art.quad_width
         self.transparent_x.y = self.renderable.y - self.art.quad_height
         self.transparent_x.y -= (h - 1) * self.art.quad_height
         # set f/b_art's quad size

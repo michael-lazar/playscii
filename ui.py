@@ -1,3 +1,4 @@
+import sdl2
 import numpy as np
 from PIL import Image
 from OpenGL import GL
@@ -504,6 +505,24 @@ class UI:
         for e in self.hovered_elements:
             if e.unclicked(button):
                 handled = True
+        return handled
+    
+    def wheel_moved(self, wheel_y):
+        handled = False
+        # use wheel to scroll chooser dialogs
+        # TODO: look up "up arrow" bind instead? how to get
+        # an SDL keycode from that?
+        if self.active_dialog:
+            keycode = sdl2.SDLK_UP if wheel_y > 0 else sdl2.SDLK_DOWN
+            self.active_dialog.handle_input(keycode,
+                                            self.app.il.shift_pressed,
+                                            self.app.il.alt_pressed,
+                                            self.app.il.ctrl_pressed)
+            handled = True
+        elif len(self.hovered_elements) > 0:
+            for e in self.hovered_elements:
+                if e.wheel_moved(wheel_y):
+                    handled = True
         return handled
     
     def quick_grab(self):
