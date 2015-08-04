@@ -20,7 +20,7 @@ class CharacterSet:
             return
         self.name = os.path.basename(self.filename)
         self.name = os.path.splitext(self.name)[0]
-        char_data_src = open(self.filename).readlines()
+        char_data_src = open(self.filename, encoding='utf-8').readlines()
         # allow comments: discard any line in char data starting with //
         # (make sure this doesn't muck up legit mapping data)
         char_data = []
