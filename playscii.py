@@ -279,7 +279,7 @@ class Application:
             filename = ART_DIR + filename
         # if a game dir is loaded, use that
         if self.gw.game_dir is not None:
-            filename = self.gw.get_game_dir() + filename
+            filename = self.gw.game_dir + filename
         filename = self.documents_dir + filename
         charset = self.load_charset(charset or self.starting_charset)
         palette = self.load_palette(palette or self.starting_palette)
@@ -300,7 +300,7 @@ class Application:
                 self.log('Creating new art %s' % filename)
                 return self.new_art(filename)
             else:
-                #self.log("Couldn't find art file %s" % filename)
+                #self.log("Couldn't find art %s" % filename)
                 return None
         # if already loaded, return that
         for a in self.art_loaded_for_edit + self.gw.art_loaded:
@@ -357,8 +357,8 @@ class Application:
         dirnames = []
         # build list of dirs to check, by priority:
         # gamedir/subdir if it exists, then ./subdir, then ./
-        if self.gw.game_dir:
-            game_dir = self.gw.get_game_dir() + subdir
+        if self.gw.game_dir is not None:
+            game_dir = self.gw.game_dir + subdir
             if os.path.exists(game_dir):
                 dirnames.append(game_dir)
         if subdir is not None and subdir != '':
@@ -368,6 +368,10 @@ class Application:
         # add duplicate set of dirs in user documents path
         doc_dirs = []
         for dirname in dirnames:
+            # dir might already have documents path in it, add as-is if so
+            if dirname.startswith(self.documents_dir) and os.path.exists(dirname):
+                doc_dirs.append(dirname)
+                continue
             doc_dir = self.documents_dir + dirname
             if os.path.exists(doc_dir):
                 doc_dirs.append(doc_dir)
@@ -392,7 +396,6 @@ class Application:
                 if ext != '' and not filename.endswith(ext):
                     f += '.' + ext
                 filenames.append(f)
-        #print('checking %s' % (filenames))
         # return first one we find
         for f in filenames:
             if f is not None and os.path.exists(f) and os.path.isfile(f):
@@ -407,7 +410,7 @@ class Application:
         valid_filename = self.find_filename_path(filename, ART_DIR,
                                                  EDSCII_FILE_EXTENSION)
         if not valid_filename:
-            self.log("Couldn't find file %s" % filename)
+            self.log("Couldn't find EDSCII file %s" % filename)
         art = ArtFromEDSCII(valid_filename, self, width_override)
         if not art.valid:
             self.log('Failed to load %s' % valid_filename)

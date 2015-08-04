@@ -34,7 +34,7 @@ class GameWorld:
     def __init__(self, app):
         self.app = app
         self.game_dir = None
-        self.top_game_dir = TOP_GAME_DIR
+        self.game_name = None
         self.selected_objects = []
         self.camera = Camera(self.app)
         self.player = None
@@ -168,9 +168,6 @@ class GameWorld:
         if self.game_dir:
             self.load_game_state(self.last_state_loaded)
     
-    def get_game_dir(self):
-        return TOP_GAME_DIR + self.game_dir
-    
     def set_game_dir(self, dir_name, reset=False):
         if dir_name == self.game_dir:
             self.load_game_state(DEFAULT_STATE_FILENAME)
@@ -184,9 +181,10 @@ class GameWorld:
             if not os.path.exists(d):
                 continue
             self.game_dir = d
+            self.game_name = dir_name
             if not d.endswith('/'):
                 self.game_dir += '/'
-            self.app.log('Game data directory is now %s' % d)
+            self.app.log('Game data directory is now %s' % self.game_dir)
             if reset:
                 # load in a default state, eg start.gs
                 self.load_game_state(DEFAULT_STATE_FILENAME)
@@ -201,23 +199,19 @@ class GameWorld:
             self.app.ui.edit_game_panel.draw_titlebar()
     
     def import_all(self):
-        
-        # TODO: if game is loading from user document dir, what does import path
-        # look like?
-        
-        module_suffix = TOP_GAME_DIR[:-1] + '.'
-        module_suffix += self.game_dir[:-1] + '.'
-        module_suffix += GAME_SCRIPTS_DIR[:-1] + '.'
-        module_path = TOP_GAME_DIR + self.game_dir + GAME_SCRIPTS_DIR
+        module_path = self.game_dir + GAME_SCRIPTS_DIR
         # build list of module files
         modules_list = ['game_object', 'game_hud']
         for filename in os.listdir(module_path):
             # exclude emacs temp files :/
             if filename.endswith('.py') and not filename.startswith('.#'):
-                modules_list.append(module_suffix + filename[:-3])
+                modules_list.append(filename[:-3])
         # make copy of old modules table for import vs reload check
         old_modules = self.modules.copy()
         self.modules = {}
+        # add game dir to import path if it isn't there already
+        if not module_path in sys.path:
+            sys.path += [module_path]
         for module_name in modules_list:
             if module_name in old_modules:
                 self.modules[module_name] = importlib.reload(old_modules[module_name])
@@ -360,9 +354,9 @@ class GameWorld:
             timestamp = int(time.time())
             filename = '%s%s.%s' % (self.game_dir, timestamp,
                                      STATE_FILE_EXTENSION)
-        json.dump(d, open(TOP_GAME_DIR + filename, 'w'),
+        json.dump(d, open(filename, 'w'),
                   sort_keys=True, indent=1)
-        self.app.log('Saved game state file %s to disk.' % filename)
+        self.app.log('Saved game state %s to disk.' % filename)
     
     def get_all_loaded_classes(self):
         """
@@ -437,9 +431,9 @@ class GameWorld:
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
         if not os.path.exists(filename):
-            filename = '%s%s%s' % (TOP_GAME_DIR, self.game_dir, filename)
+            filename = self.game_dir + filename
         if not filename.endswith(STATE_FILE_EXTENSION):
-            filename += '.%s' % STATE_FILE_EXTENSION
+            filename += '.' + STATE_FILE_EXTENSION
         self.app.enter_game_mode()
         self.unload_game()
         # import all submodules and catalog classes
@@ -447,9 +441,9 @@ class GameWorld:
         self.classes = self.get_all_loaded_classes()
         try:
             d = json.load(open(filename))
-            #self.app.log('Loading game state file %s...' % filename)
+            #self.app.log('Loading game state %s...' % filename)
         except:
-            self.app.log("Couldn't load game state from file %s" % filename)
+            self.app.log("Couldn't load game state from %s" % filename)
             #self.app.log(sys.exc_info())
             return
         self.gravity_x = d['gravity_x']
@@ -465,7 +459,7 @@ class GameWorld:
         # restore camera settings
         if 'camera_x' in d and 'camera_y' in d and 'camera_z' in d:
             self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])
-        self.app.log('Loaded game state from file %s' % filename)
+        self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.app.show_collision_all)
         self.set_for_all_objects('show_bounds', self.app.show_bounds_all)

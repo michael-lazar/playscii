@@ -3,25 +3,7 @@ TODO
 - Art.copy() so that "save as" can create a duplicate?
 -- also helps art instance scripting for game objects?
 
-- use OS-appropriate documents directories to store user documents!
--- Windows: "winshell" module gives you documents dir for XP/7/etc
-http://stackoverflow.com/questions/6227590/finding-the-users-my-documents-path
-http://stackoverflow.com/questions/3858851/python-get-windows-special-folders-for-currently-logged-in-user
--- OSX: NSHomeDirectory?
-https://developer.apple.com/library/mac/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/FileSystemOverview/FileSystemOverview.html
-~/Documents/Playscii
--- Linux: $HOME/Documents/playscii if ~/Documents exists, $HOME/playscii if not
-- create subdirs if they don't exist:
--- art/
--- charsets/
--- games/
--- palettes/
--- scripts/
--- screenshots/
-- also create config dirs:
--- "appdir" module finds these for each OS "user_config_dir"
--- Mac: ~/Library/Application support/Playscii
-- create playscii.cfg, console.log, console_history if they don't exist
+- mousewheel should scroll in game edit list panel
 
 ---
 

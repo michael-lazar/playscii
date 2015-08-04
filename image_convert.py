@@ -31,7 +31,7 @@ class ImageConverter:
     def __init__(self, app, image_filename, art):
         image_filename = image_filename or 'a.png' ### TEST ###
         if not os.path.exists(image_filename):
-            app.log("Couldn't find image file %s" % image_filename)
+            app.log("Couldn't find image %s" % image_filename)
             return
         self.app = app
         self.app.converter = self
