@@ -29,8 +29,8 @@ class ImageConverter:
     lab_color_comparison = True
     
     def __init__(self, app, image_filename, art):
-        image_filename = image_filename or 'a.png' ### TEST ###
-        if not os.path.exists(image_filename):
+        image_filename = app.find_filename_path(image_filename)
+        if not image_filename or not os.path.exists(image_filename):
             app.log("Couldn't find image %s" % image_filename)
             return
         self.app = app

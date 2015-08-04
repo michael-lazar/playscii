@@ -352,7 +352,7 @@ class Application:
         self.close_art(self.ui.active_art)
         self.load_art_for_edit(filename)
     
-    def get_dirnames(self, subdir, include_base=True):
+    def get_dirnames(self, subdir=None, include_base=True):
         "returns list of suitable directory names across app and user dirs"
         dirnames = []
         # build list of dirs to check, by priority:
@@ -361,7 +361,7 @@ class Application:
             game_dir = self.gw.game_dir + subdir
             if os.path.exists(game_dir):
                 dirnames.append(game_dir)
-        if subdir is not None and subdir != '':
+        if subdir is not None:
             dirnames.append(subdir)
         if include_base:
             dirnames.append('')
@@ -378,13 +378,14 @@ class Application:
         # check in user document dirs first
         return doc_dirs + dirnames
     
-    def find_filename_path(self, filename, subdir, extensions=[]):
+    def find_filename_path(self, filename, subdir=None, extensions=None):
         "returns a valid path for given file, extension, subdir (art/ etc)"
         dirnames = self.get_dirnames(subdir)
         # build list of filenames from each dir, first w/ extension then w/o
         filenames = []
-        # extensions: accept list or single item, empty list if None is passed
-        if extensions is None:
+        # extensions: accept list or single item,
+        # list with one empty string if None passed
+        if extensions is None or len(extensions) == 0:
             extensions = ['']
         elif not type(extensions) is list:
             extensions = [extensions]
