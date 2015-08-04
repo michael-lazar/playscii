@@ -39,7 +39,7 @@ from game_world import GameWorld, TOP_GAME_DIR
 from game_object import GameObject
 
 APP_NAME = 'Playscii'
-VERSION = '0.6.1'
+VERSION = '0.6.2'
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
@@ -274,15 +274,10 @@ class Application:
         width = width or self.new_art_width
         height = height or self.new_art_height
         filename = filename if filename and filename != '' else 'new'
-        if not filename.startswith(ART_DIR):
-            filename = ART_DIR + filename
-        # if a game dir is loaded, use that
-        if self.gw.game_dir is not None:
-            filename = self.gw.game_dir + filename
-        filename = self.documents_dir + filename
         charset = self.load_charset(charset or self.starting_charset)
         palette = self.load_palette(palette or self.starting_palette)
         art = Art(filename, self, charset, palette, width, height)
+        art.set_filename(filename)
         art.time_loaded = time.time()
         return art
     

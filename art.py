@@ -556,11 +556,13 @@ class Art:
         # if no dir given, assume documents/art/ dir
         if os.path.basename(new_filename) == new_filename:
             new_dir = self.app.documents_dir
+            # documents/game/art if game loaded
             if self.app.gw.game_dir is not None:
-                new_dir += self.app.gw.game_dir
+                new_dir = self.app.gw.game_dir
             new_dir += ART_DIR
             new_filename = new_dir + new_filename
-        # TODO: check if file already exists?
+        # TODO: check if file already exists? warn user?
+        # (probably better to do this in new art / save as
         self.filename = new_filename
     
     def run_script(self, script_filename):
