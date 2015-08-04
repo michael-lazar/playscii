@@ -651,6 +651,7 @@ class Application:
 
 def get_win_documents_path():
     # from http://stackoverflow.com/a/30924555/1191587
+    # (winshell module too much of a pain to get working with py2exe)
     import ctypes.wintypes
     CSIDL_PERSONAL = 5       # My Documents
     SHGFP_TYPE_CURRENT = 1   # Get current, not default value
@@ -660,7 +661,11 @@ def get_win_documents_path():
 
 def get_paths():
     # all dir variables should end in /
-    config_dir = appdirs.user_config_dir(APP_NAME) + '/'
+    # work around a bug in appdirs on Windows
+    if platform.system() == 'Windows':
+        config_dir = appdirs.user_config_dir() + '/%s/' % APP_NAME
+    else:
+        config_dir = appdirs.user_config_dir(APP_NAME) + '/'
     if not os.path.exists(config_dir):
         os.mkdir(config_dir)
     DOCUMENTS_SUBDIR = '/Documents'
