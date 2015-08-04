@@ -7,7 +7,6 @@ if platform.system() == 'Windows':
     # set env variable so pysdl2 can find sdl2.dll
     os.environ['PYSDL2_DLL_PATH'] = '.'
     sys.path += ['.']
-    import winshell
 
 # app imports
 import ctypes, time
@@ -650,6 +649,15 @@ class Application:
         sdl2.SDL_Quit()
         self.log_file.close()
 
+def get_win_documents_path():
+    # from http://stackoverflow.com/a/30924555/1191587
+    import ctypes.wintypes
+    CSIDL_PERSONAL = 5       # My Documents
+    SHGFP_TYPE_CURRENT = 1   # Get current, not default value
+    buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+    ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, buf)
+    return buf.value
+
 def get_paths():
     # all dir variables should end in /
     config_dir = appdirs.user_config_dir(APP_NAME) + '/'
@@ -657,7 +665,7 @@ def get_paths():
         os.mkdir(config_dir)
     DOCUMENTS_SUBDIR = '/Documents'
     if platform.system() == 'Windows':
-        documents_dir = winshell.my_documents()
+        documents_dir = get_win_documents_path()
     elif platform.system() == 'Darwin':
         documents_dir = os.path.expanduser('~') + DOCUMENTS_SUBDIR
     elif platform.system() == 'Linux':
