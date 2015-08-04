@@ -16,7 +16,7 @@ class Palette:
         self.filename = self.app.find_filename_path(src_filename, PALETTE_DIR,
                                                     PALETTE_EXTENSIONS)
         if self.filename is None:
-            self.app.log("Couldn't find palette image file %s" % src_filename)
+            self.app.log("Couldn't find palette image %s" % src_filename)
             return
         self.name = os.path.basename(self.filename)
         self.name = os.path.splitext(self.name)[0]
@@ -137,7 +137,7 @@ class PaletteFromFile(Palette):
         self.init_success = False
         # dither source image, re-save it, use that as the source for a palette
         if not os.path.exists(src_filename):
-            app.log("Couldn't find palette source image file %s" % src_filename)
+            app.log("Couldn't find palette source image %s" % src_filename)
             return
         src_img = Image.open(src_filename)
         # method:

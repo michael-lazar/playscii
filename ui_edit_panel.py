@@ -6,7 +6,7 @@ from ui_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
 from ui_chooser_dialog import ScrollArrowButton
 from ui_colors import UIColors
 
-from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
+from game_world import STATE_FILE_EXTENSION
 
 class ToggleEditUIButton(UIButton):
     caption = '<< Hide edit UI'
@@ -251,7 +251,7 @@ class EditGamePanel(GamePanel):
                 b.refresh_caption()
     
     def get_label(self):
-        return ' %s' % self.world.game_dir
+        return ' %s' % self.world.game_name
     
     def clicked(self, button):
         self.world.classname_to_spawn = None
@@ -386,9 +386,8 @@ class EditListPanel(GamePanel):
         self.items = []
         self.clear_buttons(self.list_buttons)
         # list state files in current game dir
-        game_path = TOP_GAME_DIR + self.world.game_dir
-        for filename in os.listdir(game_path):
-            if filename.endswith('.%s' % STATE_FILE_EXTENSION):
+        for filename in os.listdir(self.world.game_dir):
+            if filename.endswith('.' + STATE_FILE_EXTENSION):
                 li = self.ListItem(filename[:-3], None)
                 self.items.append(li)
         self.titlebar = 'States:'

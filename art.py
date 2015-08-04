@@ -551,15 +551,15 @@ class Art:
     
     def set_filename(self, new_filename):
         # append extension if missing
-        if not new_filename.endswith('.%s' % ART_FILE_EXTENSION):
-            new_filename += '.%s' % ART_FILE_EXTENSION
-        # if no dir given, assume art/ dir
-        #if not '/' in new_filename:
+        if not new_filename.endswith('.' + ART_FILE_EXTENSION):
+            new_filename += '.' + ART_FILE_EXTENSION
+        # if no dir given, assume documents/art/ dir
         if os.path.basename(new_filename) == new_filename:
-            new_filename = self.app.documents_dir
+            new_dir = self.app.documents_dir
             if self.app.gw.game_dir is not None:
-                new_filename += self.app.gw.get_game_dir()
-            new_filename += ART_DIR, new_filename
+                new_dir += self.app.gw.game_dir
+            new_dir += ART_DIR
+            new_filename = new_dir + new_filename
         # TODO: check if file already exists?
         self.filename = new_filename
     
@@ -588,7 +588,7 @@ class Art:
         # try adding extension
         script_filename += '.%s' % SCRIPT_FILE_EXTENSION
         if not os.path.exists(script_filename):
-            self.app.log("Couldn't find script file %s" % script_filename)
+            self.app.log("Couldn't find script %s" % script_filename)
             return
         return script_filename
     
