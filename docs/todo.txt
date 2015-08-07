@@ -2,16 +2,11 @@ TODO
 
 current tasks:
 
-undo bug - templetest2_bug, grab black squares to right of column, then paint over right edge of column, try to undo
-
 status bar:
 - clicking frames X/Y field should cycle forward/backward through frames (LMB/RMB)
 - same as above for layers
 - clicking filename field should cycle through open arts
 - fix: weird magic number issue with dim box on xform - doesn't adjust for window resize properly
-
-swatch:
-- xform buttons should change selected xform!
 
 - Art.copy() so that "save as" can create a duplicate?
 

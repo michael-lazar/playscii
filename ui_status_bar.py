@@ -67,6 +67,17 @@ class ToolCycleButton(StatusBarTextCycleButton):
     x = XformCycleButton.x + XformCycleButton.width + len('tool:') + 1
     # width and caption are set during status bar init after button is created
 
+class FileCycleButton(StatusBarTextCycleButton):
+    caption = '[nothing]'
+
+class LayerCycleButton(StatusBarTextCycleButton):
+    caption = 'X/Y'
+    width = len(caption)
+
+class FrameCycleButton(StatusBarTextCycleButton):
+    caption = 'X/Y'
+    width = len(caption)
+
 class StatusBarUI(UIElement):
     
     snap_bottom = True
@@ -92,11 +103,15 @@ class StatusBarUI(UIElement):
         BGCycleButton: 'bg_cycle',
         XformToggleButton: 'xform_toggle',
         XformCycleButton: 'xform_cycle',
-        ToolCycleButton: 'tool_cycle'
+        ToolCycleButton: 'tool_cycle',
+        FileCycleButton: 'file_cycle',
+        LayerCycleButton: 'layer_cycle',
+        FrameCycleButton: 'frame_cycle'
     }
     
     def __init__(self, ui):
         art = ui.active_art
+        self.ui = ui
         # create 3 custom Arts w/ source charset and palette, renderables for each
         art_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.char_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width, 1)
@@ -109,6 +124,11 @@ class StatusBarUI(UIElement):
         self.dim_art = UIArt(art_name, ui.app, ui.charset, ui.palette, self.swatch_width + self.char_swatch_x, 1)
         self.dim_renderable = UIRenderable(ui.app, self.dim_art)
         self.dim_renderable.alpha = 0.75
+        # separate dimmed out box for xform, easier this way
+        xform_width = XformToggleButton.width + XformCycleButton.width
+        self.dim_xform_art = UIArt(art_name, ui.app, ui.charset, ui.palette, xform_width, 1)
+        self.dim_xform_renderable = UIRenderable(ui.app, self.dim_xform_art)
+        self.dim_xform_renderable.alpha = 0.75
         # create clickable buttons
         self.buttons = []
         for button_class, button_name in self.button_names.items():
@@ -117,15 +137,13 @@ class StatusBarUI(UIElement):
             cb_name = '%s_button_pressed' % button_name
             button.callback = getattr(self, cb_name)
             self.buttons.append(button)
-        # set some tool cycle button data specially
-        # (unlike xforms, more tools might be added in the future)
-        self.tool_cycle_button.caption = ui.selected_tool.button_caption
-        self.tool_cycle_button.width = ui.get_longest_tool_name_length() + 2
+            # some button captions, widths, locations will be set in reset_art
         # determine total width of left-justified items
-        self.left_items_width = self.tool_label_x + self.tool_cycle_button.width + 7
+        self.left_items_width = self.tool_cycle_button.x + self.tool_cycle_button.width + 15
         # set some properties in bulk
         self.renderables = []
-        for r in [self.char_renderable, self.fg_renderable, self.bg_renderable, self.dim_renderable]:
+        for r in [self.char_renderable, self.fg_renderable, self.bg_renderable,
+                  self.dim_renderable, self.dim_xform_renderable]:
             r.ui = ui
             r.grain_strength = 0
             # add to list of renderables to manage eg destroyed on quit
@@ -184,6 +202,24 @@ class StatusBarUI(UIElement):
             self.ui.cycle_selected_tool(True)
         self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
     
+    def file_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.next_active_art()
+        elif mouse_button == 3:
+            self.ui.previous_active_art()
+    
+    def layer_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.set_active_layer(self.ui.active_art.active_layer + 1)
+        elif mouse_button == 3:
+            self.ui.set_active_layer(self.ui.active_art.active_layer - 1)
+    
+    def frame_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.set_active_frame(self.ui.active_art.active_frame + 1)
+        elif mouse_button == 3:
+            self.ui.set_active_frame(self.ui.active_art.active_frame - 1)
+    
     def reset_art(self):
         UIElement.reset_art(self)
         self.tile_width = ceil(self.ui.width_tiles * self.ui.scale)
@@ -196,8 +232,11 @@ class StatusBarUI(UIElement):
         # dim box
         self.dim_art.clear_frame_layer(0, 0, self.ui.colors.white)
         self.dim_art.update()
+        self.dim_xform_art.clear_frame_layer(0, 0, self.ui.colors.white)
+        self.dim_xform_art.update()
         # rebuild geo, elements may be new dimensions
         self.dim_art.geo_changed = True
+        self.dim_xform_art.geo_changed = True
         self.char_art.geo_changed = True
         self.fg_art.geo_changed = True
         self.bg_art.geo_changed = True
@@ -213,7 +252,14 @@ class StatusBarUI(UIElement):
                               self.ui.palette.darkest_index)
         # only draw right side info if the window is wide enough
         if self.art.width > self.left_items_width + self.right_items_width:
+            self.file_cycle_button.visible = True
+            self.layer_cycle_button.visible = True
+            self.frame_cycle_button.visible = True
             self.write_right_elements()
+        else:
+            self.file_cycle_button.visible = False
+            self.layer_cycle_button.visible = False
+            self.frame_cycle_button.visible = False
     
     def set_active_charset(self, new_charset):
         self.char_art.charset = self.fg_art.charset = self.bg_art.charset = new_charset
@@ -222,6 +268,25 @@ class StatusBarUI(UIElement):
     def set_active_palette(self, new_palette):
         self.char_art.palette = self.fg_art.palette = self.bg_art.palette = new_palette
         self.reset_art()
+    
+    def update_button_captions(self):
+        "set captions for buttons that change from selections"
+        art = self.ui.active_art
+        self.xform_cycle_button.caption = uv_names[self.ui.selected_xform]
+        self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
+        self.tool_cycle_button.width = len(self.tool_cycle_button.caption) + 2
+        # right edge elements
+        self.file_cycle_button.caption = os.path.basename(art.filename) if art else FileCycleButton.caption
+        self.file_cycle_button.width = len(self.file_cycle_button.caption) + 2
+        # NOTE: button X offsets will be set in write_right_elements
+        layers = art.layers if art else 0
+        layer = '%s/%s' % (art.active_layer + 1, layers) if art else 'n/a'
+        self.layer_cycle_button.caption = layer
+        self.layer_cycle_button.width = len(self.layer_cycle_button.caption)
+        frames = art.frames if art else 0
+        frame = '%s/%s' % (art.active_frame + 1, frames) if art else 'n/a'
+        self.frame_cycle_button.caption = frame
+        self.frame_cycle_button.width = len(self.frame_cycle_button.caption)
     
     def update(self):
         # update buttons
@@ -235,13 +300,12 @@ class StatusBarUI(UIElement):
         self.char_art.set_char_index_at(0, 0, 1, 0, self.ui.selected_char)
         self.char_art.set_color_at(0, 0, 1, 0, self.ui.selected_fg_color, True)
         self.char_art.set_char_transform_at(0, 0, 1, 0, self.ui.selected_xform)
-        # set captions for buttons that change from selections
-        self.xform_cycle_button.caption = uv_names[self.ui.selected_xform]
-        self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
         # position elements
         self.position_swatch(self.char_renderable, self.char_swatch_x)
         self.position_swatch(self.fg_renderable, self.fg_swatch_x)
         self.position_swatch(self.bg_renderable, self.bg_swatch_x)
+        # update buttons before redrawing art (ie non-interactive bits)
+        self.update_button_captions()
         for art in [self.char_art, self.fg_art, self.bg_art]:
             art.update()
         self.rewrite_art()
@@ -257,20 +321,16 @@ class StatusBarUI(UIElement):
     def write_right_elements(self):
         """
         fills in right-justified parts of status bar, eg current
-        frame/layer/tile and filename
+        frame/layer/tile labels (buttons positioned but drawn separately)
         """
         dark = self.ui.colors.black
         light = self.ui.colors.white
-        padding = 2
-        x = self.tile_width - 1
         art = self.ui.active_art
-        # filename
-        filename = ' [nothing] '
-        if art:
-            filename = ' %s ' % os.path.basename(art.filename)
-        # use "right justify" final arg of write_string
-        self.art.write_string(0, 0, x, 0, filename, light, dark, True)
-        x += -padding - len(filename)
+        padding = 2
+        # position file button
+        x = self.tile_width - (self.file_cycle_button.width + 1)
+        self.file_cycle_button.x = x
+        x -= padding
         # tile
         tile = 'X/Y'
         color = light
@@ -288,21 +348,18 @@ class StatusBarUI(UIElement):
             tile_y = str(tile_y).rjust(3)
             tile = '%s,%s' % (tile_x, tile_y)
         self.art.write_string(0, 0, x, 0, tile, color, dark, True)
+        # tile label
         x -= len(tile)
         self.art.write_string(0, 0, x, 0, self.tile_label, dark, light, True)
-        x += -padding - len(self.tile_label)
-        # layer
-        layers = art.layers if art else 0
-        layer = '%s/%s' % (art.active_layer + 1, layers) if art else 'n/a'
-        self.art.write_string(0, 0, x, 0, layer, light, dark, True)
-        x -= len(layer)
+        # position layer button
+        x -= (padding + len(self.tile_label) + self.layer_cycle_button.width)
+        self.layer_cycle_button.x = x
+        # layer label
         self.art.write_string(0, 0, x, 0, self.layer_label, dark, light, True)
-        x += -padding - len(self.layer_label)
-        # frame
-        frames = art.frames if art else 0
-        frame = '%s/%s' % (art.active_frame + 1, frames) if art else 'n/a'
-        self.art.write_string(0, 0, x, 0, frame, light, dark, True)
-        x -= len(frame)
+        # position frame button
+        x -= (padding + len(self.layer_label) + self.frame_cycle_button.width)
+        self.frame_cycle_button.x = x
+        # frame label
         self.art.write_string(0, 0, x, 0, self.frame_label, dark, light, True)
     
     def render(self):
@@ -337,10 +394,7 @@ class StatusBarUI(UIElement):
             self.dim_renderable.x = self.bg_renderable.x - swatch_width
             self.dim_renderable.render()
         if not self.ui.selected_tool.affects_xform:
-            self.dim_renderable.x = XformToggleButton.x * self.art.quad_width - 1
-            dim_orig_width = self.dim_renderable.scale_x
-            self.dim_renderable.scale_x = XformToggleButton.width + XformCycleButton.width
-            # TODO: why is magic number needed here?!
-            self.dim_renderable.scale_x *= self.art.quad_width * 9.2
-            self.dim_renderable.render()
-            self.dim_renderable.scale_x = dim_orig_width
+            # separate dimmer renderable for xform's wider size
+            self.dim_xform_renderable.y = self.char_renderable.y
+            self.dim_xform_renderable.x = XformToggleButton.x * self.art.quad_width - 1
+            self.dim_xform_renderable.render()
