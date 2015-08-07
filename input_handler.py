@@ -14,6 +14,8 @@ from art import ART_DIR, ART_FILE_EXTENSION
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
+README_FILENAME = 'README.md'
+WEBSITE_URL = 'http://vectorpoem.com/playscii'
 
 class InputLord:
     
@@ -700,10 +702,10 @@ class InputLord:
         self.ui.open_dialog(HelpScreenDialog)
     
     def BIND_open_readme(self):
-        os.system('./readme.txt')
+        os.system('./' + README_FILENAME)
     
     def BIND_open_website(self):
-        webbrowser.open('http://vectorpoem.com/playscii')
+        webbrowser.open(WEBSITE_URL)
     
     def BIND_crop_to_selection(self):
         self.ui.crop_to_selection(self.ui.active_art)
