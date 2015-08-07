@@ -564,20 +564,20 @@ class ToolPopup(UIElement):
         active_swatch.move_cursor(self.cursor_box, dx, dy)
     
     def select_key_pressed(self, mod_pressed):
-        button = [1, 3][mod_pressed]
-        self.clicked(button)
+        mouse_button = [1, 3][mod_pressed]
+        self.clicked(mouse_button)
     
-    def clicked(self, button):
-        handled = UIElement.clicked(self, button)
+    def clicked(self, mouse_button):
+        handled = UIElement.clicked(self, mouse_button)
         if handled:
             return
         # if cursor is over a char or color, make it the ui's selected one
         if self.cursor_char != -1:
             self.ui.selected_char = self.cursor_char
         elif self.cursor_color != -1:
-            if button == 1:
+            if mouse_button == 1:
                 self.ui.selected_fg_color = self.cursor_color
-            elif button == 3:
+            elif mouse_button == 3:
                 self.ui.selected_bg_color = self.cursor_color
     
     def render(self):

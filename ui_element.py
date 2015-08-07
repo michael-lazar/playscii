@@ -77,8 +77,8 @@ class UIElement:
         handled = False
         return handled
     
-    def clicked(self, button):
-        self.log_event('clicked', button)
+    def clicked(self, mouse_button):
+        self.log_event('clicked', mouse_button)
         # return if a button did something
         handled = False
         # tell any hovered buttons they've been clicked
@@ -86,15 +86,23 @@ class UIElement:
             if b.can_click:
                 b.click()
                 if b.callback:
+                    # button callback might need extra data (cb_arg)
                     if b.cb_arg is not None:
-                        b.callback(b.cb_arg)
+                        # button might want to know which mouse button clicked
+                        if b.pass_mouse_button:
+                            b.callback(mouse_button, b.cb_arg)
+                        else:
+                            b.callback(b.cb_arg)
                     else:
-                        b.callback()
+                        if b.pass_mouse_button:
+                            b.callback(mouse_button)
+                        else:
+                            b.callback()
                 handled = True
         return handled
     
-    def unclicked(self, button):
-        self.log_event('unclicked', button)
+    def unclicked(self, mouse_button):
+        self.log_event('unclicked', mouse_button)
         handled = False
         for b in self.hovered_buttons:
             b.unclick()

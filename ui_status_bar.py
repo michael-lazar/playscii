@@ -2,37 +2,97 @@ import os.path, time
 from math import ceil
 
 from ui_element import UIElement, UIArt, UIRenderable
+from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
+from ui_colors import UIColors
 from renderable_line import UIRenderableX
 from art import uv_names
+
+# buttons to toggle "affects" status / cycle through choices, respectively
+
+class StatusBarToggleButton(UIButton):
+    caption_justify = TEXT_RIGHT
+
+class StatusBarCycleButton(UIButton):
+    # do different stuff for left vs right click
+    pass_mouse_button = True
+    should_draw_caption = False
+    width = 3
+
+class CharToggleButton(StatusBarToggleButton):
+    x = 0
+    caption = 'ch:'
+    width = len(caption) + 1
+
+class CharCycleButton(StatusBarCycleButton):
+    x = CharToggleButton.width
+
+class FGToggleButton(StatusBarToggleButton):
+    x = CharCycleButton.x + CharCycleButton.width
+    caption = 'fg:'
+    width = len(caption) + 1
+
+class FGCycleButton(StatusBarCycleButton):
+    x = FGToggleButton.x + FGToggleButton.width
+
+class BGToggleButton(StatusBarToggleButton):
+    x = FGCycleButton.x + FGCycleButton.width
+    caption = 'bg:'
+    width = len(caption) + 1
+
+class BGCycleButton(StatusBarCycleButton):
+    x = BGToggleButton.x + BGToggleButton.width
+
+class XformToggleButton(StatusBarToggleButton):
+    x = BGCycleButton.x + BGCycleButton.width
+    caption = 'xform:'
+    width = len(caption) + 1
+
+# class for things like xform and tool whose captions you can cycle through
+class StatusBarTextCycleButton(StatusBarCycleButton):
+    should_draw_caption = True
+    caption_justify = TEXT_CENTER
+    normal_fg_color = UIColors.lightgrey
+    normal_bg_color = UIColors.black
+    hovered_fg_color = UIColors.lightgrey
+    hovered_bg_color = UIColors.black
+    clicked_fg_color = UIColors.black
+    clicked_bg_color = UIColors.white
+
+class XformCycleButton(StatusBarTextCycleButton):
+    x = XformToggleButton.x + XformToggleButton.width
+    width = len('Rotate 180')
+    caption = uv_names[0]
+
+class ToolCycleButton(StatusBarTextCycleButton):
+    x = XformCycleButton.x + XformCycleButton.width + len('tool:') + 1
+    # width and caption are set during status bar init after button is created
 
 class StatusBarUI(UIElement):
     
     snap_bottom = True
     snap_left = True
     dim_color = 12
-    char_label = 'ch:'
-    fg_label = 'fg:'
-    bg_label = 'bg:'
-    xform_label = 'xform:'
     swatch_width = 3
-    char_label_x = 1
-    char_swatch_x = char_label_x + len(char_label)
-    fg_label_x = char_swatch_x + swatch_width + 1
-    fg_swatch_x = fg_label_x + len(fg_label)
-    bg_label_x = fg_swatch_x + swatch_width + 1
-    bg_swatch_x = bg_label_x + len(bg_label)
-    xform_label_x = bg_swatch_x + swatch_width + 1
-    xform_selected_width = len('Rotate 180')
-    xform_selected_x = xform_label_x + len(xform_label)
+    char_swatch_x = CharCycleButton.x
+    fg_swatch_x = FGCycleButton.x
+    bg_swatch_x = BGCycleButton.x
     tool_label = 'tool:'
-    tool_label_x = xform_selected_x + xform_selected_width + 2
-    tool_selection_x = tool_label_x + len(tool_label)
-    # total width of left-justified items
-    left_items_width = tool_selection_x + 7
+    tool_label_x = XformCycleButton.x + XformCycleButton.width + 1
     tile_label = 'tile:'
     layer_label = 'layer:'
     frame_label = 'frame:'
     right_items_width = len(tile_label) + len(layer_label) + len(frame_label) + (len('X/Y') + 2) * 2 + len('XX/YY') + 2 + 10
+    button_names = {
+        CharToggleButton: 'char_toggle',
+        CharCycleButton: 'char_cycle',
+        FGToggleButton: 'fg_toggle',
+        FGCycleButton: 'fg_cycle',
+        BGToggleButton: 'bg_toggle',
+        BGCycleButton: 'bg_cycle',
+        XformToggleButton: 'xform_toggle',
+        XformCycleButton: 'xform_cycle',
+        ToolCycleButton: 'tool_cycle'
+    }
     
     def __init__(self, ui):
         art = ui.active_art
@@ -45,9 +105,23 @@ class StatusBarUI(UIElement):
         self.bg_art = UIArt(art_name, ui.app, art.charset, art.palette, self.swatch_width, 1)
         self.bg_renderable = UIRenderable(ui.app, self.bg_art)
         # "dimmed out" box
-        self.dim_art = UIArt(art_name, ui.app, ui.charset, ui.palette, self.swatch_width + len(self.char_label), 1)
+        self.dim_art = UIArt(art_name, ui.app, ui.charset, ui.palette, self.swatch_width + self.char_swatch_x, 1)
         self.dim_renderable = UIRenderable(ui.app, self.dim_art)
         self.dim_renderable.alpha = 0.75
+        # create clickable buttons
+        self.buttons = []
+        for button_class, button_name in self.button_names.items():
+            button = button_class(self)
+            setattr(self, button_name + '_button', button)
+            cb_name = '%s_button_pressed' % button_name
+            button.callback = getattr(self, cb_name)
+            self.buttons.append(button)
+        # set some tool cycle button data specially
+        # (unlike xforms, more tools might be added in the future)
+        self.tool_cycle_button.caption = ui.selected_tool.button_caption
+        self.tool_cycle_button.width = ui.get_longest_tool_name_length() + 2
+        # determine total width of left-justified items
+        self.left_items_width = self.tool_label_x + self.tool_cycle_button.width + 7
         # set some properties in bulk
         self.renderables = []
         for r in [self.char_renderable, self.fg_renderable, self.bg_renderable, self.dim_renderable]:
@@ -61,6 +135,53 @@ class StatusBarUI(UIElement):
         self.x_renderable.status_bar = self
         self.renderables.append(self.x_renderable)
         UIElement.__init__(self, ui)
+    
+    # button callbacks
+    
+    def char_toggle_button_pressed(self):
+        self.ui.selected_tool.toggle_affects_char()
+    
+    def char_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.select_char(self.ui.selected_char + 1)
+        elif mouse_button == 3:
+            self.ui.select_char(self.ui.selected_char - 1)
+    
+    def fg_toggle_button_pressed(self):
+        self.ui.selected_tool.toggle_affects_fg()
+    
+    def fg_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.select_fg(self.ui.selected_fg_color + 1)
+        elif mouse_button == 3:
+            self.ui.select_fg(self.ui.selected_fg_color - 1)
+    
+    def bg_toggle_button_pressed(self):
+        self.ui.selected_tool.toggle_affects_bg()
+    
+    def bg_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.select_bg(self.ui.selected_bg_color + 1)
+        elif mouse_button == 3:
+            self.ui.select_bg(self.ui.selected_bg_color - 1)
+    
+    def xform_toggle_button_pressed(self):
+        self.ui.selected_tool.toggle_affects_xform()
+    
+    def xform_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.cycle_selected_xform()
+        elif mouse_button == 3:
+            self.ui.cycle_selected_xform(True)
+        # update caption with new xform
+        self.xform_cycle_button.caption = uv_names[self.ui.selected_xform]
+    
+    def tool_cycle_button_pressed(self, mouse_button):
+        if mouse_button == 1:
+            self.ui.cycle_selected_tool()
+        elif mouse_button == 3:
+            self.ui.cycle_selected_tool(True)
+        self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
     
     def reset_art(self):
         UIElement.reset_art(self)
@@ -86,7 +207,9 @@ class StatusBarUI(UIElement):
         # if user is making window reeeeally skinny, bail
         if self.tile_width < self.left_items_width:
             return
-        self.write_left_elements()
+        # draw tool label
+        self.art.write_string(0, 0, self.tool_label_x, 0, self.tool_label,
+                              self.ui.palette.darkest_index)
         # only draw right side info if the window is wide enough
         if self.art.width > self.left_items_width + self.right_items_width:
             self.write_right_elements()
@@ -100,14 +223,17 @@ class StatusBarUI(UIElement):
         self.reset_art()
     
     def update(self):
+        # update buttons
+        UIElement.update(self)
         # set color swatches
         for i in range(self.swatch_width):
             self.char_art.set_color_at(0, 0, i, 0, self.ui.selected_bg_color, False)
             self.fg_art.set_color_at(0, 0, i, 0, self.ui.selected_fg_color, False)
             self.bg_art.set_color_at(0, 0, i, 0, self.ui.selected_bg_color, False)
-        # set char w/ correct FG color
+        # set char w/ correct FG color and xform
         self.char_art.set_char_index_at(0, 0, 1, 0, self.ui.selected_char)
         self.char_art.set_color_at(0, 0, 1, 0, self.ui.selected_fg_color, True)
+        self.char_art.set_char_transform_at(0, 0, 1, 0, self.ui.selected_xform)
         # position elements
         self.position_swatch(self.char_renderable, self.char_swatch_x)
         self.position_swatch(self.fg_renderable, self.fg_swatch_x)
@@ -115,6 +241,7 @@ class StatusBarUI(UIElement):
         for art in [self.char_art, self.fg_art, self.bg_art]:
             art.update()
         self.rewrite_art()
+        self.draw_buttons()
     
     def position_swatch(self, renderable, x_offset):
         renderable.x = (self.char_art.quad_width * x_offset) - 1
@@ -122,27 +249,6 @@ class StatusBarUI(UIElement):
     
     def reset_loc(self):
         UIElement.reset_loc(self)
-    
-    def write_left_elements(self):
-        """
-        fills in left-justified parts of status bar, eg labels for selected
-        character/color/tool sections
-        """
-        # draw labels first
-        color = self.ui.palette.darkest_index
-        self.art.write_string(0, 0, self.char_label_x, 0, self.char_label, color)
-        self.art.write_string(0, 0, self.fg_label_x, 0, self.fg_label, color)
-        self.art.write_string(0, 0, self.bg_label_x, 0, self.bg_label, color)
-        self.art.write_string(0, 0, self.xform_label_x, 0, self.xform_label, color)
-        self.art.write_string(0, 0, self.tool_label_x, 0, self.tool_label, color)
-        # draw selections (tool, xform)
-        color = self.ui.colors.white
-        bg = self.ui.colors.black
-        xform_selection = uv_names[self.ui.selected_xform]
-        self.art.write_string(0, 0, self.xform_selected_x, 0, xform_selection, color, bg)
-        # get name of tool from UI
-        tool_selection = ' %s ' % self.ui.selected_tool.button_caption
-        self.art.write_string(0, 0, self.tool_selection_x, 0, tool_selection, color, bg)
     
     def write_right_elements(self):
         """
@@ -216,20 +322,21 @@ class StatusBarUI(UIElement):
             self.x_renderable.render()
         # dim out items if brush is set to not affect them
         self.dim_renderable.y = self.char_renderable.y
+        swatch_width = self.art.quad_width * StatusBarCycleButton.width
         if not self.ui.selected_tool.affects_char:
-            self.dim_renderable.x = self.char_renderable.x - self.art.quad_width * len(self.char_label)
+            self.dim_renderable.x = self.char_renderable.x - swatch_width
             self.dim_renderable.render()
         if not self.ui.selected_tool.affects_fg_color:
-            self.dim_renderable.x = self.fg_renderable.x - self.art.quad_width * len(self.fg_label)
+            self.dim_renderable.x = self.fg_renderable.x - swatch_width
             self.dim_renderable.render()
         if not self.ui.selected_tool.affects_bg_color:
-            self.dim_renderable.x = self.bg_renderable.x - self.art.quad_width * len(self.bg_label)
+            self.dim_renderable.x = self.bg_renderable.x - swatch_width
             self.dim_renderable.render()
         if not self.ui.selected_tool.affects_xform:
-            # render dim renderable thrice to cover label and item
-            self.dim_renderable.x = self.xform_label_x * self.art.quad_width - 1
+            self.dim_renderable.x = XformToggleButton.x * self.art.quad_width - 1
+            dim_orig_width = self.dim_renderable.scale_x
+            self.dim_renderable.scale_x = XformToggleButton.width + XformCycleButton.width
+            # TODO: why is magic number needed here?!
+            self.dim_renderable.scale_x *= self.art.quad_width * 9.2
             self.dim_renderable.render()
-            self.dim_renderable.x = self.xform_selected_x * self.art.quad_width - 1
-            self.dim_renderable.render()
-            self.dim_renderable.x = (self.xform_selected_x + 6) * self.art.quad_width - 1
-            self.dim_renderable.render()
+            self.dim_renderable.scale_x = dim_orig_width

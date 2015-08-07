@@ -231,6 +231,23 @@ class UI:
             self.menu_bar.close_active_menu()
         self.message_line.post_line('%s %s' % (self.selected_tool.button_caption, self.tool_selected_log))
     
+    def get_longest_tool_name_length(self):
+        "VERY specific function to help status bar draw its buttons"
+        longest = 0
+        for tool in self.tools:
+            if len(tool.button_caption) > longest:
+                longest = len(tool.button_caption)
+        return longest
+    
+    def cycle_selected_tool(self, back=False):
+        tool_index = self.tools.index(self.selected_tool)
+        if back:
+            tool_index -= 1
+        else:
+            tool_index += 1
+        tool_index %= len(self.tools)
+        self.set_selected_tool(self.tools[tool_index])
+    
     def set_selected_xform(self, new_xform):
         self.selected_xform = new_xform
         self.popup.set_xform(new_xform)
@@ -488,22 +505,22 @@ class UI:
                 e.art.update()
         self.tool_settings_changed = False
     
-    def clicked(self, button):
+    def clicked(self, mouse_button):
         handled = False
         # return True if any button handled the input
         for e in self.hovered_elements:
             if not e.is_visible():
                 continue
-            if e.clicked(button):
+            if e.clicked(mouse_button):
                 handled = True
         if self.pulldown.visible and not self.pulldown in self.hovered_elements and not self.menu_bar in self.hovered_elements:
             self.menu_bar.close_active_menu()
         return handled
     
-    def unclicked(self, button):
+    def unclicked(self, mouse_button):
         handled = False
         for e in self.hovered_elements:
-            if e.unclicked(button):
+            if e.unclicked(mouse_button):
                 handled = True
         return handled
     
