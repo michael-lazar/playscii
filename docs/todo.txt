@@ -2,17 +2,12 @@ TODO
 
 current tasks:
 
-status bar:
-- clicking frames X/Y field should cycle forward/backward through frames (LMB/RMB)
-- same as above for layers
-- clicking filename field should cycle through open arts
-- fix: weird magic number issue with dim box on xform - doesn't adjust for window resize properly
-
-- Art.copy() so that "save as" can create a duplicate?
-
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
 -- use Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
+
+- Art.copy() so that "save as" can create a duplicate?
+-- "save as" should create a new editable art in the session, not replace current one
 
 ---
 
@@ -55,8 +50,6 @@ generalized (works for any type of file, not just arts) file chooser:
 ---
 
 fixes / minor improvements:
-
-"save as" should create a new editable art in the session, not replace current one
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
