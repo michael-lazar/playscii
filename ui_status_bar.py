@@ -71,6 +71,7 @@ class StatusBarUI(UIElement):
     
     snap_bottom = True
     snap_left = True
+    always_consume_input = True
     dim_color = 12
     swatch_width = 3
     char_swatch_x = CharCycleButton.x
@@ -234,6 +235,9 @@ class StatusBarUI(UIElement):
         self.char_art.set_char_index_at(0, 0, 1, 0, self.ui.selected_char)
         self.char_art.set_color_at(0, 0, 1, 0, self.ui.selected_fg_color, True)
         self.char_art.set_char_transform_at(0, 0, 1, 0, self.ui.selected_xform)
+        # set captions for buttons that change from selections
+        self.xform_cycle_button.caption = uv_names[self.ui.selected_xform]
+        self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
         # position elements
         self.position_swatch(self.char_renderable, self.char_swatch_x)
         self.position_swatch(self.fg_renderable, self.fg_swatch_x)

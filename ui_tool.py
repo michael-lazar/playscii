@@ -265,7 +265,7 @@ class TextTool(UITool):
         new_tc.set_after(a_char, a_fg, a_bg, a_xform)
         # add command, apply immediately, and move cursor
         if self.cursor.current_command:
-            self.cursor.current_command.add_command_tiles(new_tc)
+            self.cursor.current_command.add_command_tiles([new_tc])
         else:
             self.ui.app.log('DEV WARNING: Cursor current command was expected')
         new_tc.apply()

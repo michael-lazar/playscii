@@ -6,36 +6,60 @@ class EditCommand:
         self.art = art
         self.start_time = art.app.elapsed_time
         self.finish_time = None
-        self.tile_commands = []
+        # nested dictionary with frame(layer(column(row))) structure -
+        # this prevents multiple commands operating on the same tile
+        # from stomping each other
+        self.tile_commands = {}
+    
+    def get_number_of_commands(self):
+        commands = 0
+        for frame in self.tile_commands.values():
+            for layer in frame.values():
+                for column in layer.values():
+                    for tile in column.values():
+                        commands += 1
+        return commands
     
     def __str__(self):
         # get unique-ish ID from memory address
         addr = self.__repr__()
         addr = addr[addr.find('0'):-1]
-        s = 'EditCommand_%s: %s tiles, time %s' % (addr, len(self.tile_commands),
+        s = 'EditCommand_%s: %s tiles, time %s' % (addr, self.get_number_of_commands(),
                                                    self.finish_time)
         return s
     
     def add_command_tiles(self, new_command_tiles):
-        "add one or more command tiles"
-        # check type to support one command or a list of commands
-        if type(new_command_tiles) is EditCommandTile:
-            self.tile_commands.append(new_command_tiles)
-        else:
-            self.tile_commands += new_command_tiles[:]
+        for ct in new_command_tiles:
+            # create new tables for frames/layers/columns if not present
+            if not ct.frame in self.tile_commands:
+                self.tile_commands[ct.frame] = {}
+            if not ct.layer in self.tile_commands[ct.frame]:
+                self.tile_commands[ct.frame][ct.layer] = {}
+            if not ct.y in self.tile_commands[ct.frame][ct.layer]:
+                self.tile_commands[ct.frame][ct.layer][ct.y] = {}
+            # preserve "before" state of any command we overwrite
+            if ct.x in self.tile_commands[ct.frame][ct.layer][ct.y]:
+                old_ct = self.tile_commands[ct.frame][ct.layer][ct.y][ct.x]
+                ct.set_before(old_ct.b_char, old_ct.b_fg, old_ct.b_bg,
+                              old_ct.b_xform)
+            self.tile_commands[ct.frame][ct.layer][ct.y][ct.x] = ct
     
     def undo_commands_for_tile(self, frame, layer, x, y):
-        for tc in self.tile_commands:
-            if tc.frame == frame and tc.layer == layer and tc.x == x and tc.y == y:
-                tc.undo()
+        self.tile_commands[frame][layer][y][x].undo()
     
     def undo(self):
-        for tile_command in self.tile_commands:
-            tile_command.undo()
+        for frame in self.tile_commands.values():
+            for layer in frame.values():
+                for column in layer.values():
+                    for tile_command in column.values():
+                        tile_command.undo()
     
     def apply(self):
-        for tile_command in self.tile_commands:
-            tile_command.apply()
+        for frame in self.tile_commands.values():
+            for layer in frame.values():
+                for column in layer.values():
+                    for tile_command in column.values():
+                        tile_command.apply()
 
 
 class EditCommandTile:

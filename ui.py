@@ -374,7 +374,7 @@ class UI:
             # clear to current BG
             a_bg = self.selected_bg_color
             new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
-            new_command.add_command_tiles(new_tile_command)
+            new_command.add_command_tiles([new_tile_command])
         new_command.apply()
         self.active_art.command_stack.commit_commands(new_command)
         self.active_art.set_unsaved_changes(True)

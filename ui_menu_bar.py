@@ -103,6 +103,7 @@ class MenuBar(UIElement):
     
     snap_top = True
     snap_left = True
+    always_consume_input = True
     button_classes = [FileMenuButton, EditMenuButton, ToolMenuButton,
                       ArtMenuButton, FrameMenuButton, LayerMenuButton,
                       CharColorMenuButton, GameMenuButton, HelpMenuButton]

@@ -19,6 +19,8 @@ class UIElement:
     visible = True
     renderables = None
     can_hover = True
+    # always return True for clicked/unclicked, "consuming" the input
+    always_consume_input = False
     buttons = []
     # renders in "game mode"
     game_mode_visible = False
@@ -99,6 +101,8 @@ class UIElement:
                         else:
                             b.callback()
                 handled = True
+        if self.always_consume_input:
+            return True
         return handled
     
     def unclicked(self, mouse_button):
@@ -107,6 +111,8 @@ class UIElement:
         for b in self.hovered_buttons:
             b.unclick()
             handled = True
+        if self.always_consume_input:
+            return True
         return handled
     
     def log_event(self, event_type, mouse_button=None):
