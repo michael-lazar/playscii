@@ -134,7 +134,7 @@ class Cursor:
             size_offset = math.ceil(size / 2) - 1
             return int(self.x + size_offset), int(-self.y + size_offset)
         else:
-            return self.x, self.y
+            return int(self.x), int(self.y)
     
     def get_tiles_under_brush(self, base_zero=False):
         """
@@ -207,7 +207,9 @@ class Cursor:
         #print(self.app.ui.active_art.command_stack)
     
     def moved_this_frame(self):
-        return self.moved or self.last_x != self.x or self.last_y != self.y
+        return self.moved or \
+            int(self.last_x) != int(self.x) or \
+            int(self.last_y) != int(self.y)
     
     def update(self, elapsed_time):
         # save old positions before update
