@@ -94,7 +94,8 @@ Jack Turner, Chris Welch, Andrew Yoder
            Programming Contributions:
 
 Mattias Gustavsson, Rohit Nirmal, Sean Gubelman,
-Erin Congden, Tin Tvrtković
+Erin Congden, Tin Tvrtković, Dan Reeves,
+Raigan Burns
 
                 Technical Advice:
 

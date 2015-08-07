@@ -47,6 +47,9 @@ class EditCommandTile:
     def __init__(self, art):
         self.art = art
         self.creation_time = self.art.app.elapsed_time
+        # initialize everything
+        for item in self.serialized_items:
+            setattr(self, item, None)
     
     def __str__(self):
         s = 'F%s L%s %s,%s @ %.2f: ' % (self.frame, self.layer, str(self.x).rjust(2, '0'), str(self.y).rjust(2, '0'), self.creation_time)
@@ -66,8 +69,7 @@ class EditCommandTile:
         # TODO: old or new timestamp? does it matter?
         new_ect.creation_time = self.art.app.elapsed_time
         for item in self.serialized_items:
-            if hasattr(self, item):
-                setattr(new_ect, item, getattr(self, item))
+            setattr(new_ect, item, getattr(self, item))
         return new_ect
     
     def set_tile(self, frame, layer, x, y):

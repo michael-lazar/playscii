@@ -111,17 +111,17 @@ class PencilTool(UITool):
             if len(self.ui.select_tool.selected_tiles) > 0:
                 if not self.ui.select_tool.selected_tiles.get(tile, False):
                     continue
-            new_tile_command = EditCommandTile(art)
-            new_tile_command.set_tile(frame, layer, *tile)
+            new_tc = EditCommandTile(art)
+            new_tc.set_tile(frame, layer, *tile)
             b_char, b_fg, b_bg, b_xform = art.get_tile_at(frame, layer, *tile)
-            new_tile_command.set_before(b_char, b_fg, b_bg, b_xform)
+            new_tc.set_before(b_char, b_fg, b_bg, b_xform)
             a_char, a_fg, a_bg, a_xform = self.get_tile_change(b_char, b_fg, b_bg, b_xform)
-            new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
+            new_tc.set_after(a_char, a_fg, a_bg, a_xform)
             # Note: even if command has same result as another in command_tiles,
             # add it anyway as it may be a tool for which subsequent edits to
             # the same tile have different effects, eg rotate
-            if not new_tile_command.is_null():
-                commands.append(new_tile_command)
+            if not new_tc.is_null():
+                commands.append(new_tc)
         return commands
 
 
@@ -143,17 +143,15 @@ class RotateTool(PencilTool):
     
     name = 'rotate'
     button_caption = 'Rotate'
+    rotation_shifts = {
+        UV_NORMAL: UV_ROTATE90,
+        UV_ROTATE90: UV_ROTATE180,
+        UV_ROTATE180: UV_ROTATE270,
+        UV_ROTATE270: UV_NORMAL
+    }
     
     def get_tile_change(self, b_char, b_fg, b_bg, b_xform):
-        if b_xform == UV_NORMAL:
-            a_xform = UV_ROTATE90
-        elif b_xform == UV_ROTATE90:
-            a_xform = UV_ROTATE180
-        elif b_xform == UV_ROTATE180:
-            a_xform = UV_ROTATE270
-        else:
-            a_xform = UV_NORMAL
-        return b_char, b_fg, b_bg, a_xform
+        return b_char, b_fg, b_bg, self.rotation_shifts[b_xform]
 
 
 class GrabTool(UITool):
@@ -256,21 +254,21 @@ class TextTool(UITool):
         elif not keystr.isalpha() and shift_pressed:
             keystr = shift_map.get(keystr, ' ')
         # create tile command
-        new_tile_command = EditCommandTile(art)
-        new_tile_command.set_tile(frame, layer, x, y)
+        new_tc = EditCommandTile(art)
+        new_tc.set_tile(frame, layer, x, y)
         b_char, b_fg, b_bg, b_xform = art.get_tile_at(frame, layer, x, y)
-        new_tile_command.set_before(b_char, b_fg, b_bg, b_xform)
+        new_tc.set_before(b_char, b_fg, b_bg, b_xform)
         a_char = art.charset.get_char_index(keystr)
         a_fg = self.ui.selected_fg_color if self.affects_fg_color else None
         a_bg = self.ui.selected_bg_color if self.affects_bg_color else None
         a_xform = self.ui.selected_xform if self.affects_xform else None
-        new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
+        new_tc.set_after(a_char, a_fg, a_bg, a_xform)
         # add command, apply immediately, and move cursor
         if self.cursor.current_command:
-            self.cursor.current_command.add_command_tiles(new_tile_command)
+            self.cursor.current_command.add_command_tiles(new_tc)
         else:
             self.ui.app.log('DEV WARNING: Cursor current command was expected')
-        new_tile_command.apply()
+        new_tc.apply()
         self.cursor.x += char_w
         if self.cursor.x >= self.ui.active_art.width:
             self.cursor.x = self.start_x
@@ -379,14 +377,14 @@ class PasteTool(UITool):
         # similar to PencilTool's get_paint_commands, but "tiles under brush"
         # isn't as straightforward here
         art = self.ui.active_art
-        for tile_command in self.ui.clipboard:
+        for tc in self.ui.clipboard:
             # deep copy of each clipboard command
-            new_command = tile_command.copy()
+            new_tc = tc.copy()
             # not much depends on EditCommand.art at the moment, set it just
             # to be safe
             # TODO: determine whether it makes sense to remove it entirely
-            new_command.art = art
-            frame, layer, x, y = new_command.frame, new_command.layer, new_command.x, new_command.y
+            new_tc.art = art
+            frame, layer, x, y = new_tc.frame, new_tc.layer, new_tc.x, new_tc.y
             frame = art.active_frame
             layer = art.active_layer
             # offset cursor position, center paste on cursor
@@ -399,13 +397,15 @@ class PasteTool(UITool):
                 if not self.ui.select_tool.selected_tiles.get((x, y), False):
                     continue
             b_char, b_fg, b_bg, b_xform = self.ui.active_art.get_tile_at(frame, layer, x, y)
-            new_command.set_before(b_char, b_fg, b_bg, b_xform)
-            new_command.set_tile(frame, layer, x, y)
+            new_tc.set_before(b_char, b_fg, b_bg, b_xform)
+            new_tc.set_tile(frame, layer, x, y)
             # respect affects masks like other tools
-            a_char = new_command.a_char if self.affects_char else b_char
-            a_fg = new_command.a_fg if self.affects_fg_color else b_fg
-            a_bg = new_command.a_bg if self.affects_bg_color else b_bg
-            a_xform = new_command.a_xform if self.affects_xform else b_xform
-            new_command.set_after(a_char, a_fg, a_bg, a_xform)
-            commands.append(new_command)
+            a_char = new_tc.a_char if self.affects_char else b_char
+            a_fg = new_tc.a_fg if self.affects_fg_color else b_fg
+            a_bg = new_tc.a_bg if self.affects_bg_color else b_bg
+            a_xform = new_tc.a_xform if self.affects_xform else b_xform
+            new_tc.set_after(a_char, a_fg, a_bg, a_xform)
+            # see comment at end of PencilTool.get_paint_commands
+            if not new_tc.is_null():
+                commands.append(new_tc)
         return commands

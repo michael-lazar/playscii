@@ -2,6 +2,12 @@ TODO
 
 current tasks:
 
+undo bug - templetest2_bug, grab black squares to right of column, then paint over right edge of column, try to undo
+
+status bar:
+- make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
+- make the labels clickable to toggle "affects"
+
 - Art.copy() so that "save as" can create a duplicate?
 
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
@@ -51,9 +57,6 @@ generalized (works for any type of file, not just arts) file chooser:
 fixes / minor improvements:
 
 "save as" should create a new editable art in the session, not replace current one
-
-status bar:
-- make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
