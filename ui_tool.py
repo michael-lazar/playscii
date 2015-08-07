@@ -32,7 +32,7 @@ class UITool:
         self.affects_char = not self.affects_char
         self.ui.tool_settings_changed = True
         line = self.button_caption + ' '
-        line = '%s %s' % (self.button_caption, [self.ui.affects_char_on_log, self.ui.affects_char_off_log][self.affects_char])
+        line = '%s %s' % (self.button_caption, [self.ui.affects_char_off_log, self.ui.affects_char_on_log][self.affects_char])
         self.ui.message_line.post_line(line)
     
     def toggle_affects_fg(self):
@@ -40,7 +40,7 @@ class UITool:
             return
         self.affects_fg_color = not self.affects_fg_color
         self.ui.tool_settings_changed = True
-        line = '%s %s' % (self.button_caption, [self.ui.affects_fg_on_log, self.ui.affects_fg_off_log][self.affects_fg_color])
+        line = '%s %s' % (self.button_caption, [self.ui.affects_fg_off_log, self.ui.affects_fg_on_log][self.affects_fg_color])
         self.ui.message_line.post_line(line)
     
     def toggle_affects_bg(self):
@@ -48,7 +48,7 @@ class UITool:
             return
         self.affects_bg_color = not self.affects_bg_color
         self.ui.tool_settings_changed = True
-        line = '%s %s' % (self.button_caption, [self.ui.affects_bg_on_log, self.ui.affects_bg_off_log][self.affects_bg_color])
+        line = '%s %s' % (self.button_caption, [self.ui.affects_bg_off_log, self.ui.affects_bg_on_log][self.affects_bg_color])
         self.ui.message_line.post_line(line)
     
     def toggle_affects_xform(self):
@@ -56,7 +56,7 @@ class UITool:
             return
         self.affects_xform = not self.affects_xform
         self.ui.tool_settings_changed = True
-        line = '%s %s' % (self.button_caption, [self.ui.affects_xform_on_log, self.ui.affects_xform_off_log][self.affects_xform])
+        line = '%s %s' % (self.button_caption, [self.ui.affects_xform_off_log, self.ui.affects_xform_on_log][self.affects_xform])
         self.ui.message_line.post_line(line)
     
     def get_paint_commands(self):

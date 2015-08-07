@@ -8,6 +8,9 @@ status bar:
 - make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
 - make the labels clickable to toggle "affects"
 
+swatch:
+- xform buttons should change selected xform!
+
 - Art.copy() so that "save as" can create a duplicate?
 
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both

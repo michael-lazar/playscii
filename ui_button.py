@@ -37,6 +37,8 @@ class UIButton:
     never_draw = False
     # weird (gross?) thing: other code can stash an argument to callback here
     cb_arg = None
+    # if True, pass in mouse button #
+    pass_mouse_button = False
     # if true, clear all characters before painting a new caption
     clear_before_caption_draw = False
     

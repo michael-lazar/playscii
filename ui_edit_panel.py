@@ -197,11 +197,11 @@ class GamePanel(UIElement):
         self.refresh_items()
         UIElement.reset_art(self)
     
-    def clicked(self, button):
+    def clicked(self, mouse_button):
         if self.ui.active_dialog:
             return False
         # always handle input, even if we didn't hit a button
-        UIElement.clicked(self, button)
+        UIElement.clicked(self, mouse_button)
         return True
 
 
@@ -253,14 +253,14 @@ class EditGamePanel(GamePanel):
     def get_label(self):
         return ' %s' % self.world.game_name
     
-    def clicked(self, button):
+    def clicked(self, mouse_button):
         self.world.classname_to_spawn = None
         self.list_panel.list_mode = LIST_NONE
         # reset all buttons
         self.clear_buttons()
         # draw to set proper visual state
         self.draw_buttons()
-        return GamePanel.clicked(self, button)
+        return GamePanel.clicked(self, mouse_button)
 
 
 class ListButton(UIButton):
