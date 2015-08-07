@@ -5,8 +5,10 @@ current tasks:
 undo bug - templetest2_bug, grab black squares to right of column, then paint over right edge of column, try to undo
 
 status bar:
-- make char/fg/bg/xform items clickable to cycle forward/backward (LMB/RMB)
-- make the labels clickable to toggle "affects"
+- clicking frames X/Y field should cycle forward/backward through frames (LMB/RMB)
+- same as above for layers
+- clicking filename field should cycle through open arts
+- fix: weird magic number issue with dim box on xform - doesn't adjust for window resize properly
 
 swatch:
 - xform buttons should change selected xform!

@@ -23,6 +23,7 @@ class PulldownMenu(UIElement):
     
     label_shortcut_padding = 5
     visible = False
+    always_consume_input = True
     bg_color = UIColors.lightgrey
     border_color = UIColors.medgrey
     border_corner_char = 77
