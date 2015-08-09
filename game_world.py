@@ -157,6 +157,14 @@ class GameWorld:
         for obj in self.objects.values():
             setattr(obj, name, value)
     
+    def edit_art_for_selected(self):
+        if len(self.selected_objects) == 0:
+            return
+        self.app.exit_game_mode()
+        for obj in self.selected_objects:
+            for art_filename in obj.get_all_art():
+                self.app.load_art_for_edit(art_filename)
+    
     def move_selected(self, move_x, move_y, move_z):
         for obj in self.selected_objects:
             #obj.move(move_x, move_y)

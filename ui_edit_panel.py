@@ -42,19 +42,19 @@ class PauseGameButton(UIButton):
 
 
 class SetGameDirButton(UIButton):
-    caption = 'Set new game dir...'
+    caption = 'Set new game dir…'
     def selected(button):
         button.element.ui.open_dialog(SetGameDirDialog)
         button.element.highlight_button(button)
 
 class LoadStateButton(UIButton):
-    caption = 'Load game state...'
+    caption = 'Load game state…'
     def selected(button):
         button.element.list_panel.list_states()
         button.element.highlight_button(button)
 
 class SaveStateButton(UIButton):
-    caption = 'Save game state...'
+    caption = 'Save game state…'
     def selected(button):
         button.element.ui.open_dialog(SaveGameStateDialog)
         # show states in list for convenience
@@ -62,7 +62,7 @@ class SaveStateButton(UIButton):
         button.element.highlight_button(button)
 
 class SpawnObjectButton(UIButton):
-    caption = 'Spawn object...'
+    caption = 'Spawn object…'
     def selected(button):
         # change list to show object classes
         button.element.list_panel.list_classes()
@@ -74,11 +74,16 @@ class DuplicateObjectButton(UIButton):
         button.element.world.duplicate_selected_objects()
 
 class SelectObjectsButton(UIButton):
-    caption = 'Select objects...'
+    caption = 'Select objects…'
     def selected(button):
         # change list to show objects
         button.element.list_panel.list_objects()
         button.element.highlight_button(button)
+
+class EditObjectArtButton(UIButton):
+    caption = 'Edit art for selected…'
+    def selected(button):
+        button.element.world.edit_art_for_selected()
 
 class GameEditToggleButton(UIButton):
     "button whose caption reflects an on/off state"
@@ -216,6 +221,7 @@ class EditGamePanel(GamePanel):
                       SetGameDirButton, ResetStateButton, PauseGameButton,
                       LoadStateButton, SaveStateButton, SpawnObjectButton,
                       DuplicateObjectButton, SelectObjectsButton,
+                      EditObjectArtButton,
                       TogglePlayerCameraLockButton, ToggleGridSnapButton,
                       ToggleOriginVizButton,
                       ToggleBoundsVizButton, ToggleCollisionVizButton]
