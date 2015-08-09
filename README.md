@@ -96,8 +96,6 @@ a separate tab.
 
 `Ctrl-A`: Select all
 
-`Ctrl-D`: Deselect all
-
 `Ctrl-I`: Invert selection
 
 `Shift-R`: toggle CRT shader
