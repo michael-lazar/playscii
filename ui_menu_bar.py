@@ -2,7 +2,7 @@ from math import ceil
 
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
-from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, GameMenuData, HelpMenuData
+from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ViewMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, GameMenuData, HelpMenuData
 from ui_info_dialog import AboutDialog
 from ui_colors import UIColors
 from renderable_sprite import UISpriteRenderable
@@ -66,6 +66,11 @@ class ToolMenuButton(MenuButton):
     caption = 'Tool'
     menu_data = ToolMenuData
 
+class ViewMenuButton(MenuButton):
+    name = 'view'
+    caption = 'View'
+    menu_data = ViewMenuData
+
 class ArtMenuButton(MenuButton):
     name = 'art'
     caption = 'Art'
@@ -105,8 +110,9 @@ class MenuBar(UIElement):
     snap_left = True
     always_consume_input = True
     button_classes = [FileMenuButton, EditMenuButton, ToolMenuButton,
-                      ArtMenuButton, FrameMenuButton, LayerMenuButton,
-                      CharColorMenuButton, GameMenuButton, HelpMenuButton]
+                      ViewMenuButton, ArtMenuButton, FrameMenuButton,
+                      LayerMenuButton, CharColorMenuButton, GameMenuButton,
+                      HelpMenuButton]
     # empty tiles between each button
     button_padding = 1
     

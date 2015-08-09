@@ -226,6 +226,14 @@ class ToolToggleAffectsXformItem(ToolSettingsMenuItem):
     def should_mark(ui):
         return ui.selected_tool.affects_xform
 
+class ViewToggleCRTMenuItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'toggle_crt'
+    def should_dim(app):
+        return app.fb.disable_crt
+    def get_label(app):
+        return 'CRT filter: ' + ['Disabled', 'Enabled'][app.fb.crt]
+
 class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
     label = 'Open all Game Mode assets'
     command = 'open_all_game_assets'
@@ -496,6 +504,8 @@ class ToolMenuData(PulldownMenuData):
             return item.should_mark(ui)
         return item.label == '  %s' % ui.selected_tool.button_caption
 
+class ViewMenuData(PulldownMenuData):
+    items = [ViewToggleCRTMenuItem]
 
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeMenuItem, ArtCropToSelectionMenuItem, SeparatorMenuItem,
