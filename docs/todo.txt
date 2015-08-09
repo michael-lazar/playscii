@@ -55,11 +55,6 @@ fixes / minor improvements:
 
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
-PNG export:
-- CRT off/on affects PNG output, according to a scale factor.
--- arg 1 of export console command = scale factor override, default is Nx
-- fix looping / proper GIF89a status on exported GIFs
-
 main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
 - ability to "pin" popup so it stays on screen always

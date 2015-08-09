@@ -39,7 +39,7 @@ from game_world import GameWorld, TOP_GAME_DIR
 from game_object import GameObject
 
 APP_NAME = 'Playscii'
-VERSION = '0.6.3'
+VERSION = '0.6.4'
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
