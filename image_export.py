@@ -7,8 +7,11 @@ def get_frame_image(app, art, frame):
     # determine art's native size in pixels
     w = art.charset.char_width * art.width
     h = art.charset.char_height * art.height
-    # TODO: if CRT is on, use that shader for output w/ a scale factor!
-    scale = 2 if app.fb.crt and not app.fb.disable_crt else 1
+    # if CRT is on, use that shader for output w/ a scale factor
+    scale = app.export_crt_scale_factor if app.fb.crt and not app.fb.disable_crt else 1
+    
+    # TODO: create CRT framebuffer
+    
     # create render target
     framebuffer = GL.glGenFramebuffers(1)
     render_buffer = GL.glGenRenderbuffers(1)
