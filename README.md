@@ -12,8 +12,8 @@ always be available here:
 
 If you downloaded the ZIP file with "win32" in its name, you should have a
 Windows EXE build you can run without needing to install anything listed below.
-A Mac application bundle file would also be nice, but I don't have a Mac to
-create one with - if you're interested in helping with this, let me know!
+A Mac application bundle file isn't available yet but I'd love to make one
+available in the near future.
 
 If you downloaded the ZIP file with "source" in its name or from the project's
 source code repository, you can run Playscii from source if you have Python and
@@ -33,15 +33,20 @@ can also be opened though they will be saved in the new format - as of version
 
 ## Controls
 
-Every keyboard shortcut available in Playscii is also shown in its pulldown menus!
+Every keyboard shortcut available in Playscii is also shown in its pulldown
+menus, so you can figure out a lot by just exploring those.  Binds can also
+be changed, see the Configuration section below.
 
-`Middle mouse drag` or `Shift + W A S D` or `Shift + arrow keys`: pan the view around
+`Middle mouse drag` or `Shift + W A S D` or `Shift + arrow keys`: **Pan** the view around
 
-`Mouse` or `arrow keys`: move the cursor around
+`Mouse` or `arrow keys`: **Move** the cursor around
 
 `Left mouse button` or `enter`: paint using the current tool
 
-`Mouse wheel` or `Shift + Z` or `X`: zoom the view in and out
+`Mouse wheel` or `Shift + Z` or `X`: **Zoom** the view in and out
+
+`Space`: bring up the **Popup**.  This provides quick access to the characters and colors available in the current document.  Tool settings are available in
+a separate tab.
 
 `A`: select **Paint** tool - lays down tiles with the currently selected character, foreground and background color, and character "transform": normal, rotated 90 degrees, rotated 180, 270, mirrored, flipped.
 
@@ -92,8 +97,6 @@ Every keyboard shortcut available in Playscii is also shown in its pulldown menu
 `Shift-G`: toggle grid
 
 `` ` ``: toggle console.  Type "help" to see a list of available commands.
-
-`Shift-T`: toggle camera tilt
 
 `Alt-Enter`: toggle fullscreen (uses desktop resolution)
 
