@@ -8,7 +8,7 @@ dir /s/b dist\*__pycache__ > cachedirs
 REM rename dist\ dir to the top level dir we want in the archive
 move dist playscii
 REM name zip according to version
-%ZIP_EXE% a -r playscii_win32-%PLAYSCII_VERSION%.zip playscii/*.* -x@cachedirs
+%ZIP_EXE% a -r playscii_win32-%PLAYSCII_VERSION%.zip playscii/* -x@cachedirs
 REM put everything back
 move playscii dist
 del cachedirs

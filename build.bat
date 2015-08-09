@@ -28,8 +28,8 @@ mkdir dist\art
 copy /v art\*.* dist\art\
 mkdir dist\charsets
 copy /v charsets\*.* dist\charsets\
-mkdir dist\docs
-copy /v docs\*.* dist\docs\
+REM mkdir dist\docs
+REM copy /v docs\*.* dist\docs\
 mkdir dist\palettes
 copy /v palettes\*.* dist\palettes\
 mkdir dist\scripts
