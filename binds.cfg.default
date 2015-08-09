@@ -75,6 +75,7 @@ self.edit_bind_src = {
     'alt f'    : 'open_file_menu',
     'alt e'    : 'open_edit_menu',
     'alt t'    : 'open_tool_menu',
+	'alt v'    : 'open_view_menu',
     'alt a'    : 'open_art_menu',
     'alt r'    : 'open_frame_menu',
     'alt l'    : 'open_layer_menu',

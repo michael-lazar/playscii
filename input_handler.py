@@ -398,6 +398,7 @@ class InputLord:
     
     def BIND_toggle_crt(self):
         self.app.fb.toggle_crt()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_select_pencil_tool(self):
         self.ui.set_selected_tool(self.ui.pencil_tool)
@@ -654,6 +655,9 @@ class InputLord:
     
     def BIND_open_tool_menu(self):
         self.ui.menu_bar.open_menu_by_name('tool')
+    
+    def BIND_open_view_menu(self):
+        self.ui.menu_bar.open_menu_by_name('view')
     
     def BIND_open_art_menu(self):
         self.ui.menu_bar.open_menu_by_name('art')
