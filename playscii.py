@@ -67,7 +67,9 @@ class Application:
     capslock_is_ctrl = False
     bg_color = (0.1, 0.1, 0.1, 1)
     # scaling factor used when CRT filter is on during image export
-    export_crt_scale_factor = 2
+    export_crt_scale_factor = 4
+    # scale for export when no CRT
+    export_no_crt_scale_factor = 1
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
     # show dev-only log messages

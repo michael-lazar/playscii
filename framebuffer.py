@@ -1,6 +1,7 @@
 import numpy as np
 from OpenGL import GL
 
+
 class Framebuffer:
     
     start_crt_enabled = True
@@ -93,3 +94,8 @@ class Framebuffer:
         GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
+
+
+class ExportFramebuffer(Framebuffer): clear_color = (0, 0, 0, 0)
+
+class ExportFramebufferNoCRT(ExportFramebuffer): disable_crt = True
