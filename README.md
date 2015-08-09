@@ -31,6 +31,14 @@ can also be opened though they will be saved in the new format - as of version
 0.5.0 Playscii is a complete replacement for EDSCII.
 
 
+## Roadmap
+
+Many of Playscii's intended features have now been implemented, but you can see
+the very latest version of JP's TODO file here:
+
+[https://bitbucket.org/JPLeBreton/playscii/src/default/docs/todo.txt](https://bitbucket.org/JPLeBreton/playscii/src/default/docs/todo.txt)
+
+
 ## Controls
 
 Every keyboard shortcut available in Playscii is also shown in its pulldown
@@ -167,14 +175,6 @@ top of build.bat if they're in a different location.
 To produce Mac Application bundles, you'll need py2app: [https://pypi.python.org/pypi/py2app](https://pypi.python.org/pypi/py2app)
 
 As with the Windows build process, run the "mac_build.py" script.
-
-
-## Roadmap
-
-Many of Playscii's intended features have now been implemented, but you can see
-the very latest version of JP's TODO file here:
-
-https://bitbucket.org/JPLeBreton/playscii/src/default/docs/todo.txt
 
 
 ## Configuration
