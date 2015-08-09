@@ -39,7 +39,7 @@ from game_world import GameWorld, TOP_GAME_DIR
 from game_object import GameObject
 
 APP_NAME = 'Playscii'
-VERSION = '0.6.4'
+VERSION_FILENAME = 'version'
 
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
@@ -103,7 +103,7 @@ class Application:
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         self.inactive_layer_visibility = 1
-        self.version = VERSION
+        self.version = get_version()
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
         # set ui None so other objects can check it None, eg load_art check
@@ -682,10 +682,13 @@ def get_paths():
             os.mkdir(documents_dir + subdir)
     return config_dir, documents_dir
 
+def get_version():
+    return open(VERSION_FILENAME).readlines()[0].strip()
+
 if __name__ == "__main__":
     # start log even before Application has initialized so we can write to it
     # startup message: application and version #
-    line = '%s v%s' % (APP_NAME, VERSION)
+    line = '%s v%s' % (APP_NAME, get_version())
     log_lines = [line]
     print(line)
     # get paths for config file, later to be passed into Application

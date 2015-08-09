@@ -38,30 +38,16 @@ mkdir dist\shaders
 copy /v shaders\*.* dist\shaders\
 REM test game content
 mkdir dist\games
-mkdir dist\games\test1
-mkdir dist\games\test1\art
-mkdir dist\games\test1\palettes
-mkdir dist\games\test1\scripts
-copy /v games\test1\*.* dist\games\test1\
-copy /v games\test1\art\*.* dist\games\test1\art\
-copy /v games\test1\palettes\*.* dist\games\test1\palettes\
-copy /v games\test1\scripts\*.* dist\games\test1\scripts\
-mkdir dist\games\cronotest
-mkdir dist\games\cronotest\art
-mkdir dist\games\cronotest\palettes
-mkdir dist\games\cronotest\scripts
-copy /v games\cronotest\*.* dist\games\cronotest\
-copy /v games\cronotest\art\*.* dist\games\cronotest\art\
-copy /v games\cronotest\palettes\*.* dist\games\cronotest\palettes\
-copy /v games\cronotest\scripts\*.* dist\games\cronotest\scripts\
+xcopy /s games\*.* dist\games\
 REM ignore ui art source assets (eg .xcf)
 mkdir dist\ui
 copy /v ui\*.png dist\ui\
-copy readme.txt dist\
+copy README.md dist\
 copy license.txt dist\
 copy code_of_conduct.txt dist\
 copy playscii.cfg.default dist\
 copy binds.cfg.default dist\
+copy version dist\
 
 echo Done!
 pause
