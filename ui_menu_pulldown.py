@@ -169,14 +169,17 @@ class PulldownMenu(UIElement):
     def keyboard_navigate(self, move_dir):
         old_idx = self.keyboard_nav_index
         new_idx = self.keyboard_nav_index + move_dir
-        if new_idx < 0 or new_idx > len(self.buttons) - 1:
-            return
-        else:
-            self.keyboard_nav_index += move_dir
-        while 0 <= self.keyboard_nav_index + move_dir < len(self.buttons) and self.buttons[self.keyboard_nav_index].state == 'dimmed':
+        self.keyboard_nav_index += move_dir
+        self.keyboard_nav_index %= len(self.buttons)
+        tries = 0
+        while self.buttons[self.keyboard_nav_index].state == 'dimmed' and tries < len(self.buttons):
             # move_dir might be zero, give it a direction to avoid infinite loop
             # if menu item 0 is dimmed
             self.keyboard_nav_index += move_dir or 1
+            self.keyboard_nav_index %= len(self.buttons)
+            tries += 1
+        if tries == len(self.buttons):
+            return
         self.update_keyboard_hover()
     
     def update_keyboard_hover(self):
@@ -188,6 +191,9 @@ class PulldownMenu(UIElement):
     
     def keyboard_select_item(self):
         button = self.buttons[self.keyboard_nav_index]
+        # don't allow selecting dimmed buttons
+        if button.state == 'dimmed':
+            return
         if button.cb_arg:
             button.callback(button.cb_arg)
         else:

@@ -9,8 +9,6 @@ current tasks:
 - Art.copy() so that "save as" can create a duplicate?
 -- "save as" should create a new editable art in the session, not replace current one
 
-"edit this object's art" button in edit UI
-
 ---
 
 new features / major improvements:
@@ -59,6 +57,8 @@ main popup
 - "use global settings" toggle for tools with an "affects X" mask - when true, setting one of the current tool's masks changes all tool's masks
 - ability to "pin" popup so it stays on screen always
 - arrow keys navigate between char and color pickers properly
+
+- allow user to set view background color (per-art? in game world?)
 
 shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 
