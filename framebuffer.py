@@ -5,6 +5,7 @@ class Framebuffer:
     
     start_crt_enabled = True
     disable_crt = False
+    clear_color = (0, 0, 0, 1)
     
     def __init__(self, app, width=None, height=None):
         self.app = app
@@ -19,21 +20,9 @@ class Framebuffer:
                         GL.GL_STATIC_DRAW)
         # texture, depth buffer, framebuffer
         self.texture = GL.glGenTextures(1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, self.width, self.height, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
         self.depth_buffer = GL.glGenRenderbuffers(1)
-        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, self.depth_buffer)
-        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_DEPTH_COMPONENT16, self.width, self.height)
-        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, 0)
         self.framebuffer = GL.glGenFramebuffers(1)
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.framebuffer)
-        GL.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_TEXTURE_2D, self.texture, 0)
-        GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_RENDERBUFFER, self.depth_buffer)
-        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+        self.setup_texture_and_buffers()
         # shaders
         self.plain_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f.glsl')
         if not self.disable_crt:
@@ -50,6 +39,34 @@ class Framebuffer:
             self.crt_res_uniform = self.crt_shader.get_uniform_location('resolution')
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindVertexArray(0)
+    
+    def setup_texture_and_buffers(self):
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D,
+                           GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D,
+                           GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D,
+                           GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D,
+                           GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA,
+                        self.width, self.height, 0,
+                        GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
+        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, self.depth_buffer)
+        GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_DEPTH_COMPONENT16,
+                                 self.width, self.height)
+        GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, 0)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.framebuffer)
+        GL.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0,
+                                  GL.GL_TEXTURE_2D, self.texture, 0)
+        GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT,
+                                     GL.GL_RENDERBUFFER, self.depth_buffer)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+    
+    def resize(self, new_width, new_height):
+        self.width, self.height = new_width, new_height
+        self.setup_texture_and_buffers()
     
     def toggle_crt(self):
         self.crt = not self.crt
@@ -70,7 +87,7 @@ class Framebuffer:
             GL.glUseProgram(self.plain_shader.program)
             GL.glUniform1i(self.plain_tex_uniform, 0)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
-        GL.glClearColor(0, 0, 0, 1)
+        GL.glClearColor(*self.clear_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         GL.glBindVertexArray(self.vao)
         GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)

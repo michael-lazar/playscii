@@ -66,6 +66,8 @@ class Application:
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
     bg_color = (0.1, 0.1, 0.1, 1)
+    # scaling factor used when CRT filter is on during image export
+    export_crt_scale_factor = 2
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
     # show dev-only log messages
@@ -475,13 +477,8 @@ class Application:
     def resize_window(self, new_width, new_height):
         GL.glViewport(0, 0, new_width, new_height)
         self.window_width, self.window_height = new_width, new_height
-        # preserve FB state, eg CRT shader enabled
-        crt = self.fb.crt
-        # create a new framebuffer in its place
-        # TODO: determine if it's better to do this or change existing fb
-        self.fb = Framebuffer(self)
-        self.fb.crt = crt
-        # tell camera and UI that view aspect has changed
+        # tell FB, camera, and UI that view aspect has changed
+        self.fb.resize(new_width, new_height)
         self.camera.window_resized()
         self.ui.window_resized()
     

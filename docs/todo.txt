@@ -9,6 +9,8 @@ current tasks:
 - Art.copy() so that "save as" can create a duplicate?
 -- "save as" should create a new editable art in the session, not replace current one
 
+"edit this object's art" button in edit UI
+
 ---
 
 new features / major improvements:
