@@ -27,6 +27,7 @@ OPTIONS = {
     'resources': [
         'playscii.cfg.default',
         'binds.cfg.default',
+        'version',
         'ui',
         'shaders',
         'scripts',
