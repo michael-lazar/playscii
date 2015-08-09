@@ -175,7 +175,7 @@ class ToolIncreaseBrushSizeItem(PulldownMenuItem):
     command = 'increase_brush_size'
     def should_dim(app):
         # dim this item for tools where brush size doesn't apply
-        if not app.ui.active_art or app.ui.selected_tool.brush_size:
+        if not app.ui.active_art or not app.ui.selected_tool.brush_size:
             return True
     def get_label(app):
         if not app.ui.selected_tool.brush_size:
@@ -187,7 +187,7 @@ class ToolDecreaseBrushSizeItem(PulldownMenuItem):
     label = 'blah'
     command = 'decrease_brush_size'
     def should_dim(app):
-        if not app.ui.active_art or app.ui.selected_tool.brush_size:
+        if not app.ui.active_art or not app.ui.selected_tool.brush_size:
             return True
         return app.ui.selected_tool.brush_size <= 1
     def get_label(app):

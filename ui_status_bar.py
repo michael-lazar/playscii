@@ -203,18 +203,21 @@ class StatusBarUI(UIElement):
         self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
     
     def file_cycle_button_pressed(self, mouse_button):
+        if not self.ui.active_art: return
         if mouse_button == 1:
             self.ui.next_active_art()
         elif mouse_button == 3:
             self.ui.previous_active_art()
     
     def layer_cycle_button_pressed(self, mouse_button):
+        if not self.ui.active_art: return
         if mouse_button == 1:
             self.ui.set_active_layer(self.ui.active_art.active_layer + 1)
         elif mouse_button == 3:
             self.ui.set_active_layer(self.ui.active_art.active_layer - 1)
     
     def frame_cycle_button_pressed(self, mouse_button):
+        if not self.ui.active_art: return
         if mouse_button == 1:
             self.ui.set_active_frame(self.ui.active_art.active_frame + 1)
         elif mouse_button == 3:

@@ -240,6 +240,8 @@ class UI:
         return longest
     
     def cycle_selected_tool(self, back=False):
+        if not self.active_art:
+            return
         tool_index = self.tools.index(self.selected_tool)
         if back:
             tool_index -= 1
@@ -355,10 +357,10 @@ class UI:
     def erase_selection_or_art(self):
         if len(self.select_tool.selected_tiles) > 0:
             self.erase_tiles_in_selection()
-        else:
-            self.active_art.clear_frame_layer(self.active_art.active_frame,
-                                              self.active_art.active_layer,
-                                              bg_color=self.selected_bg_color)
+            return
+        self.select_all()
+        self.erase_tiles_in_selection()
+        self.select_none()
     
     def erase_tiles_in_selection(self):
         # create and commit command group to clear all tiles in selection
