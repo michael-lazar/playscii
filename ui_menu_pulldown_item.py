@@ -175,7 +175,7 @@ class ToolIncreaseBrushSizeItem(PulldownMenuItem):
     command = 'increase_brush_size'
     def should_dim(app):
         # dim this item for tools where brush size doesn't apply
-        if not app.ui.selected_tool.brush_size:
+        if not app.ui.active_art or app.ui.selected_tool.brush_size:
             return True
     def get_label(app):
         if not app.ui.selected_tool.brush_size:
@@ -187,7 +187,7 @@ class ToolDecreaseBrushSizeItem(PulldownMenuItem):
     label = 'blah'
     command = 'decrease_brush_size'
     def should_dim(app):
-        if not app.ui.selected_tool.brush_size:
+        if not app.ui.active_art or app.ui.selected_tool.brush_size:
             return True
         return app.ui.selected_tool.brush_size <= 1
     def get_label(app):
@@ -200,7 +200,7 @@ class ToolSettingsMenuItem(PulldownMenuItem):
     # base class for tool settings toggle items
     def should_dim(app):
         # blacklist specific tools
-        return type(app.ui.selected_tool) in [SelectTool]
+        return not app.ui.active_art or type(app.ui.selected_tool) in [SelectTool]
 
 class ToolToggleAffectsCharItem(ToolSettingsMenuItem):
     label = '  Affects: character'
@@ -227,12 +227,25 @@ class ToolToggleAffectsXformItem(ToolSettingsMenuItem):
         return ui.selected_tool.affects_xform
 
 class ViewToggleCRTMenuItem(PulldownMenuItem):
-    label = 'blah'
+    label = '  CRT filter'
     command = 'toggle_crt'
     def should_dim(app):
         return app.fb.disable_crt
-    def get_label(app):
-        return 'CRT filter: ' + ['Disabled', 'Enabled'][app.fb.crt]
+    def should_mark(ui):
+        return ui.app.fb.crt
+
+class ViewToggleGridMenuItem(PulldownMenuItem):
+    label = '  Grid'
+    command = 'toggle_grid_visibility'
+    def should_mark(ui):
+        return ui.app.grid.visible
+
+class ViewToggleCameraTiltMenuItem(PulldownMenuItem):
+    label = '  Camera tilt'
+    command = 'toggle_camera_tilt'
+    def should_dim(app): return False
+    def should_mark(ui):
+        return ui.app.camera.y_tilt != 0
 
 class ArtOpenAllGameAssetsMenuItem(PulldownMenuItem):
     label = 'Open all Game Mode assets'
@@ -359,6 +372,8 @@ class LayerToggleVisibleMenuItem(PulldownMenuItem):
     label = 'blah'
     command = 'toggle_layer_visibility'
     def get_label(app):
+        if not app.ui.active_art:
+            return 'Show this layer (Game Mode)'
         visible = app.ui.active_art.layers_visibility[app.ui.active_art.active_layer]
         return ['Show', 'Hide'][visible] + ' this layer (Game Mode)'
 
@@ -411,14 +426,17 @@ class ChoosePaletteMenuItem(PulldownMenuItem):
 class PaletteFromFileMenuItem(PulldownMenuItem):
     label = 'Palette from file…'
     command = 'palette_from_file'
+    def should_dim(app): return False
 
 class ToggleGameModeMenuItem(PulldownMenuItem):
     label = 'Toggle Game Mode'
     command = 'toggle_game_mode'
+    def should_dim(app): return False
 
 class SetGameDirItem(PulldownMenuItem):
     label = 'Set game dir…'
     command = 'set_game_dir'
+    def should_dim(app): return False
 
 class LoadGameStateItem(PulldownMenuItem):
     label = 'Load game state…'
@@ -505,7 +523,12 @@ class ToolMenuData(PulldownMenuData):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 class ViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTMenuItem]
+    items = [ViewToggleCRTMenuItem, ViewToggleGridMenuItem,
+             ViewToggleCameraTiltMenuItem]
+    def should_mark_item(item, ui):
+        if hasattr(item, 'should_mark'):
+            return item.should_mark(ui)
+        return False
 
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeMenuItem, ArtCropToSelectionMenuItem, SeparatorMenuItem,

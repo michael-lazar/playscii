@@ -159,7 +159,10 @@ class Cursor:
         pjm = np.matrix(self.app.camera.projection_matrix)
         vm = np.matrix(self.app.camera.view_matrix)
         vp_inverse = (pjm * vm).getI()
-        z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
+        if self.app.ui.active_art:
+            z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
+        else:
+            z = 0
         point = vp_inverse.dot(np.array([x, y, z, 0]))
         point = point.getA()
         cz = self.app.camera.z - z

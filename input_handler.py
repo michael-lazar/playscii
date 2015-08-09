@@ -510,6 +510,7 @@ class InputLord:
     
     def BIND_toggle_grid_visibility(self):
         self.app.grid.visible = not self.app.grid.visible
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_frame(self):
         self.ui.set_active_frame(self.ui.active_art.active_frame - 1)
@@ -566,6 +567,7 @@ class InputLord:
         else:
             self.app.camera.y_tilt = 2
             self.ui.message_line.post_line('Camera tilt engaged.')
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_select_or_paint(self):
         # select menu item if navigating pulldown
