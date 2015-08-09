@@ -1,8 +1,8 @@
 # PLAYSCII - an ASCII art tool
 
 Playscii (pronounced play-skee) is the successor to EDSCII.  It's still in
-development and may not be fully usable as an art tool yet.  The latest version
-will always be available here:
+development and may not be feature-complete yet.  The latest version will
+always be available here:
 
 * [http://jp.itch.io/playscii](http://jp.itch.io/playscii)
 * [https://bitbucket.org/JPLeBreton/playscii](https://bitbucket.org/JPLeBreton/playscii)
@@ -10,7 +10,7 @@ will always be available here:
 
 ## Running
 
-If you downloaded the ZIP file without "source" in its name, you should have a
+If you downloaded the ZIP file with "win32" in its name, you should have a
 Windows EXE build you can run without needing to install anything listed below.
 A Mac application bundle file would also be nice, but I don't have a Mac to
 create one with - if you're interested in helping with this, let me know!
@@ -33,6 +33,8 @@ can also be opened though they will be saved in the new format - as of version
 
 ## Controls
 
+Every keyboard shortcut available in Playscii is also shown in its pulldown menus!
+
 `Middle mouse drag` or `Shift + W A S D` or `Shift + arrow keys`: pan the view around
 
 `Mouse` or `arrow keys`: move the cursor around
@@ -41,60 +43,55 @@ can also be opened though they will be saved in the new format - as of version
 
 `Mouse wheel` or `Shift + Z` or `X`: zoom the view in and out
 
-`A`: select Paint tool - lays down tiles with the currently selected character, foreground and background color, and character "transform": normal, rotated 90 degrees, rotated 180, 270, mirrored, flipped.
+`A`: select **Paint** tool - lays down tiles with the currently selected character, foreground and background color, and character "transform": normal, rotated 90 degrees, rotated 180, 270, mirrored, flipped.
 
-`E`: select Erase tool - erases character and foreground for tiles to selected background color, including transparency.
+`E`: select **Erase** tool - erases character and foreground for tiles to selected background color, including transparency.
 
-`R`: select Rotate tool - painting tiles with this rotates them 90 degrees, multiple passes produce the 4 possible rotations.
+`R`: select **Rotate** tool - painting tiles with this rotates them 90 degrees, multiple passes produce the 4 possible rotations.
 
-`T`: select Text tool - click on a tile and start typing in characters, arrow keys move cursor and enter skips to next line down.  Escape ends the edit.
+`T`: select **Text** tool - click on a tile and start typing in characters, arrow keys move cursor and enter skips to next line down.  Escape ends the edit.
 
-`S`: select Select tool - click and drag to select tiles.  Cut and Copy operate on the selected area, and Paint/Erase/etc operations will only affect the selected area.
+`S`: select **Select** tool - click and drag to select tiles.  Cut and Copy operate on the selected area, and Paint/Erase/etc operations will only affect the selected area.
 
-`V`: select Paste tool - tiles previously Cut or Copied will appear on the brush as a stamp which you can paint with like any other tool.
+`V`: select **Paste** tool - tiles previously Cut or Copied will appear on the brush as a stamp which you can paint with like any other tool.
 
-`3` or `#`: cycle the currently selected character forward or backward through the character set
+`3` or `#`: cycle the currently selected **character** forward or backward through the character set
 
-`4` or `$`: cycle the currently selected foreground color forward or backward through the palette
+`4` or `$`: cycle the currently selected **foreground color** forward or backward through the palette
 
-`5` or `%`: same as above but for the currently selected background color
+`5` or `%`: same as above but for the currently selected **background color**
 
-`6` or `^`: cycle through character transforms
+`6` or `^`: cycle through **character transforms**, eg rotations and flips
 
-`W`: swap currently selected foreground and background colors
+`W`: **swap** currently selected foreground and background colors
 
-`C`: toggle whether current tool affects characters or not
+`C`: toggle whether current tool affects **characters** or not
 
-`F`: toggle whether current tool affects foreground color or not
+`F`: toggle whether current tool affects **foreground color** or not
 
-`B`: toggle whether current tool affects background color or not
+`B`: toggle whether current tool affects **background color** or not
 
-`X`: toggle whether current tool affects character transform or not
+`X`: toggle whether current tool affects **character transform** or not
 
-`Right mouse button` or `Q`: "grab" the character and colors the from cursor's current tile, akin to the eyedropper tool in other paint programs
+`Right mouse button` or `Q`: **Grab** the character and colors the from cursor's current tile, akin to the eyedropper tool in other paint programs
 
-`Ctrl-X`: Cut - deletes current selection contents and switches to Paste tool with those contents in the clipboard.
+`Ctrl-X`: **Cut** - deletes current selection contents and switches to Paste tool with those contents in the clipboard.
 
-`Ctrl-C`: Copy - same as Cut but doesn't delete the tiles selected
+`Ctrl-C`: **Copy** - same as Cut but doesn't delete the tiles selected
 
-`ESC` or `Ctrl-D`: clear current selection with no changes
+`ESC` or `Ctrl-D`: **Clear** current selection with no changes
 
 `Ctrl-A`: Select all
+
+`Ctrl-D`: Deselect all
 
 `Ctrl-I`: Invert selection
 
 `Shift-R`: toggle CRT shader
 
-`G`: toggle grid
+`Shift-G`: toggle grid
 
-`` ` ``: toggle console.  Current valid commands are: 
-
-* `open [filename]`
-* `save [filename]`
-* `export`
-* `char [character set]`
-* `pal [palette]`
-* `quit`
+`` ` ``: toggle console.  Type "help" to see a list of available commands.
 
 `Shift-T`: toggle camera tilt
 
@@ -117,7 +114,7 @@ can also be opened though they will be saved in the new format - as of version
 `F12`: take screenshot
 
 `Ctrl-Q`: quit
-`
+
 
 ## Running from Source
 
@@ -134,11 +131,13 @@ the following libraries:
 
 * Python Image Library (PIL) or one of its derivatives, eg Pillow: [https://github.com/python-pillow/Pillow](https://github.com/python-pillow/Pillow)
 
+* appdirs: [https://github.com/ActiveState/appdirs](https://github.com/ActiveState/appdirs)
+
 These libraries are all pretty easy to install using PIP, the package manager
 that comes with Python 3.4 and later.  Find the pip executable and run it from
 the command line, like so:
 
-`pip install pysdl2 pyopengl numpy pillow`
+`pip install pysdl2 pyopengl numpy pillow appdirs`
 
 In Windows the pip executable is in the `Scripts\` subdirectory of your Python
 install folder, eg `c:\Python34`.  On some Unix-like systems (Linux and maybe
@@ -147,7 +146,8 @@ Python 2 installations.  On Unix-like systems you may also need to run pip as
 super user to let it install system libraries, eg by pre-pending "sudo" to the
 command above.
 
-Once you have the dependencies installed, you can run Playscii from source like so:
+Once you have the dependencies installed, you can run Playscii from source
+like so:
 
 `python playscii.py [optional name of art file to open]`
 
@@ -161,13 +161,52 @@ Simply run "build.bat" and it will place a complete build in the `dist\`
 subdirectory.  You may need to edit your Python and SDL2.dll paths at the very
 top of build.bat if they're in a different location.
 
+To produce Mac Application bundles, you'll need py2app: [https://pypi.python.org/pypi/py2app](https://pypi.python.org/pypi/py2app)
 
-## A Brief Roadmap
+As with the Windows build process, run the "mac_build.py" script.
 
-1. Collision detection for objects in Game Mode.
 
-2. Game Mode object placement and editing mode.
+## Roadmap
 
-3. Image export: CRT filter setting should affect output; GIF export of animations.
+Many of Playscii's intended features have now been implemented, but you can see
+the very latest version of JP's TODO file here:
 
-Still more to do!
+https://bitbucket.org/JPLeBreton/playscii/src/default/docs/todo.txt
+
+
+## Configuration
+
+Playscii places its configuration files in OS-appropriate directories, eg
+C:\Users\[your username]\AppData\Local\Playscii in Windows 7+,
+~/.config/Playscii in Linux, etc.
+
+Documents (your art, color palettes, etc) are stored in eg ~/Documents/Playscii
+in OSX and Linux, and the appropriate "My Documents" folder in Windows.
+
+You can override many program defaults in the file playscii.cfg.  This file
+starts with a few possible commented-out overrides to get you started.
+
+Likewise you can change Playscii's keyboard command binds in binds.cfg.
+
+
+## Game Mode
+
+In addition to its art and animation capabilities, Playscii has a Game Mode
+that allows you to write Python code to determine the behavior of game objects.
+Game objects are represented by pieces of Playscii art, so you can edit your
+art and animation assets on-the-fly and see your changes reflected back in
+game mode instantly.
+
+Game mode is still in heavy development, and a full documentation pass will
+only make sense once its features have stabilized.  In the meantime, if you're
+interested in exploring it further you can check out the two very basic
+example games included with Playscii in the application's games/ directory,
+"test1" and "cronotest".  Levels are stored as game state saves with a .GS
+extension, Python scripts defining new types of GameObject are stored in the
+scripts/ subdirectory, and art assets are stored in subdirs analogous to the
+ones used outside of game mode.
+
+If you've used game mode and have any suggestions, please let JP know!
+[http://vectorpoem.com/contact.html](http://vectorpoem.com/contact.html)
+
+<3
