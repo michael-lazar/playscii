@@ -72,6 +72,8 @@ class Application:
     export_no_crt_scale_factor = 1
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
+    # launch into art mode even if a game dir is specified via CLI
+    always_launch_art_mode = False
     # show dev-only log messages
     show_dev_log = False
     # toggles for "show all" debug viz modes
@@ -245,6 +247,8 @@ class Application:
             pass
         if not self.can_edit:
             self.enter_game_mode()
+        elif self.gw.game_dir and self.always_launch_art_mode:
+            self.exit_game_mode()
     
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu, what am i missing?
@@ -519,6 +523,7 @@ class Application:
         self.game_mode = False
         self.camera = self.edit_camera
         self.ui.message_line.post_line('', 1)
+        self.update_window_title()
     
     def main_loop(self):
         while not self.should_quit:

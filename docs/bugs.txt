@@ -1,7 +1,5 @@
 bug list
 
-some cursor preview commands "stick" and can't be undone if cursor is hovering tiles affected by a redo
-
 tile coords in status bar have negative Y only when text tool is active?!
 
 PNG export: layers that have too high a Z won't show up in export, special-case behavior for near/far Z in renderable export?
@@ -9,6 +7,9 @@ PNG export: layers that have too high a Z won't show up in export, special-case 
 rewrite Cursor.screen_to_world to produce same results as gluUnProject:
 https://www.opengl.org/wiki/GluProject_and_gluUnProject_code
 https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
+
+more on above: when camera tilt engaged, cursor is closest to accurate along middle of bottom edge - apply aspect correction to both axes?
+multiplying y by aspect (w/h) causes more distortion, but recenters most accurate point at middle of screen instead
 
 
 lower priority:

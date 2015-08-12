@@ -577,7 +577,8 @@ class FrameDelayDialog(AddFrameDialog):
     
     def __init__(self, ui):
         AddFrameDialog.__init__(self, ui)
-        self.field0_text = str(DEFAULT_FRAME_DELAY)
+        existing = ui.active_art.frame_delays[ui.active_art.active_frame]
+        self.field0_text = str(existing)
     
     def is_input_valid(self):
         if not self.is_valid_frame_delay(self.field0_text):

@@ -135,10 +135,11 @@ class PaletteFromFile(Palette):
     
     def __init__(self, app, src_filename, palette_filename, colors=256):
         self.init_success = False
-        # dither source image, re-save it, use that as the source for a palette
-        if not os.path.exists(src_filename):
+        src_filename = app.find_filename_path(src_filename)
+        if not src_filename:
             app.log("Couldn't find palette source image %s" % src_filename)
             return
+        # dither source image, re-save it, use that as the source for a palette
         src_img = Image.open(src_filename)
         # method:
         src_img = src_img.convert('P', None, Image.FLOYDSTEINBERG, Image.ADAPTIVE, colors)
