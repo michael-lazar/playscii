@@ -360,7 +360,9 @@ class Application:
         # build list of dirs to check, by priority:
         # gamedir/subdir if it exists, then ./subdir, then ./
         if self.gw.game_dir is not None:
-            game_dir = self.gw.game_dir + subdir
+            game_dir = self.gw.game_dir
+            if subdir:
+                game_dir += subdir
             if os.path.exists(game_dir):
                 dirnames.append(game_dir)
         if subdir is not None:

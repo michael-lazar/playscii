@@ -147,8 +147,9 @@ class PaletteFromFile(Palette):
         # write converted source image w/ same name as final palette image
         if not palette_filename.lower().endswith('.png'):
             palette_filename += '.png'
-        if not palette_filename.startswith(PALETTE_DIR):
-            palette_filename = '%s%s' % (PALETTE_DIR, palette_filename)
+        # get most appropriate path for palette image
+        palette_path = app.get_dirnames(PALETTE_DIR, False)[0]
+        palette_filename = palette_path + palette_filename
         src_img.save(palette_filename)
         # create the actual palette and export it as an image
         Palette.__init__(self, app, palette_filename, True)
