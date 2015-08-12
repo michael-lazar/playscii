@@ -8,7 +8,7 @@ from renderable_sprite import ImagePreviewRenderable
 from lab_color import rgb_to_lab, lab_color_diff
 
 """
-notes
+notes / future research
 
 - generate a table of image sum vectors for every char/fg/bg combination in the charset + palette
 - find the closest vector from this table for each source block
@@ -75,10 +75,16 @@ class ImageConverter:
         self.char_array = np.fromstring(self.char_img.tostring(), dtype=np.uint8)
         self.char_array = np.reshape(self.char_array, (self.art.charset.image_height, self.art.charset.image_width))
         # create, size and position image preview
-        self.preview_sprite = ImagePreviewRenderable(self.app, None, self.src_img.convert('RGB'))
-        self.preview_sprite.y = -self.art.height * self.art.quad_height
-        self.preview_sprite.scale_x = w / self.char_w
-        self.preview_sprite.scale_y = h / self.char_h
+        preview_img = self.src_img.copy()
+        # remove transparency if source image is a GIF to avoid a PIL crash :[
+        if 'transparency' in preview_img.info:
+            preview_img.info.pop('transparency')
+        self.preview_sprite = ImagePreviewRenderable(self.app, None, preview_img)
+        # preview image scale takes into account character aspect
+        self.preview_sprite.scale_x = w / (self.char_w / self.art.quad_width)
+        self.preview_sprite.scale_y = h / (self.char_h / self.art.quad_height)
+        # position in top left corner
+        self.preview_sprite.y = -self.preview_sprite.scale_y
         self.preview_sprite.z = self.art.layers_z[self.art.active_layer] - 0.01
         # clear active layer so we can see preview
         self.art.clear_frame_layer(self.art.active_frame, self.art.active_layer, 0)

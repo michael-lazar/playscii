@@ -172,6 +172,8 @@ class InputLord:
                 elif self.ui.active_dialog:
                     self.ui.active_dialog.handle_input(event.key.keysym.sym,
                         self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    sdl2.SDL_PumpEvents()
+                    return
                 # handle text input if text tool is active
                 elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
                     self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym,
@@ -574,6 +576,8 @@ class InputLord:
         if self.ui.menu_bar.active_menu_name:
             self.ui.pulldown.keyboard_select_item()
         if not self.ui.active_art:
+            return
+        if self.ui.active_dialog:
             return
         if self.ui.popup.visible:
             # simulate left/right click in popup to select stuff
