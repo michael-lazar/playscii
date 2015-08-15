@@ -205,7 +205,7 @@ class Cursor:
         if not self.current_command:
             return
         self.current_command.finish_time = self.app.elapsed_time
-        self.app.ui.active_art.command_stack.commit_commands(self.current_command)
+        self.app.ui.active_art.command_stack.commit_commands([self.current_command])
         self.current_command = None
         #print(self.app.ui.active_art.command_stack)
     

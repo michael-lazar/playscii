@@ -15,7 +15,7 @@ from ui_object_panel import EditObjectPanel
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
-from edit_command import EditCommand, EditCommandTile
+from edit_command import EditCommand, EditCommandTile, ResizeCommand
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -378,7 +378,7 @@ class UI:
             new_tile_command.set_after(a_char, a_fg, a_bg, a_xform)
             new_command.add_command_tiles([new_tile_command])
         new_command.apply()
-        self.active_art.command_stack.commit_commands(new_command)
+        self.active_art.command_stack.commit_commands([new_command])
         self.active_art.set_unsaved_changes(True)
     
     def copy_selection(self):
@@ -436,12 +436,18 @@ class UI:
                 max_y = y
         w = max_x - min_x + 1
         h = max_y - min_y + 1
+        # create command for undo/redo
+        command = ResizeCommand(art, min_x, min_y)
+        command.save_tiles(before=True)
         art.resize(w, h, min_x, min_y)
         self.app.log('Resized %s to %s x %s' % (art.filename, w, h))
         art.set_unsaved_changes(True)
         # clear selection to avoid having tiles we know are OoB selected
         self.select_tool.selected_tiles = {}
         self.adjust_for_art_resize(art)
+        # commit command
+        command.save_tiles(before=False)
+        art.command_stack.commit_commands([command])
     
     def adjust_for_art_resize(self, art):
         # update grid, camera, cursor
@@ -456,8 +462,15 @@ class UI:
             self.app.cursor.moved = True
     
     def resize_art(self, art, new_width, new_height, origin_x, origin_y):
+        # create command for undo/redo
+        command = ResizeCommand(art, origin_x, origin_y)
+        command.save_tiles(before=True)
+        # resize
         art.resize(new_width, new_height, origin_x, origin_y)
         self.adjust_for_art_resize(art)
+        # commit command
+        command.save_tiles(before=False)
+        art.command_stack.commit_commands([command])
     
     def select_none(self):
         self.select_tool.selected_tiles = {}
