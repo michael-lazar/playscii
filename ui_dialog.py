@@ -31,6 +31,8 @@ class OtherButton(ConfirmButton):
 class UIDialog(UIElement):
     
     tile_width, tile_height = 40, 8
+    # extra lines added to height beyond contents length
+    extra_lines = 0
     fg_color = UIColors.black
     bg_color = UIColors.white
     title = 'Test Dialog Box'
@@ -92,6 +94,7 @@ class UIDialog(UIElement):
         h = 4
         h += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
         h += 3 * self.fields
+        h += self.extra_lines
         return h
     
     def reset_art(self, resize=True):

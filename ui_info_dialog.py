@@ -18,6 +18,7 @@ class PagedInfoDialog(UIDialog):
     other_caption = '<<'
     cancel_caption = 'Done'
     other_button_visible = True
+    extra_lines = 1
     
     def __init__(self, ui):
         self.page = 0
