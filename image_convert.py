@@ -77,6 +77,7 @@ class ImageConverter:
         # create, size and position image preview
         preview_img = self.src_img.copy()
         # remove transparency if source image is a GIF to avoid a PIL crash :[
+        # TODO: https://github.com/python-pillow/Pillow/issues/1377
         if 'transparency' in preview_img.info:
             preview_img.info.pop('transparency')
         self.preview_sprite = ImagePreviewRenderable(self.app, None, preview_img)
