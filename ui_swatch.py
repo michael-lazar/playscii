@@ -176,10 +176,11 @@ class CharacterSetSwatch(UISwatch):
     def update(self):
         charset = self.ui.active_art.charset
         fg, bg = self.ui.selected_fg_color, self.ui.selected_bg_color
+        xform = self.ui.selected_xform
         # repopulate colors every update
         for y in range(charset.map_height):
             for x in range(charset.map_width):
-                self.art.set_tile_at(0, 0, x, y, None, fg, bg)
+                self.art.set_tile_at(0, 0, x, y, None, fg, bg, xform)
         self.art.update()
         if self.shade_art.quad_width != self.art.quad_width or self.shade_art.quad_height != self.art.quad_height:
             self.shade_art.quad_width = self.art.quad_width

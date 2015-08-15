@@ -4,7 +4,7 @@ current tasks:
 
 fix: open art with 1:2 charset, open another with a 1:1 charset, in 2nd art selection tool has wrong aspect
 
-fix: resize/crop can't be undone - way of using edit command system
+fix: using 3/4/5/6 to change selected with a 1:2 aspect makes the cursor move up
 
 fix: edges of game objects whose pivots aren't on grid can't be aligned to grid
 

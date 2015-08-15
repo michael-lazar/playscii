@@ -134,7 +134,7 @@ class Cursor:
             size_offset = math.ceil(size / 2) - 1
             return int(self.x + size_offset), int(-self.y + size_offset)
         else:
-            return int(self.x), int(self.y)
+            return int(self.x), int(-self.y)
     
     def get_tiles_under_brush(self, base_zero=False):
         """
@@ -230,7 +230,7 @@ class Cursor:
         if not self.moved and not self.app.ui.tool_settings_changed:
             return
         # snap to tile
-        if not self.app.keyboard_editing:
+        if not self.app.keyboard_editing and not self.app.ui.tool_settings_changed:
             w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
             char_aspect = w / h
             self.x = math.floor(self.x / w) * w
