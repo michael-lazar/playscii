@@ -384,6 +384,8 @@ class Application:
     
     def find_filename_path(self, filename, subdir=None, extensions=None):
         "returns a valid path for given file, extension, subdir (art/ etc)"
+        if not filename or filename == '':
+            return None
         dirnames = self.get_dirnames(subdir)
         # build list of filenames from each dir, first w/ extension then w/o
         filenames = []
@@ -398,7 +400,7 @@ class Application:
                 f = '%s%s' % (dirname, filename)
                 # filename passed in might already have intended extension,
                 # eg from a directory listing
-                if ext != '' and not filename.endswith(ext):
+                if ext and ext != '' and not filename.endswith(ext):
                     f += '.' + ext
                 filenames.append(f)
         # return first one we find

@@ -45,7 +45,7 @@ class GameObject:
     # if specified, this art will be loaded from disk and used as object's
     # default appearance. if object has states/facings, this is the "base"
     # filename prefix, eg "hero" in "hero_stand_front.psci"
-    art_src = None
+    art_src = 'game_object_default'
     # if true, art will change with current state; depends on file naming
     state_changes_art = False
     # if true, object will go to stand state any time velocity is zero
@@ -57,6 +57,8 @@ class GameObject:
     # if generate_art is True, blank art will be created with these
     # dimensions, charset, and palette
     generate_art = False
+    # if True, object's art will animate on init/reset
+    animating = False
     art_width, art_height = 8, 8
     art_charset, art_palette = None, None
     # Y-sort: if true, object will sort according to its Y position
@@ -101,7 +103,8 @@ class GameObject:
     should_save = True
     # list of members to serialize (no weak refs!)
     serialized = ['x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
-                  'art_off_pct_x', 'art_off_pct_y', 'alpha', 'state', 'facing']
+                  'art_off_pct_x', 'art_off_pct_y', 'alpha', 'state', 'facing',
+                  'animating']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
     editable = ['show_collision', 'inv_mass', 'bounciness', 'stop_velocity']
@@ -161,9 +164,9 @@ class GameObject:
                 for art in self.arts:
                     self.art = self.arts[art]
                     break
-            else:
-                self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
-                return
+        if not self.art:
+            self.app.log("Couldn't spawn GameObject with art %s" % self.art_src)
+            return
         self.renderable = GameObjectRenderable(self.app, self.art, self)
         self.renderable.alpha = self.alpha
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
@@ -184,6 +187,8 @@ class GameObject:
             attachment.attach_to(self)
             setattr(self, atch_name, attachment)
         self.should_destroy = False
+        if self.animating and self.art.frames > 0:
+            self.start_animating()
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
     
@@ -397,7 +402,7 @@ class GameObject:
         self.bounds_renderable.set_art(self.art)
         if self.collision_shape_type == CST_TILE:
             self.collision.create_shapes()
-        if start_animating and new_art.frames > 1:
+        if (start_animating or self.animating) and new_art.frames > 1:
             self.renderable.start_animating()
     
     def set_art_src(self, new_art_filename):
