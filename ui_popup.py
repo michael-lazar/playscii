@@ -302,6 +302,9 @@ class ToolPopup(UIElement):
     def set_xform(self, new_xform):
         "tells UI elements to respect new xform"
         self.charset_swatch.set_xform(new_xform)
+        self.update_xform_buttons()
+    
+    def update_xform_buttons(self):
         # light up button for current selected option
         button_map = {
             UV_NORMAL: self.xform_normal_button,
@@ -479,6 +482,7 @@ class ToolPopup(UIElement):
             self.draw_char_color_tab()
         elif self.active_tab == TAB_TOOLS:
             self.draw_tool_tab()
+        self.update_xform_buttons()
         # draw button captions
         UIElement.reset_art(self)
     

@@ -185,6 +185,11 @@ class UI:
             y -= (r.art.height + margin) * r.art.quad_height
         # now that renderables are moved, rescale/reposition grid
         self.app.grid.reset()
+        # tell select tool renderables
+        for r in [self.select_tool.select_renderable,
+                  self.select_tool.drag_renderable]:
+            r.quad_size_ref = new_art
+            r.rebuild_geo(self.select_tool.selected_tiles)
         self.app.update_window_title()
         self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
     
