@@ -2,8 +2,6 @@ TODO
 
 current tasks:
 
-fix: edges of game objects whose pivots aren't on grid can't be aligned to grid
-
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
 -- use Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
