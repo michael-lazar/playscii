@@ -225,8 +225,7 @@ class Application:
             renderable = OnionTileRenderable(self, self.ui.active_art)
             self.onion_renderables_next.append(renderable)
         # set camera bounds based on art size
-        self.camera.max_x = self.ui.active_art.width * self.ui.active_art.quad_width
-        self.camera.min_y = -self.ui.active_art.height * self.ui.active_art.quad_height
+        self.camera.set_for_art(self.ui.active_art)
         self.update_window_title()
         self.cursor = Cursor(self)
         self.grid = Grid(self, self.ui.active_art)
@@ -526,6 +525,8 @@ class Application:
     def exit_game_mode(self):
         self.game_mode = False
         self.camera = self.edit_camera
+        if self.ui.active_art:
+            self.camera.set_for_art(self.ui.active_art)
         self.ui.message_line.post_line('', 1)
         self.update_window_title()
     

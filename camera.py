@@ -140,13 +140,17 @@ class Camera:
     def set_loc(self, x, y, z):
         self.x, self.y, self.z = x, y, (z or self.z) # z optional
     
-    def set_limits_for_art(self, art):
+    def set_for_art(self, art):
+        # set limits
         self.max_x = art.width * art.quad_width
         self.min_y = -art.height * art.quad_height
+        # use saved pan/zoom
+        self.set_loc(art.camera_x, art.camera_y, art.camera_z)
     
     def center_camera_for_art(self, art):
         self.x = art.width / 2
         self.y = -art.height / 2
+        # TODO: set z appropriately so entire art is on screen
     
     def mouse_pan(self, dx, dy):
         "pan view based on mouse delta"
