@@ -252,6 +252,12 @@ class GameObject:
         if self.world.object_grid_snap:
             self.x = round(self.x)
             self.y = round(self.y)
+            # if odd width/height, origin will be between quads and
+            # edges will be off-grid; nudge so that edges are on-grid
+            if self.art.width % 2 != 0:
+                self.x += self.art.quad_width / 2
+            if self.art.height % 2 != 0:
+                self.y += self.art.quad_height / 2
         self.enable_collision()
         if self.collision_shape_type == CST_TILE:
             self.collision.create_shapes()

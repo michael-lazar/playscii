@@ -601,7 +601,8 @@ class Application:
     def render(self):
         # draw main scene to framebuffer
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.fb.framebuffer)
-        GL.glClearColor(*self.bg_color)
+        bg_color = self.gw.bg_color if self.game_mode else self.bg_color
+        GL.glClearColor(*bg_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         if self.game_mode:
             self.gw.render()

@@ -25,6 +25,7 @@ class GameWorld:
     
     "holds global state for game mode"
     gravity_x, gravity_y, gravity_z = 0, 0, 0
+    bg_color = (0, 0, 0, 1)
     last_click_on_ui = False
     player_camera_lock = True
     object_grid_snap = True
@@ -342,6 +343,10 @@ class GameWorld:
             'gravity_x': self.gravity_x,
             'gravity_y': self.gravity_y,
             'gravity_z': self.gravity_z,
+            'bg_r': self.bg_color[0],
+            'bg_g': self.bg_color[1],
+            'bg_b': self.bg_color[2],
+            'bg_a': self.bg_color[3] or 1,
             'camera_x': self.camera.x,
             'camera_y': self.camera.y,
             'camera_z': self.camera.z,
@@ -457,6 +462,8 @@ class GameWorld:
         self.gravity_x = d['gravity_x']
         self.gravity_y = d['gravity_y']
         self.gravity_z = d.get('gravity_z', self.gravity_z)
+        self.bg_color = (d.get('bg_r', 0), d.get('bg_g', 0), d.get('bg_b', 0),
+                         d.get('bg_a', 1))
         # spawn hud
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
