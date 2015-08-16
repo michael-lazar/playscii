@@ -166,7 +166,7 @@ class UI:
             if x >= new_art.width or y >= new_art.height:
                 self.select_tool.selected_tiles.pop(tile, None)
         # set camera bounds based on art size
-        self.app.camera.set_limits_for_art(new_art)
+        self.app.camera.set_for_art(new_art)
         # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)
@@ -457,7 +457,7 @@ class UI:
     def adjust_for_art_resize(self, art):
         # update grid, camera, cursor
         if art is self.active_art:
-            self.app.camera.set_limits_for_art(art)
+            self.app.camera.set_for_art(art)
             self.app.camera.center_camera_for_art(art)
             self.app.grid.reset()
             if self.app.cursor.x > art.width:

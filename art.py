@@ -91,6 +91,8 @@ class Art:
         self.command_stack = CommandStack(self)
         self.unsaved_changes = False
         self.width, self.height = width, height
+        # camera position - updated in Art.update, saved in .psci
+        self.update_saved_camera(self.app.camera)
         self.frames = 0
         # current frame being edited
         self.active_frame = 0
@@ -481,8 +483,14 @@ class Art:
         if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
+    def update_saved_camera(self, camera):
+        self.camera_x, self.camera_y, self.camera_z = camera.x, camera.y, camera.z
+    
     def update(self):
         self.update_scripts()
+        # update our camera if we're active
+        if not self.app.game_mode and self.app.ui and self.app.ui.active_art is self:
+            self.update_saved_camera(self.app.camera)
         # update our renderables if they're on a frame whose char/colors changed
         if self.geo_changed:
             self.build_geo()
@@ -509,7 +517,7 @@ class Art:
              'charset': self.charset.name, 'palette': self.palette.name,
              'active_frame': self.active_frame,
              'active_layer': self.active_layer,
-             'camera': (self.app.camera.x, self.app.camera.y, self.app.camera.z)
+             'camera': (self.camera_x, self.camera_y, self.camera_z)
         }
         # preferred character set and palette, default used if not found
         # remember camera location
@@ -694,7 +702,9 @@ class ArtFromDisk(Art):
         self.quad_height = self.charset.char_height / self.charset.char_width
         if not self.app.override_saved_camera and not self.app.game_mode:
             cam = d['camera']
-            self.app.camera.set_loc(cam[0], cam[1], cam[2])
+            self.camera_x, self.camera_y, self.camera_z = cam[0], cam[1], cam[2]
+        else:
+            self.update_saved_camera(self.app.camera)
         frames = d['frames']
         self.frames = len(frames)
         self.frame_delays = []
