@@ -86,7 +86,7 @@ class Collideable:
         obj = self.game_object
         frame = obj.renderable.frame
         if not obj.col_layer_name in obj.art.layer_names:
-            obj.app.log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
+            obj.app.dev_log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
             return
         layer = obj.art.layer_names.index(obj.col_layer_name)
         # for this circle version, no support for non-square tiles - largest

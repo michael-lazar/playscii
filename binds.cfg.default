@@ -71,6 +71,7 @@ self.edit_bind_src = {
     'down'     : 'arrow_down',
     'left'     : 'arrow_left',
     'right'    : 'arrow_right',
+	'home'     : 'center_cursor_in_art',
     'l'        : 'cycle_inactive_layer_visibility',
     'alt f'    : 'open_file_menu',
     'alt e'    : 'open_edit_menu',

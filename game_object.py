@@ -412,10 +412,15 @@ class GameObject:
             self.renderable.start_animating()
     
     def set_art_src(self, new_art_filename):
+        if self.art_src == new_art_filename:
+            return
         new_art = self.app.load_art(new_art_filename)
         if not new_art:
             return
         self.art_src = new_art_filename
+        # reset arts dict
+        self.arts = {}
+        self.load_arts()
         self.set_art(new_art)
     
     def set_loc(self, x, y, z=None):

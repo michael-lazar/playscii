@@ -597,6 +597,7 @@ class UI:
         # if hiding, show tip on how to get it back
         if not self.edit_game_panel.visible:
             bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
+            bind = bind.title()
             self.message_line.post_line(self.show_edit_ui_log % bind, 10)
         else:
             self.message_line.post_line('')

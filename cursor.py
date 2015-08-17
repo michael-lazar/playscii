@@ -136,6 +136,14 @@ class Cursor:
         else:
             return int(self.x), int(-self.y)
     
+    def center_in_art(self):
+        art = self.app.ui.active_art
+        if not art:
+            return
+        self.x = round(art.width / 2) * art.quad_width
+        self.y = round(-art.height / 2) * art.quad_height
+        self.moved = True
+    
     def get_tiles_under_brush(self, base_zero=False):
         """
         returns list of tuple coordinates of all tiles under the cursor @ its
