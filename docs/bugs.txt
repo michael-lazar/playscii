@@ -1,7 +1,5 @@
 bug list
 
-tile coords in status bar have negative Y only when text tool is active?!
-
 PNG export: layers that have too high a Z won't show up in export, special-case behavior for near/far Z in renderable export?
 
 rewrite Cursor.screen_to_world to produce same results as gluUnProject:

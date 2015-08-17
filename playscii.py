@@ -60,12 +60,12 @@ class Application:
     # starting document defaults
     starting_charset = 'c64_petscii'
     starting_palette = 'c64_original'
-    new_art_width, new_art_height = 8, 8
+    new_art_width, new_art_height = 20, 15
     # arbitrary size cap, but something bigger = probably a bad idea
     max_art_width, max_art_height = 9999, 9999
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
-    bg_color = (0.1, 0.1, 0.1, 1)
+    bg_color = [0.1, 0.1, 0.1, 1]
     # scaling factor used when CRT filter is on during image export
     export_crt_scale_factor = 4
     # scale for export when no CRT
@@ -516,9 +516,11 @@ class Application:
     def enter_game_mode(self):
         self.game_mode = True
         self.camera = self.gw.camera
+        # cursor might be hovering an object's art, undo preview viz
+        self.cursor.undo_preview_edits()
         # display message on how to toggle game mode
         mode_bind = self.il.get_command_shortcut('toggle_game_mode')
-        mode_bind = mode_bind.upper()
+        mode_bind = mode_bind.title()
         if self.can_edit:
             self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
     

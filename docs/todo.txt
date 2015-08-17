@@ -51,6 +51,8 @@ generalized (works for any type of file, not just arts) file chooser:
 
 fixes / minor improvements:
 
+undo/redo for adding or removing frames and layers :/
+
 menu bar - when alt pressed, grey/darker bg on character that is an item's accelerator
 
 main popup

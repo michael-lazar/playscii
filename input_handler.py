@@ -861,3 +861,6 @@ class InputLord:
     def BIND_game_grab(self):
         if self.accept_normal_game_input():
             self.app.gw.player.button_pressed(0)
+    
+    def BIND_center_cursor_in_art(self):
+        self.app.cursor.center_in_art()
