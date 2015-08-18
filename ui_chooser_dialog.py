@@ -11,22 +11,22 @@ class ChooserItemButton(UIButton):
     
     "button representing a ChooserItem"
     
-    item_data = None
+    item = None
     width = 20
+    big_width = 30
     clear_before_caption_draw = True
     
     def __init__(self, element):
+        # more room for list items if screen is wide enough
+        if element.ui.width_tiles - 20 > element.big_width:
+            self.width = self.big_width
         UIButton.__init__(self, element)
         self.callback = self.pick_item
     
     def pick_item(self):
-        if not self.item_data:
+        if not self.item:
             return
-        # set item selected and refresh preview
-        self.element.selected_item_index = self.item_data.index
-        #print('picked %s' % self.element.selected_item_index)
-        self.element.reset_art(False)
-        self.element.position_preview()
+        self.item.picked(self.element)
 
 
 class ScrollArrowButton(UIButton):
@@ -50,14 +50,38 @@ class ScrollArrowButton(UIButton):
             self.element.scroll_index -= 1
         elif not self.up and self.element.scroll_index < max_scroll:
             self.element.scroll_index += 1
+        self.element.load_selected_item()
         self.element.reset_art(False)
         self.element.set_preview()
         self.element.position_preview()
 
 
 class ChooserItem:
+    
     label = 'Chooser item'
-    data = None
+    
+    def __init__(self, index, name):
+        self.index = index
+        # item's unique name, eg a filename
+        self.name = name
+        self.label = self.get_label()
+        # validity flag lets ChooserItem subclasses exclude themselves
+        self.valid = True
+    
+    def get_label(self): return self.name
+    
+    def get_description_lines(self): return []
+    
+    def get_preview_texture(self): return None
+    
+    def load(self, app): pass
+    
+    def picked(self, element):
+        # set item selected and refresh preview
+        element.set_selected_item_index(self.index)
+        element.load_selected_item()
+        element.reset_art(False)
+        element.position_preview()
 
 
 class ChooserDialog(UIDialog):
@@ -67,21 +91,32 @@ class ChooserDialog(UIDialog):
     cancel_caption = 'Close'
     message = ''
     draw_field_labels = False
-    tile_width, tile_height = 60, 30
+    # if True, chooser shows files; show filename on first line of description
+    show_filenames = False
+    tile_width, tile_height = 60, 20
+    # use these if screen is big enough
+    big_width, big_height = 80, 30
     fields = 1
     field0_label = ''
     field0_width = tile_width - 4
     item_start_x, item_start_y = 2, 4
-    items_in_view = tile_height - item_start_y - 3
     no_preview_label = 'No preview available!'
     item_button_class = ChooserItemButton
+    chooser_item_class = ChooserItem
     scrollbar_shade_char = 54
     flip_preview_y = True
     
     def __init__(self, ui):
         self.ui = ui
+        if self.ui.width_tiles - 20 > self.big_width:
+            self.tile_width = self.big_width
+            self.field0_width = self.tile_width - 4
+        if self.ui.height_tiles - 15 > self.big_height:
+            self.tile_height = self.big_height
+        self.items_in_view = self.tile_height - self.item_start_y - 3
         self.items = self.get_items()
-        self.selected_item_index = self.get_initial_selection()
+        self.set_selected_item_index(self.get_initial_selection())
+        self.load_selected_item()
         # start scroll index higher if initial selection would be offscreen
         self.scroll_index = 0
         if self.selected_item_index >= self.items_in_view:
@@ -111,41 +146,47 @@ class ChooserDialog(UIDialog):
             self.buttons.append(button)
             self.item_buttons.append(button)
         # create scrollbar buttons
+        self.item_button_width = self.item_buttons[0].width
         self.up_arrow_button = ScrollArrowButton(self)
-        self.up_arrow_button.x = self.item_start_x + ChooserItemButton.width
+        self.up_arrow_button.x = self.item_start_x + self.item_button_width
         self.up_arrow_button.y = self.item_start_y
         self.down_arrow_button = ScrollArrowButton(self)
-        self.down_arrow_button.x = self.item_start_x + ChooserItemButton.width
+        self.down_arrow_button.x = self.item_start_x + self.item_button_width
         self.down_arrow_button.y = self.item_start_y + self.items_in_view - 1
         self.down_arrow_button.up = False
         self.buttons += [self.up_arrow_button, self.down_arrow_button]
     
-    def get_selected_data(self):
-        return self.items[self.selected_item_index].data
+    def set_selected_item_index(self, item_index):
+        self.selected_item_index = item_index
+        item = self.get_selected_item()
+        self.field0_text = item.name
+    
+    def get_selected_item(self):
+        return self.items[self.selected_item_index]
+    
+    def load_selected_item(self):
+        item = self.get_selected_item()
+        item.load(self.ui.app)
     
     def get_initial_selection(self):
         # subclasses return index of initial selection
         return 0
     
     def set_preview(self):
-        # subclasses do stuff here to get something on the preview
-        pass
+        item = self.get_selected_item()
+        self.preview_renderable.texture = item.get_preview_texture()
     
     def get_items(self):
         # subclasses generate lists of items here
-        items = []
-        for i in range(10):
-            item = ChooserItem()
-            item.label += ' %s' % i
-            item.data = 'Item %s' % i
-            items.append(item)
-        return items
+        return []
     
     def position_preview(self, reset=True):
         if reset: self.set_preview()
+        if not self.preview_renderable.texture:
+            return
         qw, qh = self.art.quad_width, self.art.quad_height
         # determine x position, then width as (dialog width - x)
-        x = (ChooserItemButton.width + self.item_start_x + 3) * qw
+        x = (self.item_button_width + self.item_start_x + 3) * qw
         self.preview_renderable.x = self.x + x
         self.preview_renderable.scale_x = (self.tile_width - 2) * qw - x
         # determine height based on width, then y position
@@ -178,7 +219,7 @@ class ChooserDialog(UIDialog):
                 continue
             item = self.items[self.scroll_index + i]
             button.caption = item.label
-            button.item_data = item
+            button.item = item
             button.never_draw = False
             # highlight selected item
             if i == self.selected_item_index - self.scroll_index:
@@ -201,10 +242,21 @@ class ChooserDialog(UIDialog):
             button.set_state(state)
             button.can_hover = hover
     
+    def get_description_filename(self, item):
+        "returns a description-appropriate filename for given item"
+        # truncate from start to fit in description area if needed
+        max_width = self.tile_width
+        max_width -= self.item_start_x + self.item_button_width + 5
+        if len(item.name) > max_width - 1:
+            return '…' + item.name[-max_width:]
+        return item.name
+    
     def get_selected_description_lines(self):
-        "subclasses provide their own logic here"
-        lines = ['Description of thing:']
-        lines += ['description stuff']
+        item = self.get_selected_item()
+        lines = []
+        if self.show_filenames:
+            lines += [self.get_description_filename(item)]
+        lines += item.get_description_lines()
         return lines
     
     def draw_selected_description(self):
@@ -243,27 +295,43 @@ class ChooserDialog(UIDialog):
         keystr = sdl2.SDL_GetKeyName(key).decode()
         # up/down keys navigate list
         old_idx, old_scroll = self.selected_item_index, self.scroll_index
-        if keystr == 'Up':
+        new_index = self.selected_item_index
+        if keystr == 'Return':
+            item = self.get_selected_item()
+            item.picked(self)
+            return
+        elif keystr == 'Up':
             if self.selected_item_index == 0:
                 pass
             elif self.selected_item_index == self.scroll_index:
-                self.selected_item_index -= 1
+                new_index -= 1
                 self.scroll_index -= 1
             else:
-                self.selected_item_index -= 1
+                new_index -= 1
         elif keystr == 'Down':
             if self.selected_item_index == len(self.items) - 1:
                 pass
             elif self.selected_item_index - self.scroll_index == self.items_in_view - 1:
                 self.scroll_index += 1
-                self.selected_item_index += 1
+                new_index += 1
             else:
-                self.selected_item_index += 1
+                new_index += 1
+        # home/end: beginning/end of list, respectively
+        elif keystr == 'Home':
+            new_index = 0
+            self.scroll_index = 0
+        elif keystr == 'End':
+            new_index = len(self.items) - 1
+            self.scroll_index = len(self.items) - self.items_in_view
+        if new_index != self.selected_item_index:
+            self.set_selected_item_index(new_index)
         if old_idx != self.selected_item_index or old_scroll != self.scroll_index:
+            self.load_selected_item()
             self.reset_art(False)
             self.position_preview()
         UIDialog.handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed)
     
     def render(self):
         UIDialog.render(self)
-        self.preview_renderable.render()
+        if self.preview_renderable.texture:
+            self.preview_renderable.render()

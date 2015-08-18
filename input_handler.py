@@ -5,9 +5,9 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, OpenArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog
+from ui_dialog import NewArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
-from ui_file_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
+from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog
 from collision import CT_NONE
 from image_export import export_still_image, export_animation
 from art import ART_DIR, ART_FILE_EXTENSION
@@ -687,7 +687,7 @@ class InputLord:
         self.ui.open_dialog(NewArtDialog)
     
     def BIND_open_art(self):
-        self.ui.open_dialog(OpenArtDialog)
+        self.ui.open_dialog(ArtChooserDialog)
     
     def BIND_save_art_as(self):
         if not self.ui.active_art:
