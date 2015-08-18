@@ -3,10 +3,8 @@ TODO
 current tasks:
 
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
--- use Art.copy to create an instance, save a reference to source, "restore" method
+-- write Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
-
-- Art.copy() so that "save as" can create a duplicate?
 -- "save as" should create a new editable art in the session, not replace current one
 
 ---
@@ -65,3 +63,8 @@ main popup
 shift-O: toggle between perspective and ortho views (steal unity's cool lerp)
 
 state load / live reload: is there a way to determine when a class default has been changed and should / shouldn't override serialized data?
+
+exporters for:
+- C64 PRG file: single layer, C64 res (48x35 / 40x25)
+- ENDOOM (DOS charset, EGA palette)
+- ASCII/ANSI art scene formats
