@@ -95,6 +95,8 @@ class Application:
         self.init_success = False
         self.config_dir = config_dir
         self.documents_dir = documents_dir
+        # last dir art was opened from
+        self.last_art_dir = None
         # log fed in from __main__, might already have stuff in it
         self.log_lines = log_lines
         self.log_file = open(self.config_dir + LOG_FILENAME, 'w')
