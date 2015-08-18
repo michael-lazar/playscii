@@ -5,7 +5,7 @@ from ui_swatch import CharacterSetSwatch, PaletteSwatch
 from ui_colors import UIColors
 from renderable_line import LineRenderable, SwatchSelectionBoxRenderable
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
-from ui_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
+from ui_file_chooser_dialog import CharSetChooserDialog, PaletteChooserDialog
 
 TOOL_PANE_WIDTH = 10
 
