@@ -50,6 +50,8 @@ class UIDialog(UIElement):
     field0_label = 'Field 1 label:'
     field1_label = 'Field 2 label:'
     field2_label = 'Field 3 label:'
+    # if False, skip line where field label would go entirely
+    draw_field_labels = True
     # field types - filters text input handling
     field0_type = str
     field1_type = int
@@ -168,8 +170,12 @@ class UIDialog(UIElement):
     def get_message(self):
         # if a triple quoted string, split line breaks
         msg = self.message.rstrip().split('\n')
+        msg_lines = []
+        for line in msg:
+            if line != '':
+                msg_lines.append(line)
         # TODO: split over multiple lines if too long
-        return msg
+        return msg_lines
     
     def get_field_y(self, field_index):
         "returns a Y value for where the given field (caption) should start"
@@ -177,15 +183,17 @@ class UIDialog(UIElement):
         # add # of message lines
         if self.message:
             start_y += len(self.get_message()) + 1
-        return (field_index * 3) + start_y
+        field_height = 3 if self.draw_field_labels else 2
+        return (field_index * field_height) + start_y
     
-    def draw_fields(self, draw_field_labels=True):
+    def draw_fields(self, with_labels=True):
         for i in range(self.fields):
             y = self.get_field_y(i)
-            if draw_field_labels:
+            if with_labels and self.draw_field_labels:
                 label = getattr(self, 'field%s_label' % i)
                 self.art.write_string(0, 0, 2, y, label, self.fg_color)
-            y += 1
+            if self.draw_field_labels:
+                y += 1
             field_width = self.get_field_width(i)
             field_text = self.get_field_text(i)
             # draw cursor at end if this is the active field

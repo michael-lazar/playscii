@@ -69,10 +69,13 @@ class ChooserDialog(UIDialog):
     title = 'Chooser'
     confirm_caption = 'Set'
     cancel_caption = 'Close'
-    message = 'Available items:'
-    fields = 0
-    tile_width, tile_height = 60, 20
-    item_start_x, item_start_y = 2, 3
+    message = ''
+    draw_field_labels = False
+    tile_width, tile_height = 60, 30
+    fields = 1
+    field0_label = ''
+    field0_width = tile_width - 4
+    item_start_x, item_start_y = 2, 4
     items_in_view = tile_height - item_start_y - 3
     no_preview_label = 'No preview available!'
     item_button_class = ChooserItemButton
@@ -210,7 +213,7 @@ class ChooserDialog(UIDialog):
     
     def draw_selected_description(self):
         x = self.tile_width - 2
-        y = self.item_start_y - 1
+        y = self.item_start_y
         lines = self.get_selected_description_lines()
         for line in lines:
             self.art.write_string(0, 0, x, y, line, None, None, True)
@@ -270,7 +273,7 @@ class ChooserDialog(UIDialog):
         self.preview_renderable.render()
 
 
-class FileChooserDialog(ChooserDialog):
+class BaseFileChooserDialog(ChooserDialog):
     
     "base class for choosers whose items correspond with files"
     
@@ -293,7 +296,7 @@ class FileChooserDialog(ChooserDialog):
         return {}
     
     def get_items(self):
-        "populatea and return items from list of files, loading as needed"
+        "populate and return items from list of files, loading as needed"
         items = []
         # find all suitable files (images)
         filenames = self.get_filenames()
@@ -314,9 +317,9 @@ class FileChooserDialog(ChooserDialog):
         return items
 
 
-class PaletteChooserDialog(FileChooserDialog):
+class PaletteChooserDialog(BaseFileChooserDialog):
+    
     title = 'Choose palette'
-    message = 'Available palettes:'
     
     def get_selected_description_lines(self):
         item = self.get_selected_data()
@@ -355,9 +358,9 @@ class PaletteChooserDialog(FileChooserDialog):
         self.ui.popup.set_active_palette(new_pal)
 
 
-class CharSetChooserDialog(FileChooserDialog):
+class CharSetChooserDialog(BaseFileChooserDialog):
+    
     title = 'Choose character set'
-    message = 'Available sets:'
     flip_preview_y = False
     
     def get_selected_description_lines(self):
