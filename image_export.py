@@ -101,3 +101,16 @@ def export_still_image(app, art):
         output_img.save(output_filename, 'PNG', transparency=0)
         output_format = '8-bit palettized w/ transparency'
     app.log('%s exported (%s)' % (output_filename, output_format))
+
+
+def write_thumbnail(app, art_filename, thumb_filename):
+    "write thumbnail. assume art is not loaded, tear down everything when done."
+    art = app.load_art(art_filename, False)
+    renderable = None
+    if len(art.renderables) == 0:
+        renderable = app.thumbnail_renderable_class(app, art)
+        art.renderables.append(renderable)
+    img = get_frame_image(app, art, 0, True)
+    img.save(thumb_filename, 'PNG')
+    if renderable:
+        renderable.destroy()

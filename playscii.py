@@ -9,7 +9,7 @@ if platform.system() == 'Windows':
     sys.path += ['.']
 
 # app imports
-import ctypes, time
+import ctypes, time, hashlib
 import sdl2
 import sdl2.ext
 import appdirs
@@ -30,6 +30,7 @@ from ui import UI
 from cursor import Cursor
 from grid import Grid
 from input_handler import InputLord
+from ui_file_chooser_dialog import THUMBNAIL_CACHE_DIR
 # some classes are imported only so the cfg file can modify their defaults
 from renderable_line import LineRenderable
 from ui_swatch import CharacterSetSwatch
@@ -90,13 +91,16 @@ class Application:
     # start_game: if set, load this game on start no matter what
     start_game = None
     
-    def __init__(self, config_dir, documents_dir, log_lines, art_filename,
-                 game_dir_to_load, state_to_load):
+    def __init__(self, config_dir, documents_dir, cache_dir,
+                 log_lines, art_filename, game_dir_to_load, state_to_load):
         self.init_success = False
         self.config_dir = config_dir
         self.documents_dir = documents_dir
+        self.cache_dir = cache_dir
         # last dir art was opened from
         self.last_art_dir = None
+        # class to use for temp thumbnail renderable
+        self.thumbnail_renderable_class = TileRenderable
         # log fed in from __main__, might already have stuff in it
         self.log_lines = log_lines
         self.log_file = open(self.config_dir + LOG_FILENAME, 'w')
@@ -354,6 +358,10 @@ class Application:
         filename = self.ui.active_art.filename
         self.close_art(self.ui.active_art)
         self.load_art_for_edit(filename)
+    
+    def get_file_hash(self, filename):
+        f_data = open(filename, 'rb').read()
+        return hashlib.md5(f_data).hexdigest()
     
     def get_dirnames(self, subdir=None, include_base=True):
         "returns list of suitable directory names across app and user dirs"
@@ -673,10 +681,16 @@ def get_paths():
     # work around a bug in appdirs on Windows
     if platform.system() == 'Windows':
         config_dir = appdirs.user_config_dir() + '/%s/' % APP_NAME
+        cache_dir = appdirs.user_cache_dir() + '/%s/' % APP_NAME
     else:
         config_dir = appdirs.user_config_dir(APP_NAME) + '/'
+        cache_dir = appdirs.user_cache_dir(APP_NAME) + '/'
     if not os.path.exists(config_dir):
         os.mkdir(config_dir)
+    if not os.path.exists(cache_dir):
+        os.mkdir(cache_dir)
+    if not os.path.exists(cache_dir + THUMBNAIL_CACHE_DIR):
+        os.mkdir(cache_dir + THUMBNAIL_CACHE_DIR)
     DOCUMENTS_SUBDIR = '/Documents'
     if platform.system() == 'Windows':
         documents_dir = get_win_documents_path()
@@ -695,7 +709,7 @@ def get_paths():
                    SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
         if not os.path.exists(documents_dir + subdir):
             os.mkdir(documents_dir + subdir)
-    return config_dir, documents_dir
+    return config_dir, documents_dir, cache_dir
 
 def get_version():
     return open(VERSION_FILENAME).readlines()[0].strip()
@@ -707,7 +721,7 @@ if __name__ == "__main__":
     log_lines = [line]
     print(line)
     # get paths for config file, later to be passed into Application
-    config_dir, documents_dir = get_paths()
+    config_dir, documents_dir, cache_dir = get_paths()
     # load in config - may change above values and submodule class defaults
     if os.path.exists(config_dir + CONFIG_FILENAME):
         exec(open(config_dir + CONFIG_FILENAME).read())
@@ -740,7 +754,7 @@ if __name__ == "__main__":
         else:
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
-    app = Application(config_dir, documents_dir, log_lines,
+    app = Application(config_dir, documents_dir, cache_dir, log_lines,
                       file_to_load or 'new', game_dir_to_load, state_to_load)
     error = app.main_loop()
     app.quit()
