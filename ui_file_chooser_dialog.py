@@ -1,12 +1,15 @@
 
 import os, time, json
 
+from PIL import Image
+
+from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
 from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand
-from art import ART_DIR, ART_FILE_EXTENSION
+from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
-
+from image_export import write_thumbnail
 
 class BaseFileChooserDialog(ChooserDialog):
     
@@ -71,6 +74,19 @@ class ArtChooserItem(ChooserItem):
         lines += ['char: %s, pal: %s' % (self.art_charset, self.art_palette)]
         return lines
     
+    def get_preview_texture(self, app):
+        if os.path.isdir(self.name):
+            return
+        thumbnail_filename = app.cache_dir + THUMBNAIL_CACHE_DIR + self.art_hash + '.png'
+        # create thumbnail if it doesn't exist
+        if not os.path.exists(thumbnail_filename):
+            write_thumbnail(app, self.name, thumbnail_filename)
+        # read thumbnail
+        img = Image.open(thumbnail_filename)
+        img = img.convert('RGBA')
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        return Texture(img.tostring(), *img.size)
+    
     def load(self, app):
         if os.path.isdir(self.name):
             return
@@ -78,6 +94,8 @@ class ArtChooserItem(ChooserItem):
             return
         # get last modified time for description
         self.art_mod_time = os.path.getmtime(self.name)
+        # get file's hash for unique thumbnail name
+        self.art_hash = app.get_file_hash(self.name)
         # rather than load the entire art, just get some high level stats
         d = json.load(open(self.name))
         self.art_width, self.art_height = d['width'], d['height']
@@ -107,8 +125,11 @@ class ArtChooserDialog(BaseFileChooserDialog):
     confirm_caption = 'Open'
     cancel_caption = 'Cancel'
     chooser_item_class = ArtChooserItem
+    flip_preview_y = False
     
     def __init__(self, ui):
+        # TODO: IF no art in Documents dir yet, start in playscii/art/ for examples?
+        
         # get last opened dir, else start in docs/game art dir
         if ui.app.last_art_dir:
             self.current_dir = ui.app.last_art_dir
@@ -165,7 +186,7 @@ class PaletteChooserItem(ChooserItem):
         colors = len(self.palette.colors)
         return ['Unique colors: %s' % str(colors - 1)]
     
-    def get_preview_texture(self):
+    def get_preview_texture(self, app):
         return self.palette.src_texture
     
     def load(self, app):
@@ -218,7 +239,7 @@ class CharsetChooserItem(ChooserItem):
     def get_description_lines(self):
         return ['Characters: %s' % str(self.charset.last_index)]
     
-    def get_preview_texture(self):
+    def get_preview_texture(self, app):
         return self.charset.texture
     
     def load(self, app):

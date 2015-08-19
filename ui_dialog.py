@@ -234,6 +234,7 @@ class UIDialog(UIElement):
             self.active_field %= self.fields
             return
         elif keystr == 'Backspace':
+            # TODO: alt should delete to last /
             if len(field_text) > 0:
                 field_text = '' if alt_pressed else field_text[:-1]
         elif keystr == 'Space':

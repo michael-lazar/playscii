@@ -2,6 +2,7 @@ import os.path, json
 import numpy as np
 
 from edit_command import CommandStack
+from image_export import write_thumbnail
 
 # X, Y, Z
 VERT_LENGTH = 3
@@ -19,6 +20,8 @@ DEFAULT_LAYER_Z_OFFSET = 0.5
 ART_DIR = 'art/'
 ART_FILE_EXTENSION = 'psci'
 EDSCII_FILE_EXTENSION = 'ed'
+
+THUMBNAIL_CACHE_DIR = 'thumbnails/'
 
 SCRIPT_DIR = 'scripts/'
 SCRIPT_FILE_EXTENSION = 'arsc'
@@ -76,7 +79,7 @@ class Art:
     quad_width,quad_height = 1, 1
     log_size_changes = False
     recalc_quad_height = True
-    log_creation = True
+    log_creation = False
     
     def __init__(self, filename, app, charset, palette, width, height):
         "creates a new, blank document"
@@ -545,11 +548,19 @@ class Art:
             frame['layers'] = layers
             frames.append(frame)
         d['frames'] = frames
+        # remove old thumbnail
+        thumb_dir = self.app.cache_dir + THUMBNAIL_CACHE_DIR
+        old_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
+        if os.path.exists(old_thumb_filename):
+            os.remove(old_thumb_filename)
         # MAYBE-TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
         self.set_unsaved_changes(False)
         self.app.log('saved %s to disk.' % self.filename)
+        # write thumbnail
+        new_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
+        write_thumbnail(self.app, self.filename, new_thumb_filename)
     
     def set_unsaved_changes(self, new_status):
         if new_status == self.unsaved_changes:

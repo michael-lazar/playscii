@@ -174,7 +174,7 @@ class ChooserDialog(UIDialog):
     
     def set_preview(self):
         item = self.get_selected_item()
-        self.preview_renderable.texture = item.get_preview_texture()
+        self.preview_renderable.texture = item.get_preview_texture(self.ui.app)
     
     def get_items(self):
         # subclasses generate lists of items here
