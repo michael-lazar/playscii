@@ -1,4 +1,4 @@
-import os.path
+import platform, os.path
 import sdl2
 
 from ui_element import UIElement
@@ -65,6 +65,7 @@ class UIDialog(UIElement):
     center_in_window = True
     
     def __init__(self, ui):
+        self.ui = ui
         self.confirm_button = ConfirmButton(self)
         self.other_button = OtherButton(self)
         self.cancel_button = CancelButton(self)
@@ -80,15 +81,19 @@ class UIDialog(UIElement):
         self.other_button.callback = self.other_pressed
         self.cancel_button.callback = self.cancel_pressed
         self.buttons = [self.confirm_button, self.other_button, self.cancel_button]
-        self.field0_text = ''
-        self.field1_text = ''
-        self.field2_text = ''
-        self.field3_text = ''
+        self.field0_text = self.get_initial_field_text(0)
+        self.field1_text = self.get_initial_field_text(1)
+        self.field2_text = self.get_initial_field_text(2)
+        self.field3_text = self.get_initial_field_text(3)
         # field cursor starts on
         self.active_field = 0
         UIElement.__init__(self, ui)
         if self.ui.menu_bar and self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
+    
+    def get_initial_field_text(self, field_number):
+        "subclasses specify a given field's initial text here"
+        return ''
     
     def get_height(self, msg_lines):
         "determine size based on contents (subclasses can use custom logic)"
@@ -226,6 +231,9 @@ class UIDialog(UIElement):
         elif keystr == 'Tab':
             if self.fields == 0:
                 return
+            # TODO: if only one field, tab through autocompletes
+            if self.fields == 1:
+                pass
             # cycle through fields
             if shift_pressed:
                 self.active_field -= 1
@@ -234,9 +242,22 @@ class UIDialog(UIElement):
             self.active_field %= self.fields
             return
         elif keystr == 'Backspace':
-            # TODO: alt should delete to last /
-            if len(field_text) > 0:
-                field_text = '' if alt_pressed else field_text[:-1]
+            if len(field_text) == 0:
+                pass
+            elif alt_pressed:
+                # for file dialogs, delete back to last slash
+                last_slash = field_text[:-1].rfind('/')
+                # on windows, recognize backslash as well
+                if platform.system() == 'Windows':
+                    last_backslash = field_text[:-1].rfind('\\')
+                    if last_backslash != -1 and last_slash != -1:
+                        last_slash = min(last_backslash, last_slash)
+                if last_slash == -1:
+                    field_text = ''
+                else:
+                    field_text = field_text[:last_slash+1]
+            else:
+                field_text = field_text[:-1]
         elif keystr == 'Space':
             field_text += ' '
         elif len(keystr) > 1:
@@ -268,6 +289,7 @@ class UIDialog(UIElement):
         return getattr(self, 'field%s_text' % field_number)
     
     def set_field_text(self, field_number, new_text):
+        #print('s_f_t: setting %s to %s' % (field_number, new_text))
         setattr(self, 'field%s_text' % field_number, new_text)
     
     def dismiss(self):
@@ -353,7 +375,7 @@ class OpenArtDialog(UIDialog):
     
     def confirm_pressed(self):
         # run console command for same code path
-        OpenCommand.execute(self.ui.console, [self.field0_text])
+        OpenCommand.execute(self.ui.console, [self.get_field_text(0)])
         self.dismiss()
 
 
@@ -485,13 +507,13 @@ class ResizeArtDialog(UIDialog):
     invalid_height_error = 'Invalid height.'
     invalid_start_error = 'Invalid crop origin.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        # populate with good defaults
-        self.field0_text = str(ui.active_art.width)
-        self.field1_text = str(ui.active_art.height)
-        self.field2_text = '0'
-        self.field3_text = '0'
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return str(self.ui.active_art.width)
+        elif field_number == 1:
+            return str(self.ui.active_art.height)
+        else:
+            return '0'
     
     def is_input_valid(self):
         "file can't already exist, dimensions must be >0 and <= max"
@@ -537,10 +559,11 @@ class AddFrameDialog(UIDialog):
     invalid_index_error = 'Invalid index. (1-%s allowed)'
     invalid_delay_error = 'Invalid hold time.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        self.field0_text = str(ui.active_art.frames + 1)
-        self.field1_text = str(DEFAULT_FRAME_DELAY)
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return str(self.ui.active_art.frames + 1)
+        elif field_number == 1:
+            return str(DEFAULT_FRAME_DELAY)
     
     def is_valid_frame_index(self, index):
         try: index = int(index)
@@ -587,10 +610,9 @@ class FrameDelayDialog(AddFrameDialog):
     field0_label = 'New hold time (in seconds) for frame:'
     confirm_caption = 'Set'
     
-    def __init__(self, ui):
-        AddFrameDialog.__init__(self, ui)
-        existing = ui.active_art.frame_delays[ui.active_art.active_frame]
-        self.field0_text = str(existing)
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return str(self.ui.active_art.frame_delays[self.ui.active_art.active_frame])
     
     def is_input_valid(self):
         if not self.is_valid_frame_delay(self.field0_text):
@@ -634,11 +656,11 @@ class AddLayerDialog(UIDialog):
     name_exists_error = 'Layer by that name already exists.'
     invalid_z_error = 'Invalid number.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        self.field0_text = 'Layer %s' % str(ui.active_art.layers + 1)
-        z = ui.active_art.layers_z[ui.active_art.active_layer] + DEFAULT_LAYER_Z_OFFSET
-        self.field1_text = str(z)
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return 'Layer %s' % str(self.ui.active_art.layers + 1)
+        elif field_number == 1:
+            return str(self.ui.active_art.layers_z[self.ui.active_art.active_layer] + DEFAULT_LAYER_Z_OFFSET)
     
     def is_valid_layer_name(self, name, exclude_active_layer=False):
         for i,layer_name in enumerate(self.ui.active_art.layer_names):
@@ -702,10 +724,10 @@ class SetLayerZDialog(UIDialog):
     confirm_caption = 'Set'
     invalid_z_error = 'Invalid number.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
+    def get_initial_field_text(self, field_number):
         # populate with existing z
-        self.field0_text = str(ui.active_art.layers_z[ui.active_art.active_layer])
+        if field_number == 0:
+            return str(self.ui.active_art.layers_z[self.ui.active_art.active_layer])
     
     def is_input_valid(self):
         try: z = float(self.get_field_text(0))

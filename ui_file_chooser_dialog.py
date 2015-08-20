@@ -108,6 +108,13 @@ class ArtChooserItem(ChooserItem):
         # if this is different from the last clicked item, pick it
         if element.selected_item_index != self.index:
             ChooserItem.picked(self, element)
+            element.first_selection_made = True
+            return
+        # if we haven't yet clicked something in this view, require another
+        # click before opening it (consistent double click behavior for
+        # initial selections)
+        if not element.first_selection_made:
+            element.first_selection_made = True
             return
         if self.name == '..' and self.name != '/':
             new_dir = os.path.abspath(element.current_dir + '..')
@@ -117,6 +124,7 @@ class ArtChooserItem(ChooserItem):
             element.change_current_dir(new_dir)
         else:
             element.confirm_pressed()
+        element.first_selection_made = False
 
 
 class ArtChooserDialog(BaseFileChooserDialog):
@@ -126,30 +134,21 @@ class ArtChooserDialog(BaseFileChooserDialog):
     cancel_caption = 'Cancel'
     chooser_item_class = ArtChooserItem
     flip_preview_y = False
+    directory_aware = True
     
-    def __init__(self, ui):
-        # TODO: IF no art in Documents dir yet, start in playscii/art/ for examples?
-        
+    def set_initial_dir(self):
+        # TODO: IF no art in Documents dir yet, start in app/art/ for examples?
         # get last opened dir, else start in docs/game art dir
-        if ui.app.last_art_dir:
-            self.current_dir = ui.app.last_art_dir
+        if self.ui.app.last_art_dir:
+            self.current_dir = self.ui.app.last_art_dir
         else:
-            self.current_dir = ui.app.gw.game_dir if ui.app.gw.game_dir else ui.app.documents_dir
+            self.current_dir = self.ui.app.gw.game_dir if self.ui.app.gw.game_dir else self.ui.app.documents_dir
             self.current_dir += ART_DIR
-        BaseFileChooserDialog.__init__(self, ui)
-    
-    def change_current_dir(self, new_dir):
-        self.current_dir = new_dir
-        if not self.current_dir.endswith('/'):
-            self.current_dir += '/'
-        # redo items and redraw
-        self.selected_item_index = 0
-        self.items = self.get_items()
-        self.reset_art(False)
+        self.set_field_text(self.active_field, self.current_dir)
     
     def get_initial_selection(self):
         # first item in dir list
-        return 1
+        return 0
     
     def get_filenames(self):
         # list parent, then dirs, then filenames with art extension
@@ -169,8 +168,10 @@ class ArtChooserDialog(BaseFileChooserDialog):
         return parent + dirs + files
     
     def confirm_pressed(self):
+        if not os.path.exists(self.get_field_text(0)):
+            return
         self.ui.app.last_art_dir = self.current_dir
-        OpenCommand.execute(self.ui.console, [self.field0_text])
+        OpenCommand.execute(self.ui.console, [self.get_field_text(0)])
         self.dismiss()
 
 #
