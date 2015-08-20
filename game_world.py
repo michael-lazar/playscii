@@ -30,6 +30,7 @@ class GameWorld:
     player_camera_lock = True
     object_grid_snap = True
     hud_class_name = 'GameHUD'
+    draw_hud = True
     collision_enabled = True
     
     def __init__(self, app):
@@ -135,8 +136,8 @@ class GameWorld:
                     obj.y += world_dy
             self.dragging_object = True
     
-    def select_object(self, obj):
-        if obj and obj.selectable and not obj in self.selected_objects:
+    def select_object(self, obj, force=False):
+        if obj and (obj.selectable or force) and not obj in self.selected_objects:
             self.selected_objects.append(obj)
     
     def deselect_object(self, obj):
@@ -335,7 +336,7 @@ class GameWorld:
             item.obj.render(item.layer, 0)
         for obj in self.objects.values():
             obj.render_debug()
-        if self.hud:
+        if self.hud and self.draw_hud:
             self.hud.render()
     
     def save_to_file(self, filename=None):
@@ -452,6 +453,8 @@ class GameWorld:
             filename += '.' + STATE_FILE_EXTENSION
         self.app.enter_game_mode()
         self.unload_game()
+        # tell list panel to reset, its contents might get jostled
+        self.app.ui.edit_list_panel.game_reset()
         # import all submodules and catalog classes
         self.import_all()
         self.classes = self.get_all_loaded_classes()
@@ -483,6 +486,7 @@ class GameWorld:
         self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
         self.set_for_all_objects('show_origin', self.app.show_origin_all)
         self.app.update_window_title()
+        self.app.ui.edit_list_panel.refresh_items()
         #self.report()
     
     def report(self):

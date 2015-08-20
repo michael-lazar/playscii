@@ -358,10 +358,10 @@ class EditListPanel(GamePanel):
             if self.ui.app.il.ctrl_pressed:
                 self.world.deselect_object(item.obj)
             elif self.ui.app.il.shift_pressed:
-                self.world.select_object(item.obj)
+                self.world.select_object(item.obj, force=True)
             else:
                 self.world.deselect_all()
-                self.world.select_object(item.obj)
+                self.world.select_object(item.obj, force=True)
         elif self.list_mode == LIST_STATES:
             self.world.load_game_state(item.name)
     
@@ -423,6 +423,9 @@ class EditListPanel(GamePanel):
             if item.name == last_gs:
                 return True
         return False
+    
+    def game_reset(self):
+        self.list_scroll_index = 0
     
     def refresh_items(self):
         # prune any objects that have been deleted from items

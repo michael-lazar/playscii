@@ -550,9 +550,10 @@ class Art:
         d['frames'] = frames
         # remove old thumbnail
         thumb_dir = self.app.cache_dir + THUMBNAIL_CACHE_DIR
-        old_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
-        if os.path.exists(old_thumb_filename):
-            os.remove(old_thumb_filename)
+        if os.path.exists(self.filename):
+            old_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
+            if os.path.exists(old_thumb_filename):
+                os.remove(old_thumb_filename)
         # MAYBE-TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
