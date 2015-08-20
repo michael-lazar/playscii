@@ -180,12 +180,13 @@ class GameObject:
         self.collision = Collideable(self)
         self.world.new_objects[self.name] = self
         self.attachments = []
-        for atch_name,atch_class_name in self.attachment_classes.items():
-            atch_class = self.world.classes[atch_class_name]
-            attachment = atch_class(self.world)
-            self.attachments.append(attachment)
-            attachment.attach_to(self)
-            setattr(self, atch_name, attachment)
+        if self.attachment_classes:
+            for atch_name,atch_class_name in self.attachment_classes.items():
+                atch_class = self.world.classes[atch_class_name]
+                attachment = atch_class(self.world)
+                self.attachments.append(attachment)
+                attachment.attach_to(self)
+                setattr(self, atch_name, attachment)
         self.should_destroy = False
         if self.animating and self.art.frames > 0:
             self.start_animating()
@@ -557,7 +558,8 @@ class GameObjectAttachment(GameObject):
     should_save = False
     selectable = False
     # offset from parent object's origin
-    offset_x, offset_y, offset_z = 0, 0, 0
+    offset_x, offset_y, offset_z = 0., 0., 0.
+    editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
     
     def attach_to(self, gobj):
         self.parent = gobj
