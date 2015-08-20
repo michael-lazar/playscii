@@ -1,3 +1,4 @@
+import os
 import sdl2
 
 from renderable_sprite import SpriteRenderable
@@ -79,9 +80,6 @@ class ChooserItem:
     def picked(self, element):
         # set item selected and refresh preview
         element.set_selected_item_index(self.index)
-        element.load_selected_item()
-        element.reset_art(False)
-        element.position_preview()
 
 
 class ChooserDialog(UIDialog):
@@ -93,6 +91,7 @@ class ChooserDialog(UIDialog):
     draw_field_labels = False
     # if True, chooser shows files; show filename on first line of description
     show_filenames = False
+    directory_aware = False
     tile_width, tile_height = 60, 20
     # use these if screen is big enough
     big_width, big_height = 80, 30
@@ -108,17 +107,26 @@ class ChooserDialog(UIDialog):
     
     def __init__(self, ui):
         self.ui = ui
+        # semikludge: track whether user has selected anything in a new dir,
+        # so double click behavior is consistent even on initial selections
+        self.first_selection_made = False
         if self.ui.width_tiles - 20 > self.big_width:
             self.tile_width = self.big_width
             self.field0_width = self.tile_width - 4
         if self.ui.height_tiles - 15 > self.big_height:
             self.tile_height = self.big_height
         self.items_in_view = self.tile_height - self.item_start_y - 3
+        # set active field earlier than UIDialog.init so set_initial_dir
+        # can change its text
+        self.active_field = 0
+        if self.directory_aware:
+            self.set_initial_dir()
+        # scroll index - how far into items list current screen view begins
+        self.scroll_index = 0
         self.items = self.get_items()
-        self.set_selected_item_index(self.get_initial_selection())
+        self.set_selected_item_index(self.get_initial_selection(), True, False)
         self.load_selected_item()
         # start scroll index higher if initial selection would be offscreen
-        self.scroll_index = 0
         if self.selected_item_index >= self.items_in_view:
             self.scroll_index = self.selected_item_index - self.items_in_view + 1
         # for convenience, create another list where 1st item button starts at 0
@@ -156,10 +164,44 @@ class ChooserDialog(UIDialog):
         self.down_arrow_button.up = False
         self.buttons += [self.up_arrow_button, self.down_arrow_button]
     
-    def set_selected_item_index(self, item_index):
+    def set_initial_dir(self, ui):
+        # for directory-aware dialogs, subclasses specify here where to start
+        self.current_dir = '.'
+    
+    def change_current_dir(self, new_dir):
+        self.current_dir = new_dir
+        if not self.current_dir.endswith('/'):
+            self.current_dir += '/'
+        # redo items and redraw
+        self.selected_item_index = 0
+        self.set_field_text(self.active_field, self.current_dir)
+        self.items = self.get_items()
+        self.reset_art(False)
+    
+    def set_selected_item_index(self, item_index, set_field_text=True,
+                                update_view=True):
+        """
+        set the view's selected item to specified index
+        perform usually-necessary refresh functions for convenience
+        """
         self.selected_item_index = item_index
-        item = self.get_selected_item()
-        self.field0_text = item.name
+        can_scroll = len(self.items) > self.items_in_view
+        should_scroll = self.selected_item_index > self.scroll_index + self.items_in_view
+        if can_scroll and should_scroll:
+            self.scroll_index = self.selected_item_index
+            # don't let view go out of bounds
+            max_scroll = len(self.items) - self.items_in_view
+            self.scroll_index = min(self.scroll_index, max_scroll)
+        else:
+            self.scroll_index = 0
+        if set_field_text:
+            item = self.get_selected_item()
+            #print('s_s_s_i: setting %s' % item.name)
+            self.set_field_text(self.active_field, item.name)
+        if update_view:
+            self.load_selected_item()
+            self.reset_art(False)
+            self.position_preview()
     
     def get_selected_item(self):
         return self.items[self.selected_item_index]
@@ -225,11 +267,14 @@ class ChooserDialog(UIDialog):
             if i == self.selected_item_index - self.scroll_index:
                 button.normal_fg_color = UIButton.clicked_fg_color
                 button.normal_bg_color = UIButton.clicked_bg_color
-                button.can_hover = False
+                # still allow hover and click
+                button.hovered_fg_color = UIButton.clicked_fg_color
+                button.hovered_bg_color = UIButton.clicked_bg_color
             else:
                 button.normal_fg_color = UIButton.normal_fg_color
                 button.normal_bg_color = UIButton.normal_bg_color
-                button.can_hover = True
+                button.hovered_fg_color = UIButton.hovered_fg_color
+                button.hovered_bg_color = UIButton.hovered_bg_color
         # init_buttons has not yet run on first reset_art
         if not self.up_arrow_button:
             return
@@ -296,11 +341,14 @@ class ChooserDialog(UIDialog):
         # up/down keys navigate list
         old_idx, old_scroll = self.selected_item_index, self.scroll_index
         new_index = self.selected_item_index
+        navigated = False
         if keystr == 'Return':
-            item = self.get_selected_item()
-            item.picked(self)
-            return
+            # if handle_enter returns True, bail before rest of input handling -
+            # make sure any changes to handle_enter are safe for this!
+            if self.handle_enter(shift_pressed, alt_pressed, ctrl_pressed):
+                return
         elif keystr == 'Up':
+            navigated = True
             if self.selected_item_index == 0:
                 pass
             elif self.selected_item_index == self.scroll_index:
@@ -309,6 +357,7 @@ class ChooserDialog(UIDialog):
             else:
                 new_index -= 1
         elif keystr == 'Down':
+            navigated = True
             if self.selected_item_index == len(self.items) - 1:
                 pass
             elif self.selected_item_index - self.scroll_index == self.items_in_view - 1:
@@ -318,18 +367,71 @@ class ChooserDialog(UIDialog):
                 new_index += 1
         # home/end: beginning/end of list, respectively
         elif keystr == 'Home':
+            navigated = True
             new_index = 0
             self.scroll_index = 0
         elif keystr == 'End':
+            navigated = True
             new_index = len(self.items) - 1
             self.scroll_index = len(self.items) - self.items_in_view
-        if new_index != self.selected_item_index:
-            self.set_selected_item_index(new_index)
+        self.set_selected_item_index(new_index, set_field_text=navigated)
         if old_idx != self.selected_item_index or old_scroll != self.scroll_index:
             self.load_selected_item()
             self.reset_art(False)
             self.position_preview()
+        # handle alphanumeric input etc
         UIDialog.handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed)
+        # if we didn't navigate, seek based on new alphanumeric input
+        if not navigated:
+            self.text_input_seek()
+    
+    def text_input_seek(self):
+        field_text = self.get_field_text(self.active_field)
+        if field_text.strip() == '':
+            return
+        for i,item in enumerate(self.items):
+            if item.name.startswith(field_text):
+                self.set_selected_item_index(i, set_field_text=False)
+                break
+    
+    def handle_enter(self, shift_pressed, alt_pressed, ctrl_pressed):
+        "handle Enter key, return False if rest of handle_input should continue"
+        # if selected item is already in text field, pick it
+        field_text = self.get_field_text(self.active_field)
+        selected_item = self.get_selected_item()
+        if field_text.strip() == '':
+            self.set_field_text(self.active_field, selected_item.name)
+            field_text = self.get_field_text(self.active_field)
+            return True
+        if field_text == selected_item.name:
+            # this (and similar following cases) should count as having
+            # made a selection
+            self.first_selection_made = True
+            selected_item.picked(self)
+            return True
+        # else navigate to directory or file if it's real
+        if not os.path.exists(field_text):
+            return False
+        # special case for parent dir ..
+        if field_text == self.current_dir and selected_item.name == '..':
+            self.first_selection_made = True
+            self.change_current_dir('..')
+            return True
+        if self.directory_aware and os.path.isdir(field_text):
+            self.first_selection_made = True
+            self.change_current_dir(field_text)
+            return True
+        if os.path.isfile(field_text):
+            file_dir_name = os.path.dirname(field_text)
+            # if a file, change to its dir and select it
+            if self.directory_aware and file_dir_name != self.current_dir:
+                self.change_current_dir(file_dir_name)
+            for i,item in enumerate(self.items):
+                if item.name == field_text:
+                    self.set_selected_item_index(i)
+                    item.picked(self)
+                    return True
+        return False
     
     def render(self):
         UIDialog.render(self)

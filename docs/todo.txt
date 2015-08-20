@@ -2,6 +2,16 @@ TODO
 
 current tasks:
 
+generalized (works for any type of file, not just arts) file chooser:
+x left and right go up and into selected dir where applicable
+x get dir list every update so FS changes show up immediately?
+- text pathname field, clicking a new file in list fills it in (clicking again opens it)
+- hitting enter with a valid filename opens it, hitting enter with a valid pathname navigates list view to that dir
+- for non-arts (eg convert image) show image preview
+- remove debug prints in ui_dialog and ui_chooser_dialog
+- pgup/pgdn move pages up and down for long lists
+
+
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
 -- write Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
@@ -11,9 +21,20 @@ current tasks:
 
 new features / major improvements:
 
+audio:
+- stream music from OGG/whatever
+- load sound FX into memory and play em from game code
+
+more complete example games:
+- endless ladder climbing HD (5th anniversary edition) - side view game with multiple screens, art that modifies itself to shift colors, uses collision for ground and overlap for ladder, anims for player states
+- tetris - implementation of classic game, all blocks drawn into a single Art, everything else implemented in a GameHUD (and maybe some background art)
+
 collision:
 - broadphase (tile system)
 - integrate AARR support
+
+proper help screen:
+- one screen of high level stuff, other screens are a generated listing of binds - use a given bind's function's __doc__ string
 
 brushes:
 - user-defined(?) ramps of characters
@@ -26,20 +47,6 @@ brushes:
 line definitions:
 - user-defined(?) rules for which tile to use based on tiles painted since start of paint (click)
 - probably shares some code with brushes
-
-generalized (works for any type of file, not just arts) file chooser:
-- unify with existing ChooserDialog class, clean up as needed
-- clickable GUI list with scroll arrows, allows directory traversal as well
--- filter for valid files, eg psci for art, jpg/png/bmp for image convert, ed for edscii
--- list directories first
--- sort files by name or last modified?
--- up/down arrows move up and down (like scrollbar buttons), left and right go up and into selected dir where applicable (how to tell if we're in a root?)
--- get dir list every update so FS changes show up immediately?
-- text pathname field, clicking a new file in list fills it in (clicking again opens it)
--- hitting enter with a valid filename opens it, hitting enter with a valid pathname navigates list view to that dir
-- thumbnail preview - cache thumbnails in a new playscii/ subdir
-- text beneath thumbnail: art dimensions, layer and frame #s, charset and palette
-- for non-arts (eg convert image) show image preview
 
 - if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
 -- or just create a binary format that isn't broken like EDSCII's was? probably best to do once file format has stabilized

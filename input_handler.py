@@ -251,6 +251,10 @@ class InputLord:
                         app.cursor.start_paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
                     self.ui.quick_grab()
+        # none of the below applies to cases where a dialog is up
+        if self.ui.active_dialog:
+            sdl2.SDL_PumpEvents()
+            return
         # directly query keys we don't want affected by OS key repeat delay
         # TODO: these are hard-coded for the moment, think of a good way
         # to expose this functionality to the key bind system
