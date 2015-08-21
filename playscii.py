@@ -18,6 +18,7 @@ from OpenGL import GL
 from PIL import Image
 
 # submodules - set here so cfg file can modify them all easily
+from audio import AudioLord
 from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet, CHARSET_DIR
@@ -195,6 +196,8 @@ class Application:
         # draw black screen while doing other init
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+        # initialize audio
+        self.al = AudioLord(self)
         self.set_icon()
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
@@ -533,6 +536,7 @@ class Application:
         mode_bind = mode_bind.title()
         if self.can_edit:
             self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
+        self.al.resume_music()
     
     def exit_game_mode(self):
         self.game_mode = False
@@ -541,6 +545,7 @@ class Application:
             self.camera.set_for_art(self.ui.active_art)
         self.ui.message_line.post_line('', 1)
         self.update_window_title()
+        self.al.pause_music()
     
     def main_loop(self):
         while not self.should_quit:
@@ -578,6 +583,7 @@ class Application:
         self.il.handle_input()
     
     def update(self, dt):
+        self.al.update()
         for art in self.art_loaded_for_edit:
             art.update()
         for renderable in self.edit_renderables:
@@ -661,6 +667,7 @@ class Application:
             for palette in self.palettes:
                 palette.texture.destroy()
             self.sl.destroy()
+        self.al.destroy()
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
         sdl2.SDL_Quit()

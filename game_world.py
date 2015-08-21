@@ -8,6 +8,8 @@ TOP_GAME_DIR = 'games/'
 DEFAULT_STATE_FILENAME = 'start'
 STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
+START_SCRIPT_FILENAME = 'start.py'
+SOUNDS_DIR = 'sounds/'
 
 # import after game_object has done its imports from us
 import game_object
@@ -53,6 +55,11 @@ class GameWorld:
         # player is edit-dragging an object
         self.dragging_object = False
         self.last_state_loaded = DEFAULT_STATE_FILENAME
+    
+    def play_music(self, music_filename, fade_in_time=0):
+        music_filename = self.game_dir + SOUNDS_DIR + music_filename
+        self.app.al.set_music(music_filename)
+        self.app.al.start_music(music_filename)
     
     def pick_next_object_at(self, x, y):
         # TODO: cycle through objects at point til an unselected one is found
@@ -154,6 +161,7 @@ class GameWorld:
         self.objects = {}
         # art_loaded is cleared when game dir is set
         self.selected_objects = []
+        self.app.al.stop_all_music()
     
     def set_for_all_objects(self, name, value):
         for obj in self.objects.values():
@@ -213,9 +221,14 @@ class GameWorld:
         # build list of module files
         modules_list = ['game_object', 'game_hud']
         for filename in os.listdir(module_path):
-            # exclude emacs temp files :/
-            if filename.endswith('.py') and not filename.startswith('.#'):
-                modules_list.append(filename[:-3])
+            # exclude emacs temp files and special world start script
+            if not filename.endswith('.py'):
+                continue
+            if filename.startswith('.#'):
+                continue
+            if filename == START_SCRIPT_FILENAME:
+                continue
+            modules_list.append(filename[:-3])
         # make copy of old modules table for import vs reload check
         old_modules = self.modules.copy()
         self.modules = {}
@@ -487,6 +500,11 @@ class GameWorld:
         self.set_for_all_objects('show_origin', self.app.show_origin_all)
         self.app.update_window_title()
         self.app.ui.edit_list_panel.refresh_items()
+        # run "world start" script if present
+        start_script = self.game_dir + GAME_SCRIPTS_DIR + START_SCRIPT_FILENAME
+        if os.path.exists(start_script):
+            world = self
+            exec(open(start_script).read())
         #self.report()
     
     def report(self):
