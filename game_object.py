@@ -73,7 +73,7 @@ class GameObject:
     bounciness = 0.25
     # near-zero point at which velocity
     stop_velocity = 0.01
-    affected_by_gravity = True
+    affected_by_gravity = False
     log_move = False
     log_load = False
     log_spawn = False

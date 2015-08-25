@@ -2,6 +2,13 @@
 import ctypes
 from sdl2 import sdlmixer
 
+class PlayingSound:
+    "represents a currently playing sound"
+    def __init__(self, filename, channel, game_object):
+        self.filename = filename
+        self.channel = channel
+        self.game_object = game_object
+
 class AudioLord:
     
     sample_rate = 44100
@@ -13,27 +20,28 @@ class AudioLord:
         sdlmixer.Mix_OpenAudio(self.sample_rate, sdlmixer.MIX_DEFAULT_FORMAT,
                                2, 1024)
         self.reset()
-        
-        #void Mix_ChannelFinished(void (*channel_finished)(int channel))
-        
-        # TODO: figure out how to properly use this callback
-        self.CBFUNC = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.POINTER(ctypes.c_int))
-        # NOTE: Make sure you keep references to CFUNCTYPE() objects as long as they are used from C code.
-        self.c_cb = self.CBFUNC(self.channel_finished)
-        
-        # FIX: the following line crashes
-        #sdlmixer.Mix_ChannelFinished(ctypes.byref(self.c_cb))
+        # sound callback
+        # retain handle to C callable even though we don't use it directly
+        self.sound_cb = ctypes.CFUNCTYPE(None, ctypes.c_int)(self.channel_finished)
+        sdlmixer.Mix_ChannelFinished(self.sound_cb)
     
     def channel_finished(self, channel):
-        print('channel %s finished' % channel)
+        # remove sound from dicts of playing channels and sounds
+        old_sound = self.playing_channels.pop(channel)
+        self.playing_sounds[old_sound.filename].remove(old_sound)
+        # remove empty list
+        if self.playing_sounds[old_sound.filename] == []:
+            self.playing_sounds.pop(old_sound.filename)
     
     def reset(self):
         self.stop_all_music()
         self.stop_all_sounds()
-        # dict of objects, containing dicts of filenames + lists of
-        # channels playing, eg:
-        # { 'Object1': {'sound1.wav': [1, 2, 3]} }
-        self.obj_sounds = {}
+        # current playing sounds, of form:
+        # {'filename': [list of PlayingSound objects]}
+        self.playing_sounds = {}
+        # current playing channels, of form:
+        # {channel_number: PlayingSound object}
+        self.playing_channels = {}
         # handle init case where self.musics doesn't exist yet
         if hasattr(self, 'musics'):
             for music in self.musics.values():
@@ -53,20 +61,21 @@ class AudioLord:
     
     def object_play_sound(self, game_object, sound_filename,
                           loops=0, allow_multiple=False):
-        # TODO: volume param
-        #volume = volume if volume != -1 else sdlmixer.MIX_MAX_VOLUME
-        
-        # bail if given object already playing given sound and we don't allow
-        # duplicates of this sound
-        object_is_playing_sound = game_object.name in self.obj_sounds
-        if not allow_multiple and object_is_playing_sound and sound_filename in self.obj_sounds[game_object.name]:
-            return
+        # TODO: volume param? sdlmixer.MIX_MAX_VOLUME if not specified
+        # bail if same object isn't allowed to play same sound multiple times
+        if not allow_multiple and sound_filename in self.playing_sounds:
+            for playing_sound in self.playing_sounds[sound_filename]:
+                if playing_sound.game_object is game_object:
+                    return
         sound = self.register_sound(sound_filename)
         channel = sdlmixer.Mix_PlayChannel(-1, sound, loops)
-        if game_object.name in self.obj_sounds:
-            self.obj_sounds[game_object.name][sound_filename].append(channel)
+        # add sound to dicts of playing sounds and channels
+        new_playing_sound = PlayingSound(sound_filename, channel, game_object)
+        if sound_filename in self.playing_sounds:
+            self.playing_sounds[sound_filename].append(new_playing_sound)
         else:
-            self.obj_sounds[game_object.name] = {sound_filename: [channel]}
+            self.playing_sounds[sound_filename] = [new_playing_sound]
+        self.playing_channels[channel] = new_playing_sound
     
     def stop_all_sounds(self):
         sdlmixer.Mix_HaltChannel(-1)
@@ -106,9 +115,6 @@ class AudioLord:
     def update(self):
         if self.current_music and not self.is_music_playing():
             self.current_music = None
-        for obj_name,obj_sounds in self.obj_sounds.items():
-            for channel in obj_sounds:
-                pass
     
     def destroy(self):
         self.reset()
