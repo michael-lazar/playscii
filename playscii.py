@@ -116,8 +116,8 @@ class Application:
         # last edit came from keyboard or mouse, used by cursor control logic
         self.keyboard_editing = False
         # set ui None so other objects can check it None, eg load_art check
-        # for its active art on later runs
-        self.ui = None
+        # for its active art on later runs (audiolord too)
+        self.ui, self.al = None, None
         sdl2.ext.init()
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
         # determine screen resolution
@@ -667,7 +667,8 @@ class Application:
             for palette in self.palettes:
                 palette.texture.destroy()
             self.sl.destroy()
-        self.al.destroy()
+        if self.al:
+            self.al.destroy()
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
         sdl2.SDL_Quit()
@@ -684,14 +685,9 @@ def get_win_documents_path():
     return buf.value
 
 def get_paths():
-    # all dir variables should end in /
-    # work around a bug in appdirs on Windows
-    if platform.system() == 'Windows':
-        config_dir = appdirs.user_config_dir() + '/%s/' % APP_NAME
-        cache_dir = appdirs.user_cache_dir() + '/%s/' % APP_NAME
-    else:
-        config_dir = appdirs.user_config_dir(APP_NAME) + '/'
-        cache_dir = appdirs.user_cache_dir(APP_NAME) + '/'
+    # pass False as second arg to disable "app author" windows dir convention
+    config_dir = appdirs.user_config_dir(APP_NAME, False) + '/'
+    cache_dir = appdirs.user_cache_dir(APP_NAME, False) + '/'
     if not os.path.exists(config_dir):
         os.mkdir(config_dir)
     if not os.path.exists(cache_dir):
