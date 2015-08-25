@@ -38,6 +38,7 @@ class GameWorld:
     def __init__(self, app):
         self.app = app
         self.game_dir = None
+        self.sounds_dir = None
         self.game_name = None
         self.selected_objects = []
         self.camera = Camera(self.app)
@@ -215,6 +216,8 @@ class GameWorld:
             self.app.log("Couldn't find game directory %s" % dir_name)
         if self.app.ui:
             self.app.ui.edit_game_panel.draw_titlebar()
+        if self.game_dir:
+            self.sounds_dir = self.game_dir + SOUNDS_DIR
     
     def import_all(self):
         module_path = self.game_dir + GAME_SCRIPTS_DIR
