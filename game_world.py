@@ -26,14 +26,19 @@ class RenderItem:
 class GameWorld:
     
     "holds global state for game mode"
+    # serialized properties
     gravity_x, gravity_y, gravity_z = 0, 0, 0
     bg_color = [0, 0, 0, 1]
-    last_click_on_ui = False
+    hud_class_name = 'GameHUD'
     player_camera_lock = True
     object_grid_snap = True
-    hud_class_name = 'GameHUD'
+    # editable properties
     draw_hud = True
     collision_enabled = True
+    # toggles for "show all" debug viz modes
+    show_collision_all = False
+    show_bounds_all = False
+    show_origin_all = False
     
     def __init__(self, app):
         self.app = app
@@ -41,6 +46,7 @@ class GameWorld:
         self.sounds_dir = None
         self.game_name = None
         self.selected_objects = []
+        self.last_click_on_ui = False
         self.camera = Camera(self.app)
         self.player = None
         self.paused = False
@@ -270,6 +276,11 @@ class GameWorld:
         self.objects.update(self.new_objects)
         self.new_objects = {}
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
+        # run "first update" on all appropriate objects
+        for obj in self.objects.values():
+            if not obj.pre_first_update_run:
+                obj.pre_first_update()
+                obj.pre_first_update_run = True
         if not self.paused:
             # update objects based on movement, then resolve collisions
             for obj in self.objects.values():
@@ -433,7 +444,8 @@ class GameWorld:
         x += obj.renderable.width
         y -= obj.renderable.height
         d['x'], d['y'] = x, y
-        return self.spawn_object_from_data(d)
+        new_obj = self.spawn_object_from_data(d)
+        return new_obj
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
         if not class_name in self.classes:
@@ -442,7 +454,8 @@ class GameWorld:
         d = {'class_name': class_name}
         if x is not None and y is not None:
             d['x'], d['y'] = x, y
-        return self.spawn_object_from_data(d)
+        new_obj = self.spawn_object_from_data(d)
+        return new_obj
     
     def spawn_object_from_data(self, object_data):
         # load module and class
@@ -498,9 +511,9 @@ class GameWorld:
             self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])
         self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
-        self.set_for_all_objects('show_collision', self.app.show_collision_all)
-        self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
-        self.set_for_all_objects('show_origin', self.app.show_origin_all)
+        self.set_for_all_objects('show_collision', self.show_collision_all)
+        self.set_for_all_objects('show_bounds', self.show_bounds_all)
+        self.set_for_all_objects('show_origin', self.show_origin_all)
         self.app.update_window_title()
         self.app.ui.edit_list_panel.refresh_items()
         # run "world start" script if present
@@ -544,16 +557,16 @@ class GameWorld:
         print('%s arts loaded for edit' % len(self.app.art_loaded_for_edit))
     
     def toggle_all_origin_viz(self):
-        self.app.show_origin_all = not self.app.show_origin_all
-        self.set_for_all_objects('show_origin', self.app.show_origin_all)
+        self.show_origin_all = not self.show_origin_all
+        self.set_for_all_objects('show_origin', self.show_origin_all)
     
     def toggle_all_bounds_viz(self):
-        self.app.show_bounds_all = not self.app.show_bounds_all
-        self.set_for_all_objects('show_bounds', self.app.show_bounds_all)
+        self.show_bounds_all = not self.show_bounds_all
+        self.set_for_all_objects('show_bounds', self.show_bounds_all)
     
     def toggle_all_collision_viz(self):
-        self.app.show_collision_all = not self.app.show_collision_all
-        self.set_for_all_objects('show_collision', self.app.show_collision_all)
+        self.show_collision_all = not self.show_collision_all
+        self.set_for_all_objects('show_collision', self.show_collision_all)
     
     def destroy(self):
         self.unload_game()

@@ -2,14 +2,16 @@ TODO
 
 current tasks:
 
-audio via sdlmixer:
-- init/teardown in Application.init/quit
-- GameWorld.play_music(music_filename, fade_in_time=1.0)
-- GameWorld.stop_music(music_filename, fade_out_time=1.0)
-- GameObject.play_sound(sound_filename, repeat=0) (-1 loops indefinitely)
-- GameObject.stop_sound(sound_filename)
+more complete example games:
+- endless ladder climbing HD (5th anniversary edition) - side view game with multiple screens, art that modifies itself to shift colors, uses collision for ground and overlap for ladder, anims for player states
 
-enumerate specific bugs with below and fix em
+enumerate specific bugs with chooser UI below and fix em
+
+save "player camera lock" in GW, restore it properly
+
+"world properties" object:
+- stores world stuff that should be serialized, eg gravity, bg color, camera, hud class
+- can't be deleted, only one can be created, when it spawns on load world takes its properties
 
 generalized (works for any type of file, not just arts) file chooser:
 x left and right go up and into selected dir where applicable
@@ -31,13 +33,14 @@ x get dir list every update so FS changes show up immediately?
 new features / major improvements:
 
 game distribution system:
+- "game to auto-load" config option
+-- alternately/additionally: if only one game dir is present, auto-load that?
 - "create new project" menu option, creates directory, subdirs, and start.gs
 - ideal is something like LOVE does: single file you can associate with playscii and click to open
 - possibly helpful: http://pysdl2.readthedocs.org/en/latest/modules/sdl2ext_resources.html
 
 more complete example games:
-- endless ladder climbing HD (5th anniversary edition) - side view game with multiple screens, art that modifies itself to shift colors, uses collision for ground and overlap for ladder, anims for player states
-- tetris - implementation of classic game, all blocks drawn into a single Art, everything else implemented in a GameHUD (and maybe some background art)
+- tetris - implementation of classic, all blocks drawn into a single Art, everything else implemented in a GameHUD (and maybe some background art)
 
 collision:
 - broadphase (tile system)
@@ -65,6 +68,9 @@ line definitions:
 ---
 
 fixes / minor improvements:
+
+volume support for playing sound FX
+fade in/out support for music
 
 undo/redo for adding or removing frames and layers :/
 

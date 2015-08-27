@@ -78,10 +78,6 @@ class Application:
     always_launch_art_mode = False
     # show dev-only log messages
     show_dev_log = False
-    # toggles for "show all" debug viz modes
-    show_collision_all = False
-    show_bounds_all = False
-    show_origin_all = False
     # in art mode, show layers marked invisible to game mode
     show_hidden_layers = False
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'

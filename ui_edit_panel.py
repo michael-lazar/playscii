@@ -123,7 +123,7 @@ class ToggleGridSnapButton(GameEditToggleButton):
 class ToggleOriginVizButton(GameEditToggleButton):
     base_caption = 'Object origins:'
     def get_caption_value(button):
-        return button.element.ui.app.show_origin_all
+        return button.element.world.show_origin_all
     def selected(button):
         button.element.world.toggle_all_origin_viz()
         button.refresh_caption()
@@ -131,7 +131,7 @@ class ToggleOriginVizButton(GameEditToggleButton):
 class ToggleBoundsVizButton(GameEditToggleButton):
     base_caption = 'Object bounds:'
     def get_caption_value(button):
-        return button.element.ui.app.show_bounds_all
+        return button.element.world.show_bounds_all
     def selected(button):
         button.element.world.toggle_all_bounds_viz()
         button.refresh_caption()
@@ -139,7 +139,7 @@ class ToggleBoundsVizButton(GameEditToggleButton):
 class ToggleCollisionVizButton(GameEditToggleButton):
     base_caption = 'Object collision:'
     def get_caption_value(button):
-        return button.element.ui.app.show_collision_all
+        return button.element.world.show_collision_all
     def selected(button):
         button.element.world.toggle_all_collision_viz()
         button.refresh_caption()

@@ -121,6 +121,10 @@ class UI:
         self.grain_texture.set_filter(GL.GL_LINEAR, GL.GL_LINEAR_MIPMAP_LINEAR)
         # update elements that weren't created when UI scale was determined
         self.set_elements_scale()
+        # if editing is disallowed, hide game mode UI
+        if not self.app.can_edit:
+            self.edit_ui_disabled = False
+            self.toggle_game_edit_ui()
     
     def set_scale(self, new_scale):
         old_scale = self.scale
@@ -589,13 +593,18 @@ class UI:
         self.elements.insert(0, dialog)
     
     def toggle_game_edit_ui(self):
-        if not self.app.game_mode:
+        # if editing is disallowed, only run this once to disable UI
+        if not self.app.can_edit:
+            if self.edit_ui_disabled:
+                return
+            self.edit_ui_disabled = True
+        elif not self.app.game_mode:
             return
         self.edit_list_panel.visible = not self.edit_list_panel.visible
         self.edit_game_panel.visible = not self.edit_game_panel.visible
         self.edit_object_panel.visible = not self.edit_object_panel.visible
         # if hiding, show tip on how to get it back
-        if not self.edit_game_panel.visible:
+        if not self.edit_game_panel.visible and self.app.can_edit:
             bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
             bind = bind.title()
             self.message_line.post_line(self.show_edit_ui_log % bind, 10)
