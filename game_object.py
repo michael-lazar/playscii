@@ -65,15 +65,15 @@ class GameObject:
     y_sort = False
     move_accel_rate = 0.01
     # normal movement will accelerate up to this, final velocity is uncapped
-    max_move_speed = 0.4
-    friction = 0.1
+    max_move_speed = 0.1
+    ground_friction = 15.0
+    air_friction = 30.0
     # inverse mass: 0 = infinitely dense
     inv_mass = 1.
     # bounciness aka restitution, % of velocity reflected on bounce
     bounciness = 0.25
     # near-zero point at which velocity
-    stop_velocity = 0.01
-    affected_by_gravity = False
+    stop_velocity = 0.05
     log_move = False
     log_load = False
     log_spawn = False
@@ -147,6 +147,8 @@ class GameObject:
                 else:
                     setattr(self, v, obj_data[v])
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
+        # user-intended acceleration
+        self.move_x, self.move_y, self.move_z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
         self.world = world
@@ -191,10 +193,19 @@ class GameObject:
                 attachment.attach_to(self)
                 setattr(self, atch_name, attachment)
         self.should_destroy = False
+        # flag that tells us we should run post_init next update
+        self.pre_first_update_run = False
         if self.animating and self.art.frames > 0:
             self.start_animating()
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
+    
+    def pre_first_update(self):
+        """
+        runs before first update; use this for any logic that depends on
+        init/creation being done ie all objects being present
+        """
+        pass
     
     def load_arts(self):
         "fill self.arts dict with art assets: states, facings"
@@ -222,11 +233,16 @@ class GameObject:
     
     def is_point_inside(self, x, y):
         "returns True if given point is inside our bounds"
-        min_x = self.x - (self.renderable.width * self.art_off_pct_x)
-        max_x = self.x + (self.renderable.width * self.art_off_pct_x)
-        min_y = self.y - (self.renderable.height * self.art_off_pct_y)
-        max_y = self.y + (self.renderable.height * self.art_off_pct_y)
-        return min_x <= x <= max_x and min_y <= y <= max_y
+        left, top, right, bottom = self.get_edges()
+        return left <= x <= right and bottom <= y <= top
+    
+    def get_edges(self):
+        "returns coords of our bounds (left, top, right, bottom)"
+        left = self.x - (self.renderable.width * self.art_off_pct_x)
+        right = self.x + (self.renderable.width * self.art_off_pct_x)
+        bottom = self.y - (self.renderable.height * self.art_off_pct_y)
+        top = self.y + (self.renderable.height * self.art_off_pct_y)
+        return left, top, right, bottom
     
     def distance_to_object(self, other):
         dx = self.x - other.x
@@ -313,6 +329,19 @@ class GameObject:
             self.stopped_colliding(obj)
             obj.stopped_colliding(self)
     
+    def is_overlapping(self, other):
+        "return True if we overlap with other object's collision"
+        return other.name in self.collision.contacts
+    
+    def are_bounds_overlapping(self, other):
+        "return True if we overlap with other object's art bounds"
+        left, top, right, bottom = self.get_edges()
+        corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
+        for x,y in corners:
+            if other.is_point_inside(x, y):
+                return True
+        return False
+    
     def overlapped(self, other, dx, dy):
         started = not other.name not in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
@@ -357,7 +386,7 @@ class GameObject:
             if art_state_name in self.arts:
                 return self.arts[art_state_name], False
             else:
-                default_name = '%s_%s' % (self.art_src, DEFAULT_STATE)
+                default_name = '%s_%s' % (self.art_src, self.state or DEFAULT_STATE)
                 assert(default_name in self.arts)
                 return self.arts[default_name], False
         # more complex case: art determined by both state and facing
@@ -445,48 +474,87 @@ class GameObject:
         self.renderable.alpha = self.alpha = new_alpha
     
     def move(self, dx, dy):
+        "handle player-initiated velocity"
         # don't handle moves while game paused
         # (add override flag if this becomes necessary)
         if self.world.paused:
             return
-        m = 1 + self.friction
-        vel_dx = dx * self.move_accel_rate * m
-        vel_dy = dy * self.move_accel_rate * m
-        # TODO: account for friction so max rate is actually max rate
-        # (below doesn't work properly, figure it out)
-        max_speed = self.max_move_speed# * (1 + self.friction)
-        if vel_dx < 0:
-            self.vel_x += max(vel_dx, -max_speed)
-        elif vel_dx > 0:
-            self.vel_x += min(vel_dx, max_speed)
-        if vel_dy < 0:
-            self.vel_y += max(vel_dy, -max_speed)
-        elif vel_dy > 0:
-            self.vel_y += min(vel_dy, max_speed)
+        dt = self.world.app.elapsed_time / 1000
+        move_dx = dx * self.move_accel_rate * dt
+        move_dy = dy * self.move_accel_rate * dt
+        # cap move-command-derived acceleration
+        if move_dx < 0:
+            self.move_x += max(move_dx, -self.max_move_speed)
+        elif move_dx > 0:
+            self.move_x += min(move_dx, self.max_move_speed)
+        if move_dy < 0:
+            self.move_y += max(move_dy, -self.max_move_speed)
+        elif move_dy > 0:
+            self.move_y += min(move_dy, self.max_move_speed)
     
-    def update_move(self):
-        # apply friction and move
-        if self.vel_x == 0 and self.vel_y == 0 and self.vel_z == 0:
-            if self.stand_if_not_moving:
-                self.state = DEFAULT_STATE
-            return
-        self.vel_x *= 1 - self.friction
-        self.vel_y *= 1 - self.friction
-        self.vel_z *= 1 - self.friction
+    def is_on_ground(self):
+        "logic for determining if object is on ground vs not"
+        return True
+
+    def get_friction(self):
+        return self.ground_friction if self.is_on_ground() else self.air_friction
+    
+    def get_axis_velocity(self, axis_velocity, drag):
+        if axis_velocity == 0:
+            return 0
+        return axis_velocity * max(0, (axis_velocity - drag) / axis_velocity)
+    
+    def apply_friction(self, dt):
+        friction = self.get_friction() * dt
+        drag_x = self.vel_x * friction
+        drag_y = self.vel_y * friction
+        drag_z = self.vel_z * friction
+        self.vel_x = self.get_axis_velocity(self.vel_x, drag_x)
+        self.vel_y = self.get_axis_velocity(self.vel_y, drag_y)
+        self.vel_z = self.get_axis_velocity(self.vel_z, drag_z)
+    
+    def apply_gravity(self, dt):
+        grav_x, grav_y, grav_z = 0, 0, 0
+        if not self.is_on_ground():
+            grav_x = self.world.gravity_x
+            grav_y = self.world.gravity_y
+            grav_z = self.world.gravity_z
+        self.vel_x += grav_x * dt
+        self.vel_y += grav_y * dt
+        self.vel_z += grav_z * dt
+    
+    def is_affected_by_gravity(self):
+        return False
+    
+    def apply_move(self, dt):
+        "apply friction, move impulse, and gravity"
+        self.apply_friction(dt)
+        # apply desired move impulse then reset it for next frame
+        self.vel_x += self.move_x
+        self.vel_y += self.move_y
+        self.vel_z += self.move_z
+        self.move_x = self.move_y = self.move_z = 0
         # zero velocity if it's nearly zero
         self.vel_x = self.vel_x if abs(self.vel_x) > self.stop_velocity else 0
         self.vel_y = self.vel_y if abs(self.vel_y) > self.stop_velocity else 0
         self.vel_z = self.vel_z if abs(self.vel_z) > self.stop_velocity else 0
+        if self.is_affected_by_gravity():
+            self.apply_gravity(dt)
         self.x += self.vel_x
         self.y += self.vel_y
         self.z += self.vel_z
-        if self.affected_by_gravity:
-            self.x += self.world.gravity_x
-            self.y += self.world.gravity_y
-            self.z += self.world.gravity_z
         if self.log_move:
             debug = ['%s velocity: %.4f, %.4f' % (self.name, self.vel_x, self.vel_y)]
             self.app.ui.debug_text.post_lines(debug)
+    
+    def moved_this_frame(self):
+        delta = abs(self.last_x - self.x) + abs(self.last_y - self.y) + abs(self.last_z - self.z)
+        return delta > self.stop_velocity
+    
+    def update_state(self):
+        "update state based on things like movement"
+        if self.stand_if_not_moving and not self.moved_this_frame():
+            self.state = DEFAULT_STATE
     
     def update_facing(self):
         dx, dy = self.x - self.last_x, self.y - self.last_y
@@ -502,7 +570,8 @@ class GameObject:
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
-        self.update_move()
+        self.apply_move(dt)
+        self.update_state()
         self.update_facing()
         # update art based on state (and possibly facing too)
         if self.state_changes_art:
@@ -617,20 +686,28 @@ class Pickup(GameObject):
 class GameCharacter(GameObject):
     
     state_changes_art = True
-    facing_changes_art = True
     stand_if_not_moving = True
-    valid_states = [DEFAULT_STATE, 'walk']
-    move_accel_rate = 0.1
-    max_move_speed = 0.8
-    friction = 0.25
-    inv_mass = 0.1
+    # move state name - added to valid_states in init so subclasses recognized
+    move_state = 'walk'
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
-
+    
+    def __init__(self, world, obj_data=None):
+        if not self.move_state in self.valid_states:
+            self.valid_states.append(self.move_state)
+        GameObject.__init__(self, world, obj_data)
+    
+    def update_state(self):
+        GameObject.update_state(self)
+        if abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
+            self.state = self.move_state
 
 class Player(GameCharacter):
     log_move = False
     collision_type = CT_PLAYER
+    editable = GameCharacter.editable + ['move_accel_rate', 'max_move_speed',
+                                         'ground_friction', 'air_friction',
+                                         'bounciness', 'stop_velocity']
     
     def __init__(self, world, obj_data=None):
         GameCharacter.__init__(self, world, obj_data)
@@ -648,11 +725,7 @@ class TopDownPlayer(Player):
     
     y_sort = True
     attachment_classes = { 'shadow': 'BlobShadow' }
-    
-    def update_move(self):
-        Player.update_move(self)
-        if abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
-            self.state = 'walk'
+    facing_changes_art = True
     
     def get_facing_dir(self):
         return FACING_DIRS[self.facing]

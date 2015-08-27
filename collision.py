@@ -207,10 +207,12 @@ class CollisionLord:
         if obj_a.is_dynamic():
             ax, ay = obj_a.collision.contacts[obj_b.name][:2]
             a_vel = total_vel * (obj_a.inv_mass / total_mass)
+            a_vel *= obj_a.bounciness
             obj_a.vel_x, obj_a.vel_y = -ax * a_vel, -ay * a_vel
         if obj_b.is_dynamic():
             bx, by = obj_b.collision.contacts[obj_a.name][:2]
             b_vel = total_vel * (obj_b.inv_mass / total_mass)
+            b_vel *= obj_b.bounciness
             obj_b.vel_x, obj_b.vel_y = -bx * b_vel, -by * b_vel
         # mark objects as resolved
         self.collisions_this_frame.append(obj_a)
