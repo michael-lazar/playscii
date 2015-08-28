@@ -413,7 +413,7 @@ class ChooserDialog(UIDialog):
         if not os.path.exists(field_text):
             return False
         # special case for parent dir ..
-        if field_text == self.current_dir and selected_item.name == '..':
+        if self.directory_aware and field_text == self.current_dir and selected_item.name == '..':
             self.first_selection_made = True
             self.change_current_dir('..')
             return True

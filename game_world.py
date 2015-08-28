@@ -26,10 +26,11 @@ class RenderItem:
 class GameWorld:
     
     "holds global state for game mode"
-    # serialized properties
-    gravity_x, gravity_y, gravity_z = 0, 0, 0
-    bg_color = [0, 0, 0, 1]
+    # properties serialized via WorldPropertiesObject (make sure type is right)
+    gravity_x, gravity_y, gravity_z = 0., 0., 0.
+    bg_color = [0., 0., 0., 1.]
     hud_class_name = 'GameHUD'
+    properties_object_class_name = 'WorldPropertiesObject'
     player_camera_lock = True
     object_grid_snap = True
     # editable properties
@@ -47,6 +48,7 @@ class GameWorld:
         self.game_name = None
         self.selected_objects = []
         self.last_click_on_ui = False
+        self.properties_object = None
         self.camera = Camera(self.app)
         self.player = None
         self.paused = False
@@ -133,6 +135,9 @@ class GameWorld:
         # if last onclick was a UI element, don't drag
         if self.last_click_on_ui:
             return
+        # not dragging anything?
+        if len(self.selected_objects) == 0:
+            return
         # get mouse delta in world space
         mx1, my1, mz1 = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                         self.app.mouse_y)
@@ -169,6 +174,14 @@ class GameWorld:
         # art_loaded is cleared when game dir is set
         self.selected_objects = []
         self.app.al.stop_all_music()
+    
+    def get_all_objects_of_type(self, class_name):
+        # TODO: "allow subclasses" optional flag
+        objects = []
+        for obj in self.objects.values():
+            if type(obj).__name__ == class_name:
+                objects.append(obj)
+        return objects
     
     def set_for_all_objects(self, name, value):
         for obj in self.objects.values():
@@ -276,6 +289,8 @@ class GameWorld:
         self.objects.update(self.new_objects)
         self.new_objects = {}
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
+        if self.properties_object:
+            self.properties_object.update_from_world()
         # run "first update" on all appropriate objects
         for obj in self.objects.values():
             if not obj.pre_first_update_run:
@@ -367,24 +382,11 @@ class GameWorld:
             self.hud.render()
     
     def save_to_file(self, filename=None):
-        d = {
-            'gravity_x': self.gravity_x,
-            'gravity_y': self.gravity_y,
-            'gravity_z': self.gravity_z,
-            'bg_r': self.bg_color[0],
-            'bg_g': self.bg_color[1],
-            'bg_b': self.bg_color[2],
-            'bg_a': self.bg_color[3] or 1,
-            'camera_x': self.camera.x,
-            'camera_y': self.camera.y,
-            'camera_z': self.camera.z,
-            'hud_class': self.hud_class_name
-        }
         objects = []
         for obj in self.objects.values():
             if obj.should_save:
                 objects.append(obj.get_dict())
-        d['objects'] = objects
+        d = {'objects': objects}
         if filename and filename != '':
             if not filename.endswith(STATE_FILE_EXTENSION):
                 filename += '.' + STATE_FILE_EXTENSION
@@ -494,11 +496,6 @@ class GameWorld:
             self.app.log("Couldn't load game state from %s" % filename)
             #self.app.log(sys.exc_info())
             return
-        self.gravity_x = d['gravity_x']
-        self.gravity_y = d['gravity_y']
-        self.gravity_z = d.get('gravity_z', self.gravity_z)
-        self.bg_color = [d.get('bg_r', 0), d.get('bg_g', 0), d.get('bg_b', 0),
-                         d.get('bg_a', 1)]
         # spawn hud
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
@@ -506,9 +503,15 @@ class GameWorld:
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
-        # restore camera settings
-        if 'camera_x' in d and 'camera_y' in d and 'camera_z' in d:
-            self.camera.set_loc(d['camera_x'], d['camera_y'], d['camera_z'])
+        # spawn a WorldPropertiesObject if one doesn't exist
+        world_props_object_exists = False
+        for obj in self.new_objects.values():
+            if type(obj).__name__ == self.properties_object_class_name:
+                world_props_object_exists = True
+                self.properties_object = obj
+                break
+        if not world_props_object_exists:
+            self.properties_object = self.spawn_object_of_class(self.properties_object_class_name, 0, 0)
         self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.show_collision_all)
