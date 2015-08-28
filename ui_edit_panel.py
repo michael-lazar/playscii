@@ -85,6 +85,11 @@ class EditObjectArtButton(UIButton):
     def selected(button):
         button.element.world.edit_art_for_selected()
 
+class EditWorldPropertiesButton(UIButton):
+    caption = 'Edit world properties…'
+    def selected(button):
+        button.element.world.select_object(button.element.world.properties_object, force=True)
+
 class GameEditToggleButton(UIButton):
     "button whose caption reflects an on/off state"
     
@@ -221,10 +226,13 @@ class EditGamePanel(GamePanel):
                       SetGameDirButton, ResetStateButton, PauseGameButton,
                       LoadStateButton, SaveStateButton, SpawnObjectButton,
                       DuplicateObjectButton, SelectObjectsButton,
-                      EditObjectArtButton,
+                      EditObjectArtButton, EditWorldPropertiesButton]
+    # disable toggles now that we have "edit world properties"
+    """
                       TogglePlayerCameraLockButton, ToggleGridSnapButton,
                       ToggleOriginVizButton,
                       ToggleBoundsVizButton, ToggleCollisionVizButton]
+    """
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):
@@ -288,7 +296,7 @@ class EditListPanel(GamePanel):
     tile_y = EditGamePanel.tile_y + EditGamePanel.tile_height + 1
     scrollbar_shade_char = 54
     # height will change based on how many items in list
-    tile_height = 12
+    tile_height = 15
     snap_left = True
     spawn_msg = 'Click anywhere in the world view to spawn a %s'
     # transient state
@@ -305,6 +313,8 @@ class EditListPanel(GamePanel):
         self.list_mode = LIST_NONE
         # separate lists for item buttons vs other controls
         self.list_buttons = []
+        # set when game resets
+        self.should_reset_list = False
         GamePanel.__init__(self, ui)
     
     def create_buttons(self):
@@ -426,6 +436,15 @@ class EditListPanel(GamePanel):
     
     def game_reset(self):
         self.list_scroll_index = 0
+        self.should_reset_list = True
+    
+    def reset_list(self):
+        if self.list_mode == LIST_OBJECTS:
+            self.list_objects()
+        elif self.list_mode == LIST_CLASSES:
+            self.list_classes()
+        elif self.list_mode == LIST_STATES:
+            self.list_states()
     
     def refresh_items(self):
         # prune any objects that have been deleted from items
@@ -454,6 +473,9 @@ class EditListPanel(GamePanel):
         self.draw_buttons()
     
     def update(self):
+        if self.should_reset_list:
+            self.reset_list()
+            self.should_reset_list = False
         # redraw contents every update
         self.draw_titlebar()
         self.refresh_items()

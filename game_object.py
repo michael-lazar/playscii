@@ -113,6 +113,8 @@ class GameObject:
     set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha'}
     # can select in edit mode
     selectable = True
+    # can delete in edit mode
+    deleteable = True
     # objects to spawn as attachments: key is member name, value is class
     attachment_classes = {}
     # class blacklist for collisions - string names of classes, not class defs
@@ -328,6 +330,9 @@ class GameObject:
         for obj in finished:
             self.stopped_colliding(obj)
             obj.stopped_colliding(self)
+    
+    def get_contacting_objects(self):
+        return [self.world.objects[obj] for obj in self.collision.contacts]
     
     def is_overlapping(self, other):
         "return True if we overlap with other object's collision"
@@ -570,7 +575,9 @@ class GameObject:
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
-        self.apply_move(dt)
+        # don't apply physics to selected objects being dragged
+        if not (self.world.dragging_object and self in self.world.selected_objects):
+            self.apply_move(dt)
         self.update_state()
         self.update_facing()
         # update art based on state (and possibly facing too)
@@ -729,3 +736,66 @@ class TopDownPlayer(Player):
     
     def get_facing_dir(self):
         return FACING_DIRS[self.facing]
+
+
+class WorldPropertiesObject(GameObject):
+    
+    "special magic singleton object that stores and sets GameWorld properties"
+    
+    art_src = 'world_properties_object'
+    visible = deleteable = selectable = False
+    # properties we serialize on behalf of GameWorld
+    # TODO: figure out how to make these defaults sync with those in GW?
+    world_props = ['gravity_x', 'gravity_y', 'gravity_z', 'hud_class_name',
+                   'camera_x', 'camera_y', 'camera_z',
+                   'bg_color_r', 'bg_color_g', 'bg_color_b', 'bg_color_a',
+                   'player_camera_lock', 'object_grid_snap', 'draw_hud',
+                   'collision_enabled', 'show_collision_all', 'show_bounds_all',
+                   'show_origin_all'
+    ]
+    serialized = world_props
+    # all visible properties are serialized, not editable
+    editable = []
+    
+    def __init__(self, world, obj_data=None):
+        GameObject.__init__(self, world, obj_data)
+        for v in self.serialized:
+            if v in obj_data:
+                # if world has property from loaded data, use it
+                if hasattr(self.world, v):
+                    setattr(self.world, v, obj_data[v])
+                setattr(self, v, obj_data[v])
+            # if world has property but loaded data doesn't, use world's
+            elif hasattr(self.world, v):
+                setattr(self, v, getattr(self.world, v))
+            else:
+                setattr(self, v, 0)
+        # special handling of bg color (a list)
+        self.world.bg_color = [self.bg_color_r, self.bg_color_g, self.bg_color_b, self.bg_color_a]
+        self.world.camera.set_loc(self.camera_x, self.camera_y, self.camera_z)
+    
+    def set_object_property(self, prop_name, new_value):
+        setattr(self, prop_name, new_value)
+        # special handling for some values, eg bg color and camera
+        if prop_name.startswith('bg_color_'):
+            component = {'r': 0, 'g': 1, 'b': 2, 'a': 3}[prop_name[-1]]
+            self.world.bg_color[component] = float(new_value)
+        elif prop_name.startswith('camera_') and len(prop_name) == len('camera_x'):
+            setattr(self.world.camera, prop_name[-1], new_value)
+        # some properties have unique set methods in GW
+        elif prop_name == 'show_collision_all':
+            self.world.toggle_all_collision_viz()
+        elif prop_name == 'show_bounds_all':
+            self.world.toggle_all_bounds_viz()
+        elif prop_name == 'show_origin_all':
+            self.world.toggle_all_origin_viz()
+        elif prop_name == 'player_camera_lock':
+            self.world.toggle_player_camera_lock()
+        # normal properties you can just set: set em
+        elif hasattr(self.world, prop_name):
+            setattr(self.world, prop_name, new_value)
+    
+    def update_from_world(self):
+        self.camera_x = self.world.camera.x
+        self.camera_y = self.world.camera.y
+        self.camera_z = self.world.camera.z

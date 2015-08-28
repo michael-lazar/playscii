@@ -466,7 +466,9 @@ class InputLord:
             # operate on a copy of selected objects list,
             # as obj.destroy() removes itself from original
             for obj in self.app.gw.selected_objects[:]:
-                obj.destroy()
+                # some objects can't be deleted
+                if obj.deleteable:
+                    obj.destroy()
         else:
             self.ui.erase_selection_or_art()
     
