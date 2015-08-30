@@ -31,6 +31,7 @@ class GameWorld:
     bg_color = [0., 0., 0., 1.]
     hud_class_name = 'GameHUD'
     properties_object_class_name = 'WorldPropertiesObject'
+    globals_object_class_name = 'WorldGlobalsObject'
     player_camera_lock = True
     object_grid_snap = True
     # editable properties
@@ -48,7 +49,8 @@ class GameWorld:
         self.game_name = None
         self.selected_objects = []
         self.last_click_on_ui = False
-        self.properties_object = None
+        self.properties = None
+        self.globals = None
         self.camera = Camera(self.app)
         self.player = None
         self.paused = False
@@ -299,8 +301,8 @@ class GameWorld:
         self.objects.update(self.new_objects)
         self.new_objects = {}
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
-        if self.properties_object:
-            self.properties_object.update_from_world()
+        if self.properties:
+            self.properties.update_from_world()
         # run "first update" on all appropriate objects
         for obj in self.objects.values():
             if not obj.pre_first_update_run:
@@ -507,14 +509,14 @@ class GameWorld:
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
         # spawn a WorldPropertiesObject if one doesn't exist
-        world_props_object_exists = False
         for obj in self.new_objects.values():
             if type(obj).__name__ == self.properties_object_class_name:
-                world_props_object_exists = True
-                self.properties_object = obj
+                self.properties = obj
                 break
-        if not world_props_object_exists:
-            self.properties_object = self.spawn_object_of_class(self.properties_object_class_name, 0, 0)
+        if not self.properties:
+            self.properties = self.spawn_object_of_class(self.properties_object_class_name, 0, 0)
+        # spawn a WorldGlobalStateObject
+        self.globals = self.spawn_object_of_class(self.properties.globals_object_class_name, 0, 0)
         self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.show_collision_all)

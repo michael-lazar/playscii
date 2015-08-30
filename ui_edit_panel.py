@@ -89,7 +89,7 @@ class EditWorldPropertiesButton(UIButton):
     caption = 'Edit world properties…'
     def selected(button):
         button.element.world.deselect_all()
-        button.element.world.select_object(button.element.world.properties_object, force=True)
+        button.element.world.select_object(button.element.world.properties, force=True)
 
 class GameEditToggleButton(UIButton):
     "button whose caption reflects an on/off state"
@@ -400,6 +400,8 @@ class EditListPanel(GamePanel):
         self.items = []
         self.clear_buttons(self.list_buttons)
         for obj in self.world.objects.values():
+            if obj.do_not_list:
+                continue
             li = self.ListItem(obj.name, obj)
             self.items.append(li)
         self.titlebar = 'Objects:'
