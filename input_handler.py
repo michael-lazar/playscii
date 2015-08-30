@@ -209,7 +209,7 @@ class InputLord:
             #
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 ui_wheeled = self.ui.wheel_moved(event.wheel.y)
-                if not ui_wheeled:
+                if not ui_wheeled and self.app.can_edit:
                     if event.wheel.y > 0:
                         app.camera.zoom(-3)
                     elif event.wheel.y < 0:
@@ -266,7 +266,9 @@ class InputLord:
             return ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]
         def pressing_right(ks):
             return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]
-        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active:
+        # prevent camera move if: console is up, text input is active, editing
+        # is not allowed
+        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active and self.app.can_edit:
             if pressing_up(ks):
                 app.camera.pan(0, 1, True)
             if pressing_down(ks):
@@ -279,7 +281,7 @@ class InputLord:
                 app.camera.zoom(-1, True)
             if ks[sdl2.SDL_SCANCODE_Z]:
                 app.camera.zoom(1, True)
-        if app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
+        if self.app.can_edit and app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
         # game mode: arrow keys and left gamepad stick move player
         if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog:
@@ -315,7 +317,7 @@ class InputLord:
     # function names correspond with key values in binds.cfg
     def BIND_quit(self):
         for art in self.app.art_loaded_for_edit:
-            if art.unsaved_changes:
+            if art.unsaved_changes and self.app.can_edit:
                 if self.app.game_mode:
                     self.app.exit_game_mode()
                 self.ui.set_active_art(art)
@@ -482,7 +484,8 @@ class InputLord:
         self.app.update_window_title()
     
     def BIND_set_game_dir(self):
-        self.ui.open_dialog(SetGameDirDialog)
+        if self.app.can_edit:
+            self.ui.open_dialog(SetGameDirDialog)
     
     def BIND_load_game_state(self):
         self.ui.open_dialog(LoadGameStateDialog)

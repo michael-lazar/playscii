@@ -115,6 +115,8 @@ class GameObject:
     selectable = True
     # can delete in edit mode
     deleteable = True
+    # do not list in edit mode UI - system use only!
+    do_not_list = False
     # objects to spawn as attachments: key is member name, value is class
     attachment_classes = {}
     # class blacklist for collisions - string names of classes, not class defs
@@ -776,9 +778,12 @@ class WorldPropertiesObject(GameObject):
     
     art_src = 'world_properties_object'
     visible = deleteable = selectable = False
+    locked = True
+    do_not_list = True
     # properties we serialize on behalf of GameWorld
     # TODO: figure out how to make these defaults sync with those in GW?
-    world_props = ['gravity_x', 'gravity_y', 'gravity_z', 'hud_class_name',
+    world_props = ['gravity_x', 'gravity_y', 'gravity_z',
+                   'hud_class_name', 'globals_object_class_name',
                    'camera_x', 'camera_y', 'camera_z',
                    'bg_color_r', 'bg_color_g', 'bg_color_b', 'bg_color_a',
                    'player_camera_lock', 'object_grid_snap', 'draw_hud',
@@ -831,3 +836,17 @@ class WorldPropertiesObject(GameObject):
         self.camera_x = self.world.camera.x
         self.camera_y = self.world.camera.y
         self.camera_z = self.world.camera.z
+
+
+class WorldGlobalsObject(GameObject):
+    """
+    invisible object holding global state, variables etc in GameWorld.globals
+    subclass can be specified in WorldPropertiesObject
+    NOTE: this object is spawned from scratch every load, it's never serialized!
+    """
+    should_save = False
+    visible = deleteable = selectable = False
+    locked = True
+    do_not_list = True
+    serialized = []
+    editable = []
