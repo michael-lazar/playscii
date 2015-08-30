@@ -80,6 +80,14 @@ class AudioLord:
     def stop_all_sounds(self):
         sdlmixer.Mix_HaltChannel(-1)
     
+    def object_stop_sound(self, game_object, sound_filename):
+        if not sound_filename in self.playing_sounds:
+            return
+        # stop all instances of this sound object might be playing
+        for sound in self.playing_sounds[sound_filename]:
+            if game_object is sound.game_object:
+                sdlmixer.Mix_HaltChannel(sound.channel)
+    
     def set_music(self, music_filename):
         if music_filename in self.musics:
             return

@@ -712,7 +712,7 @@ class ArtFromDisk(Art):
             return
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
-        if not self.app.override_saved_camera and not self.app.game_mode:
+        if not self.app.override_saved_camera:
             cam = d['camera']
             self.camera_x, self.camera_y, self.camera_z = cam[0], cam[1], cam[2]
         else:
