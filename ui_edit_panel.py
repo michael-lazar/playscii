@@ -88,6 +88,7 @@ class EditObjectArtButton(UIButton):
 class EditWorldPropertiesButton(UIButton):
     caption = 'Edit world properties…'
     def selected(button):
+        button.element.world.deselect_all()
         button.element.world.select_object(button.element.world.properties_object, force=True)
 
 class GameEditToggleButton(UIButton):

@@ -57,6 +57,8 @@ class Application:
     fullscreen = False
     # framerate: uncapped if -1
     framerate = 60
+    # fixed timestep for game physics
+    timestep = 1 / framerate
     # force to run even if we can't get an OpenGL 2.1 context
     run_if_opengl_incompatible = False
     # starting document defaults
@@ -105,6 +107,8 @@ class Application:
             self.log_file.write('%s\n' % line)
         self.elapsed_time = 0
         self.delta_time = 0
+        # total number of updates over life of application
+        self.ticks = 0
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         self.inactive_layer_visibility = 1
@@ -573,6 +577,7 @@ class Application:
                 delay -= min(delay, tick_time)
                 sdl2.timer.SDL_Delay(delay)
             self.last_tick_time = tick_time
+            self.ticks += 1
         return 1
     
     def handle_input(self):
@@ -587,7 +592,8 @@ class Application:
         if self.converter:
             self.converter.update()
         if self.game_mode:
-            self.gw.update(dt)
+            # fixed timestep
+            self.gw.update(self.timestep)
         self.camera.update()
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)

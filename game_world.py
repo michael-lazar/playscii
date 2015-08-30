@@ -70,6 +70,12 @@ class GameWorld:
         self.app.al.set_music(music_filename)
         self.app.al.start_music(music_filename)
     
+    def stop_music(self):
+        self.app.al.stop_all_music()
+    
+    def is_music_playing(self):
+        return self.app.al.is_music_playing()
+    
     def pick_next_object_at(self, x, y):
         # TODO: cycle through objects at point til an unselected one is found
         for obj in self.get_objects_at(x, y):
@@ -156,6 +162,8 @@ class GameWorld:
             self.dragging_object = True
     
     def select_object(self, obj, force=False):
+        if not self.app.can_edit:
+            return
         if obj and (obj.selectable or force) and not obj in self.selected_objects:
             self.selected_objects.append(obj)
     
@@ -170,6 +178,8 @@ class GameWorld:
         for obj in self.objects.values():
             obj.destroy()
         self.cl.reset()
+        self.camera.focus_object = None
+        self.player = None
         self.objects = {}
         # art_loaded is cleared when game dir is set
         self.selected_objects = []
@@ -468,13 +478,6 @@ class GameWorld:
         obj_class = self.classes[class_name]
         # pass in object data
         new_object = obj_class(self, object_data)
-        # special handling if object is player
-        if object_data.get('is_player', False):
-            self.player = new_object
-            if self.player_camera_lock:
-                self.camera.focus_object = self.player
-            else:
-                self.camera.focus_object = None
         return new_object
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):

@@ -63,9 +63,9 @@ class GameObject:
     art_charset, art_palette = None, None
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
-    move_accel_rate = 0.01
+    move_accel_x = move_accel_y = 0.01
     # normal movement will accelerate up to this, final velocity is uncapped
-    max_move_speed = 0.1
+    max_move_speed_x = max_move_speed_y = 0.1
     ground_friction = 15.0
     air_friction = 30.0
     # inverse mass: 0 = infinitely dense
@@ -121,6 +121,8 @@ class GameObject:
     noncolliding_classes = []
     # dict of sound filenames, keys are string "tags"
     sound_filenames = {}
+    # looping sounds that should play while in a given state
+    looping_state_sounds = {}
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
@@ -284,12 +286,23 @@ class GameObject:
         if self.collision_shape_type == CST_TILE:
             self.collision.create_shapes()
     
+    def is_entering_state(self, state):
+        return self.state == state and self.last_state != state
+    
+    def is_exiting_state(self, state):
+        return self.state != state and self.last_state == state
+    
     def play_sound(self, sound_name, loops=0, allow_multiple=False):
         # use sound_name as filename if it's not in our filenames dict
         sound_filename = self.sound_filenames.get(sound_name, sound_name)
         sound_filename = self.world.sounds_dir + sound_filename
         self.world.app.al.object_play_sound(self, sound_filename,
                                             loops, allow_multiple)
+    
+    def stop_sound(self, sound_name):
+        sound_filename = self.sound_filenames.get(sound_name, sound_name)
+        sound_filename = self.world.sounds_dir + sound_filename
+        self.world.app.al.object_stop_sound(self, sound_filename)
     
     def enable_collision(self):
         self.collision_type = self.orig_collision_type
@@ -478,24 +491,31 @@ class GameObject:
     def set_alpha(self, new_alpha):
         self.renderable.alpha = self.alpha = new_alpha
     
+    def allow_move(self, dx, dy):
+        "return True only if this object is allowed to move based on input"
+        return True
+    
     def move(self, dx, dy):
         "handle player-initiated velocity"
         # don't handle moves while game paused
         # (add override flag if this becomes necessary)
         if self.world.paused:
             return
-        dt = self.world.app.elapsed_time / 1000
-        move_dx = dx * self.move_accel_rate * dt
-        move_dy = dy * self.move_accel_rate * dt
+        # check allow_move first
+        if not self.allow_move(dx, dy):
+            return
+        dt = 1 / self.world.app.timestep
+        move_dx = dx * self.move_accel_x * dt
+        move_dy = dy * self.move_accel_y * dt
         # cap move-command-derived acceleration
         if move_dx < 0:
-            self.move_x += max(move_dx, -self.max_move_speed)
+            self.move_x += max(move_dx, -self.max_move_speed_x)
         elif move_dx > 0:
-            self.move_x += min(move_dx, self.max_move_speed)
+            self.move_x += min(move_dx, self.max_move_speed_x)
         if move_dy < 0:
-            self.move_y += max(move_dy, -self.max_move_speed)
+            self.move_y += max(move_dy, -self.max_move_speed_y)
         elif move_dy > 0:
-            self.move_y += min(move_dy, self.max_move_speed)
+            self.move_y += min(move_dy, self.max_move_speed_y)
     
     def is_on_ground(self):
         "logic for determining if object is on ground vs not"
@@ -571,14 +591,24 @@ class GameObject:
         else:
             self.facing = GOF_RIGHT if dx >= 0 else GOF_LEFT
     
+    def update_state_sounds(self):
+        "play looping sounds associated with any states"
+        for state,sound in self.looping_state_sounds.items():
+            if self.is_entering_state(state):
+                self.play_sound(sound, loops=-1)
+            elif self.is_exiting_state(state):
+                self.stop_sound(sound)
+    
     def update(self, dt):
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
+        self.last_state = self.state
         # don't apply physics to selected objects being dragged
         if not (self.world.dragging_object and self in self.world.selected_objects):
             self.apply_move(dt)
         self.update_state()
+        self.update_state_sounds()
         self.update_facing()
         # update art based on state (and possibly facing too)
         if self.state_changes_art:
@@ -617,8 +647,6 @@ class GameObject:
     def get_dict(self):
         "return a dict that GameWorld.save_to_file can dump to JSON"
         d = { 'class_name': type(self).__name__ }
-        if self is self.world.player:
-            d['is_player'] = True
         # serialize whatever other vars are declared in self.serialized
         for prop_name in self.serialized:
             if hasattr(self, prop_name):
@@ -712,14 +740,18 @@ class GameCharacter(GameObject):
 class Player(GameCharacter):
     log_move = False
     collision_type = CT_PLAYER
-    editable = GameCharacter.editable + ['move_accel_rate', 'max_move_speed',
+    editable = GameCharacter.editable + ['move_accel_x', 'move_accel_y',
+                                         'max_move_speed_x', 'max_move_speed_y',
                                          'ground_friction', 'air_friction',
                                          'bounciness', 'stop_velocity']
     
-    def __init__(self, world, obj_data=None):
-        GameCharacter.__init__(self, world, obj_data)
+    def pre_first_update(self):
         if self.world.player is None:
             self.world.player = self
+            if self.world.player_camera_lock:
+                self.world.camera.focus_object = self
+            else:
+                self.world.camera.focus_object = None
     
     def button_pressed(self, button_index):
         pass
