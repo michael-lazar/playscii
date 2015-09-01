@@ -12,7 +12,7 @@ class Camera:
     # good starting values
     start_x,start_y = 0,0
     start_zoom = 2.5
-    y_tilt = 0
+    x_tilt, y_tilt = 0, 0
     # pan/zoom speed tuning
     mouse_pan_rate = 10
     pan_accel = 0.005
@@ -53,6 +53,7 @@ class Camera:
         eye = vector.Vec3(self.x, self.y, self.z)
         target = eye.copy()
         target.z = 0
+        target.x += self.x_tilt
         target.y += self.y_tilt # camera pitch mode7 radness
         up = vector.Vec3(0, 1, 0)
         #self.view_matrix = matrix.look_at(loc, target, up)

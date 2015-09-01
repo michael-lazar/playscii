@@ -501,10 +501,6 @@ class GameWorld:
             self.app.log("Couldn't load game state from %s" % filename)
             #self.app.log(sys.exc_info())
             return
-        # spawn hud
-        hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
-        self.hud = hud_class(self)
-        self.hud_class_name = hud_class.__name__
         # spawn objects
         for obj_data in d['objects']:
             self.spawn_object_from_data(obj_data)
@@ -517,6 +513,11 @@ class GameWorld:
             self.properties = self.spawn_object_of_class(self.properties_object_class_name, 0, 0)
         # spawn a WorldGlobalStateObject
         self.globals = self.spawn_object_of_class(self.properties.globals_object_class_name, 0, 0)
+        # spawn hud
+        hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
+        self.hud = hud_class(self)
+        self.hud_class_name = hud_class.__name__
+        
         self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.show_collision_all)
@@ -551,7 +552,8 @@ class GameWorld:
                 obj_cols += 1
                 obj_col_rends += len(obj.collision.renderables)
             attachments += len(obj.attachments)
-        print("""%s arts in objects, %s arts loaded,
+        print("""
+        %s arts in objects, %s arts loaded,
         %s HUD arts, %s HUD renderables,
         %s renderables, %s debug renderables,
         %s collideables, %s collideable viz renderables,
