@@ -1,0 +1,117 @@
+{
+ "active_frame": 0,
+ "active_layer": 0,
+ "camera": [
+  2.5,
+  -1.5,
+  8.762620393409348
+ ],
+ "charset": "ui",
+ "frames": [
+  {
+   "delay": 0.1,
+   "layers": [
+    {
+     "name": "Layer 1",
+     "tiles": [
+      {
+       "bg": 1,
+       "char": 50,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 42,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 45,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 39,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 31,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 0,
+       "fg": 0,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 128,
+       "fg": 7,
+       "xform": 0
+      },
+      {
+       "bg": 7,
+       "char": 130,
+       "fg": 6,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 128,
+       "fg": 7,
+       "xform": 4
+      },
+      {
+       "bg": 1,
+       "char": 0,
+       "fg": 0,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 0,
+       "fg": 0,
+       "xform": 0
+      },
+      {
+       "bg": 1,
+       "char": 128,
+       "fg": 7,
+       "xform": 5
+      },
+      {
+       "bg": 7,
+       "char": 129,
+       "fg": 6,
+       "xform": 5
+      },
+      {
+       "bg": 1,
+       "char": 128,
+       "fg": 7,
+       "xform": 2
+      },
+      {
+       "bg": 1,
+       "char": 0,
+       "fg": 0,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0
+    }
+   ]
+  }
+ ],
+ "height": 3,
+ "palette": "c64_original",
+ "width": 5
+}
