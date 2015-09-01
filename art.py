@@ -460,14 +460,26 @@ class Art:
         color_index %= len(self.palette.colors)
         # no functional differences between fg and bg color update,
         # so use the same code path with different parameters
-        update_array = self.fg_colors[frame]
-        if not fg:
-            update_array = self.bg_colors[frame]
+        update_array = self.fg_colors[frame] if fg else self.bg_colors[frame]
         update_array[layer][y][x] = color_index
         if fg and not frame in self.fg_changed_frames:
             self.fg_changed_frames.append(frame)
         elif not fg and not frame in self.bg_changed_frames:
             self.bg_changed_frames.append(frame)
+    
+    def set_all_non_transparent_colors(self, new_color_index):
+        for frame, layer, x, y in TileIter(self):
+            # non-transparent color could be FG or BG
+            char, fg, bg, xform = self.get_tile_at(frame, layer, x, y)
+            change_fg = bg == 0
+            self.set_color_at(frame, layer, x, y, new_color_index, change_fg)
+    
+    def set_all_bg_colors(self, new_color_index, exclude_layers=[]):
+        for frame, layer, x, y in TileIter(self):
+            # exclude all layers named in list
+            if self.layer_names[layer] in exclude_layers:
+                continue
+            self.set_color_at(frame, layer, x, y, new_color_index, fg=False)
     
     def set_char_transform_at(self, frame, layer, x, y, transform):
         self.uv_mods[frame][layer][y][x] = uv_types[transform]

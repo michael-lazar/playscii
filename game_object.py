@@ -105,7 +105,7 @@ class GameObject:
     # list of members to serialize (no weak refs!)
     serialized = ['x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
                   'art_off_pct_x', 'art_off_pct_y', 'alpha', 'state', 'facing',
-                  'animating']
+                  'animating', 'scale_x', 'scale_y']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
     editable = ['show_collision', 'inv_mass', 'bounciness', 'stop_velocity']
@@ -128,6 +128,7 @@ class GameObject:
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
+        self.scale_x, self.scale_y, self.scale_z = 1., 1., 1.
         # every object gets a state and facing, even if it never changes
         self.state = DEFAULT_STATE
         self.facing = GOF_FRONT
@@ -155,7 +156,6 @@ class GameObject:
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         # user-intended acceleration
         self.move_x, self.move_y, self.move_z = 0, 0, 0
-        self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
         self.flip_x = False
         self.world = world
         self.app = self.world.app
@@ -201,6 +201,7 @@ class GameObject:
         self.should_destroy = False
         # flag that tells us we should run post_init next update
         self.pre_first_update_run = False
+        self.last_state = None
         if self.animating and self.art.frames > 0:
             self.start_animating()
         if self.log_spawn:
@@ -305,6 +306,9 @@ class GameObject:
         sound_filename = self.sound_filenames.get(sound_name, sound_name)
         sound_filename = self.world.sounds_dir + sound_filename
         self.world.app.al.object_stop_sound(self, sound_filename)
+    
+    def stop_all_sounds(self):
+        self.world.app.al.object_stop_all_sounds(self)
     
     def enable_collision(self):
         self.collision_type = self.orig_collision_type
@@ -605,6 +609,9 @@ class GameObject:
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
+        # if we're just entering stand state, play any sound for it
+        if self.last_state is None:
+            self.update_state_sounds()
         self.last_state = self.state
         # don't apply physics to selected objects being dragged
         if not (self.world.dragging_object and self in self.world.selected_objects):
@@ -659,6 +666,7 @@ class GameObject:
         self.world.reset_object_in_place(self)
     
     def destroy(self):
+        self.stop_all_sounds()
         if self in self.world.selected_objects:
             self.world.selected_objects.remove(self)
         self.origin_renderable.destroy()

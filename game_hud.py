@@ -31,6 +31,11 @@ class GameHUD:
         for r in self.renderables:
             r.update()
     
+    def should_render(self):
+        return True
+    
     def render(self):
+        if not self.should_render():
+            return
         for r in self.renderables:
             r.render()

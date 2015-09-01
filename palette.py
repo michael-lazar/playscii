@@ -1,4 +1,4 @@
-import os.path, math
+import os.path, math, time
 from random import randint
 from PIL import Image
 
@@ -6,7 +6,7 @@ from texture import Texture
 
 PALETTE_DIR = 'palettes/'
 PALETTE_EXTENSIONS = ['png', 'gif', 'bmp']
-MAX_COLORS = 255
+MAX_COLORS = 1024
 
 class Palette:
     
@@ -65,12 +65,9 @@ class Palette:
             self.app.log('  lightest color index: %s' % self.lightest_index)
         self.init_success = True
     
-    def export_as_image(self):
-        #width = math.floor(math.sqrt(len(self.colors) - 1))
+    def generate_image(self):
         width = min(16, len(self.colors) - 1)
-        #width = min(math.sqrt(len(self.colors)), math.sqrt(MAX_COLORS + 1))
         height = math.floor((len(self.colors) - 1) / width)
-        block_size = 8
         # new PIL image, blank (0 alpha) pixels
         img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
         # set each pixel from color list (minus first, transparent color)
@@ -81,7 +78,13 @@ class Palette:
                     break
                 img.putpixel((x, y), self.colors[color_index])
                 color_index += 1
+        return img
+    
+    def export_as_image(self):
+        img = self.generate_image()
+        block_size = 8
         # scale up
+        width, height = img.size
         img = img.resize((width * block_size, height * block_size),
                          resample=Image.NEAREST)
         # write to file
@@ -129,6 +132,48 @@ class Palette:
     def get_random_color_index(self):
         # exclude transparent first index
         return randint(1, len(self.colors))
+
+
+class PaletteFromList(Palette):
+    
+    "palette created from list of 3/4-tuple base-255 colors instead of image"
+    
+    def __init__(self, app, src_color_list, log):
+        self.init_success = False
+        self.app = app
+        # generate a unique non-user-facing palette name
+        name = 'PaletteFromList_%s' % time.time()
+        self.filename = self.name = self.base_filename = name
+        colors = []
+        for color in src_color_list:
+            # assume 1 alpha if not given
+            if len(color) == 3:
+                colors.append((color[0], color[1], color[2], 255))
+            else:
+                colors.append(color)
+        self.colors = [(0, 0, 0, 0)] + colors
+        lightest = 0
+        darkest = 255 * 3 + 1
+        for color in self.colors:
+            luminosity = color[0]*0.21 + color[1]*0.72 + color[2]*0.07
+            if luminosity < darkest:
+                darkest = luminosity
+                self.darkest_index = len(self.colors) - 1
+            elif luminosity > lightest:
+                lightest = luminosity
+                self.lightest_index = len(self.colors) - 1
+        # create texture
+        img = Image.new('RGBA', (MAX_COLORS, 1), (0, 0, 0, 0))
+        x = 0
+        for color in self.colors:
+            img.putpixel((x, 0), color)
+            x += 1
+        self.texture = Texture(img.tostring(), MAX_COLORS, 1)
+        if log and not self.app.game_mode:
+            self.app.log("generated new palette '%s'" % (self.name))
+            self.app.log('  unique colors: %s' % int(len(self.colors)-1))
+            self.app.log('  darkest color index: %s' % self.darkest_index)
+            self.app.log('  lightest color index: %s' % self.lightest_index)
 
 
 class PaletteFromFile(Palette):
