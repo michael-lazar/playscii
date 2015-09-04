@@ -58,7 +58,7 @@ class Application:
     # framerate: uncapped if -1
     framerate = 60
     # fixed timestep for game physics
-    timestep = 1 / framerate
+    update_rate = 30
     # force to run even if we can't get an OpenGL 2.1 context
     run_if_opengl_incompatible = False
     # starting document defaults
@@ -105,12 +105,15 @@ class Application:
         self.log_file = open(self.config_dir + LOG_FILENAME, 'w')
         for line in self.log_lines:
             self.log_file.write('%s\n' % line)
-        self.elapsed_time = 0
-        self.delta_time = 0
-        # total number of updates over life of application
-        self.ticks = 0
+        self.elapsed_time, self.last_time = 0, 0
+        # number of updates (world, etc) and rendered frames this session
+        self.updates, self.frames = 0, 0
+        self.timestep = (1 / self.update_rate) * 1000
+        # for FPS counter
+        self.frame_time, self.fps = 0, 0
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
+        self.mouse_dx, self.mouse_dy = 0, 0
         self.inactive_layer_visibility = 1
         self.version = get_version()
         # last edit came from keyboard or mouse, used by cursor control logic
@@ -239,7 +242,6 @@ class Application:
         self.cursor = Cursor(self)
         self.grid = Grid(self, self.ui.active_art)
         self.ui.set_active_layer(self.ui.active_art.active_layer)
-        self.frame_time, self.fps, self.last_tick_time = 0, 0, 0
         # INPUTLORD rules input handling and keybinds
         self.il = InputLord(self)
         self.init_success = True
@@ -548,60 +550,74 @@ class Application:
         self.al.pause_music()
     
     def main_loop(self):
+        self.last_time = sdl2.timer.SDL_GetTicks()
         while not self.should_quit:
-            # set all arts to "not updated"
-            if self.game_mode:
-                self.gw.pre_update()
-            else:
-                for art in self.art_loaded_for_edit:
-                    art.updated_this_tick = False
-            tick_time = sdl2.timer.SDL_GetTicks()
-            self.handle_input()
-            self.update(self.delta_time / 1000)
+            self.elapsed_time = start_frame_time = sdl2.timer.SDL_GetTicks()
+            self.pre_frame_update()
+            # avoid too many updates if eg machine straight up hangs
+            if self.elapsed_time - self.last_time > 1000:
+                self.last_time = self.elapsed_time
+            updates = int((self.elapsed_time - self.last_time) / self.timestep)
+            for i in range(updates):
+                self.il.handle_input()
+                self.pre_update()
+                self.update()
+                self.last_time += self.timestep
+                self.updates += 1
+            self.frame_update()
             self.render()
+            self.frames += 1
             self.sl.check_hot_reload()
-            elapsed_time = sdl2.timer.SDL_GetTicks()
-            # determine frame work time, feed it into delay
-            tick_time = elapsed_time - tick_time
-            self.delta_time = elapsed_time - self.elapsed_time
-            self.elapsed_time = elapsed_time
             # determine FPS
             # alpha: lower = smoother
-            alpha = 0.2
-            self.frame_time = alpha * self.delta_time + (1 - alpha) * self.frame_time
+            alpha = 0.1
+            dt = sdl2.timer.SDL_GetTicks() - start_frame_time
+            self.frame_time = alpha * dt + (1 - alpha) * self.frame_time
             self.fps = 1000 / self.frame_time
             # delay to maintain framerate, if uncapped
             if self.framerate != -1:
-                delay = int(1000 / self.framerate)
+                delay = 1000 / self.framerate
                 # subtract work time from delay to maintain framerate
-                delay -= min(delay, tick_time)
-                sdl2.timer.SDL_Delay(delay)
-            self.last_tick_time = tick_time
-            self.ticks += 1
+                delay -= min(delay, dt)
+                print('delaying %sms to hit %s' % (delay, self.framerate))
+                sdl2.timer.SDL_Delay(int(delay))
         return 1
     
-    def handle_input(self):
-        self.il.handle_input()
+    def pre_update(self):
+        "runs just before a new update starts"
+        # set all arts to "not updated"
+        if self.game_mode:
+            self.gw.pre_update()
     
-    def update(self, dt):
-        self.al.update()
+    def update(self):
+        """
+        update game world and anything else that should happen on fixed timestep
+        """
+        if self.game_mode:
+            self.gw.update()
+        if self.ui.visible:
+            self.ui.update()
+    
+    def pre_frame_update(self):
+        if not self.game_mode:
+            for art in self.art_loaded_for_edit:
+                art.updated_this_tick = False
+    
+    def frame_update(self):
+        "non-game updates that should happen once per frame"
+        if self.converter:
+            self.converter.update()
         for art in self.art_loaded_for_edit:
             art.update()
         for renderable in self.edit_renderables:
             renderable.update()
-        if self.converter:
-            self.converter.update()
-        if self.game_mode:
-            # fixed timestep
-            self.gw.update(self.timestep)
-        self.camera.update()
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
-        if self.ui.visible:
-            self.ui.update()
+        self.camera.update()
         if not self.game_mode:
             self.grid.update()
             self.cursor.end_update()
+        self.al.update()
     
     def debug_onion_frames(self):
         "debug function to log onion renderable state"

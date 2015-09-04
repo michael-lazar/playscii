@@ -2,16 +2,15 @@ TODO
 
 current tasks:
 
-more complete example games:
-- endless ladder climbing HD (5th anniversary edition) - side view game with multiple screens, art that modifies itself to shift colors, uses collision for ground and overlap for ladder, anims for player states
+game distribution: if "start_game" is set, create a separate CFG file and don't create playscii directories
+
+fix physics:
+- http://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity
+
+"movement context" for handling movement/physics:
+- move accel, max accel, max velocity, stop velocity, gravity (if not global), "specific-axis" bool
 
 enumerate specific bugs with chooser UI below and fix em
-
-save "player camera lock" in GW, restore it properly
-
-"world properties" object:
-- stores world stuff that should be serialized, eg gravity, bg color, camera, hud class
-- can't be deleted, only one can be created, when it spawns on load world takes its properties
 
 generalized (works for any type of file, not just arts) file chooser:
 x left and right go up and into selected dir where applicable

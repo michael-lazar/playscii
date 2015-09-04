@@ -64,7 +64,7 @@ class GameObject:
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
     move_accel_x = move_accel_y = 0.01
-    # normal movement will accelerate up to this, final velocity is uncapped
+    # normal movement will accelerate up to this (final velocity is uncapped)
     max_move_speed_x = max_move_speed_y = 0.1
     ground_friction = 15.0
     air_friction = 30.0
@@ -502,6 +502,22 @@ class GameObject:
         return True
     
     def move(self, dx, dy):
+        if self.world.paused:
+            return
+        # check allow_move first
+        if not self.allow_move(dx, dy):
+            return
+        self.move_x += min(self.max_move_speed_x, dx * self.move_accel_x)
+        """
+        acceleration = force(time, position, velocity) / mass
+        time += timestep
+        position += timestep * (velocity + timestep * acceleration / 2)
+        velocity += timestep * acceleration
+        newAcceleration = force(time, position, velocity) / mass
+        velocity += timestep * (newAcceleration - acceleration) / 2
+        """
+    
+    def moveX(self, dx, dy):
         "handle player-initiated velocity"
         # don't handle moves while game paused
         # (add override flag if this becomes necessary)
@@ -510,7 +526,7 @@ class GameObject:
         # check allow_move first
         if not self.allow_move(dx, dy):
             return
-        dt = 1 / self.world.app.timestep
+        dt = self.world.app.timestep
         move_dx = dx * self.move_accel_x * dt
         move_dy = dy * self.move_accel_y * dt
         # cap move-command-derived acceleration
@@ -557,7 +573,18 @@ class GameObject:
     def is_affected_by_gravity(self):
         return False
     
-    def apply_move(self, dt):
+    def apply_move(self):
+        self.move_x *= self.ground_friction
+        dt = (self.world.app.elapsed_time - self.world.app.last_time) / 1000
+        self.x += dt * (self.vel_x + dt * self.move_x / 2)
+        self.vel_x += dt * self.move_x
+        #position += timestep * (velocity + timestep * acceleration / 2);
+        #velocity += timestep * acceleration;
+        self.vel_x = self.vel_x if abs(self.vel_x) > self.stop_velocity else 0
+        self.vel_y = self.vel_y if abs(self.vel_y) > self.stop_velocity else 0
+        self.vel_z = self.vel_z if abs(self.vel_z) > self.stop_velocity else 0
+    
+    def apply_moveX(self, dt):
         "apply friction, move impulse, and gravity"
         self.apply_friction(dt)
         # apply desired move impulse then reset it for next frame
@@ -605,7 +632,7 @@ class GameObject:
             elif self.is_exiting_state(state):
                 self.stop_sound(sound)
     
-    def update(self, dt):
+    def update(self):
         if not self.art.updated_this_tick:
             self.art.update()
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
@@ -615,7 +642,7 @@ class GameObject:
         self.last_state = self.state
         # don't apply physics to selected objects being dragged
         if not (self.world.dragging_object and self in self.world.selected_objects):
-            self.apply_move(dt)
+            self.apply_move()
         self.update_state()
         self.update_state_sounds()
         self.update_facing()
@@ -692,7 +719,7 @@ class GameObjectAttachment(GameObject):
     def attach_to(self, gobj):
         self.parent = gobj
     
-    def update(self, dt):
+    def update(self):
         if not self.art.updated_this_tick:
             self.art.update()
         self.x = self.parent.x + self.offset_x

@@ -296,7 +296,7 @@ class GameWorld:
         for obj in self.objects.values():
             obj.art.updated_this_tick = False
     
-    def update(self, dt):
+    def update(self):
         # add newly spawned objects to table
         self.objects.update(self.new_objects)
         self.new_objects = {}
@@ -311,7 +311,7 @@ class GameWorld:
         if not self.paused:
             # update objects based on movement, then resolve collisions
             for obj in self.objects.values():
-                obj.update(dt)
+                obj.update()
             if self.collision_enabled:
                 self.cl.resolve_overlaps()
         # display debug text for selected object(s)
@@ -327,7 +327,7 @@ class GameWorld:
         for obj_name in to_destroy:
             self.objects.pop(obj_name)
         if self.hud:
-            self.hud.update(dt)
+            self.hud.update()
     
     def render(self):
         for obj in self.objects.values():

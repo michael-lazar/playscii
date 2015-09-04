@@ -184,7 +184,7 @@ class TileRenderable:
     def move_to(self, x, y, z, travel_time=None):
         # for fixed travel time, set move rate accordingly
         if travel_time:
-            frames = (travel_time * 1000) / self.app.frame_time
+            frames = (travel_time * 1000) / max(self.app.framerate, 30)
             dx = x - self.x
             dy = y - self.y
             dz = z - self.z
@@ -243,7 +243,7 @@ class TileRenderable:
             self.update_loc()
         if not self.animating:
             return
-        self.anim_timer += self.app.delta_time / 1000
+        self.anim_timer += self.app.elapsed_time - self.app.last_time
         this_frame_delay = self.art.frame_delays[self.frame]
         while self.anim_timer > this_frame_delay:
             self.anim_timer -= this_frame_delay

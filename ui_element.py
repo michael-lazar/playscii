@@ -213,7 +213,7 @@ class FPSCounterUI(UIElement):
         x = self.tile_width - 1
         self.art.write_string(0, 0, x, 0, text, color, None, True)
         # display last tick time; frame_time includes delay, is useless
-        text = '%.1f ms ' % self.ui.app.last_tick_time
+        text = '%.1f ms ' % self.ui.app.frame_time
         self.art.write_string(0, 0, x, 1, text, color, None, True)
     
     def render(self):
