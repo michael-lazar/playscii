@@ -25,7 +25,7 @@ class GameHUD:
         self.world = world
         self.arts, self.renderables = [], []
     
-    def update(self, dt):
+    def update(self):
         for art in self.arts:
             art.update()
         for r in self.renderables:

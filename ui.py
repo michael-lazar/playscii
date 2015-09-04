@@ -181,10 +181,10 @@ class UI:
             # always put active art at 0,0
             if r in self.active_art.renderables:
                 r.alpha = 1
-                r.move_to(0, 0, 0, 0.1)
+                r.move_to(0, 0, 0, 0.2)
             else:
                 r.alpha = 0.5
-                r.move_to(x, y, -1, 0.1)
+                r.move_to(x, y, -1, 0.2)
             x += (r.art.width + margin) * r.art.quad_width
             y -= (r.art.height + margin) * r.art.quad_height
         # now that renderables are moved, rescale/reposition grid
