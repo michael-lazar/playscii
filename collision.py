@@ -25,7 +25,7 @@ class CircleCollisionShape:
         self.x, self.y = loc_x, loc_y
         self.radius = radius
         self.game_object = gobj
-        self.inv_mass = self.game_object.inv_mass
+        self.mass = self.game_object.mass
 
 class AxisAlignedRoundedRectangle:
     # AAAARRRR matey
@@ -35,7 +35,7 @@ class AxisAlignedRoundedRectangle:
         self.radius = radius
         self.halfwidth_x, self.halfwidth_y = halfwidth_x, halfwidth_y
         self.game_object = gobj
-        self.inv_mass = self.game_object.inv_mass
+        self.mass = self.game_object.mass
 
 class Collideable:
     
@@ -199,19 +199,20 @@ class CollisionLord:
             return
         # determine new direction and velocity
         total_vel = obj_a.vel_x + obj_a.vel_y + obj_b.vel_x + obj_b.vel_y
-        total_mass = obj_a.inv_mass + obj_b.inv_mass
+        # negative mass = infinite
+        total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
         if obj_b.name not in obj_a.collision.contacts or \
            obj_a.name not in obj_b.collision.contacts:
             return
         # redistribute velocity based on mass we're colliding with
-        if obj_a.is_dynamic():
+        if obj_a.is_dynamic() and obj_a.mass >= 0:
             ax, ay = obj_a.collision.contacts[obj_b.name][:2]
-            a_vel = total_vel * (obj_a.inv_mass / total_mass)
+            a_vel = total_vel * (obj_a.mass / total_mass)
             a_vel *= obj_a.bounciness
             obj_a.vel_x, obj_a.vel_y = -ax * a_vel, -ay * a_vel
-        if obj_b.is_dynamic():
+        if obj_b.is_dynamic() and obj_b.mass >= 0:
             bx, by = obj_b.collision.contacts[obj_a.name][:2]
-            b_vel = total_vel * (obj_b.inv_mass / total_mass)
+            b_vel = total_vel * (obj_b.mass / total_mass)
             b_vel *= obj_b.bounciness
             obj_b.vel_x, obj_b.vel_y = -bx * b_vel, -by * b_vel
         # mark objects as resolved
@@ -243,22 +244,22 @@ def collide_circles(a, b):
         # if either object says it shouldn't collide with other, don't
         if not a_coll_b or not b_coll_a:
             return
-        total_mass = obj_a.inv_mass + obj_b.inv_mass
+        total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
         if obj_a.is_dynamic():
-            if not obj_b.is_dynamic():
+            if not obj_b.is_dynamic() or obj_b.mass < 0:
                 a_push = pdist
             else:
-                a_push = (a.inv_mass / total_mass) * pdist
+                a_push = (a.mass / total_mass) * pdist
             # move parent object, not shape
             obj_a.x += a_push * dx
             obj_a.y += a_push * dy
             # update all shapes based on object's new position
             obj_a.collision.update_transform_from_object()
         if obj_b.is_dynamic():
-            if not obj_a.is_dynamic():
+            if not obj_a.is_dynamic() or obj_a.mass < 0:
                 b_push = pdist
             else:
-                b_push = (b.inv_mass / total_mass) * pdist
+                b_push = (b.mass / total_mass) * pdist
             obj_b.x -= b_push * dx
             obj_b.y -= b_push * dy
             obj_b.collision.update_transform_from_object()

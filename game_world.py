@@ -291,15 +291,23 @@ class GameWorld:
     def toggle_grid_snap(self):
         self.object_grid_snap = not self.object_grid_snap
     
-    def pre_update(self):
+    def pre_frame_update(self):
         "runs at start of game loop iteration, before input/update/render"
         for obj in self.objects.values():
             obj.art.updated_this_tick = False
     
-    def update(self):
+    def frame_update(self):
+        for obj in self.objects.values():
+            obj.frame_update()
+    
+    def pre_update(self):
         # add newly spawned objects to table
         self.objects.update(self.new_objects)
         self.new_objects = {}
+        for obj in self.objects.values():
+            obj.pre_update()
+    
+    def update(self):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
         if self.properties:
             self.properties.update_from_world()
