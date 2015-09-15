@@ -559,8 +559,8 @@ class Application:
                 self.last_time = self.elapsed_time
             updates = int((self.elapsed_time - self.last_time) / self.timestep)
             for i in range(updates):
-                self.il.handle_input()
                 self.pre_update()
+                self.il.handle_input()
                 self.update()
                 self.last_time += self.timestep
                 self.updates += 1
@@ -584,22 +584,18 @@ class Application:
         return 1
     
     def pre_update(self):
-        "runs just before a new update starts"
-        # set all arts to "not updated"
-        if self.game_mode:
-            self.gw.pre_update()
+        "runs just before a new update starts and input is handled"
+        if self.game_mode: self.gw.pre_update()
     
     def update(self):
-        """
-        update game world and anything else that should happen on fixed timestep
-        """
-        if self.game_mode:
-            self.gw.update()
-        if self.ui.visible:
-            self.ui.update()
+        "update game world & anything else that should happen on fixed timestep"
+        if self.game_mode: self.gw.update()
     
     def pre_frame_update(self):
-        if not self.game_mode:
+        if self.game_mode:
+            self.gw.pre_frame_update()
+        else:
+            # set all arts to "not updated"
             for art in self.art_loaded_for_edit:
                 art.updated_this_tick = False
     
@@ -611,12 +607,17 @@ class Application:
             art.update()
         for renderable in self.edit_renderables:
             renderable.update()
+        # game world has its own once-a-frame updates, eg art/renderables
+        if self.game_mode:
+            self.gw.frame_update()
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update(self.elapsed_time)
         self.camera.update()
         if not self.game_mode:
             self.grid.update()
             self.cursor.end_update()
+        if self.ui.visible:
+            self.ui.update()
         self.al.update()
     
     def debug_onion_frames(self):

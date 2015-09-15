@@ -63,13 +63,14 @@ class GameObject:
     art_charset, art_palette = None, None
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
+    # acceleration per update from player movement
     move_accel_x = move_accel_y = 0.01
-    # normal movement will accelerate up to this (final velocity is uncapped)
-    max_move_speed_x = max_move_speed_y = 0.1
+    # player movement acceleration cap (velocity is uncapped)
+    max_move_accel_x = max_move_accel_y = 0.1
     ground_friction = 15.0
     air_friction = 30.0
-    # inverse mass: 0 = infinitely dense
-    inv_mass = 1.
+    # mass: negative number = infinitely dense
+    mass = 1.
     # bounciness aka restitution, % of velocity reflected on bounce
     bounciness = 0.25
     # near-zero point at which velocity
@@ -108,7 +109,7 @@ class GameObject:
                   'animating', 'scale_x', 'scale_y']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
-    editable = ['show_collision', 'inv_mass', 'bounciness', 'stop_velocity']
+    editable = ['show_collision', 'mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
     set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha'}
     # can select in edit mode
@@ -155,7 +156,7 @@ class GameObject:
                     setattr(self, v, obj_data[v])
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         # user-intended acceleration
-        self.move_x, self.move_y, self.move_z = 0, 0, 0
+        self.move_x, self.move_y = 0, 0
         self.flip_x = False
         self.world = world
         self.app = self.world.app
@@ -501,13 +502,20 @@ class GameObject:
         "return True only if this object is allowed to move based on input"
         return True
     
-    def move(self, dx, dy):
+    def move(self, dir_x, dir_y):
+        self.move_x += dir_x
+        self.move_y += dir_y
+    
+    def moveY(self, dir_x, dir_y):
         if self.world.paused:
             return
         # check allow_move first
-        if not self.allow_move(dx, dy):
+        if not self.allow_move(dir_x, dir_y):
             return
-        self.move_x += min(self.max_move_speed_x, dx * self.move_accel_x)
+        #self.move_x += min(self.max_move_speed_x, dx * self.move_accel_x)
+        #self.move_x = min(self.max_move_speed_x, dx * self.move_accel_x)
+        self.accel_x = dir_x * self.move_accel_x
+        self.move
         """
         acceleration = force(time, position, velocity) / mass
         time += timestep
@@ -542,7 +550,7 @@ class GameObject:
     def is_on_ground(self):
         "logic for determining if object is on ground vs not"
         return True
-
+    
     def get_friction(self):
         return self.ground_friction if self.is_on_ground() else self.air_friction
     
@@ -572,17 +580,84 @@ class GameObject:
     
     def is_affected_by_gravity(self):
         return False
+    """
+acceleration = force(time, position) / mass;
+time += timestep;
+position += timestep * (velocity + timestep * acceleration / 2);
+newAcceleration = force(time, position) / mass;
+velocity += timestep * (acceleration + newAcceleration) / 2;
+    """
     
-    def apply_move(self):
-        self.move_x *= self.ground_friction
-        dt = (self.world.app.elapsed_time - self.world.app.last_time) / 1000
-        self.x += dt * (self.vel_x + dt * self.move_x / 2)
-        self.vel_x += dt * self.move_x
-        #position += timestep * (velocity + timestep * acceleration / 2);
-        #velocity += timestep * acceleration;
+    def check_stop(self):
         self.vel_x = self.vel_x if abs(self.vel_x) > self.stop_velocity else 0
         self.vel_y = self.vel_y if abs(self.vel_y) > self.stop_velocity else 0
         self.vel_z = self.vel_z if abs(self.vel_z) > self.stop_velocity else 0
+    
+    def get_gravity(self):
+        grav_x = self.world.gravity_x
+        grav_y = self.world.gravity_y
+        grav_z = self.world.gravity_z
+        return grav_x, grav_y
+    
+    def get_acceleration(self):
+        #accel_x = min(self.move_x * self.move_accel_x, self.max_move_speed_x)
+        #accel_y = min(self.move_y * self.move_accel_y, self.max_move_speed_y)
+        accel_x = self.move_x * self.move_accel_x
+        accel_y = self.move_y * self.move_accel_y
+        accel_z = 0
+        if self.is_affected_by_gravity():
+            grav_x, grav_y, grav_z = self.get_gravity()
+            accel_x -= grav_x * self.mass
+            accel_y -= grav_y * self.mass
+            accel_z -= grav_z * self.mass
+        # friction / drag
+        friction = self.get_friction()
+        speed = math.sqrt(self.vel_x ** 2 + self.vel_y ** 2 + self.vel_z ** 2)
+        accel_x -= friction * self.mass * speed * self.vel_x
+        accel_y -= friction * self.mass * speed * self.vel_y
+        accel_z -= friction * self.mass * speed * self.vel_z
+        return accel_x, accel_y, accel_z
+    
+    def cut_xyz(self, x, y, z, threshold):
+        x = x if abs(x) > threshold else 0
+        y = y if abs(y) > threshold else 0
+        z = z if abs(z) > threshold else 0
+        return x, y, z
+    
+    def apply_move(self):
+        accel_x, accel_y, accel_z = self.get_acceleration()
+        accel_x, accel_y, accel_z = self.cut_xyz(accel_x, accel_y, accel_z, 0.1)
+        timestep = self.world.app.timestep / 1000
+        self.vel_x += accel_x * timestep
+        self.vel_y += accel_y * timestep
+        self.vel_z += accel_z * timestep
+        self.vel_x, self.vel_y, self.vel_z = self.cut_xyz(self.vel_x, self.vel_y, self.vel_z, self.stop_velocity)
+        self.x += self.vel_x * timestep
+        self.y += self.vel_y * timestep
+        self.z += self.vel_z * timestep
+        if self is self.world.player:
+            lines = ['accel: %s' % accel_x, 'vel: %s' % self.vel_x]
+            self.world.app.ui.debug_text.post_lines(lines)
+    
+    def apply_moveZ(self):
+        self.accel_x -= self.vel_x * self.ground_friction
+        dt = self.world.app.timestep / 1000
+        self.x += (self.accel_x / 2) * dt**2 + self.vel_x * dt
+        self.vel_x += self.accel_x * dt
+        self.accel_x = 0
+        self.check_stop()
+        if self is self.world.player:
+            lines = ['accel: %s' % self.accel_x, 'vel: %s' % self.vel_x]
+            self.world.app.ui.debug_text.post_lines(lines)
+    
+    def apply_moveY(self):
+        old_accel_x = self.accel_x
+        timestep = self.world.app.timestep / 1000
+        self.x += timestep * (self.vel_x + timestep * self.accel_x / 2)
+        self.accel_x *= self.ground_friction
+        self.vel_x += timestep * (self.accel_x + old_accel_x) / 2
+        #position += timestep * (velocity + timestep * acceleration / 2);
+        #velocity += timestep * acceleration;
     
     def apply_moveX(self, dt):
         "apply friction, move impulse, and gravity"
@@ -632,25 +707,30 @@ class GameObject:
             elif self.is_exiting_state(state):
                 self.stop_sound(sound)
     
-    def update(self):
+    def frame_update(self):
         if not self.art.updated_this_tick:
             self.art.update()
+        # update art based on state (and possibly facing too)
+        if self.state_changes_art:
+            new_art, flip_x = self.get_art_for_state()
+            self.set_art(new_art)
+            self.flip_x = flip_x
+    
+    def pre_update(self):
+        self.move_x, self.move_y = 0, 0
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         # if we're just entering stand state, play any sound for it
         if self.last_state is None:
             self.update_state_sounds()
         self.last_state = self.state
+    
+    def update(self):
         # don't apply physics to selected objects being dragged
         if not (self.world.dragging_object and self in self.world.selected_objects):
             self.apply_move()
         self.update_state()
         self.update_state_sounds()
         self.update_facing()
-        # update art based on state (and possibly facing too)
-        if self.state_changes_art:
-            new_art, flip_x = self.get_art_for_state()
-            self.set_art(new_art)
-            self.flip_x = flip_x
         # update collision shape before CollisionLord resolves any collisions
         self.collision.update()
     
@@ -778,7 +858,7 @@ class Player(GameCharacter):
     log_move = False
     collision_type = CT_PLAYER
     editable = GameCharacter.editable + ['move_accel_x', 'move_accel_y',
-                                         'max_move_speed_x', 'max_move_speed_y',
+                                         'max_move_accel_x', 'max_move_accel_y',
                                          'ground_friction', 'air_friction',
                                          'bounciness', 'stop_velocity']
     
