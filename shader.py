@@ -25,9 +25,9 @@ class ShaderLord:
         return s
     
     def check_hot_reload(self):
-        if self.app.elapsed_time - self.last_check < self.hot_reload_check_interval:
+        if self.app.get_elapsed_time() - self.last_check < self.hot_reload_check_interval:
             return
-        self.last_check = self.app.elapsed_time
+        self.last_check = self.app.get_elapsed_time()
         for shader in self.shaders:
             vert_shader_updated, frag_shader_updated = shader.has_updated()
             if vert_shader_updated:

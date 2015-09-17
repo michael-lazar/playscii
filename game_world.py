@@ -291,10 +291,11 @@ class GameWorld:
     def toggle_grid_snap(self):
         self.object_grid_snap = not self.object_grid_snap
     
-    def pre_frame_update(self):
+    def frame_begin(self):
         "runs at start of game loop iteration, before input/update/render"
         for obj in self.objects.values():
             obj.art.updated_this_tick = False
+            obj.frame_begin()
     
     def frame_update(self):
         for obj in self.objects.values():
@@ -304,18 +305,19 @@ class GameWorld:
         # add newly spawned objects to table
         self.objects.update(self.new_objects)
         self.new_objects = {}
+        # run object pre-updates
         for obj in self.objects.values():
             obj.pre_update()
-    
-    def update(self):
-        self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
-        if self.properties:
-            self.properties.update_from_world()
         # run "first update" on all appropriate objects
         for obj in self.objects.values():
             if not obj.pre_first_update_run:
                 obj.pre_first_update()
                 obj.pre_first_update_run = True
+    
+    def update(self):
+        self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
+        if self.properties:
+            self.properties.update_from_world()
         if not self.paused:
             # update objects based on movement, then resolve collisions
             for obj in self.objects.values():

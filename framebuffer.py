@@ -78,12 +78,12 @@ class Framebuffer:
         GL.glDeleteTextures([self.texture])
         GL.glDeleteFramebuffers(1, [self.framebuffer])
     
-    def render(self, elapsed_time):
+    def render(self):
         if self.crt and not self.disable_crt:
             GL.glUseProgram(self.crt_shader.program)
             GL.glUniform1i(self.crt_tex_uniform, 0)
             GL.glUniform2f(self.crt_res_uniform, self.width, self.height)
-            GL.glUniform1f(self.crt_time_uniform, elapsed_time)
+            GL.glUniform1f(self.crt_time_uniform, self.app.get_elapsed_time())
         else:
             GL.glUseProgram(self.plain_shader.program)
             GL.glUniform1i(self.plain_tex_uniform, 0)

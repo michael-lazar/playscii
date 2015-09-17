@@ -125,7 +125,7 @@ class LineRenderable():
     def get_quad_size(self):
         return self.quad_size_ref.quad_width, self.quad_size_ref.quad_height
     
-    def get_color(self, elapsed_time):
+    def get_color(self):
         return (1, 1, 1, 1)
     
     def destroy(self):
@@ -141,7 +141,7 @@ class LineRenderable():
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform2f(self.quad_size_uniform, *self.get_quad_size())
-        GL.glUniform4f(self.color_uniform, *self.get_color(self.app.elapsed_time))
+        GL.glUniform4f(self.color_uniform, *self.get_color())
         GL.glBindVertexArray(self.vao)
         # bind elem array - see similar behavior in Cursor.render
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
@@ -191,7 +191,7 @@ class SwatchSelectionBoxRenderable(LineRenderable):
         # track tile X and Y for cursor movement
         self.tile_x, self.tile_y = 0,0
     
-    def get_color(self, elapsed_time):
+    def get_color(self):
         return self.color
     
     def build_geo(self):
@@ -264,10 +264,10 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         h = (art.height * art.quad_height) * self.game_object.scale_y
         return w, h
     
-    def get_color(self, elapsed_time):
+    def get_color(self):
         # pulse if selected
         if self.game_object in self.app.gw.selected_objects:
-            color = 0.75 + (math.sin(elapsed_time / 100) / 2)
+            color = 0.75 + (math.sin(self.app.get_elapsed_time() / 100) / 2)
             return (color, color, color, 1)
         else:
             return (1, 1, 1, 1)
