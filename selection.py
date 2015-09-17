@@ -72,7 +72,7 @@ class SelectionRenderable(LineRenderable):
     def get_view_matrix(self):
         return self.app.camera.view_matrix
     
-    def get_color(self, elapsed_time):
+    def get_color(self):
         # pulse for visibility
-        a = 0.75 + (math.sin(elapsed_time / 100) / 2)
+        a = 0.75 + (math.sin(self.app.get_elapsed_time() / 100) / 2)
         return (a, a, a, 1)

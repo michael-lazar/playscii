@@ -207,7 +207,7 @@ class UIDialog(UIElement):
             if i == self.active_field:
                 fg, bg = self.active_field_fg_color, self.active_field_bg_color
                 # blink cursor
-                blink_on = int(self.ui.app.elapsed_time / 250) % 2
+                blink_on = int(self.ui.app.get_elapsed_time() / 250) % 2
                 if blink_on:
                     cursor = '_'
             field_text = (field_text + cursor).ljust(field_width)

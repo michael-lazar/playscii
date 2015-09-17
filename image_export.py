@@ -35,7 +35,7 @@ def get_frame_image(app, art, frame, force_no_crt=False):
     # render to it
     art.renderables[0].render_frame_for_export(frame)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, export_fb)
-    post_fb.render(0)
+    post_fb.render()
     GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0)
     # read pixels from it
     pixels = GL.glReadPixels(0, 0, w, h, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE,

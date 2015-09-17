@@ -6,7 +6,7 @@ class EditCommand:
     
     def __init__(self, art):
         self.art = art
-        self.start_time = art.app.elapsed_time
+        self.start_time = art.app.get_elapsed_time()
         self.finish_time = None
         # nested dictionary with frame(layer(column(row))) structure -
         # this prevents multiple commands operating on the same tile
@@ -75,7 +75,7 @@ class ResizeCommand:
         self.art = art
         # remember origin of resize command
         self.origin_x, self.origin_y = origin_x, origin_y
-        self.start_time = self.finish_time = art.app.elapsed_time
+        self.start_time = self.finish_time = art.app.get_elapsed_time()
     
     def save_tiles(self, before=True):
         # save copies of tile data lists
@@ -116,7 +116,7 @@ class EditCommandTile:
     
     def __init__(self, art):
         self.art = art
-        self.creation_time = self.art.app.elapsed_time
+        self.creation_time = self.art.app.get_elapsed_time()
         # initialize everything
         for item in self.serialized_items:
             setattr(self, item, None)
@@ -137,7 +137,7 @@ class EditCommandTile:
         "returns a deep copy of this tile command"
         new_ect = EditCommandTile(self.art)
         # TODO: old or new timestamp? does it matter?
-        new_ect.creation_time = self.art.app.elapsed_time
+        new_ect.creation_time = self.art.app.get_elapsed_time()
         for item in self.serialized_items:
             setattr(new_ect, item, getattr(self, item))
         return new_ect

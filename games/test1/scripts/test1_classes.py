@@ -19,17 +19,18 @@ class WobblyThing(GameObject):
         self.origin_z = randint(-5, 5)
         self.start_animating()
     
-    def update(self, dt):
-        x_off = math.sin(self.app.elapsed_time / 1000) * self.origin_x
-        y_off = math.sin(self.app.elapsed_time / 500) * self.origin_y
-        z_off = math.sin(self.app.elapsed_time / 750) * self.origin_z
+    def update(self):
+        # TODO: convert this to get_acceleration?
+        x_off = math.sin(self.app.get_elapsed_time() / 1000) * self.origin_x
+        y_off = math.sin(self.app.get_elapsed_time() / 500) * self.origin_y
+        z_off = math.sin(self.app.get_elapsed_time() / 750) * self.origin_z
         self.x = self.origin_x + x_off
         self.y = self.origin_y + y_off
         self.z = self.origin_z + z_off
-        scale_x = 0.5 + math.sin(self.app.elapsed_time / 10000) / 100
-        scale_y = 0.5 + math.sin(self.app.elapsed_time / 5000) / 100
+        scale_x = 0.5 + math.sin(self.app.get_elapsed_time() / 10000) / 100
+        scale_y = 0.5 + math.sin(self.app.get_elapsed_time() / 5000) / 100
         self.set_scale(scale_x, scale_y, 1)
-        GameObject.update(self, dt)
+        GameObject.update(self)
 
 class ParticleThing(GameObject):
     

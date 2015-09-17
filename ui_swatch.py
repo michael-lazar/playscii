@@ -188,7 +188,7 @@ class CharacterSetSwatch(UISwatch):
             self.shade_art.geo_changed = True
         self.shade_art.update()
         # selection box color
-        elapsed_time = self.ui.app.elapsed_time
+        elapsed_time = self.ui.app.get_elapsed_time()
         color = 0.75 + (math.sin(elapsed_time / 100) / 2)
         self.selection_box.color = (color, color) * 2
         # set cursor color here rather than doin sin(time) again in popup update
@@ -308,7 +308,7 @@ class PaletteSwatch(UISwatch):
         self.f_art.update()
         self.b_art.update()
         # color selection boxes
-        elapsed_time = self.ui.app.elapsed_time
+        elapsed_time = self.ui.app.get_elapsed_time()
         color = 0.75 + (math.sin(elapsed_time / 100) / 2)
         self.fg_selection_box.color = (color, color) * 2
         self.bg_selection_box.color = (color, color) * 2

@@ -4,6 +4,10 @@ current tasks:
 
 game distribution: if "start_game" is set, create a separate CFG file and don't create playscii directories
 
+detect GPUs/GL versions that won't run CRT shader well and auto-disable it in CFG?
+
+fix https://bitbucket.org/JPLeBreton/playscii/issues/13/crash-in-texttool
+
 fix physics:
 - http://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity
 

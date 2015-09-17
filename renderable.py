@@ -38,7 +38,7 @@ class TileRenderable:
         # frame of our art's animation we're on
         self.frame = self.art.active_frame or 0
         self.animating = False
-        self.anim_timer = 0
+        self.anim_timer, self.last_frame_time = 0, 0
         # world space position and scale
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
@@ -148,6 +148,8 @@ class TileRenderable:
         self.set_frame(self.frame - 1)
     
     def set_frame(self, new_frame_index):
+        if new_frame_index == self.frame:
+            return
         old_frame = self.frame
         self.frame = new_frame_index % self.art.frames
         self.update_tile_buffers(True, True, True, True)
@@ -239,18 +241,23 @@ class TileRenderable:
     def update(self):
         if self.game_object:
             self.update_transform_from_object(self.game_object)
+        # TODO: rename "moving" to make it clearer it's art mode only
         elif self.moving:
             self.update_loc()
         if not self.animating:
             return
-        self.anim_timer += self.app.elapsed_time - self.app.last_time
-        this_frame_delay = self.art.frame_delays[self.frame]
-        while self.anim_timer > this_frame_delay:
+        elapsed = self.app.get_elapsed_time() - self.last_frame_time
+        self.anim_timer += elapsed
+        new_frame = self.frame
+        this_frame_delay = self.art.frame_delays[new_frame] * 1000
+        while self.anim_timer >= this_frame_delay:
             self.anim_timer -= this_frame_delay
-            # iterate through frames, but don't call set_frame until the end
-            self.frame = (self.frame + 1) % self.art.frames
-            this_frame_delay = self.art.frame_delays[self.frame]
-        self.set_frame(self.frame)
+            # iterate through frames, but don't call set_frame until we're done
+            new_frame += 1
+            new_frame %= self.art.frames
+            this_frame_delay = self.art.frame_delays[new_frame] * 1000
+        self.set_frame(new_frame)
+        self.last_frame_time = self.app.get_elapsed_time()
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])

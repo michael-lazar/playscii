@@ -239,7 +239,7 @@ class MessageLineUI(UIElement):
         UIElement.__init__(self, ui)
         # line we're currently displaying (even after fading out)
         self.line = ''
-        self.last_post = self.ui.app.elapsed_time
+        self.last_post = self.ui.app.get_elapsed_time()
         self.hold_time = self.default_hold_time
         self.alpha = 1
     
@@ -258,10 +258,10 @@ class MessageLineUI(UIElement):
         self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
         self.art.write_string(0, 0, start_x, 0, self.line)
         self.alpha = 1
-        self.last_post = self.ui.app.elapsed_time
+        self.last_post = self.ui.app.get_elapsed_time()
     
     def update(self):
-        if self.ui.app.elapsed_time > self.last_post + (self.hold_time * 1000):
+        if self.ui.app.get_elapsed_time() > self.last_post + (self.hold_time * 1000):
             if self.alpha >= self.fade_rate:
                 self.alpha -= self.fade_rate
             if self.alpha <= self.fade_rate:

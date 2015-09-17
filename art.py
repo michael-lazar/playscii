@@ -517,7 +517,8 @@ class Art:
             do_uvs = r.frame in self.uv_changed_frames
             do_fg = r.frame in self.fg_changed_frames
             do_bg = r.frame in self.bg_changed_frames
-            r.update_tile_buffers(do_char, do_uvs, do_fg, do_bg)
+            if do_char or do_fg or do_bg or do_uvs:
+                r.update_tile_buffers(do_char, do_uvs, do_fg, do_bg)
         # empty lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
@@ -638,7 +639,7 @@ class Art:
         self.scripts.append(script_filename)
         self.script_rates.append(rate)
         # set next time
-        next_run = (self.app.elapsed_time / 1000) + rate
+        next_run = (self.app.get_elapsed_time() / 1000) + rate
         self.scripts_next_exec_time.append(next_run)
     
     def stop_script(self, script_filename):
@@ -662,7 +663,7 @@ class Art:
         if len(self.scripts) == 0:
             return
         for i,script in enumerate(self.scripts):
-            if (self.app.elapsed_time / 1000) > self.scripts_next_exec_time[i]:
+            if (self.app.get_elapsed_time() / 1000) > self.scripts_next_exec_time[i]:
                 exec(open(script).read())
                 self.unsaved_changes = True
                 self.scripts_next_exec_time[i] += self.script_rates[i]

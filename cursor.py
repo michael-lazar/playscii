@@ -212,7 +212,7 @@ class Cursor:
         # push current command group onto undo stack
         if not self.current_command:
             return
-        self.current_command.finish_time = self.app.elapsed_time
+        self.current_command.finish_time = self.app.get_elapsed_time()
         self.app.ui.active_art.command_stack.commit_commands([self.current_command])
         self.current_command = None
         #print(self.app.ui.active_art.command_stack)
@@ -222,12 +222,12 @@ class Cursor:
             int(self.last_x) != int(self.x) or \
             int(self.last_y) != int(self.y)
     
-    def update(self, elapsed_time):
+    def update(self):
         # save old positions before update
         self.last_x, self.last_y = self.x, self.y
         # pulse alpha and scale
-        self.alpha = 0.75 + (math.sin(elapsed_time / 100) / 2)
-        #self.scale_x = 1.5 + (math.sin(elapsed_time / 100) / 50 - 0.5)
+        self.alpha = 0.75 + (math.sin(self.app.get_elapsed_time() / 100) / 2)
+        #self.scale_x = 1.5 + (math.sin(self.get_elapsed_time() / 100) / 50 - 0.5)
         mouse_moved = self.app.mouse_dx != 0 or self.app.mouse_dy != 0
         # update cursor from mouse if: mouse moved, camera moved w/o keyboard
         if mouse_moved or (not self.app.keyboard_editing and self.app.camera.moved_this_frame):

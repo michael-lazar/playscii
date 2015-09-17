@@ -105,7 +105,8 @@ class Application:
         self.log_file = open(self.config_dir + LOG_FILENAME, 'w')
         for line in self.log_lines:
             self.log_file.write('%s\n' % line)
-        self.elapsed_time, self.last_time = 0, 0
+        self.last_time = 0
+        self.this_frame_start, self.last_frame_end = 0, 0
         # number of updates (world, etc) and rendered frames this session
         self.updates, self.frames = 0, 0
         self.timestep = (1 / self.update_rate) * 1000
@@ -549,29 +550,22 @@ class Application:
         self.update_window_title()
         self.al.pause_music()
     
+    def get_elapsed_time(self):
+        return sdl2.timer.SDL_GetTicks()
+    
     def main_loop(self):
-        self.last_time = sdl2.timer.SDL_GetTicks()
+        self.last_time = self.get_elapsed_time()
         while not self.should_quit:
-            self.elapsed_time = start_frame_time = sdl2.timer.SDL_GetTicks()
-            self.pre_frame_update()
-            # avoid too many updates if eg machine straight up hangs
-            if self.elapsed_time - self.last_time > 1000:
-                self.last_time = self.elapsed_time
-            updates = int((self.elapsed_time - self.last_time) / self.timestep)
-            for i in range(updates):
-                self.pre_update()
-                self.il.handle_input()
-                self.update()
-                self.last_time += self.timestep
-                self.updates += 1
-            self.frame_update()
+            self.this_frame_start = self.get_elapsed_time()
+            self.update()
             self.render()
+            self.last_frame_end = self.get_elapsed_time()
             self.frames += 1
             self.sl.check_hot_reload()
             # determine FPS
             # alpha: lower = smoother
             alpha = 0.1
-            dt = sdl2.timer.SDL_GetTicks() - start_frame_time
+            dt = self.get_elapsed_time() - self.this_frame_start
             self.frame_time = alpha * dt + (1 - alpha) * self.frame_time
             self.fps = 1000 / self.frame_time
             # delay to maintain framerate, if uncapped
@@ -579,39 +573,45 @@ class Application:
                 delay = 1000 / self.framerate
                 # subtract work time from delay to maintain framerate
                 delay -= min(delay, dt)
-                print('delaying %sms to hit %s' % (delay, self.framerate))
+                #print('delaying %sms to hit %s' % (delay, self.framerate))
                 sdl2.timer.SDL_Delay(int(delay))
         return 1
     
-    def pre_update(self):
-        "runs just before a new update starts and input is handled"
-        if self.game_mode: self.gw.pre_update()
-    
     def update(self):
-        "update game world & anything else that should happen on fixed timestep"
-        if self.game_mode: self.gw.update()
-    
-    def pre_frame_update(self):
+        # start-of-frame stuff
         if self.game_mode:
-            self.gw.pre_frame_update()
+            self.gw.frame_begin()
         else:
             # set all arts to "not updated"
             for art in self.art_loaded_for_edit:
                 art.updated_this_tick = False
+        # handle input - once per frame
+        self.il.handle_input()
+        # update game world & anything else that should happen on fixed timestep
+        # avoid too many updates if eg machine straight up hangs
+        if self.get_elapsed_time() - self.last_time > 1000:
+            self.last_time = self.get_elapsed_time()
+        updates = (self.get_elapsed_time() - self.last_time) / self.timestep
+        for i in range(int(updates)):
+            if self.game_mode:
+                self.gw.pre_update()
+                self.gw.update()
+            self.last_time += self.timestep
+            self.updates += 1
+        self.frame_update()
     
     def frame_update(self):
         "non-game updates that should happen once per frame"
         if self.converter:
             self.converter.update()
-        for art in self.art_loaded_for_edit:
-            art.update()
-        for renderable in self.edit_renderables:
-            renderable.update()
         # game world has its own once-a-frame updates, eg art/renderables
         if self.game_mode:
             self.gw.frame_update()
+        else:
+            for art in self.art_loaded_for_edit:
+                art.update()
         if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
-            self.cursor.update(self.elapsed_time)
+            self.cursor.update()
         self.camera.update()
         if not self.game_mode:
             self.grid.update()
@@ -645,6 +645,8 @@ class Application:
         if self.game_mode:
             self.gw.render()
         else:
+            for renderable in self.edit_renderables:
+                renderable.update()
             if self.converter:
                 self.converter.preview_sprite.render()
             for r in self.edit_renderables:
@@ -667,7 +669,7 @@ class Application:
                 self.cursor.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-        self.fb.render(self.elapsed_time)
+        self.fb.render()
         if self.ui.visible:
             self.ui.render()
         GL.glUseProgram(0)
