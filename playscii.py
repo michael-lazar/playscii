@@ -48,15 +48,16 @@ CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_DIR = 'screenshots/'
+AUTOPLAY_GAME_FILENAME = 'autoplay_this_game'
 
 MAX_ONION_FRAMES = 3
 
 class Application:
     # default window dimensions, may be updated during screen res detection
-    window_width, window_height = 800, 600
+    window_width, window_height = 1280, 720
     fullscreen = False
     # framerate: uncapped if -1
-    framerate = 60
+    framerate = 30
     # fixed timestep for game physics
     update_rate = 30
     # force to run even if we can't get an OpenGL 2.1 context
@@ -87,11 +88,9 @@ class Application:
     game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
     # can_edit: if False, user can't use art or edit functionality
     can_edit = True
-    # start_game: if set, load this game on start no matter what
-    start_game = None
     
-    def __init__(self, config_dir, documents_dir, cache_dir,
-                 log_lines, art_filename, game_dir_to_load, state_to_load):
+    def __init__(self, config_dir, documents_dir, cache_dir, log_lines,
+                 art_filename, game_dir_to_load, state_to_load, autoplay_game):
         self.init_success = False
         self.config_dir = config_dir
         self.documents_dir = documents_dir
@@ -213,8 +212,8 @@ class Application:
         self.game_mode = False
         self.gw = GameWorld(self)
         # if game dir specified, set it before we try to load any art
-        if game_dir_to_load or self.start_game:
-            self.gw.set_game_dir(game_dir_to_load or self.start_game, False)
+        if game_dir_to_load or autoplay_game:
+            self.gw.set_game_dir(game_dir_to_load or autoplay_game, False)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -247,7 +246,7 @@ class Application:
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
-        if (game_dir_to_load or self.start_game) and self.gw.game_dir:
+        if (game_dir_to_load or autoplay_game) and self.gw.game_dir:
             # set initial game state
             if state_to_load:
                 self.gw.load_game_state(state_to_load)
@@ -564,7 +563,7 @@ class Application:
             self.sl.check_hot_reload()
             # determine FPS
             # alpha: lower = smoother
-            alpha = 0.1
+            alpha = 0.05
             dt = self.get_elapsed_time() - self.this_frame_start
             self.frame_time = alpha * dt + (1 - alpha) * self.frame_time
             self.fps = 1000 / self.frame_time
@@ -573,7 +572,7 @@ class Application:
                 delay = 1000 / self.framerate
                 # subtract work time from delay to maintain framerate
                 delay -= min(delay, dt)
-                #print('delaying %sms to hit %s' % (delay, self.framerate))
+                #print('frame time %s, delaying %sms to hit %s' % (self.frame_time, delay, self.framerate))
                 sdl2.timer.SDL_Delay(int(delay))
         return 1
     
@@ -744,6 +743,10 @@ if __name__ == "__main__":
     line = '%s v%s' % (APP_NAME, get_version())
     log_lines = [line]
     print(line)
+    # see if "autoplay this game" file exists and has anything in it
+    autoplay_game = None
+    if os.path.exists(AUTOPLAY_GAME_FILENAME):
+        autoplay_game = open(AUTOPLAY_GAME_FILENAME).readlines()[0].strip()
     # get paths for config file, later to be passed into Application
     config_dir, documents_dir, cache_dir = get_paths()
     # load in config - may change above values and submodule class defaults
@@ -779,7 +782,8 @@ if __name__ == "__main__":
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
     app = Application(config_dir, documents_dir, cache_dir, log_lines,
-                      file_to_load or 'new', game_dir_to_load, state_to_load)
+                      file_to_load or 'new', game_dir_to_load, state_to_load,
+                      autoplay_game)
     error = app.main_loop()
     app.quit()
     sys.exit(error)

@@ -2,17 +2,14 @@ TODO
 
 current tasks:
 
-game distribution: if "start_game" is set, create a separate CFG file and don't create playscii directories
+game distribution: if "start_game" is set, create a separate CFG file and don't create playscii documents/ + cache directories
+"autoplay_this_game" file: first line
 
 detect GPUs/GL versions that won't run CRT shader well and auto-disable it in CFG?
 
-fix https://bitbucket.org/JPLeBreton/playscii/issues/13/crash-in-texttool
-
-fix physics:
-- http://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity
-
-"movement context" for handling movement/physics:
-- move accel, max accel, max velocity, stop velocity, gravity (if not global), "specific-axis" bool
+fix user bugs:
+https://bitbucket.org/JPLeBreton/playscii/issues/13/crash-in-texttool
+https://bitbucket.org/JPLeBreton/playscii/issues/12/export-using-white-background-when-it
 
 enumerate specific bugs with chooser UI below and fix em
 
@@ -34,6 +31,9 @@ x get dir list every update so FS changes show up immediately?
 ---
 
 new features / major improvements:
+
+"movement context" for handling movement/physics:
+- move accel, max velocity, stop velocity, gravity (if not global), friction, "specific-axis" bool
 
 game distribution system:
 - "game to auto-load" config option
