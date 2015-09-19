@@ -1,15 +1,8 @@
 TODO
 
+"screens" concept: standardized object that holds groups of objects, portals to other screens
+
 current tasks:
-
-game distribution: if "start_game" is set, create a separate CFG file and don't create playscii documents/ + cache directories
-"autoplay_this_game" file: first line
-
-detect GPUs/GL versions that won't run CRT shader well and auto-disable it in CFG?
-
-fix user bugs:
-https://bitbucket.org/JPLeBreton/playscii/issues/13/crash-in-texttool
-https://bitbucket.org/JPLeBreton/playscii/issues/12/export-using-white-background-when-it
 
 enumerate specific bugs with chooser UI below and fix em
 
@@ -71,6 +64,11 @@ line definitions:
 ---
 
 fixes / minor improvements:
+
+game distribution: if autoplay_this_game is set, create a separate CFG file and don't create playscii documents/ + cache directories
+
+detect GPUs/GL versions that won't run CRT shader well and auto-disable it in CFG?
+- determine which setups would work better with this, and work out how to detect them reliably
 
 volume support for playing sound FX
 fade in/out support for music

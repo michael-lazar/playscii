@@ -4,7 +4,7 @@ from PIL import Image, ImageChops, GifImagePlugin
 
 from framebuffer import ExportFramebuffer, ExportFramebufferNoCRT
 
-def get_frame_image(app, art, frame, force_no_crt=False):
+def get_frame_image(app, art, frame, force_no_crt=False, bg_color=(0, 0, 0, 0)):
     "returns a PIL image of given frame of given art"
     # determine art's native size in pixels
     w = art.charset.char_width * art.width
@@ -30,7 +30,7 @@ def get_frame_image(app, art, frame, force_no_crt=False):
     GL.glViewport(0, 0, w, h)
     # do render
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, post_fb.framebuffer)
-    GL.glClearColor(0, 0, 0, 0)
+    GL.glClearColor(*bg_color)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
     # render to it
     art.renderables[0].render_frame_for_export(frame)
@@ -55,9 +55,13 @@ def export_animation(app, art):
     output_filename = '%s.gif' % os.path.splitext(art.filename)[0]
     # get list of rendered frame images
     frames = []
+    # use arbitrary color for transparency
+    i_transp = art.palette.get_random_non_palette_color()
+    # GL wants floats
+    f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
     for frame in range(art.frames):
-        frame_img = get_frame_image(app, art, frame, True)
-        frame_img = art.palette.get_palettized_image(frame_img)
+        frame_img = get_frame_image(app, art, frame, True, f_transp)
+        frame_img = art.palette.get_palettized_image(frame_img, i_transp[:3])
         frames.append(frame_img)
     # compile frames into animated GIF with proper frame delays
     # technique thanks to:
@@ -90,14 +94,18 @@ def export_animation(app, art):
 
 def export_still_image(app, art):
     output_filename = '%s.png' % os.path.splitext(art.filename)[0]
-    src_img = get_frame_image(app, art, art.active_frame)
     # just write RGBA if palette has more than one color with <1 alpha
     if not art.palette.all_colors_opaque() or (app.fb.crt and not app.fb.disable_crt):
+        src_img = get_frame_image(app, art, art.active_frame)
         src_img.save(output_filename, 'PNG')
         output_format = '32-bit w/ alpha'
-    # else convert to current palette
     else:
-        output_img = art.palette.get_palettized_image(src_img)
+        # else convert to current palette.
+        # as with aniGIF export, use arbitrary color for transparency
+        i_transp = art.palette.get_random_non_palette_color()
+        f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
+        src_img = get_frame_image(app, art, art.active_frame, True, f_transp)
+        output_img = art.palette.get_palettized_image(src_img, i_transp[:3])
         output_img.save(output_filename, 'PNG', transparency=0)
         output_format = '8-bit palettized w/ transparency'
     app.log('%s exported (%s)' % (output_filename, output_format))
