@@ -197,6 +197,9 @@ class TextTool(UITool):
     
     def start_entry(self):
         self.cursor = self.ui.app.cursor
+        if self.cursor.x < 0 or self.cursor.x > self.ui.active_art.width or \
+           -self.cursor.y < 0 or -self.cursor.y > self.ui.active_art.height:
+            return
         self.input_active = True
         self.reset_cursor_start(self.cursor.x, -self.cursor.y)
         self.cursor.start_paint()
@@ -231,18 +234,22 @@ class TextTool(UITool):
         elif keystr == 'Backspace':
             if self.cursor.x > self.start_x:
                 self.cursor.x -= char_w
-            # undo command on previous tile
-            self.cursor.current_command.undo_commands_for_tile(frame, layer, x-1, y)
+                # undo command on previous tile
+                self.cursor.current_command.undo_commands_for_tile(frame, layer, x-1, y)
         elif keystr == 'Space':
             keystr = ' '
         elif keystr == 'Up':
-            self.cursor.y += 1
+            if -self.cursor.y > 0:
+                self.cursor.y += 1
         elif keystr == 'Down':
-            self.cursor.y -= 1
+            if -self.cursor.y < art.height:
+                self.cursor.y -= 1
         elif keystr == 'Left':
-            self.cursor.x -= char_w
+            if self.cursor.x > 0:
+                self.cursor.x -= char_w
         elif keystr == 'Right':
-            self.cursor.x += char_w
+            if self.cursor.x < art.width:
+                self.cursor.x += char_w
         elif keystr == 'Escape':
             self.finish_entry()
             return

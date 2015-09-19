@@ -621,7 +621,7 @@ class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
 
 class GameMenuData(PulldownMenuData):
-    items = [ToggleGameModeMenuItem, SetGameDirItem, LoadGameStateItem, SaveGameStateMenuItem, ResetGameItem]
+    items = [ToggleGameModeMenuItem, SetGameDirItem]#, LoadGameStateItem, SaveGameStateMenuItem, ResetGameItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

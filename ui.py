@@ -123,8 +123,7 @@ class UI:
         self.set_elements_scale()
         # if editing is disallowed, hide game mode UI
         if not self.app.can_edit:
-            self.edit_ui_disabled = False
-            self.toggle_game_edit_ui()
+            self.set_game_edit_ui_visibility(False)
     
     def set_scale(self, new_scale):
         old_scale = self.scale
@@ -592,24 +591,24 @@ class UI:
         # insert dialog at index 0 so it draws first instead of last
         self.elements.insert(0, dialog)
     
-    def toggle_game_edit_ui(self):
-        # if editing is disallowed, only run this once to disable UI
-        if not self.app.can_edit:
-            if self.edit_ui_disabled:
-                return
-            self.edit_ui_disabled = True
-        elif not self.app.game_mode:
-            return
-        self.edit_list_panel.visible = not self.edit_list_panel.visible
-        self.edit_game_panel.visible = not self.edit_game_panel.visible
-        self.edit_object_panel.visible = not self.edit_object_panel.visible
-        # if hiding, show tip on how to get it back
-        if not self.edit_game_panel.visible and self.app.can_edit:
+    def set_game_edit_ui_visibility(self, visible, show_message=True):
+        self.edit_list_panel.visible = visible
+        self.edit_game_panel.visible = visible
+        self.edit_object_panel.visible = visible
+        if not visible and show_message:
             bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
             bind = bind.title()
             self.message_line.post_line(self.show_edit_ui_log % bind, 10)
         else:
             self.message_line.post_line('')
+    
+    def toggle_game_edit_ui(self):
+        # if editing is disallowed, only run this once to disable UI
+        if not self.app.can_edit:
+            return
+        elif not self.app.game_mode:
+            return
+        self.set_game_edit_ui_visibility(not self.edit_list_panel.visible)
     
     def destroy(self):
         for e in self.elements:

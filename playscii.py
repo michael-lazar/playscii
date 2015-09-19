@@ -255,8 +255,12 @@ class Application:
         else:
             #self.ui.message_line.post_line(self.welcome_message, 10)
             pass
+        # if "autoplay_this_game" used and game is valid, lock out edit mode
+        if autoplay_game and not game_dir_to_load and self.gw.game_dir:
+            self.can_edit = False
         if not self.can_edit:
             self.enter_game_mode()
+            self.ui.set_game_edit_ui_visibility(False, False)
         elif self.gw.game_dir and self.always_launch_art_mode:
             self.exit_game_mode()
     
