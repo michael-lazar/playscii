@@ -1,10 +1,8 @@
 TODO
 
-"screens" concept: standardized object that holds groups of objects, portals to other screens
+spec for "screens" (levels?) concept: standardized object(s) that manages groups of objects, portals to other screens, visibility/collision
 
 current tasks:
-
-enumerate specific bugs with chooser UI below and fix em
 
 generalized (works for any type of file, not just arts) file chooser:
 - for non-arts (eg convert image, create palette from image) show image preview
