@@ -131,7 +131,7 @@ class EditObjectPanel(GamePanel):
         # if None, assume string
         if EditObjectPropertyDialog.field0_type is type(None):
             EditObjectPropertyDialog.field0_type = str
-        tile_x = self.ui.width_tiles - self.tile_width
+        tile_x = int(self.ui.width_tiles * self.ui.scale) - self.tile_width
         tile_x -= EditObjectPropertyDialog.tile_width
         # give dialog a handle to item
         EditObjectPropertyDialog.item = item

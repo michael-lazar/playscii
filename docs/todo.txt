@@ -7,13 +7,8 @@ current tasks:
 enumerate specific bugs with chooser UI below and fix em
 
 generalized (works for any type of file, not just arts) file chooser:
-x left and right go up and into selected dir where applicable
-x get dir list every update so FS changes show up immediately?
-- text pathname field, clicking a new file in list fills it in (clicking again opens it)
-- hitting enter with a valid filename opens it, hitting enter with a valid pathname navigates list view to that dir
-- for non-arts (eg convert image) show image preview
-- remove debug prints in ui_dialog and ui_chooser_dialog
-- pgup/pgdn move pages up and down for long lists
+- for non-arts (eg convert image, create palette from image) show image preview
+- edit mode "set art" should invoke art file chooser
 - draw a solid black char in scrollbar relative to where selection is in total item list.  clicking in scrollbar sets scroll index to there (can a button report where exactly it was clicked? just get mouse coords in screen tile space?)
 
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
