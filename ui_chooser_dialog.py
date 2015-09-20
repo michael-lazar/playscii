@@ -46,10 +46,9 @@ class ScrollArrowButton(UIButton):
                                      self.arrow_char, None, None, xform)
     
     def callback(self):
-        max_scroll = len(self.element.items) - self.element.items_in_view
         if self.up and self.element.scroll_index > 0:
             self.element.scroll_index -= 1
-        elif not self.up and self.element.scroll_index < max_scroll:
+        elif not self.up and self.element.scroll_index < self.element.get_max_scroll():
             self.element.scroll_index += 1
         self.element.load_selected_item()
         self.element.reset_art(False)
@@ -201,16 +200,17 @@ class ChooserDialog(UIDialog):
             elif move_dir > 0 and self.selected_item_index - self.scroll_index == self.items_in_view:
                 self.scroll_index = self.selected_item_index - self.items_in_view + 1
             # keep scroll in bounds
-            max_scroll = len(self.items) - self.items_in_view
-            self.scroll_index = min(self.scroll_index, max_scroll)
+            self.scroll_index = min(self.scroll_index, self.get_max_scroll())
         if set_field_text:
             item = self.get_selected_item()
-            #print('s_s_s_i: setting %s' % item.name)
             self.set_field_text(self.active_field, item.name)
         if update_view:
             self.load_selected_item()
             self.reset_art(False)
             self.position_preview()
+    
+    def get_max_scroll(self):
+        return len(self.items) - self.items_in_view
     
     def get_selected_item(self):
         return self.items[self.selected_item_index]
@@ -363,6 +363,21 @@ class ChooserDialog(UIDialog):
             navigated = True
             if self.selected_item_index < len(self.items):
                 new_index += 1
+        elif keystr == 'PageUp':
+            navigated = True
+            page_size = int(self.items_in_view / 2)
+            new_index -= page_size
+            new_index = max(0, new_index)
+            # scroll follows selection jumps
+            self.scroll_index -= page_size
+            self.scroll_index = max(0, self.scroll_index)
+        elif keystr == 'PageDown':
+            navigated = True
+            page_size = int(self.items_in_view / 2)
+            new_index += page_size
+            new_index = min(new_index, len(self.items) - 1)
+            self.scroll_index += page_size
+            self.scroll_index = min(self.scroll_index, self.get_max_scroll())
         # home/end: beginning/end of list, respectively
         elif keystr == 'Home':
             navigated = True
