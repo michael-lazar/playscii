@@ -178,19 +178,20 @@ class ChooserDialog(UIDialog):
         self.items = self.get_items()
         self.reset_art(False)
     
-    def set_selected_item_index(self, item_index, set_field_text=True,
+    def set_selected_item_index(self, new_index, set_field_text=True,
                                 update_view=True):
         """
         set the view's selected item to specified index
         perform usually-necessary refresh functions for convenience
         """
-        self.selected_item_index = item_index
+        self.selected_item_index = new_index
         can_scroll = len(self.items) > self.items_in_view
-        should_scroll = self.selected_item_index > self.scroll_index + self.items_in_view
+        should_scroll = self.selected_item_index >= self.scroll_index + self.items_in_view
         if can_scroll and should_scroll:
-            self.scroll_index = self.selected_item_index
-            # don't let view go out of bounds
-            max_scroll = len(self.items) - self.items_in_view
+            # don't let selection or scroll go out of bounds
+            self.selected_item_index = min(self.selected_item_index, len(self.items)-1)
+            self.scroll_index = self.selected_item_index - self.items_in_view + 1
+            max_scroll = len(self.items) - self.items_in_view + 1
             self.scroll_index = min(self.scroll_index, max_scroll)
         else:
             self.scroll_index = 0
@@ -349,19 +350,19 @@ class ChooserDialog(UIDialog):
                 return
         elif keystr == 'Up':
             navigated = True
+            #print('sii: %s, si: %s' % (self.selected_item_index, self.scroll_index))
             if self.selected_item_index == 0:
                 pass
             elif self.selected_item_index == self.scroll_index:
+                #self.scroll_index -= 1
                 new_index -= 1
-                self.scroll_index -= 1
             else:
                 new_index -= 1
         elif keystr == 'Down':
             navigated = True
-            if self.selected_item_index == len(self.items) - 1:
+            if self.selected_item_index == len(self.items):
                 pass
-            elif self.selected_item_index - self.scroll_index == self.items_in_view - 1:
-                self.scroll_index += 1
+            elif self.selected_item_index - self.scroll_index == self.items_in_view:
                 new_index += 1
             else:
                 new_index += 1
@@ -375,10 +376,6 @@ class ChooserDialog(UIDialog):
             new_index = len(self.items) - 1
             self.scroll_index = len(self.items) - self.items_in_view
         self.set_selected_item_index(new_index, set_field_text=navigated)
-        if old_idx != self.selected_item_index or old_scroll != self.scroll_index:
-            self.load_selected_item()
-            self.reset_art(False)
-            self.position_preview()
         # handle alphanumeric input etc
         UIDialog.handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed)
         # if we didn't navigate, seek based on new alphanumeric input
@@ -390,7 +387,10 @@ class ChooserDialog(UIDialog):
         if field_text.strip() == '':
             return
         for i,item in enumerate(self.items):
-            if item.name.startswith(field_text):
+            # match to base item name within dir
+            item_base = os.path.basename(item.name)
+            item_base = os.path.splitext(item_base)[0]
+            if item_base.startswith(field_text) or item.name.startswith(field_text):
                 self.set_selected_item_index(i, set_field_text=False)
                 break
     
@@ -411,7 +411,8 @@ class ChooserDialog(UIDialog):
             return True
         # else navigate to directory or file if it's real
         if not os.path.exists(field_text):
-            return False
+            self.set_field_text(self.active_field, selected_item.name)
+            return True
         # special case for parent dir ..
         if self.directory_aware and field_text == self.current_dir and selected_item.name == '..':
             self.first_selection_made = True
