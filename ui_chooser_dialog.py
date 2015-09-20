@@ -121,6 +121,7 @@ class ChooserDialog(UIDialog):
         self.active_field = 0
         if self.directory_aware:
             self.set_initial_dir()
+        self.selected_item_index = 0
         # scroll index - how far into items list current screen view begins
         self.scroll_index = 0
         self.items = self.get_items()
@@ -184,17 +185,24 @@ class ChooserDialog(UIDialog):
         set the view's selected item to specified index
         perform usually-necessary refresh functions for convenience
         """
+        move_dir = new_index - self.selected_item_index
         self.selected_item_index = new_index
         can_scroll = len(self.items) > self.items_in_view
-        should_scroll = self.selected_item_index >= self.scroll_index + self.items_in_view
-        if can_scroll and should_scroll:
-            # don't let selection or scroll go out of bounds
-            self.selected_item_index = min(self.selected_item_index, len(self.items)-1)
-            self.scroll_index = self.selected_item_index - self.items_in_view + 1
-            max_scroll = len(self.items) - self.items_in_view + 1
-            self.scroll_index = min(self.scroll_index, max_scroll)
-        else:
+        should_scroll = self.selected_item_index >= self.scroll_index + self.items_in_view or self.selected_item_index < self.scroll_index
+        if not can_scroll:
             self.scroll_index = 0
+        elif should_scroll:
+            # keep selection in bounds
+            self.selected_item_index = min(self.selected_item_index, len(self.items)-1)
+            # scrolling up
+            if move_dir <= 0:
+                self.scroll_index = self.selected_item_index
+            # scrolling down
+            elif move_dir > 0 and self.selected_item_index - self.scroll_index == self.items_in_view:
+                self.scroll_index = self.selected_item_index - self.items_in_view + 1
+            # keep scroll in bounds
+            max_scroll = len(self.items) - self.items_in_view
+            self.scroll_index = min(self.scroll_index, max_scroll)
         if set_field_text:
             item = self.get_selected_item()
             #print('s_s_s_i: setting %s' % item.name)
@@ -340,7 +348,6 @@ class ChooserDialog(UIDialog):
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
         # up/down keys navigate list
-        old_idx, old_scroll = self.selected_item_index, self.scroll_index
         new_index = self.selected_item_index
         navigated = False
         if keystr == 'Return':
@@ -350,21 +357,11 @@ class ChooserDialog(UIDialog):
                 return
         elif keystr == 'Up':
             navigated = True
-            #print('sii: %s, si: %s' % (self.selected_item_index, self.scroll_index))
-            if self.selected_item_index == 0:
-                pass
-            elif self.selected_item_index == self.scroll_index:
-                #self.scroll_index -= 1
-                new_index -= 1
-            else:
+            if self.selected_item_index > 0:
                 new_index -= 1
         elif keystr == 'Down':
             navigated = True
-            if self.selected_item_index == len(self.items):
-                pass
-            elif self.selected_item_index - self.scroll_index == self.items_in_view:
-                new_index += 1
-            else:
+            if self.selected_item_index < len(self.items):
                 new_index += 1
         # home/end: beginning/end of list, respectively
         elif keystr == 'Home':
