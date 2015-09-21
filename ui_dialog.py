@@ -782,10 +782,10 @@ class PaletteFromFileDialog(UIDialog):
 
 class SetGameDirDialog(UIDialog):
     
-    title = 'Set game directory'
+    title = 'Open game'
     fields = 1
     field0_label = 'Directory to load game data from:'
-    confirm_caption = 'Set'
+    confirm_caption = 'Open'
     game_mode_visible = True
     all_modes_visible = True
     

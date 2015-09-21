@@ -434,7 +434,7 @@ class ToggleGameModeMenuItem(PulldownMenuItem):
     def should_dim(app): return False
 
 class SetGameDirItem(PulldownMenuItem):
-    label = 'Set game dir…'
+    label = 'Open game…'
     command = 'set_game_dir'
     def should_dim(app): return False
 

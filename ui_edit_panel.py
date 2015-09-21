@@ -42,7 +42,7 @@ class PauseGameButton(UIButton):
 
 
 class SetGameDirButton(UIButton):
-    caption = 'Set new game dir…'
+    caption = 'Open game…'
     def selected(button):
         button.element.ui.open_dialog(SetGameDirDialog)
         button.element.highlight_button(button)

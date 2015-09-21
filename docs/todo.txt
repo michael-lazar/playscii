@@ -4,6 +4,8 @@ spec for "screens" (levels?) concept: standardized object(s) that manages groups
 
 current tasks:
 
+enumerate specific bugs with chooser UI below and fix em
+
 generalized (works for any type of file, not just arts) file chooser:
 - for non-arts (eg convert image, create palette from image) show image preview
 - edit mode "set art" should invoke art file chooser
@@ -49,6 +51,8 @@ brushes:
 line definitions:
 - user-defined(?) rules for which tile to use based on tiles painted since start of paint (click)
 - probably shares some code with brushes
+
+standard useful paint tools: draw line, flood fill
 
 - if psci files get too huge, compress em with python's zipfile module (different extension needed?) as the json zips extraordinarily well
 -- or just create a binary format that isn't broken like EDSCII's was? probably best to do once file format has stabilized
