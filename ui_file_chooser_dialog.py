@@ -67,10 +67,13 @@ class ArtChooserItem(ChooserItem):
         mod_time = time.gmtime(self.art_mod_time)
         mod_time = time.strftime('%Y-%m-%d %H:%M:%S', mod_time)
         lines = ['last change: %s' % mod_time]
-        lines += ['%s x %s, %s frames, %s layers' % (self.art_width,
-                                                     self.art_height,
-                                                     self.art_frames,
-                                                     self.art_layers)]
+        line = '%s x %s, ' % (self.art_width, self.art_height)
+        line += '%s frame' % self.art_frames
+        # pluralize properly
+        line += 's' if self.art_frames > 1 else ''
+        line += ', %s layer' % self.art_layers
+        line += 's' if self.art_layers > 1 else ''
+        lines += [line]
         lines += ['char: %s, pal: %s' % (self.art_charset, self.art_palette)]
         return lines
     

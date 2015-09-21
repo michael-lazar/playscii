@@ -112,7 +112,7 @@ class ChooserDialog(UIDialog):
         if self.ui.width_tiles - 20 > self.big_width:
             self.tile_width = self.big_width
             self.field0_width = self.tile_width - 4
-        if self.ui.height_tiles - 15 > self.big_height:
+        if self.ui.height_tiles - 30 > self.big_height:
             self.tile_height = self.big_height
         self.items_in_view = self.tile_height - self.item_start_y - 3
         # set active field earlier than UIDialog.init so set_initial_dir
@@ -361,7 +361,7 @@ class ChooserDialog(UIDialog):
                 new_index -= 1
         elif keystr == 'Down':
             navigated = True
-            if self.selected_item_index < len(self.items):
+            if self.selected_item_index < len(self.items) - 1:
                 new_index += 1
         elif keystr == 'PageUp':
             navigated = True

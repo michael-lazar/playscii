@@ -6,7 +6,7 @@
 # many lines are here for reference but commented out, uncomment to activate.
 
 Application.fullscreen = False
-Application.window_width, Application.window_height = 1024, 768
+Application.window_width, Application.window_height = 1280, 720
 
 # try it, you'll like it :]
 Application.capslock_is_ctrl = True
@@ -28,9 +28,6 @@ Camera.start_zoom = 15
 
 # disable CRT shader entirely - use this if playscii starts up really slowly
 #Framebuffer.disable_crt = True
-
-# test pattern - changes random tiles each frame, uncomment for pretty tilenoise
-#Application.test_mutate_each_frame = True
 
 # press space to show/hide main popup rather than holding space
 #UI.popup_hold_to_show = False
