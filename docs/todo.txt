@@ -1,15 +1,10 @@
 TODO
 
-spec for "screens" (levels?) concept: standardized object(s) that manages groups of objects, portals to other screens, visibility/collision
-
 current tasks:
 
-enumerate specific bugs with chooser UI below and fix em
+spec for "screens" (levels?) concept: standardized object(s) that manages groups of objects, portals to other screens, visibility/collision
 
-generalized (works for any type of file, not just arts) file chooser:
-- for non-arts (eg convert image, create palette from image) show image preview
-- edit mode "set art" should invoke art file chooser
-- draw a solid black char in scrollbar relative to where selection is in total item list.  clicking in scrollbar sets scroll index to there (can a button report where exactly it was clicked? just get mouse coords in screen tile space?)
+use new file chooser for "convert image" and "create palette from image", show image preview
 
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
 -- write Art.copy to create an instance, save a reference to source, "restore" method
@@ -63,6 +58,10 @@ standard useful paint tools: draw line, flood fill
 fixes / minor improvements:
 
 game distribution: if autoplay_this_game is set, create a separate CFG file and don't create playscii documents/ + cache directories
+
+generalized (works for any type of file, not just arts) file chooser:
+- edit mode "set art" should invoke art file chooser
+- draw a solid black char in scrollbar relative to where selection is in total item list.  clicking in scrollbar sets scroll index to there (can a button report where exactly it was clicked? just get mouse coords in screen tile space?)
 
 detect GPUs/GL versions that won't run CRT shader well and auto-disable it in CFG?
 - determine which setups would work better with this, and work out how to detect them reliably
