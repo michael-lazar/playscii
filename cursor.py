@@ -167,7 +167,7 @@ class Cursor:
         pjm = np.matrix(self.app.camera.projection_matrix)
         vm = np.matrix(self.app.camera.view_matrix)
         vp_inverse = (pjm * vm).getI()
-        if self.app.ui.active_art:
+        if self.app.ui.active_art and not self.app.game_mode:
             z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
         else:
             z = 0

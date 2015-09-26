@@ -42,6 +42,10 @@ class TileRenderable:
         # world space position and scale
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        if game_object:
+            self.scale_x = game_object.scale_x
+            self.scale_y = game_object.scale_y
+            self.scale_z = game_object.scale_z
         # width and height in XY render space
         self.width, self.height = 1, 1
         self.reset_size()

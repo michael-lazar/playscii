@@ -109,7 +109,9 @@ class GameObject:
     # object edit UI
     editable = ['show_collision', 'mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
-    set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha'}
+    set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha',
+                   'scale_x': 'set_scale_x', 'scale_y': 'set_scale_y'
+    }
     # can select in edit mode
     selectable = True
     # can delete in edit mode
@@ -493,6 +495,15 @@ class GameObject:
     
     def set_scale(self, x, y, z):
         self.scale_x, self.scale_y, self.scale_z = x, y, z
+        self.renderable.scale_x = self.scale_x
+        self.renderable.scale_y = self.scale_y
+        self.renderable.reset_size()
+    
+    def set_scale_x(self, new_x):
+        self.set_scale(new_x, self.scale_y, self.scale_z)
+    
+    def set_scale_y(self, new_y):
+        self.set_scale(self.scale_x, new_y, self.scale_z)
     
     def set_alpha(self, new_alpha):
         self.renderable.alpha = self.alpha = new_alpha

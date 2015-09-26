@@ -2,8 +2,6 @@ TODO
 
 current tasks:
 
-ctrl-s in game mode: save game as last loaded state, shift-ctrl-s = save as
-
 "rooms" concept:
 - standardized object that contains/manages:
 -- groups of objects (some non-exclusive with other rooms, eg player)

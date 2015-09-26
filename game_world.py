@@ -79,10 +79,17 @@ class GameWorld:
         return self.app.al.is_music_playing()
     
     def pick_next_object_at(self, x, y):
-        # TODO: cycle through objects at point til an unselected one is found
+        # cycle through objects at point til an unselected one is found
+        use_next = False
         for obj in self.get_objects_at(x, y):
-            if obj.selectable and not obj in self.selected_objects:
+            if not obj.selectable:
+                continue
+            if len(self.selected_objects) == 0:
                 return obj
+            elif use_next:
+                return obj
+            elif obj in self.selected_objects:
+                use_next = True
         return None
     
     def get_objects_at(self, x, y):
