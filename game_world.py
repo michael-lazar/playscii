@@ -403,6 +403,14 @@ class GameWorld:
         if self.hud and self.draw_hud:
             self.hud.render()
     
+    def save_last_state(self):
+        "save over last loaded state"
+        # strip down to base filename w/o extension :/
+        last_state = self.last_state_loaded
+        last_state = os.path.basename(last_state)
+        last_state = os.path.splitext(last_state)[0]
+        self.save_to_file(last_state)
+    
     def save_to_file(self, filename=None):
         objects = []
         for obj in self.objects.values():

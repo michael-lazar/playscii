@@ -8,6 +8,10 @@ from ui_colors import UIColors
 
 from game_world import STATE_FILE_EXTENSION
 
+# list type constants
+LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES = 0, 1, 2, 3
+
+
 class ToggleEditUIButton(UIButton):
     caption = '<< Hide edit UI'
     y = 0
@@ -18,12 +22,14 @@ class ToggleGameModeButton(UIButton):
     caption = 'Toggle Game Mode'
     y = 0
     def selected(button):
+        button.element.list_panel.set_list_mode(LIST_NONE)
         button.element.ui.app.exit_game_mode()
 
 class ResetStateButton(UIButton):
-    caption = 'Reset'
+    caption = 'Reset to last game state'
     def selected(button):
         button.element.world.reset_game()
+        button.element.list_panel.set_list_mode(LIST_NONE)
 
 
 class PauseGameButton(UIButton):
@@ -44,50 +50,55 @@ class PauseGameButton(UIButton):
 class SetGameDirButton(UIButton):
     caption = 'Open game…'
     def selected(button):
+        # hide list for items that don't use it
+        button.element.list_panel.set_list_mode(LIST_NONE)
         button.element.ui.open_dialog(SetGameDirDialog)
         button.element.highlight_button(button)
 
 class LoadStateButton(UIButton):
     caption = 'Load game state…'
     def selected(button):
-        button.element.list_panel.list_states()
+        button.element.list_panel.set_list_mode(LIST_STATES)
         button.element.highlight_button(button)
 
 class SaveStateButton(UIButton):
-    caption = 'Save game state…'
+    caption = 'Save new game state…'
     def selected(button):
         button.element.ui.open_dialog(SaveGameStateDialog)
         # show states in list for convenience
-        button.element.list_panel.list_states()
+        button.element.list_panel.set_list_mode(LIST_STATES)
         button.element.highlight_button(button)
 
 class SpawnObjectButton(UIButton):
     caption = 'Spawn object…'
     def selected(button):
         # change list to show object classes
-        button.element.list_panel.list_classes()
+        button.element.list_panel.set_list_mode(LIST_CLASSES)
         button.element.highlight_button(button)
 
 class DuplicateObjectButton(UIButton):
     caption = 'Duplicate selected objects'
     def selected(button):
+        button.element.list_panel.set_list_mode(LIST_NONE)
         button.element.world.duplicate_selected_objects()
 
 class SelectObjectsButton(UIButton):
     caption = 'Select objects…'
     def selected(button):
         # change list to show objects
-        button.element.list_panel.list_objects()
+        button.element.list_panel.set_list_mode(LIST_OBJECTS)
         button.element.highlight_button(button)
 
 class EditObjectArtButton(UIButton):
     caption = 'Edit art for selected…'
     def selected(button):
+        button.element.list_panel.set_list_mode(LIST_NONE)
         button.element.world.edit_art_for_selected()
 
 class EditWorldPropertiesButton(UIButton):
     caption = 'Edit world properties…'
     def selected(button):
+        button.element.list_panel.set_list_mode(LIST_NONE)
         button.element.world.deselect_all()
         button.element.world.select_object(button.element.world.properties, force=True)
 
@@ -108,47 +119,6 @@ class GameEditToggleButton(UIButton):
         button.caption += [button.caption_true, button.caption_false][not button.get_caption_value()]
         button.draw_caption()
 
-class TogglePlayerCameraLockButton(GameEditToggleButton):
-    base_caption = 'Player camera lock:'
-    caption_true, caption_false = 'On', 'Off'
-    def get_caption_value(button):
-        return button.element.world.player_camera_lock
-    def selected(button):
-        button.element.world.toggle_player_camera_lock()
-        button.refresh_caption()
-
-class ToggleGridSnapButton(GameEditToggleButton):
-    base_caption = 'Object grid snap:'
-    caption_true, caption_false = 'On', 'Off'
-    def get_caption_value(button):
-        return button.element.world.object_grid_snap
-    def selected(button):
-        button.element.world.toggle_grid_snap()
-        button.refresh_caption()
-
-class ToggleOriginVizButton(GameEditToggleButton):
-    base_caption = 'Object origins:'
-    def get_caption_value(button):
-        return button.element.world.show_origin_all
-    def selected(button):
-        button.element.world.toggle_all_origin_viz()
-        button.refresh_caption()
-
-class ToggleBoundsVizButton(GameEditToggleButton):
-    base_caption = 'Object bounds:'
-    def get_caption_value(button):
-        return button.element.world.show_bounds_all
-    def selected(button):
-        button.element.world.toggle_all_bounds_viz()
-        button.refresh_caption()
-
-class ToggleCollisionVizButton(GameEditToggleButton):
-    base_caption = 'Object collision:'
-    def get_caption_value(button):
-        return button.element.world.show_collision_all
-    def selected(button):
-        button.element.world.toggle_all_collision_viz()
-        button.refresh_caption()
 
 class GamePanel(UIElement):
     "base class of game edit UI panels"
@@ -216,9 +186,6 @@ class GamePanel(UIElement):
         return True
 
 
-# list type constants
-LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES = 0, 1, 2, 3
-
 class EditGamePanel(GamePanel):
     tile_width = 28
     tile_y = 5
@@ -228,12 +195,6 @@ class EditGamePanel(GamePanel):
                       LoadStateButton, SaveStateButton, SpawnObjectButton,
                       DuplicateObjectButton, SelectObjectsButton,
                       EditObjectArtButton, EditWorldPropertiesButton]
-    # disable toggles now that we have "edit world properties"
-    """
-                      TogglePlayerCameraLockButton, ToggleGridSnapButton,
-                      ToggleOriginVizButton,
-                      ToggleBoundsVizButton, ToggleCollisionVizButton]
-    """
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):
@@ -270,7 +231,6 @@ class EditGamePanel(GamePanel):
     
     def clicked(self, mouse_button):
         self.world.classname_to_spawn = None
-        self.list_panel.list_mode = LIST_NONE
         # reset all buttons
         self.clear_buttons()
         # draw to set proper visual state
@@ -303,6 +263,9 @@ class EditListPanel(GamePanel):
     # transient state
     titlebar = 'List titlebar'
     items = []
+    list_titlebar_text = {LIST_CLASSES: 'Object classes:',
+                          LIST_OBJECTS: 'Objects:',
+                          LIST_STATES: 'States:'}
     
     class ListItem:
         def __init__(self, name, obj): self.name, self.obj = name, obj
@@ -311,7 +274,13 @@ class EditListPanel(GamePanel):
     def __init__(self, ui):
         # topmost index of items to show in view
         self.list_scroll_index = 0
+        # save & restore a scroll index for each type of list
+        self.scroll_indices = {LIST_CLASSES: 0, LIST_OBJECTS: 0, LIST_STATES: 0}
         self.list_mode = LIST_NONE
+        # map list type to list builder functions
+        self.list_functions = {LIST_CLASSES: self.list_classes,
+                               LIST_OBJECTS: self.list_objects,
+                               LIST_STATES: self.list_states}
         # separate lists for item buttons vs other controls
         self.list_buttons = []
         # set when game resets
@@ -385,40 +354,48 @@ class EditListPanel(GamePanel):
             return True
     
     def list_classes(self):
-        self.items = []
         # get list of available classes from GameWorld
         for classname,classdef in self.world.get_all_loaded_classes().items():
             item = self.ListItem(classname, classdef)
             self.items.append(item)
         # sort classes alphabetically
         self.items.sort(key=lambda i: i.name)
-        self.clear_buttons(self.list_buttons)
-        self.titlebar = 'Object classes:'
-        self.list_mode = LIST_CLASSES
     
     def list_objects(self):
-        self.items = []
-        self.clear_buttons(self.list_buttons)
         for obj in self.world.objects.values():
             if obj.do_not_list:
                 continue
             li = self.ListItem(obj.name, obj)
             self.items.append(li)
-        self.titlebar = 'Objects:'
-        self.list_mode = LIST_OBJECTS
+        # sort object names alphabetically
+        self.items.sort(key=lambda i: i.name)
     
     def list_states(self):
-        if not self.world.game_dir:
-            return
-        self.items = []
-        self.clear_buttons(self.list_buttons)
         # list state files in current game dir
         for filename in os.listdir(self.world.game_dir):
             if filename.endswith('.' + STATE_FILE_EXTENSION):
                 li = self.ListItem(filename[:-3], None)
                 self.items.append(li)
-        self.titlebar = 'States:'
-        self.list_mode = LIST_STATES
+        self.items.sort(key=lambda i: i.name)
+    
+    def set_list_mode(self, new_mode):
+        "changes list type and sets new items"
+        if new_mode == LIST_STATES and not self.world.game_dir:
+            return
+        if new_mode == LIST_NONE:
+            self.list_mode = new_mode
+            return
+        self.items = []
+        self.clear_buttons(self.list_buttons)
+        # save old list type's scroll index so we can restore it later
+        self.scroll_indices[self.list_mode] = self.list_scroll_index
+        self.list_mode = new_mode
+        self.titlebar = self.list_titlebar_text[self.list_mode]
+        self.list_functions[self.list_mode]()
+        # restore saved scroll index for new list type
+        self.list_scroll_index = self.scroll_indices[self.list_mode]
+        # keep in bounds if list size changed since last view
+        self.list_scroll_index = min(self.list_scroll_index, len(self.items))
     
     def get_label(self):
         return self.titlebar
@@ -438,16 +415,7 @@ class EditListPanel(GamePanel):
         return False
     
     def game_reset(self):
-        self.list_scroll_index = 0
         self.should_reset_list = True
-    
-    def reset_list(self):
-        if self.list_mode == LIST_OBJECTS:
-            self.list_objects()
-        elif self.list_mode == LIST_CLASSES:
-            self.list_classes()
-        elif self.list_mode == LIST_STATES:
-            self.list_states()
     
     def refresh_items(self):
         # prune any objects that have been deleted from items
@@ -477,7 +445,7 @@ class EditListPanel(GamePanel):
     
     def update(self):
         if self.should_reset_list:
-            self.reset_list()
+            self.set_list_mode(self.list_mode)
             self.should_reset_list = False
         # redraw contents every update
         self.draw_titlebar()

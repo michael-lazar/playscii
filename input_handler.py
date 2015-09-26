@@ -289,22 +289,22 @@ class InputLord:
                 # shift = move selected
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(0, 1, 0)
-                elif app.gw.player:
+                elif not self.ctrl_pressed and app.gw.player:
                     app.gw.player.move(0, 1)
             if pressing_down(ks):
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(0, -1, 0)
-                elif app.gw.player:
+                elif not self.ctrl_pressed and app.gw.player:
                     app.gw.player.move(0, -1)
             if pressing_left(ks):
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(-1, 0, 0)
-                elif app.gw.player:
+                elif not self.ctrl_pressed and app.gw.player:
                     app.gw.player.move(-1, 0)
             if pressing_right(ks):
                 if self.shift_pressed and self.app.can_edit:
                     app.gw.move_selected(1, 0, 0)
-                elif app.gw.player:
+                elif not self.ctrl_pressed and app.gw.player:
                     app.gw.player.move(1, 0)
             if abs(self.gamepad_left_x) > 0.15 and app.gw.player:
                 app.gw.player.move(self.gamepad_left_x, 0)
@@ -507,7 +507,8 @@ class InputLord:
     def BIND_save_current(self):
         # save current game state in game mode, else save current art
         if self.app.game_mode:
-            self.ui.open_dialog(SaveGameStateDialog)
+            # as with reset, save over last loaded state
+            self.app.gw.save_last_state()
         elif self.ui.active_art:
             # if new document, ask for a name
             default_name = ART_DIR + 'new.' + ART_FILE_EXTENSION
@@ -699,9 +700,12 @@ class InputLord:
         self.ui.open_dialog(ArtChooserDialog)
     
     def BIND_save_art_as(self):
-        if not self.ui.active_art:
+        if self.game_mode:
+            self.ui.open_dialog(SaveGameStateDialog)
+        elif not self.ui.active_art:
             return
-        self.ui.open_dialog(SaveAsDialog)
+        else:
+            self.ui.open_dialog(SaveAsDialog)
     
     def BIND_revert_art(self):
         if not self.ui.active_art:
