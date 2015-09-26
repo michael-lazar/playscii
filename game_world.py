@@ -347,15 +347,20 @@ class GameWorld:
             self.hud.update()
     
     def render(self):
+        visible_objects = []
         for obj in self.objects.values():
             obj.update_renderables()
+            # TODO: filter out objects outside current room here
+            # respect object's "should render at all" flag
+            if obj.visible:
+                visible_objects.append(obj)
         #
         # process non "Y sort" objects first
         #
         draw_order = []
         collision_items = []
         y_objects = []
-        for obj in self.objects.values():
+        for obj in visible_objects:
             if obj.y_sort:
                 y_objects.append(obj)
                 continue
@@ -370,10 +375,8 @@ class GameWorld:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                # respect object's "should render at all" flag
-                if obj.visible:
-                    item = RenderItem(obj, i, z + obj.z)
-                    draw_order.append(item)
+                item = RenderItem(obj, i, z + obj.z)
+                draw_order.append(item)
         draw_order.sort(key=lambda item: item.sort_value, reverse=False)
         #
         # process "Y sort" objects
@@ -391,9 +394,8 @@ class GameWorld:
                         item = RenderItem(obj, i, 0)
                         collision_items.append(item)
                     continue
-                if obj.visible:
-                    item = RenderItem(obj, i, z)
-                    items.append(item)
+                item = RenderItem(obj, i, z)
+                items.append(item)
             items.sort(key=lambda item: item.sort_value, reverse=False)
             for item in items:
                 draw_order.append(item)
