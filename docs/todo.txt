@@ -2,7 +2,7 @@ TODO
 
 current tasks:
 
-ctrl-s in game mode: save game as last loaded state, shift-ctrl-s = save as, f2 / reset = reload last loaded state
+ctrl-s in game mode: save game as last loaded state, shift-ctrl-s = save as
 
 "rooms" concept:
 - standardized object that contains/manages:
