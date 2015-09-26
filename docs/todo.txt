@@ -2,14 +2,39 @@ TODO
 
 current tasks:
 
-spec for "screens" (levels?) concept: standardized object(s) that manages groups of objects, portals to other screens, visibility/collision
+ctrl-s in game mode: save game as last loaded state, shift-ctrl-s = save as, f2 / reset = reload last loaded state
 
-use new file chooser for "convert image" and "create palette from image", show image preview
+"rooms" concept:
+- standardized object that contains/manages:
+-- groups of objects (some non-exclusive with other rooms, eg player)
+-- triggers (overlapping but not colliding objects) serve as portals to other rooms (edge of screen triggers, teleporters)
+-- visibility/collision of objects
+-- some objects are respawn-on-enter / destroy-on-exit
+-- ambient sounds
+-- current room name gets serialized in state data (where?), world does "enter room" on state load so you get per-room savegame support
+-- if world.room is None / not in the room table, world behaves as normal
+-- ensure out-of-room objects have near-zero overhead (collision)
+-- how are rooms defined?  object lists must be generated after all objects have spawned
+--- support dynamically generated room definitions a la ELC2 as well as predefined
+
+# how to specify that an object is in all rooms?
+if obj.in_all_rooms or (world.room and world.room in obj.rooms): obj.render()
+
+proper GO scale support (ended up using scale for title text in ELC2, probably broadly useful)
+
+use new file chooser for:
+- convert image (any format supported by PIL)
+- create palette from image (same)
+- game dir (only show dirs in app/games/ and ~/documents/games/)
+
+collision:
+- AABB support (sometimes perfectly flat edges are needed)
 
 - Art "instance" capabilities, so a script can change one object using the same as another without affecting both
 -- write Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
 -- "save as" should create a new editable art in the session, not replace current one
+
 
 ---
 
@@ -19,8 +44,7 @@ new features / major improvements:
 - move accel, max velocity, stop velocity, gravity (if not global), friction, "specific-axis" bool
 
 game distribution system:
-- "game to auto-load" config option
--- alternately/additionally: if only one game dir is present, auto-load that?
+- autoload alternate/addition: if only one game dir is present, autoload that?
 - "create new project" menu option, creates directory, subdirs, and start.gs
 - ideal is something like LOVE does: single file you can associate with playscii and click to open
 - possibly helpful: http://pysdl2.readthedocs.org/en/latest/modules/sdl2ext_resources.html
@@ -30,6 +54,7 @@ more complete example games:
 
 collision:
 - broadphase (tile system)
+- AABB support (sometimes perfectly flat edges are needed)
 - integrate AARR support
 
 proper help screen:
