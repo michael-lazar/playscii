@@ -433,33 +433,15 @@ class ToggleGameModeMenuItem(PulldownMenuItem):
     command = 'toggle_game_mode'
     def should_dim(app): return False
 
+class NewGameDirItem(PulldownMenuItem):
+    label = 'New game…'
+    command = 'new_game_dir'
+    def should_dim(app): return False
+
 class SetGameDirItem(PulldownMenuItem):
     label = 'Open game…'
     command = 'set_game_dir'
     def should_dim(app): return False
-
-class LoadGameStateItem(PulldownMenuItem):
-    label = 'Load game state…'
-    command = 'load_game_state'
-    def should_dim(app):
-        return app.gw.game_dir is None
-
-class SaveGameStateMenuItem(PulldownMenuItem):
-    label = 'Save game state…'
-    command = 'save_current'
-    def should_dim(app):
-        return app.gw.game_dir is None
-
-class ResetGameItem(PulldownMenuItem):
-    label = 'blah'
-    command = 'reset_game'
-    def should_dim(app):
-        return app.gw.game_dir is None
-    def get_label(app):
-        l = 'Reset game'
-        if app.gw.game_name:
-            l = '%s "%s"' % (l, app.gw.game_name)
-        return l
 
 class HelpScreenMenuItem(PulldownMenuItem):
     label = 'Help…'
@@ -621,7 +603,7 @@ class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
 
 class GameMenuData(PulldownMenuData):
-    items = [ToggleGameModeMenuItem, SetGameDirItem]#, LoadGameStateItem, SaveGameStateMenuItem, ResetGameItem]
+    items = [ToggleGameModeMenuItem, NewGameDirItem, SetGameDirItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpScreenMenuItem, HelpReadmeMenuItem, HelpWebsiteMenuItem]

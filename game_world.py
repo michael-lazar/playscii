@@ -3,6 +3,8 @@ import os, sys, time, importlib, json
 import collision
 from camera import Camera
 from art import ART_DIR
+from charset import CHARSET_DIR
+from palette import PALETTE_DIR
 
 TOP_GAME_DIR = 'games/'
 DEFAULT_STATE_FILENAME = 'start'
@@ -56,10 +58,12 @@ class GameWorld:
         self.paused = False
         self.modules = {'game_object': game_object, 'game_hud': game_hud}
         self.classname_to_spawn = None
-        # table of objects by name:object
+        # dict of objects by name:object
         self.objects = {}
-        # table of just-spawned objects, added to above on update() after spawn
+        # dict of just-spawned objects, added to above on update() after spawn
         self.new_objects = {}
+        # dict of rooms by name:room
+        self.rooms = {}
         self.cl = collision.CollisionLord(self)
         self.hud = None
         self.art_loaded = []
@@ -182,6 +186,22 @@ class GameWorld:
     
     def deselect_all(self):
         self.selected_objects = []
+    
+    def create_new_game(self, game_name):
+        "creates appropriate dirs and files for a new game, returns success"
+        new_dir = self.app.documents_dir + TOP_GAME_DIR + game_name + '/'
+        if os.path.exists(new_dir):
+            self.app.log('Game dir %s already exists!' % game_name)
+            return False
+        os.mkdir(new_dir)
+        os.mkdir(new_dir + ART_DIR)
+        os.mkdir(new_dir + GAME_SCRIPTS_DIR)
+        os.mkdir(new_dir + SOUNDS_DIR)
+        os.mkdir(new_dir + CHARSET_DIR)
+        os.mkdir(new_dir + PALETTE_DIR)
+        self.set_game_dir(game_name)
+        self.save_to_file(DEFAULT_STATE_FILENAME)
+        return True
     
     def unload_game(self):
         for obj in self.objects.values():

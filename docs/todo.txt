@@ -18,6 +18,21 @@ current tasks:
 # how to specify that an object is in all rooms?
 if obj.in_all_rooms or (world.room and world.room in obj.rooms): obj.render()
 
+load/save:
+- serialize rooms in a separate list from objects
+- room entry: list of objects, any other serializable properties
+- in GameWorld.load_game_state, after all objects have been spawned, load rooms and pass each room's data into its init, same as objects
+-- during init, each room finds its objects (string name to object reference)
+-- GameRoom has get_dict same as GO
+-- "current room" saved in serialized world properties
+
+room UI:
+- add/remove room from world
+- add/remove objects from room: selected in view / choose from list of objects
+- add/remove rooms from an object's list: choose from list of rooms
+- "change current room"
+- "show all rooms" toggle if you want to see the whole world at once
+
 - fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 
 use new file chooser for:
@@ -42,8 +57,7 @@ new features / major improvements:
 - move accel, max velocity, stop velocity, gravity (if not global), friction, "specific-axis" bool
 
 game distribution system:
-- autoload alternate/addition: if only one game dir is present, autoload that?
-- "create new project" menu option, creates directory, subdirs, and start.gs
+- create new project: auto-create a class file with a stub GameObject subclass?
 - ideal is something like LOVE does: single file you can associate with playscii and click to open
 - possibly helpful: http://pysdl2.readthedocs.org/en/latest/modules/sdl2ext_resources.html
 

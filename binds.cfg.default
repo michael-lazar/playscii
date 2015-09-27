@@ -124,5 +124,6 @@ self.edit_bind_src = {
 	'_open_game_assets' : 'open_all_game_assets',
 	'_export_anim'  : 'export_anim',
 	'_import_edscii': 'import_edscii',
-	'_revert'   : 'revert_art'
+	'_revert'   : 'revert_art',
+	'_new_game'     : 'new_game_dir'
 }

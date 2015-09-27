@@ -780,6 +780,19 @@ class PaletteFromFileDialog(UIDialog):
         new_pal = PaletteFromFile(self.ui.app, src_filename, palette_filename, colors)
         self.dismiss()
 
+class NewGameDirDialog(UIDialog):
+    title = 'New game'
+    fields = 1
+    field0_label = 'Name of new game directory:'
+    confirm_caption = 'Create'
+    
+    # TODO: only allow names that don't already exist
+    
+    def confirm_pressed(self):
+        if self.ui.app.gw.create_new_game(self.field0_text):
+            self.ui.app.enter_game_mode()
+        self.dismiss()
+
 class SetGameDirDialog(UIDialog):
     
     title = 'Open game'
