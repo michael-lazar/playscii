@@ -662,6 +662,9 @@ class Art:
     def update_scripts(self):
         if len(self.scripts) == 0:
             return
+        # don't run on game art while paused
+        if self.app.game_mode and self.app.gw.paused:
+            return
         for i,script in enumerate(self.scripts):
             if (self.app.get_elapsed_time() / 1000) > self.scripts_next_exec_time[i]:
                 exec(open(script).read())

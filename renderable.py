@@ -250,6 +250,8 @@ class TileRenderable:
             self.update_loc()
         if not self.animating:
             return
+        if self.app.game_mode and self.app.gw.paused:
+            return
         elapsed = self.app.get_elapsed_time() - self.last_frame_time
         self.anim_timer += elapsed
         new_frame = self.frame

@@ -163,7 +163,8 @@ class Application:
         self.context = sdl2.SDL_GL_CreateContext(self.window)
         # report OS, version, CPU
         self.log('OS: %s' % platform.platform())
-        self.log('CPU: %s' % platform.processor())
+        cpu = platform.processor()
+        self.log('CPU: %s' % (cpu if cpu != '' else "Couldn't detect :["))
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
         self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL version, vendor, GLSL version etc

@@ -267,7 +267,7 @@ class UIDialog(UIElement):
                 if not shift_pressed:
                     keystr = keystr.lower()
                 if not keystr.isalpha() and shift_pressed:
-                    keystr = shift_map[keystr]
+                    keystr = shift_map.get(keystr, '')
             elif field_type is int and not keystr.isdigit() and keystr != '-':
                 return
             # this doesn't guard against things like 0.00.001
