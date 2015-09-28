@@ -127,6 +127,7 @@ Zak McClendon
 class AboutDialog(PagedInfoDialog):
     title = 'Playscii'
     message = about_message
+    all_modes_visible = True
     def __init__(self, ui):
         self.title += ' %s' % ui.app.version
         PagedInfoDialog.__init__(self, ui)
@@ -142,3 +143,4 @@ Help is on the way!
 
 class HelpScreenDialog(AboutDialog):
     message = help_message
+    all_modes_visible = True

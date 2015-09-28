@@ -9,7 +9,14 @@ from ui_colors import UIColors
 from game_world import STATE_FILE_EXTENSION
 
 # list type constants
-LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES = 0, 1, 2, 3
+LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES, LIST_GAMES, LIST_ROOMS = 0, 1, 2, 3, 4, 5
+
+# list operations - tells list what to do when clicked
+LO_SELECT_OBJECTS = 0
+
+list_operation_labels = {
+    LO_SELECT_OBJECTS: 'Select objects:'
+}
 
 
 class ToggleEditUIButton(UIButton):
@@ -254,10 +261,11 @@ class ListScrollDownArrowButton(ListScrollArrowButton):
 
 class EditListPanel(GamePanel):
     tile_width = ListButton.width + 1
-    tile_y = EditGamePanel.tile_y + EditGamePanel.tile_height + 1
+    tile_y = 5
+    #tile_y = EditGamePanel.tile_y + EditGamePanel.tile_height + 1
     scrollbar_shade_char = 54
     # height will change based on how many items in list
-    tile_height = 15
+    tile_height = 30
     snap_left = True
     spawn_msg = 'Click anywhere in the world view to spawn a %s'
     # transient state
@@ -313,6 +321,11 @@ class EditListPanel(GamePanel):
         for y in range(1, self.tile_height):
             self.art.set_tile_at(0, 0, x, y, self.scrollbar_shade_char,
                                  UIColors.medgrey)
+    
+    def cancel(self):
+        self.world.deselect_all()
+        self.list_mode = LIST_NONE
+        self.world.classname_to_spawn = None
     
     def scroll_list_up(self):
         if self.list_scroll_index > 0:

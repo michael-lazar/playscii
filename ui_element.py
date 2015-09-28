@@ -123,7 +123,7 @@ class UIElement:
     def is_visible(self):
         if not self.ui.app.game_mode and self.game_mode_visible and not self.all_modes_visible:
             return False
-        elif self.ui.app.game_mode and not self.game_mode_visible:
+        elif self.ui.app.game_mode and not self.game_mode_visible and not self.all_modes_visible:
             return False
         return self.visible
     

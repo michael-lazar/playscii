@@ -543,6 +543,8 @@ class Application:
         if self.can_edit:
             self.ui.message_line.post_line(self.game_mode_message % mode_bind, 10)
         self.al.resume_music()
+        self.ui.menu_bar.close_active_menu()
+        self.ui.menu_bar = self.ui.game_menu_bar
     
     def exit_game_mode(self):
         self.game_mode = False
@@ -552,6 +554,8 @@ class Application:
         self.ui.message_line.post_line('', 1)
         self.update_window_title()
         self.al.pause_music()
+        self.ui.menu_bar.close_active_menu()
+        self.ui.menu_bar = self.ui.art_menu_bar
     
     def get_elapsed_time(self):
         return sdl2.timer.SDL_GetTicks()

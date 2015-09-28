@@ -8,6 +8,7 @@ from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
 from ui_dialog import NewArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog
+from ui_edit_panel import LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES
 from collision import CT_NONE
 from image_export import export_still_image, export_animation
 from art import ART_DIR, ART_FILE_EXTENSION
@@ -268,7 +269,7 @@ class InputLord:
             return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]
         # prevent camera move if: console is up, text input is active, editing
         # is not allowed
-        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active and self.app.can_edit:
+        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active and self.app.can_edit and not self.app.ui.pulldown.visible:
             if pressing_up(ks):
                 app.camera.pan(0, 1, True)
             if pressing_down(ks):
@@ -284,7 +285,7 @@ class InputLord:
         if self.app.can_edit and app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
         # game mode: arrow keys and left gamepad stick move player
-        if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog:
+        if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog and not self.app.ui.pulldown.visible:
             if pressing_up(ks):
                 # shift = move selected
                 if self.shift_pressed and self.app.can_edit:
@@ -452,7 +453,9 @@ class InputLord:
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
         elif self.app.game_mode:
-            self.ui.edit_game_panel.cancel()
+            # bail out of list if it's active
+            if self.ui.edit_list_panel.visible:
+                self.ui.edit_list_panel.cancel()
         else:
             self.ui.select_none()
     
@@ -588,6 +591,7 @@ class InputLord:
         # select menu item if navigating pulldown
         if self.ui.menu_bar.active_menu_name:
             self.ui.pulldown.keyboard_select_item()
+            return
         if not self.ui.active_art:
             return
         if self.ui.active_dialog:
@@ -682,7 +686,10 @@ class InputLord:
         self.ui.menu_bar.open_menu_by_name('art')
     
     def BIND_open_frame_menu(self):
-        self.ui.menu_bar.open_menu_by_name('frame')
+        if self.app.game_mode:
+            self.ui.menu_bar.open_menu_by_name('room')
+        else:
+            self.ui.menu_bar.open_menu_by_name('frame')
     
     def BIND_open_layer_menu(self):
         self.ui.menu_bar.open_menu_by_name('layer')
@@ -695,6 +702,9 @@ class InputLord:
     
     def BIND_open_help_menu(self):
         self.ui.menu_bar.open_menu_by_name('help')
+    
+    def BIND_open_object_menu(self):
+        self.ui.menu_bar.open_menu_by_name('object')
     
     def BIND_new_art(self):
         self.ui.open_dialog(NewArtDialog)
@@ -840,17 +850,14 @@ class InputLord:
     def BIND_toggle_all_collision_viz(self):
         if self.app.game_mode:
             self.app.gw.toggle_all_collision_viz()
-            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_all_bounds_viz(self):
         if self.app.game_mode:
             self.app.gw.toggle_all_bounds_viz()
-            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_all_origin_viz(self):
         if self.app.game_mode:
             self.app.gw.toggle_all_origin_viz()
-            self.ui.edit_game_panel.refresh_all_captions()
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:
@@ -868,7 +875,7 @@ class InputLord:
     # game mode binds
     #
     def accept_normal_game_input(self):
-        return self.app.game_mode and self.app.gw.player and not self.ui.active_dialog
+        return self.app.game_mode and self.app.gw.player and not self.ui.active_dialog and not self.app.ui.pulldown.visible
     
     def BIND_game_frob(self):
         if self.accept_normal_game_input():
@@ -880,3 +887,7 @@ class InputLord:
     
     def BIND_center_cursor_in_art(self):
         self.app.cursor.center_in_art()
+    
+    def BIND_select_objects(self):
+        self.ui.edit_list_panel.set_list_mode(LIST_OBJECTS)
+        # TODO: pulldown should close when this is selected!

@@ -83,6 +83,7 @@ self.edit_bind_src = {
     'alt c'    : 'open_char_color_menu',
 	'alt g'    : 'open_game_menu',
     'alt h'    : 'open_help_menu',
+    'alt o'    : 'open_object_menu',
     'ctrl o'   : 'open_art',
     'ctrl n'   : 'new_art',
     'ctrl w'   : 'close_art',
@@ -125,5 +126,6 @@ self.edit_bind_src = {
 	'_export_anim'  : 'export_anim',
 	'_import_edscii': 'import_edscii',
 	'_revert'   : 'revert_art',
-	'_new_game'     : 'new_game_dir'
+	'_new_game'     : 'new_game_dir',
+	'_select_objects': 'select_objects'
 }

@@ -30,6 +30,7 @@ class PulldownMenu(UIElement):
     border_horizontal_line_char = 78
     border_vertical_line_char = 79
     mark_char = 131
+    all_modes_visible = True
     
     def open_at(self, menu_button):
         # set X and Y based on calling menu button's location

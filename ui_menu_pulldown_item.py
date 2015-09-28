@@ -602,7 +602,7 @@ class LayerMenuData(PulldownMenuData):
 class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetMenuItem, ChoosePaletteMenuItem, SeparatorMenuItem, PaletteFromFileMenuItem]
 
-class GameMenuData(PulldownMenuData):
+class GameModeMenuData(PulldownMenuData):
     items = [ToggleGameModeMenuItem, NewGameDirItem, SetGameDirItem]
 
 class HelpMenuData(PulldownMenuData):

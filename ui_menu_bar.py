@@ -2,7 +2,8 @@ from math import ceil
 
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
-from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ViewMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, GameMenuData, HelpMenuData
+from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ViewMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, GameModeMenuData, HelpMenuData
+from ui_game_menu_pulldown_item import GameMenuData, GameRoomMenuData, GameObjectMenuData
 from ui_info_dialog import AboutDialog
 from ui_colors import UIColors
 from renderable_sprite import UISpriteRenderable
@@ -51,6 +52,10 @@ class PlaysciiMenuButton(UIButton):
     hovered_bg_color = MenuButton.hovered_bg_color
     dimmed_bg_color = MenuButton.dimmed_bg_color
 
+#
+# art mode menu buttons
+#
+
 class FileMenuButton(MenuButton):
     name = 'file'
     caption = 'File'
@@ -91,15 +96,35 @@ class CharColorMenuButton(MenuButton):
     caption = 'Chars/Colors'
     menu_data = CharColorMenuData
 
+class GameModeMenuButton(MenuButton):
+    name = 'game'
+    caption = 'Game'
+    menu_data = GameModeMenuData
+
+# (appears in both art and game mode menus)
+class HelpMenuButton(MenuButton):
+    name = 'help'
+    caption = 'Help'
+    menu_data = HelpMenuData
+
+#
+# game mode menu buttons
+#
+
 class GameMenuButton(MenuButton):
     name = 'game'
     caption = 'Game'
     menu_data = GameMenuData
 
-class HelpMenuButton(MenuButton):
-    name = 'help'
-    caption = 'Help'
-    menu_data = HelpMenuData
+class RoomMenuButton(MenuButton):
+    name = 'room'
+    caption = 'Room'
+    menu_data = GameRoomMenuData
+
+class ObjectMenuButton(MenuButton):
+    name = 'object'
+    caption = 'Object'
+    menu_data = GameObjectMenuData
 
 
 class MenuBar(UIElement):
@@ -109,10 +134,8 @@ class MenuBar(UIElement):
     snap_top = True
     snap_left = True
     always_consume_input = True
-    button_classes = [FileMenuButton, EditMenuButton, ToolMenuButton,
-                      ViewMenuButton, ArtMenuButton, FrameMenuButton,
-                      LayerMenuButton, CharColorMenuButton, GameMenuButton,
-                      HelpMenuButton]
+    # buttons set in subclasses
+    button_classes = []
     # empty tiles between each button
     button_padding = 1
     
@@ -212,3 +235,14 @@ class MenuBar(UIElement):
     def destroy(self):
         UIElement.destroy(self)
         self.playscii_sprite.destroy()
+
+class ArtMenuBar(MenuBar):
+    button_classes = [FileMenuButton, EditMenuButton, ToolMenuButton,
+                      ViewMenuButton, ArtMenuButton, FrameMenuButton,
+                      LayerMenuButton, CharColorMenuButton, GameModeMenuButton,
+                      HelpMenuButton]
+
+class GameMenuBar(MenuBar):
+    button_classes = [GameMenuButton, RoomMenuButton, ObjectMenuButton,
+                      HelpMenuButton]
+    game_mode_visible = True
