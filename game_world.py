@@ -101,7 +101,7 @@ class GameWorld:
         objects = []
         for obj in self.objects.values():
             # only allow selecting of visible objects
-            # (can still be selected via edit panel)
+            # (can still be selected via list panel)
             if obj.visible and not obj.locked and obj.is_point_inside(x, y):
                 objects.append(obj)
         return objects

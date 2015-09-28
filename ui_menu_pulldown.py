@@ -3,11 +3,13 @@ from ui_element import UIElement
 from ui_button import UIButton
 from ui_colors import UIColors
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
-from ui_menu_pulldown_item import PulldownMenuItem, PulldownMenuData, SeparatorMenuItem
+from ui_menu_pulldown_item import PulldownMenuItem, PulldownMenuData, SeparatorItem
+
 
 class MenuItemButton(UIButton):
     dimmed_fg_color = UIColors.medgrey
     dimmed_bg_color = UIColors.lightgrey
+    
     def hover(self):
         UIButton.hover(self)
         # keyboard nav if hovering with mouse
@@ -16,6 +18,12 @@ class MenuItemButton(UIButton):
                 self.element.keyboard_nav_index = i
                 self.element.update_keyboard_hover()
                 break
+    
+    def click(self):
+        UIButton.click(self)
+        if self.item.close_on_select:
+            self.element.ui.menu_bar.close_active_menu()
+
 
 class PulldownMenu(UIElement):
     
@@ -73,11 +81,13 @@ class PulldownMenu(UIElement):
         self.buttons = []
         for i,item in enumerate(items):
             # skip button creation for separators, just draw a line
-            if item is SeparatorMenuItem:
+            if item is SeparatorItem:
                 for x in range(1, self.tile_width - 1):
                     self.art.set_tile_at(0, 0, x, i+1, self.border_horizontal_line_char, self.border_color)
                 continue
             button = MenuItemButton(self)
+            # give button a handle to its item
+            button.item = item
             full_label = item.label
             if item.get_label is not PulldownMenuItem.get_label:
                 # trim output
@@ -92,7 +102,7 @@ class PulldownMenu(UIElement):
             if item.cb_arg is not None:
                 button.cb_arg = item.cb_arg
             # dim items that aren't applicable to current app state
-            if item.should_dim(self.ui.app):
+            if not item.always_active and item.should_dim(self.ui.app):
                 button.set_state('dimmed')
                 button.can_hover = False
             self.buttons.append(button)
@@ -144,7 +154,7 @@ class PulldownMenu(UIElement):
         def null():
             pass
         # special handling of SeparatorMenuItem, no command or label
-        if menu_item is SeparatorMenuItem:
+        if menu_item is SeparatorItem:
             return '', null
         binds = self.ui.app.il.edit_binds
         for bind_tuple in binds:
@@ -199,3 +209,6 @@ class PulldownMenu(UIElement):
             button.callback(button.cb_arg)
         else:
             button.callback()
+        # mirror behavior from MenuItemButton.click: close on select if needed
+        if button.item.close_on_select:
+            self.ui.menu_bar.close_active_menu()

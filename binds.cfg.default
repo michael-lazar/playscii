@@ -83,6 +83,8 @@ self.edit_bind_src = {
     'alt c'    : 'open_char_color_menu',
 	'alt g'    : 'open_game_menu',
     'alt h'    : 'open_help_menu',
+	'alt s'    : 'open_state_menu',
+    'alt w'    : 'open_world_menu',
     'alt o'    : 'open_object_menu',
     'ctrl o'   : 'open_art',
     'ctrl n'   : 'new_art',
@@ -127,5 +129,10 @@ self.edit_bind_src = {
 	'_import_edscii': 'import_edscii',
 	'_revert'   : 'revert_art',
 	'_new_game'     : 'new_game_dir',
-	'_select_objects': 'select_objects'
+	'_spawn_objects': 'choose_spawn_object_class',
+	'_duplicate_objects': 'duplicate_selected_objects',
+	'_select_objects': 'select_objects',
+	'_edit_object_art': 'edit_art_for_selected_objects',
+	'_edit_world'   : 'edit_world_properties',
+	'_save_game'    : 'save_game_state'
 }

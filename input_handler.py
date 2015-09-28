@@ -491,10 +491,15 @@ class InputLord:
     
     def BIND_set_game_dir(self):
         if self.app.can_edit:
+            # TODO: show available games in list panel
             self.ui.open_dialog(SetGameDirDialog)
     
     def BIND_load_game_state(self):
-        self.ui.open_dialog(LoadGameStateDialog)
+        self.ui.edit_list_panel.set_list_mode(LIST_STATES)
+        # TODO: tell list panel what list operation is happening
+    
+    def BIND_save_game_state(self):
+        self.ui.open_dialog(SaveGameStateDialog)
     
     def BIND_reset_game(self):
         self.app.gw.reset_game()
@@ -539,13 +544,17 @@ class InputLord:
     def BIND_toggle_anim_playback(self):
         # if game mode, pause/unpause
         if self.app.game_mode:
-            self.app.gw.toggle_pause()
+            self.toggle_pause()
             return
         for r in self.ui.active_art.renderables:
             if r.animating:
                 r.stop_animating()
             else:
                 r.start_animating()
+        self.ui.menu_bar.refresh_active_menu()
+    
+    def toggle_pause(self):
+        self.app.gw.toggle_pause()
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_previous_layer(self):
@@ -697,11 +706,17 @@ class InputLord:
     def BIND_open_char_color_menu(self):
         self.ui.menu_bar.open_menu_by_name('char_color')
     
+    def BIND_open_help_menu(self):
+        self.ui.menu_bar.open_menu_by_name('help')
+    
     def BIND_open_game_menu(self):
         self.ui.menu_bar.open_menu_by_name('game')
     
-    def BIND_open_help_menu(self):
-        self.ui.menu_bar.open_menu_by_name('help')
+    def BIND_open_state_menu(self):
+        self.ui.menu_bar.open_menu_by_name('state')
+    
+    def BIND_open_world_menu(self):
+        self.ui.menu_bar.open_menu_by_name('world')
     
     def BIND_open_object_menu(self):
         self.ui.menu_bar.open_menu_by_name('object')
@@ -888,6 +903,20 @@ class InputLord:
     def BIND_center_cursor_in_art(self):
         self.app.cursor.center_in_art()
     
+    def BIND_choose_spawn_object_class(self):
+        self.ui.edit_list_panel.set_list_mode(LIST_CLASSES)
+        # TODO: for many of these, tell list what list op is active
+    
+    def BIND_duplicate_selected_objects(self):
+        self.app.gw.duplicate_selected_objects()
+    
     def BIND_select_objects(self):
         self.ui.edit_list_panel.set_list_mode(LIST_OBJECTS)
-        # TODO: pulldown should close when this is selected!
+    
+    def BIND_edit_art_for_selected_objects(self):
+        self.app.gw.edit_art_for_selected()
+    
+    def BIND_edit_world_properties(self):
+        self.ui.edit_list_panel.set_list_mode(LIST_NONE)
+        self.app.gw.deselect_all()
+        self.app.gw.select_object(self.app.gw.properties, force=True)

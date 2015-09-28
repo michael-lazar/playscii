@@ -785,6 +785,8 @@ class NewGameDirDialog(UIDialog):
     fields = 1
     field0_label = 'Name of new game directory:'
     confirm_caption = 'Create'
+    game_mode_visible = True
+    all_modes_visible = True
     
     # TODO: only allow names that don't already exist
     
