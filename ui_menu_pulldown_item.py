@@ -510,7 +510,7 @@ class ToolMenuData(PulldownMenuData):
     # TODO: generate list from UI.tools instead of manually specified MenuItems
     def should_mark_item(item, ui):
         # if it's a tool setting toggle, use its own mark check function
-        if item.__bases__[0] is ToolSettingsMenuItem:
+        if item.__bases__[0] is ToolSettingsItem:
             return item.should_mark(ui)
         return item.label == '  %s' % ui.selected_tool.button_caption
 

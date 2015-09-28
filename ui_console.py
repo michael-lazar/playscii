@@ -411,7 +411,7 @@ class ConsoleUI(UIElement):
         if keystr.isalpha() and not shift_pressed:
             keystr = keystr.lower()
         elif not keystr.isalpha() and shift_pressed:
-            keystr = shift_map[keystr]
+            keystr = shift_map.get(keystr, '')
         if len(self.current_line) < self.max_line_length:
             self.current_line += keystr
     
