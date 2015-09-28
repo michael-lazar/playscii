@@ -8,9 +8,9 @@ from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
-from ui_menu_bar import MenuBar
+from ui_menu_bar import ArtMenuBar, GameMenuBar
 from ui_menu_pulldown import PulldownMenu
-from ui_edit_panel import EditGamePanel, EditListPanel
+from ui_edit_panel import EditListPanel
 from ui_object_panel import EditObjectPanel
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
@@ -102,14 +102,15 @@ class UI:
         self.debug_text = DebugTextUI(self)
         self.pulldown = PulldownMenu(self)
         self.menu_bar = None
-        self.menu_bar = MenuBar(self)
+        self.art_menu_bar = ArtMenuBar(self)
+        self.game_menu_bar = GameMenuBar(self)
+        self.menu_bar = self.art_menu_bar
         self.edit_list_panel = EditListPanel(self)
-        self.edit_game_panel = EditGamePanel(self)
         self.edit_object_panel = EditObjectPanel(self)
         self.elements += [self.fps_counter, self.status_bar, self.popup,
                           self.message_line, self.debug_text, self.pulldown,
-                          self.menu_bar, self.edit_list_panel,
-                          self.edit_game_panel, self.edit_object_panel]
+                          self.art_menu_bar, self.game_menu_bar,
+                          self.edit_list_panel, self.edit_object_panel]
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
@@ -583,17 +584,17 @@ class UI:
     def redo(self):
         self.active_art.command_stack.redo()
     
-    def open_dialog(self, box_class):
-        if self.app.game_mode and not box_class.game_mode_visible:
+    def open_dialog(self, dialog_class):
+        if self.app.game_mode and not dialog_class.game_mode_visible:
             return
-        dialog = box_class(self)
+        dialog = dialog_class(self)
         self.active_dialog = dialog
         # insert dialog at index 0 so it draws first instead of last
         self.elements.insert(0, dialog)
     
     def set_game_edit_ui_visibility(self, visible, show_message=True):
+        self.game_menu_bar.visible = visible
         self.edit_list_panel.visible = visible
-        self.edit_game_panel.visible = visible
         self.edit_object_panel.visible = visible
         if not visible and show_message:
             bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')

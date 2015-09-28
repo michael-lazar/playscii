@@ -272,8 +272,6 @@ class GameWorld:
             break
         else:
             self.app.log("Couldn't find game directory %s" % dir_name)
-        if self.app.ui:
-            self.app.ui.edit_game_panel.draw_titlebar()
         if self.game_dir:
             self.sounds_dir = self.game_dir + SOUNDS_DIR
     
