@@ -33,6 +33,8 @@ room UI:
 - "change current room"
 - "show all rooms" toggle if you want to see the whole world at once
 
+CameraPoint: non-GO markers (x, y, z) saved in state data, camera can be warped to them, locations can be added and removed via Camera in game menu
+
 - fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 
 use new file chooser for:
