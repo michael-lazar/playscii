@@ -230,6 +230,8 @@ class MenuBar(UIElement):
                 self.ui.pulldown.open_at(button)
     
     def open_menu_by_name(self, menu_name):
+        if not self.ui.app.can_edit:
+            return
         for button in self.menu_buttons:
             if button.name == menu_name:
                 button.callback()
