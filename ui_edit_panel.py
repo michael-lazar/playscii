@@ -12,120 +12,12 @@ from game_world import STATE_FILE_EXTENSION
 LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES, LIST_GAMES, LIST_ROOMS = 0, 1, 2, 3, 4, 5
 
 # list operations - tells list what to do when clicked
+# TODO: finish this
 LO_SELECT_OBJECTS = 0
 
 list_operation_labels = {
     LO_SELECT_OBJECTS: 'Select objects:'
 }
-
-
-class ToggleEditUIButton(UIButton):
-    caption = '<< Hide edit UI'
-    y = 0
-    def selected(button):
-        button.element.ui.toggle_game_edit_ui()
-
-class ToggleGameModeButton(UIButton):
-    caption = 'Toggle Game Mode'
-    y = 0
-    def selected(button):
-        button.element.list_panel.set_list_mode(LIST_NONE)
-        button.element.ui.app.exit_game_mode()
-
-class ResetStateButton(UIButton):
-    caption = 'Reset to last game state'
-    def selected(button):
-        button.element.world.reset_game()
-        button.element.list_panel.set_list_mode(LIST_NONE)
-
-
-class PauseGameButton(UIButton):
-    
-    caption = 'blah'
-    clear_before_caption_draw = True
-    
-    def refresh_caption(button):
-        captions = ['Pause game', 'Unpause game']
-        button.caption = ' %s' % captions[button.element.world.paused]
-        button.draw_caption()
-    
-    def selected(button):
-        button.element.world.toggle_pause()
-        button.refresh_caption()
-
-
-class SetGameDirButton(UIButton):
-    caption = 'Open game…'
-    def selected(button):
-        # hide list for items that don't use it
-        button.element.list_panel.set_list_mode(LIST_NONE)
-        button.element.ui.open_dialog(SetGameDirDialog)
-        button.element.highlight_button(button)
-
-class LoadStateButton(UIButton):
-    caption = 'Load game state…'
-    def selected(button):
-        button.element.list_panel.set_list_mode(LIST_STATES)
-        button.element.highlight_button(button)
-
-class SaveStateButton(UIButton):
-    caption = 'Save new game state…'
-    def selected(button):
-        button.element.ui.open_dialog(SaveGameStateDialog)
-        # show states in list for convenience
-        button.element.list_panel.set_list_mode(LIST_STATES)
-        button.element.highlight_button(button)
-
-class SpawnObjectButton(UIButton):
-    caption = 'Spawn object…'
-    def selected(button):
-        # change list to show object classes
-        button.element.list_panel.set_list_mode(LIST_CLASSES)
-        button.element.highlight_button(button)
-
-class DuplicateObjectButton(UIButton):
-    caption = 'Duplicate selected objects'
-    def selected(button):
-        button.element.list_panel.set_list_mode(LIST_NONE)
-        button.element.world.duplicate_selected_objects()
-
-class SelectObjectsButton(UIButton):
-    caption = 'Select objects…'
-    def selected(button):
-        # change list to show objects
-        button.element.list_panel.set_list_mode(LIST_OBJECTS)
-        button.element.highlight_button(button)
-
-class EditObjectArtButton(UIButton):
-    caption = 'Edit art for selected…'
-    def selected(button):
-        button.element.list_panel.set_list_mode(LIST_NONE)
-        button.element.world.edit_art_for_selected()
-
-class EditWorldPropertiesButton(UIButton):
-    caption = 'Edit world properties…'
-    def selected(button):
-        button.element.list_panel.set_list_mode(LIST_NONE)
-        button.element.world.deselect_all()
-        button.element.world.select_object(button.element.world.properties, force=True)
-
-class GameEditToggleButton(UIButton):
-    "button whose caption reflects an on/off state"
-    
-    base_caption = 'Toggleable thing:'
-    caption_true = 'Visible'
-    caption_false = 'Hidden'
-    caption = base_caption
-    clear_before_caption_draw = True
-    
-    def get_caption_value(button):
-        return True
-    
-    def refresh_caption(button):
-        button.caption = ' %s ' % button.base_caption
-        button.caption += [button.caption_true, button.caption_false][not button.get_caption_value()]
-        button.draw_caption()
-
 
 class GamePanel(UIElement):
     "base class of game edit UI panels"
@@ -194,32 +86,16 @@ class GamePanel(UIElement):
 
 
 class EditGamePanel(GamePanel):
+    # TODO: delete this class once it's safe to
     tile_width = 28
     tile_y = 5
     snap_left = True
-    button_classes = [ToggleEditUIButton, ToggleGameModeButton,
-                      SetGameDirButton, ResetStateButton, PauseGameButton,
-                      LoadStateButton, SaveStateButton, SpawnObjectButton,
-                      DuplicateObjectButton, SelectObjectsButton,
-                      EditObjectArtButton, EditWorldPropertiesButton]
+    button_classes = []
     tile_height = len(button_classes) + 1
     
     def __init__(self, ui):
         GamePanel.__init__(self, ui)
         self.list_panel = self.ui.edit_list_panel
-    
-    def create_buttons(self):
-        for i,button_class in enumerate(self.button_classes):
-            button = button_class(self)
-            button.width = self.tile_width
-            button.y = i + 1
-            button.callback = button.selected
-            # draw buttons with dynamic caption
-            if button.clear_before_caption_draw:
-                button.refresh_caption()
-            else:
-                button.caption = ' %s' % button.caption
-            self.buttons.append(button)
     
     def cancel(self):
         self.world.deselect_all()
@@ -246,7 +122,7 @@ class EditGamePanel(GamePanel):
 
 
 class ListButton(UIButton):
-    width = EditGamePanel.tile_width - 1
+    width = 28
     clear_before_caption_draw = True
 
 class ListScrollArrowButton(ScrollArrowButton):
@@ -262,7 +138,6 @@ class ListScrollDownArrowButton(ListScrollArrowButton):
 class EditListPanel(GamePanel):
     tile_width = ListButton.width + 1
     tile_y = 5
-    #tile_y = EditGamePanel.tile_y + EditGamePanel.tile_height + 1
     scrollbar_shade_char = 54
     # height will change based on how many items in list
     tile_height = 30

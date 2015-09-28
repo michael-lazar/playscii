@@ -537,6 +537,7 @@ class UI:
                 continue
             if e.clicked(mouse_button):
                 handled = True
+        # close pulldown if clicking outside it / the menu bar
         if self.pulldown.visible and not self.pulldown in self.hovered_elements and not self.menu_bar in self.hovered_elements:
             self.menu_bar.close_active_menu()
         return handled

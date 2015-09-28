@@ -2,8 +2,8 @@ from math import ceil
 
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
-from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ViewMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, GameModeMenuData, HelpMenuData
-from ui_game_menu_pulldown_item import GameMenuData, GameRoomMenuData, GameObjectMenuData
+from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ViewMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, HelpMenuData
+from ui_game_menu_pulldown_item import GameMenuData, GameStateMenuData, GameWorldMenuData, GameRoomMenuData, GameObjectMenuData
 from ui_info_dialog import AboutDialog
 from ui_colors import UIColors
 from renderable_sprite import UISpriteRenderable
@@ -93,13 +93,8 @@ class LayerMenuButton(MenuButton):
 
 class CharColorMenuButton(MenuButton):
     name = 'char_color'
-    caption = 'Chars/Colors'
+    caption = 'Char/Color'
     menu_data = CharColorMenuData
-
-class GameModeMenuButton(MenuButton):
-    name = 'game'
-    caption = 'Game'
-    menu_data = GameModeMenuData
 
 # (appears in both art and game mode menus)
 class HelpMenuButton(MenuButton):
@@ -116,6 +111,16 @@ class GameMenuButton(MenuButton):
     caption = 'Game'
     menu_data = GameMenuData
 
+class StateMenuButton(MenuButton):
+    name = 'state'
+    caption = 'State'
+    menu_data = GameStateMenuData
+
+class WorldMenuButton(MenuButton):
+    name = 'world'
+    caption = 'World'
+    menu_data = GameWorldMenuData
+
 class RoomMenuButton(MenuButton):
     name = 'room'
     caption = 'Room'
@@ -125,6 +130,21 @@ class ObjectMenuButton(MenuButton):
     name = 'object'
     caption = 'Object'
     menu_data = GameObjectMenuData
+
+class ModeMenuButton(UIButton):
+    caption_justify = TEXT_CENTER
+    normal_bg_color = UIColors.black
+    normal_fg_color = UIColors.white
+    #hovered_bg_color = UIColors.lightgrey
+    #dimmed_bg_color = UIColors.lightgrey
+
+class ArtModeMenuButton(ModeMenuButton):
+    caption = 'Game Mode'
+    width = len(caption) + 2
+
+class GameModeMenuButton(ModeMenuButton):
+    caption = 'Art Mode'
+    width = len(caption) + 2
 
 
 class MenuBar(UIElement):
@@ -136,15 +156,19 @@ class MenuBar(UIElement):
     always_consume_input = True
     # buttons set in subclasses
     button_classes = []
+    # button to toggle between art and game mode
+    mode_button_class = None
     # empty tiles between each button
     button_padding = 1
     
     def __init__(self, ui):
         # bitmap icon for about menu button
         self.playscii_sprite = UISpriteRenderable(ui.app)
+        self.mode_button = None
         UIElement.__init__(self, ui)
         self.active_menu_name = None
-        self.buttons = []
+        # list of menu buttons that can be navigated etc
+        self.menu_buttons = []
         x = PlaysciiMenuButton.width + self.button_padding
         for button_class in self.button_classes:
             button = button_class(self)
@@ -155,13 +179,22 @@ class MenuBar(UIElement):
             # NOTE: callback already defined in MenuButton class,
             # menu data for pulldown with set in MenuButton subclass
             button.pulldown = self.ui.pulldown
-            self.buttons.append(button)
+            self.menu_buttons.append(button)
         playscii_button = PlaysciiMenuButton(self)
         playscii_button.callback = self.open_about
         # implement Playscii logo menu as a normal UIButton that opens
         # the About screen directly
-        self.buttons.append(playscii_button)
+        self.menu_buttons.append(playscii_button)
         self.reset_icon()
+        # copy from menu buttons, any buttons past this point are not menus
+        self.buttons = self.menu_buttons[:]
+        # toggle mode button at far right
+        if not self.mode_button_class:
+            return
+        self.mode_button = self.mode_button_class(self)
+        self.mode_button.x = int(self.ui.width_tiles * self.ui.scale) - self.mode_button.width
+        self.mode_button.callback = self.toggle_game_mode
+        self.buttons.append(self.mode_button)
     
     def reset_icon(self):
         inv_aspect = self.ui.app.window_height / self.ui.app.window_width
@@ -173,9 +206,16 @@ class MenuBar(UIElement):
     def open_about(self):
         self.ui.open_dialog(AboutDialog)
     
+    def toggle_game_mode(self):
+        if not self.ui.app.game_mode:
+            self.ui.app.enter_game_mode()
+        else:
+            self.ui.app.exit_game_mode()
+        self.ui.app.update_window_title()
+    
     def close_active_menu(self):
         # un-dim active menu button
-        for button in self.buttons:
+        for button in self.menu_buttons:
             if button.name == self.active_menu_name:
                 button.dimmed = False
                 button.set_state('normal')
@@ -185,26 +225,26 @@ class MenuBar(UIElement):
     def refresh_active_menu(self):
         if not self.ui.pulldown.visible:
             return
-        for button in self.buttons:
+        for button in self.menu_buttons:
             if button.name == self.active_menu_name:
                 self.ui.pulldown.open_at(button)
     
     def open_menu_by_name(self, menu_name):
-        for button in self.buttons:
+        for button in self.menu_buttons:
             if button.name == menu_name:
                 button.callback()
     
     def open_menu_by_index(self, index):
-        if index > len(self.buttons) - 1:
+        if index > len(self.menu_buttons) - 1:
             return
         # don't navigate to the about menu
         # (does this mean it's not accessible via kb-only? probably, that's fine)
-        if self.buttons[index].name == 'playscii':
+        if self.menu_buttons[index].name == 'playscii':
             return
-        self.buttons[index].callback()
+        self.menu_buttons[index].callback()
     
     def get_menu_index(self, menu_name):
-        for i,button in enumerate(self.buttons):
+        for i,button in enumerate(self.menu_buttons):
             if button.name == self.active_menu_name:
                 return i
     
@@ -224,6 +264,9 @@ class MenuBar(UIElement):
         bg = self.ui.colors.white
         fg = self.ui.colors.black
         self.art.clear_frame_layer(0, 0, bg, fg)
+        # reposition right-justified mode switch button
+        if self.mode_button:
+            self.mode_button.x = int(self.ui.width_tiles * self.ui.scale) - self.mode_button.width
         # draw buttons, etc
         UIElement.reset_art(self)
         self.reset_icon()
@@ -239,10 +282,11 @@ class MenuBar(UIElement):
 class ArtMenuBar(MenuBar):
     button_classes = [FileMenuButton, EditMenuButton, ToolMenuButton,
                       ViewMenuButton, ArtMenuButton, FrameMenuButton,
-                      LayerMenuButton, CharColorMenuButton, GameModeMenuButton,
-                      HelpMenuButton]
+                      LayerMenuButton, CharColorMenuButton, HelpMenuButton]
+    mode_button_class = GameModeMenuButton
 
 class GameMenuBar(MenuBar):
-    button_classes = [GameMenuButton, RoomMenuButton, ObjectMenuButton,
-                      HelpMenuButton]
+    button_classes = [GameMenuButton, StateMenuButton, WorldMenuButton,
+                      RoomMenuButton, ObjectMenuButton, HelpMenuButton]
     game_mode_visible = True
+    mode_button_class = ArtModeMenuButton

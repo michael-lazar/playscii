@@ -127,6 +127,7 @@ Zak McClendon
 class AboutDialog(PagedInfoDialog):
     title = 'Playscii'
     message = about_message
+    game_mode_visible = True
     all_modes_visible = True
     def __init__(self, ui):
         self.title += ' %s' % ui.app.version
@@ -143,4 +144,5 @@ Help is on the way!
 
 class HelpScreenDialog(AboutDialog):
     message = help_message
+    game_mode_visible = True
     all_modes_visible = True
