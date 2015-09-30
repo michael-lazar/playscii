@@ -130,6 +130,8 @@ class GameObject:
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
         self.scale_x, self.scale_y, self.scale_z = 1., 1., 1.
+        # dict of rooms we're in - if empty, object appears in all rooms
+        self.rooms = {}
         # every object gets a state and facing, even if it never changes
         self.state = DEFAULT_STATE
         self.facing = GOF_FRONT

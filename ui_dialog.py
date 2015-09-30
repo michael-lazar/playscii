@@ -167,6 +167,7 @@ class UIDialog(UIElement):
         else:
             # display reason
             # TODO: somewhere better to show this than message line?
+            # how about: transparent, red, beneath dialog bottom edge?
             self.ui.message_line.post_line(reason)
             if self.confirm_button.state != 'dimmed':
                 self.confirm_button.set_state('dimmed')
@@ -786,7 +787,6 @@ class NewGameDirDialog(UIDialog):
     field0_label = 'Name of new game directory:'
     confirm_caption = 'Create'
     game_mode_visible = True
-    all_modes_visible = True
     
     # TODO: only allow names that don't already exist
     
@@ -802,7 +802,6 @@ class SetGameDirDialog(UIDialog):
     field0_label = 'Directory to load game data from:'
     confirm_caption = 'Open'
     game_mode_visible = True
-    all_modes_visible = True
     
     # TODO: only allow valid game directory
     
@@ -817,7 +816,6 @@ class LoadGameStateDialog(UIDialog):
     field0_label = 'Game state file to open:'
     confirm_caption = 'Open'
     game_mode_visible = True
-    all_modes_visible = True
     
     # TODO: only allow valid game state file in current game directory
     
@@ -832,8 +830,25 @@ class SaveGameStateDialog(UIDialog):
     field0_label = 'New filename for game state:'
     confirm_caption = 'Save'
     game_mode_visible = True
-    all_modes_visible = True
     
     def confirm_pressed(self):
         SaveGameStateCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+class AddRoomDialog(UIDialog):
+    title = 'Add new room'
+    fields = 2
+    field0_label = 'Name for new room:'
+    field1_label = 'Class of new room:'
+    confirm_caption = 'Add'
+    game_mode_visible = True
+    
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return ''
+        elif field_number == 1:
+            return 'GameRoom'
+    
+    def confirm_pressed(self):
+        self.ui.app.gw.add_room(self.field0_text, self.field1_text)
         self.dismiss()
