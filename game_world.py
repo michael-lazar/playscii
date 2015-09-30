@@ -1,5 +1,6 @@
 import os, sys, time, importlib, json
 
+import game_object, game_hud, game_room
 import collision
 from camera import Camera
 from art import ART_DIR
@@ -13,9 +14,6 @@ GAME_SCRIPTS_DIR = 'scripts/'
 START_SCRIPT_FILENAME = 'start.py'
 SOUNDS_DIR = 'sounds/'
 
-# import after game_object has done its imports from us
-import game_object
-import game_hud
 
 class RenderItem:
     "quickie class to debug render order"
@@ -56,7 +54,7 @@ class GameWorld:
         self.camera = Camera(self.app)
         self.player = None
         self.paused = False
-        self.modules = {'game_object': game_object, 'game_hud': game_hud}
+        self.modules = {'game_object': game_object, 'game_hud': game_hud, 'game_room': game_room}
         self.classname_to_spawn = None
         # dict of objects by name:object
         self.objects = {}
@@ -64,6 +62,7 @@ class GameWorld:
         self.new_objects = {}
         # dict of rooms by name:room
         self.rooms = {}
+        self.current_room = None
         self.cl = collision.CollisionLord(self)
         self.hud = None
         self.art_loaded = []
@@ -210,6 +209,7 @@ class GameWorld:
         self.camera.focus_object = None
         self.player = None
         self.objects = {}
+        self.rooms = {}
         # art_loaded is cleared when game dir is set
         self.selected_objects = []
         self.app.al.stop_all_music()
@@ -278,7 +278,7 @@ class GameWorld:
     def import_all(self):
         module_path = self.game_dir + GAME_SCRIPTS_DIR
         # build list of module files
-        modules_list = ['game_object', 'game_hud']
+        modules_list = ['game_object', 'game_hud', 'game_room']
         for filename in os.listdir(module_path):
             # exclude emacs temp files and special world start script
             if not filename.endswith('.py'):
@@ -368,9 +368,11 @@ class GameWorld:
         visible_objects = []
         for obj in self.objects.values():
             obj.update_renderables()
-            # TODO: filter out objects outside current room here
+            # filter out objects outside current room here
+            # (if no current room or object is in no rooms, render it always)
+            in_room = self.current_room is None or len(obj.rooms) == 0 or self.current_room in obj.rooms.values()
             # respect object's "should render at all" flag
-            if obj.visible:
+            if obj.visible and in_room:
                 visible_objects.append(obj)
         #
         # process non "Y sort" objects first
@@ -469,7 +471,8 @@ class GameWorld:
                 if not type(v) is type:
                     continue
                 if issubclass(v, game_object.GameObject) or \
-                   issubclass(v, game_hud.GameHUD):
+                   issubclass(v, game_hud.GameHUD) or \
+                   issubclass(v, game_room.GameRoom):
                     classes[k] = v
         return classes
     
@@ -526,6 +529,25 @@ class GameWorld:
         # pass in object data
         new_object = obj_class(self, object_data)
         return new_object
+    
+    def add_room(self, new_room_name, new_room_classname='GameRoom'):
+        if new_room_name in self.rooms:
+            self.log('Room called %s already exists!' % new_room_name)
+            return
+        new_room_class = self.classes[new_room_classname]
+        new_room = new_room_class(self, new_room_name)
+        self.rooms[new_room.name] = new_room
+    
+    def remove_room(self, room_name):
+        if not room_name in self.rooms:
+            return
+        room = self.rooms.pop(room_name)
+        if room is self.current_room:
+            self.current_room = None
+        room.destroy()
+    
+    def change_room(self, new_room_name):
+        self.current_room = self.rooms[new_room_name]
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
         if not os.path.exists(filename):

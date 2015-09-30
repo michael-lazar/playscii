@@ -5,10 +5,10 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog
+from ui_dialog import NewArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog, AddRoomDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog
-from ui_edit_panel import LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES
+from ui_edit_panel import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR
 from collision import CT_NONE
 from image_export import export_still_image, export_animation
 from art import ART_DIR, ART_FILE_EXTENSION
@@ -491,12 +491,11 @@ class InputLord:
     
     def BIND_set_game_dir(self):
         if self.app.can_edit:
-            # TODO: show available games in list panel
-            self.ui.open_dialog(SetGameDirDialog)
+            # show available games in list panel
+            self.ui.edit_list_panel.set_list_operation(LO_OPEN_GAME_DIR)
     
     def BIND_load_game_state(self):
-        self.ui.edit_list_panel.set_list_mode(LIST_STATES)
-        # TODO: tell list panel what list operation is happening
+        self.ui.edit_list_panel.set_list_operation(LO_LOAD_STATE)
     
     def BIND_save_game_state(self):
         self.ui.open_dialog(SaveGameStateDialog)
@@ -904,19 +903,29 @@ class InputLord:
         self.app.cursor.center_in_art()
     
     def BIND_choose_spawn_object_class(self):
-        self.ui.edit_list_panel.set_list_mode(LIST_CLASSES)
-        # TODO: for many of these, tell list what list op is active
+        self.ui.edit_list_panel.set_list_operation(LO_SET_SPAWN_CLASS)
     
     def BIND_duplicate_selected_objects(self):
         self.app.gw.duplicate_selected_objects()
     
     def BIND_select_objects(self):
-        self.ui.edit_list_panel.set_list_mode(LIST_OBJECTS)
+        self.ui.edit_list_panel.set_list_operation(LO_SELECT_OBJECTS)
     
     def BIND_edit_art_for_selected_objects(self):
         self.app.gw.edit_art_for_selected()
     
     def BIND_edit_world_properties(self):
-        self.ui.edit_list_panel.set_list_mode(LIST_NONE)
         self.app.gw.deselect_all()
         self.app.gw.select_object(self.app.gw.properties, force=True)
+    
+    def BIND_change_current_room(self):
+        self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM)
+    
+    def BIND_add_room(self):
+        self.ui.open_dialog(AddRoomDialog)
+    
+    def BIND_remove_current_room(self):
+        self.app.gw.remove_room(self.app.gw.current_room.name)
+    
+    def BIND_set_room_objects(self):
+        self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM_OBJECTS)

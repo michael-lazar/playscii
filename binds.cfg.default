@@ -134,5 +134,9 @@ self.edit_bind_src = {
 	'_select_objects': 'select_objects',
 	'_edit_object_art': 'edit_art_for_selected_objects',
 	'_edit_world'   : 'edit_world_properties',
-	'_save_game'    : 'save_game_state'
+	'_save_game'    : 'save_game_state',
+	'_change_room'  : 'change_current_room',
+	'_add_room'     : 'add_room',
+	'_remove_room'  : 'remove_current_room',
+	'_room_objects' : 'set_room_objects'
 }

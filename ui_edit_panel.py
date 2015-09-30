@@ -6,18 +6,17 @@ from ui_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
 from ui_chooser_dialog import ScrollArrowButton
 from ui_colors import UIColors
 
-from game_world import STATE_FILE_EXTENSION
-
-# list type constants
-LIST_NONE, LIST_CLASSES, LIST_OBJECTS, LIST_STATES, LIST_GAMES, LIST_ROOMS = 0, 1, 2, 3, 4, 5
+from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
 
 # list operations - tells list what to do when clicked
-# TODO: finish this
-LO_SELECT_OBJECTS = 0
-
-list_operation_labels = {
-    LO_SELECT_OBJECTS: 'Select objects:'
-}
+LO_NONE = 0
+LO_SELECT_OBJECTS = 1
+LO_SET_SPAWN_CLASS = 2
+LO_LOAD_STATE = 3
+LO_SET_ROOM = 4
+LO_SET_ROOM_OBJECTS = 5
+LO_SET_OBJECT_ROOMS = 6
+LO_OPEN_GAME_DIR = 7
 
 class GamePanel(UIElement):
     "base class of game edit UI panels"
@@ -85,42 +84,6 @@ class GamePanel(UIElement):
         return True
 
 
-class EditGamePanel(GamePanel):
-    # TODO: delete this class once it's safe to
-    tile_width = 28
-    tile_y = 5
-    snap_left = True
-    button_classes = []
-    tile_height = len(button_classes) + 1
-    
-    def __init__(self, ui):
-        GamePanel.__init__(self, ui)
-        self.list_panel = self.ui.edit_list_panel
-    
-    def cancel(self):
-        self.world.deselect_all()
-        self.list_panel.list_mode = LIST_NONE
-        self.world.classname_to_spawn = None
-        self.clear_buttons()
-        self.draw_buttons()
-    
-    def refresh_all_captions(self):
-        for b in self.buttons:
-            if hasattr(b, 'refresh_caption'):
-                b.refresh_caption()
-    
-    def get_label(self):
-        return ' %s' % self.world.game_name
-    
-    def clicked(self, mouse_button):
-        self.world.classname_to_spawn = None
-        # reset all buttons
-        self.clear_buttons()
-        # draw to set proper visual state
-        self.draw_buttons()
-        return GamePanel.clicked(self, mouse_button)
-
-
 class ListButton(UIButton):
     width = 28
     clear_before_caption_draw = True
@@ -146,9 +109,16 @@ class EditListPanel(GamePanel):
     # transient state
     titlebar = 'List titlebar'
     items = []
-    list_titlebar_text = {LIST_CLASSES: 'Object classes:',
-                          LIST_OBJECTS: 'Objects:',
-                          LIST_STATES: 'States:'}
+    list_operation_labels = {
+        LO_NONE: 'Stuff:',
+        LO_SELECT_OBJECTS: 'Select objects:',
+        LO_SET_SPAWN_CLASS: 'Class to spawn:',
+        LO_LOAD_STATE: 'State to load:',
+        LO_SET_ROOM: 'Change room:',
+        LO_SET_ROOM_OBJECTS: "Set objects for %s:",
+        LO_SET_OBJECT_ROOMS: "Set rooms for %s:",
+        LO_OPEN_GAME_DIR: 'Open game:'
+    }
     
     class ListItem:
         def __init__(self, name, obj): self.name, self.obj = name, obj
@@ -157,13 +127,31 @@ class EditListPanel(GamePanel):
     def __init__(self, ui):
         # topmost index of items to show in view
         self.list_scroll_index = 0
-        # save & restore a scroll index for each type of list
-        self.scroll_indices = {LIST_CLASSES: 0, LIST_OBJECTS: 0, LIST_STATES: 0}
-        self.list_mode = LIST_NONE
-        # map list type to list builder functions
-        self.list_functions = {LIST_CLASSES: self.list_classes,
-                               LIST_OBJECTS: self.list_objects,
-                               LIST_STATES: self.list_states}
+        # list operation, ie what does clicking in list do
+        self.list_operation = LO_NONE
+        # save & restore a scroll index for each flavor of list
+        self.scroll_indices = {}
+        for list_op in self.list_operation_labels:
+            self.scroll_indices[list_op] = 0
+        # map list operations to list builder functions
+        self.list_functions = {LO_NONE: self.list_none,
+                               LO_SELECT_OBJECTS: self.list_objects,
+                               LO_SET_SPAWN_CLASS: self.list_classes,
+                               LO_LOAD_STATE: self.list_states,
+                               LO_SET_ROOM: self.list_rooms,
+                               LO_SET_ROOM_OBJECTS: self.list_objects,
+                               LO_SET_OBJECT_ROOMS: self.list_rooms,
+                               LO_OPEN_GAME_DIR: self.list_games
+        }
+        # map list operations to "item clicked" functions
+        self.click_functions = {LO_SELECT_OBJECTS: self.select_object,
+                                LO_SET_SPAWN_CLASS: self.set_spawn_class,
+                                LO_LOAD_STATE: self.load_state,
+                                LO_SET_ROOM: self.set_room,
+                                LO_SET_ROOM_OBJECTS: self.set_room_object,
+                                LO_SET_OBJECT_ROOMS: self.set_object_room,
+                                LO_OPEN_GAME_DIR: self.open_game_dir
+        }
         # separate lists for item buttons vs other controls
         self.list_buttons = []
         # set when game resets
@@ -199,7 +187,7 @@ class EditListPanel(GamePanel):
     
     def cancel(self):
         self.world.deselect_all()
-        self.list_mode = LIST_NONE
+        self.list_operation = LO_NONE
         self.world.classname_to_spawn = None
     
     def scroll_list_up(self):
@@ -214,24 +202,9 @@ class EditListPanel(GamePanel):
     
     def clicked_item(self, item):
         # clear message line if not in class list
-        # TODO: do this also for game edit panel buttons
         self.ui.message_line.post_line('')
-        # check list type, do appropriate thing
-        if self.list_mode == LIST_CLASSES:
-            # set this class to be the one spawned when GameWorld is clicked
-            self.world.classname_to_spawn = item.name
-            self.ui.message_line.post_line(self.spawn_msg % self.world.classname_to_spawn, 5)
-        elif self.list_mode == LIST_OBJECTS:
-            # add to/remove from/overwrite selected list based on mod keys
-            if self.ui.app.il.ctrl_pressed:
-                self.world.deselect_object(item.obj)
-            elif self.ui.app.il.shift_pressed:
-                self.world.select_object(item.obj, force=True)
-            else:
-                self.world.deselect_all()
-                self.world.select_object(item.obj, force=True)
-        elif self.list_mode == LIST_STATES:
-            self.world.load_game_state(item.name)
+        # do thing appropriate to current list operation
+        self.click_functions[self.list_operation](item)
     
     def wheel_moved(self, wheel_y):
         if wheel_y > 0:
@@ -241,64 +214,51 @@ class EditListPanel(GamePanel):
             self.scroll_list_down()
             return True
     
-    def list_classes(self):
-        # get list of available classes from GameWorld
-        for classname,classdef in self.world.get_all_loaded_classes().items():
-            item = self.ListItem(classname, classdef)
-            self.items.append(item)
-        # sort classes alphabetically
-        self.items.sort(key=lambda i: i.name)
-    
-    def list_objects(self):
-        for obj in self.world.objects.values():
-            if obj.do_not_list:
-                continue
-            li = self.ListItem(obj.name, obj)
-            self.items.append(li)
-        # sort object names alphabetically
-        self.items.sort(key=lambda i: i.name)
-    
-    def list_states(self):
-        # list state files in current game dir
-        for filename in os.listdir(self.world.game_dir):
-            if filename.endswith('.' + STATE_FILE_EXTENSION):
-                li = self.ListItem(filename[:-3], None)
-                self.items.append(li)
-        self.items.sort(key=lambda i: i.name)
-    
-    def set_list_mode(self, new_mode):
+    def set_list_operation(self, new_op):
         "changes list type and sets new items"
-        if new_mode == LIST_STATES and not self.world.game_dir:
+        if new_op == LO_LOAD_STATE and not self.world.game_dir:
             return
-        if new_mode == LIST_NONE:
-            self.list_mode = new_mode
+        if new_op == LO_NONE:
+            self.list_operation = new_op
             return
         self.items = []
         self.clear_buttons(self.list_buttons)
         # save old list type's scroll index so we can restore it later
-        self.scroll_indices[self.list_mode] = self.list_scroll_index
-        self.list_mode = new_mode
-        self.titlebar = self.list_titlebar_text[self.list_mode]
-        self.list_functions[self.list_mode]()
+        self.scroll_indices[self.list_operation] = self.list_scroll_index
+        self.list_operation = new_op
+        self.items = self.list_functions[self.list_operation]()
         # restore saved scroll index for new list type
-        self.list_scroll_index = self.scroll_indices[self.list_mode]
+        self.list_scroll_index = self.scroll_indices[self.list_operation]
         # keep in bounds if list size changed since last view
         self.list_scroll_index = min(self.list_scroll_index, len(self.items))
     
     def get_label(self):
-        return self.titlebar
+        label = self.list_operation_labels[self.list_operation]
+        # some labels contain variables
+        if '%s' in label:
+            if self.list_operation == LO_SET_ROOM_OBJECTS:
+                label %= self.world.current_room.name
+            elif self.list_operation == LO_SET_OBJECT_ROOMS:
+                label %= '[multiple objects]' if len(self.world.selected_objects) > 1 else self.world.selected_objects[0].name
+        return label
     
     def should_highlight(self, item):
-        if self.list_mode == LIST_OBJECTS:
+        if self.list_operation == LO_SELECT_OBJECTS:
             if item.obj in self.world.selected_objects:
                 return True
-        elif self.list_mode == LIST_CLASSES:
+        elif self.list_operation == LO_SET_SPAWN_CLASS:
             if item.name == self.world.classname_to_spawn:
                 return True
-        elif self.list_mode == LIST_STATES:
+        elif self.list_operation == LO_LOAD_STATE:
             last_gs = os.path.basename(self.world.last_state_loaded)
             last_gs = os.path.splitext(last_gs)[0]
             if item.name == last_gs:
+                return True
+        elif self.list_operation == LO_SET_ROOM:
+            if self.world.current_room and item.name == self.world.current_room.name:
+                return True
+        elif self.list_operation == LO_SET_ROOM_OBJECTS:
+            if self.world.current_room and item.name in self.world.current_room.objects:
                 return True
         return False
     
@@ -307,7 +267,7 @@ class EditListPanel(GamePanel):
     
     def refresh_items(self):
         # prune any objects that have been deleted from items
-        if self.list_mode == LIST_OBJECTS:
+        if self.list_functions[self.list_operation] is self.list_objects:
             for item in self.items:
                 if not item.obj in self.world.objects.values():
                     self.items.remove(item)
@@ -333,7 +293,7 @@ class EditListPanel(GamePanel):
     
     def update(self):
         if self.should_reset_list:
-            self.set_list_mode(self.list_mode)
+            self.set_list_operation(self.list_operation)
             self.should_reset_list = False
         # redraw contents every update
         self.draw_titlebar()
@@ -341,4 +301,102 @@ class EditListPanel(GamePanel):
         GamePanel.update(self)
     
     def is_visible(self):
-        return GamePanel.is_visible(self) and self.list_mode != LIST_NONE
+        return GamePanel.is_visible(self) and self.list_operation != LO_NONE
+    
+    #
+    # list functions
+    #
+    def list_classes(self):
+        items = []
+        # get list of available classes from GameWorld
+        for classname,classdef in self.world.get_all_loaded_classes().items():
+            item = self.ListItem(classname, classdef)
+            items.append(item)
+        # sort classes alphabetically
+        items.sort(key=lambda i: i.name)
+        return items
+    
+    def list_objects(self):
+        items = []
+        for obj in self.world.objects.values():
+            if obj.do_not_list:
+                continue
+            li = self.ListItem(obj.name, obj)
+            items.append(li)
+        # sort object names alphabetically
+        items.sort(key=lambda i: i.name)
+        return items
+    
+    def list_states(self):
+        items = []
+        # list state files in current game dir
+        for filename in os.listdir(self.world.game_dir):
+            if filename.endswith('.' + STATE_FILE_EXTENSION):
+                li = self.ListItem(filename[:-3], None)
+                items.append(li)
+        items.sort(key=lambda i: i.name)
+        return items
+    
+    def list_rooms(self):
+        items = []
+        for room in self.world.rooms.values():
+            li = self.ListItem(room.name, room)
+            items.append(li)
+        items.sort(key=lambda i: i.name)
+        return items
+    
+    def list_games(self):
+        def get_dirs(dirname):
+            dirs = []
+            for filename in os.listdir(dirname):
+                if os.path.isdir(dirname + filename):
+                    dirs.append(filename)
+            return dirs
+        # get list of both app dir games and user dir games
+        docs_game_dir = self.ui.app.documents_dir + TOP_GAME_DIR
+        items = []
+        for game in get_dirs(TOP_GAME_DIR) + get_dirs(docs_game_dir):
+            li = self.ListItem(game, None)
+            items.append(li)
+        return items
+    
+    def list_none(self):
+        return []
+    
+    #
+    # "clicked list item" functions
+    #
+    def select_object(self, item):
+        # add to/remove from/overwrite selected list based on mod keys
+        if self.ui.app.il.ctrl_pressed:
+            self.world.deselect_object(item.obj)
+        elif self.ui.app.il.shift_pressed:
+            self.world.select_object(item.obj, force=True)
+        else:
+            self.world.deselect_all()
+            self.world.select_object(item.obj, force=True)
+    
+    def set_spawn_class(self, item):
+        # set this class to be the one spawned when GameWorld is clicked
+        self.world.classname_to_spawn = item.name
+        self.ui.message_line.post_line(self.spawn_msg % self.world.classname_to_spawn, 5)
+    
+    def load_state(self, item):
+        self.world.load_game_state(item.name)
+    
+    def set_room(self, item):
+        self.world.change_room(item.name)
+    
+    def set_room_object(self, item):
+        # add/remove object from current room
+        if item.name in self.world.current_room.objects:
+            self.world.current_room.remove_object_by_name(item.name)
+        else:
+            self.world.current_room.add_object_by_name(item.name)
+    
+    def set_object_room(self, item):
+        # TODO: add/remove room from object
+        pass
+    
+    def open_game_dir(self, item):
+        self.world.set_game_dir(item.name, True)

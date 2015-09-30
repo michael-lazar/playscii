@@ -18,6 +18,7 @@ class NewGameDirItem(PulldownMenuItem):
 class SetGameDirItem(PulldownMenuItem):
     label = 'Open game…'
     command = 'set_game_dir'
+    close_on_select = True
     always_active = True
 
 class PauseGameItem(PulldownMenuItem):
@@ -67,15 +68,34 @@ class EditWorldPropertiesItem(PulldownMenuItem):
 #
 
 # TODO room menu:
-# change current room... (show room list)
-# show all rooms / hide all but current room
-# add new room (new room dialog)
-# delete current room (set current room to none, show all rooms)
-# add/remove objects from room... (show object list)
+# show all rooms / show only current room
 # [X] list only objects in current room
-class StubRoomItem(PulldownMenuItem):
-    label = 'STUB'
-    def should_dim(app): return True
+
+class ChangeRoomItem(PulldownMenuItem):
+    label = 'Change current room…'
+    command = 'change_current_room'
+    close_on_select = True
+    def should_dim(app):
+        return len(app.gw.rooms) == 0
+
+class AddRoomItem(PulldownMenuItem):
+    label = 'Add room…'
+    command = 'add_room'
+    always_active = True
+
+class SetRoomObjectsItem(PulldownMenuItem):
+    label = 'Add/remove objects from room…'
+    command = 'set_room_objects'
+    close_on_select = True
+    def should_dim(app):
+        return app.gw.current_room is None
+
+class RemoveRoomItem(PulldownMenuItem):
+    label = 'Remove this room'
+    command = 'remove_current_room'
+    close_on_select = True
+    def should_dim(app):
+        return app.gw.current_room is None
 
 #
 # object menu
@@ -120,7 +140,7 @@ class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
-    items = [StubRoomItem]
+    items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, RemoveRoomItem]
 
 class GameObjectMenuData(PulldownMenuData):
     items = [SpawnObjectItem, DuplicateObjectsItem, SeparatorItem,
