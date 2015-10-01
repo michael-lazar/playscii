@@ -377,9 +377,9 @@ class GameWorld:
             obj.update_renderables()
             # filter out objects outside current room here
             # (if no current room or object is in no rooms, render it always)
-            in_room = self.current_room is None or len(obj.rooms) == 0 or self.current_room in obj.rooms.values()
+            in_room = self.current_room is None or obj.is_in_current_room()
             # respect object's "should render at all" flag
-            if obj.visible and (in_room or self.show_all_rooms):
+            if obj.visible and (self.show_all_rooms or in_room):
                 visible_objects.append(obj)
         #
         # process non "Y sort" objects first
@@ -600,10 +600,7 @@ class GameWorld:
             # get room class
             room_class_name = room_data.get('class_name', None)
             room_class = self.classes.get(room_class_name, game_room.GameRoom)
-            room = room_class(self, room_data['name'])
-            # find objects by name, add them to room
-            for obj_name in room_data.get('objects', []):
-                room.add_object_by_name(obj_name)
+            room = room_class(self, room_data['name'], room_data)
             self.rooms[room.name] = room
         self.current_room = self.rooms.get(d['current_room'], None)
         if self.current_room:
