@@ -170,10 +170,10 @@ class CollisionLord:
         for i in range(iterations):
             # push all dynamic circles out of each other
             for a in self.dynamic_shapes:
-                if a.game_object.collision_type == CT_NONE:
+                if not a.game_object.should_collide():
                     continue
                 for b in self.dynamic_shapes:
-                    if b.game_object.collision_type == CT_NONE:
+                    if not b.game_object.should_collide():
                         continue
                     if a is b:
                         continue
@@ -181,10 +181,10 @@ class CollisionLord:
                     collide_circles(a, b)
             # now push all dynamic circles out of all static circles
             for a in self.dynamic_shapes:
-                if a.game_object.collision_type == CT_NONE:
+                if not a.game_object.should_collide():
                     continue
                 for b in self.static_shapes:
-                    if b.game_object.collision_type == CT_NONE:
+                    if not b.game_object.should_collide():
                         continue
                     collide_circles(a, b)
         # check which objects stopped colliding

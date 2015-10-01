@@ -110,7 +110,8 @@ class GameObject:
     editable = ['show_collision', 'mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
     set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha',
-                   'scale_x': 'set_scale_x', 'scale_y': 'set_scale_y'
+                   'scale_x': 'set_scale_x', 'scale_y': 'set_scale_y',
+                   'name': 'rename'
     }
     # can select in edit mode
     selectable = True
@@ -213,6 +214,18 @@ class GameObject:
         # generate somewhat human-readable unique name for object
         name = str(self)
         return '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
+    
+    def rename(self, new_name):
+        "gives this object a new name. doesn't accept already-in-use names"
+        for obj in self.world.objects.values():
+            if not obj is self and obj.name == new_name:
+                return
+        old_name = self.name
+        self.name = new_name
+        for room in self.world.rooms.values():
+            if self in room.objects.values():
+                room.objects.pop(old_name)
+                room.objects[self.name] = self
     
     def pre_first_update(self):
         """
@@ -658,6 +671,15 @@ class GameObject:
     def get_debug_text(self):
         "subclass logic can return a string to display in debug line"
         return None
+    
+    def should_collide(self):
+        return self.collision_type != CT_NONE and self.is_in_current_room()
+    
+    def is_in_room(self, room):
+        return len(self.rooms) == 0 or room in self.rooms.values()
+    
+    def is_in_current_room(self):
+        return len(self.rooms) == 0 or self.world.current_room in self.rooms.values()
     
     def render_debug(self):
         if self.show_origin or self in self.world.selected_objects:

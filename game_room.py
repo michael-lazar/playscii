@@ -1,11 +1,33 @@
 
 class GameRoom:
     
-    def __init__(self, world, name):
+    serialized = ['name']
+    
+    def __init__(self, world, name, room_data=None):
         self.world = world
         self.name = name
         # dict of objects by name:object
         self.objects = {}
+        if not room_data:
+            return
+        # restore serialized properties
+        # TODO: this is copy-pasted from GameObject, find a way to unify
+        for v in self.serialized:
+            if not v in room_data:
+                self.world.app.dev_log("Serialized property '%s' not found for room %s" % (v, self.name))
+                continue
+            if not hasattr(self, v):
+                setattr(self, v, None)
+            # match type of variable as declared, eg loc might be written as
+            # an int in the JSON so preserve its floatness
+            if getattr(self, v) is not None:
+                src_type = type(getattr(self, v))
+                setattr(self, v, src_type(room_data[v]))
+            else:
+                setattr(self, v, room_data[v])
+        # find objects by name and add them
+        for obj_name in room_data.get('objects', []):
+            self.add_object_by_name(obj_name)
     
     def entered(self):
         self.world.app.log('Room %s entered' % self.name)
@@ -35,10 +57,16 @@ class GameRoom:
     def get_dict(self):
         "return a dict that GameWorld.save_to_file can dump to JSON"
         object_names = list(self.objects.keys())
-        d = { 'name': self.name, 'objects': object_names }
-        d['class_name'] = type(self).__name__
+        d = {'class_name': type(self).__name__, 'objects': object_names}
+        # serialize whatever other vars are declared in self.serialized
+        for prop_name in self.serialized:
+            if hasattr(self, prop_name):
+                d[prop_name] = getattr(self, prop_name)
         return d
     
     def destroy(self):
-        # TODO: remove references to us in each of our objects
-        pass
+        self.world.rooms.pop(self.name)
+        # remove references to us in each of our objects
+        for obj in self.objects.values():
+            obj.rooms.pop(self.name)
+        self.objects = {}
