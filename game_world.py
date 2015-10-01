@@ -567,9 +567,11 @@ class GameWorld:
     
     def change_room(self, new_room_name):
         if not new_room_name in self.rooms:
-            self.app("Couldn't change to missing room %s" % new_room_name)
+            self.app.log("Couldn't change to missing room %s" % new_room_name)
             return
         self.current_room = self.rooms[new_room_name]
+        # set camera if marker is set
+        self.current_room.use_camera_marker()
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
         if not os.path.exists(filename):
@@ -611,9 +613,9 @@ class GameWorld:
             room_class = self.classes.get(room_class_name, game_room.GameRoom)
             room = room_class(self, room_data['name'], room_data)
             self.rooms[room.name] = room
-        self.current_room = self.rooms.get(d['current_room'], None)
-        if self.current_room:
-            self.current_room.entered()
+        start_room = self.rooms.get(d['current_room'], None)
+        if start_room:
+            self.change_room(start_room.name)
         # spawn hud
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)

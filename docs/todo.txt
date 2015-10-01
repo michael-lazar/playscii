@@ -5,7 +5,10 @@ current tasks:
 fix: opening ladder2 from list after launching into another game crashes
 
 "rooms" concept - standardized object that contains/manages:
+- "location marker" object - probably doesn't need to be a game object? - whose XYZ can be used to set camera loc/zoom, warp points, etc
+- Room menu show list of rooms w/ current one marked
 - expand trigger functionality to allow warping to specific points etc
+-- alternative "bounds" changes rooms based on bounds of arts? ie stop overlapping one screen-sized art & start overlapping another = transition
 - respawn-on-enter / destroy-on-exit object (+ loc?) lists for rooms
 - ambient sounds
 - support dynamically generated room definitions a la ELC2 as well as predefined

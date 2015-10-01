@@ -852,3 +852,14 @@ class AddRoomDialog(UIDialog):
     def confirm_pressed(self):
         self.ui.app.gw.add_room(self.field0_text, self.field1_text)
         self.dismiss()
+
+class SetRoomCamDialog(UIDialog):
+    title = 'Set room camera marker'
+    fields = 1
+    field0_label = 'Name of location marker object for this room:'
+    confirm_caption = 'Set'
+    game_mode_visible = True
+    
+    def confirm_pressed(self):
+        self.ui.app.gw.current_room.set_camera_marker_name(self.field0_text)
+        self.dismiss()

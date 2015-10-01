@@ -104,6 +104,12 @@ class ToogleAllRoomsVizItem(PulldownMenuItem):
     def get_label(app):
         return ['Show all rooms', 'Show only current room'][app.gw.show_all_rooms]
 
+class SetRoomCameraItem(PulldownMenuItem):
+    label = "Set this room's camera marker…"
+    command = 'set_room_camera_marker'
+    def should_dim(app):
+        return app.gw.current_room is None
+
 
 #
 # object menu
@@ -150,8 +156,8 @@ class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
-    items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, RemoveRoomItem,
-             SeparatorItem, ToogleAllRoomsVizItem]
+    items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, SetRoomCameraItem,
+             RemoveRoomItem, SeparatorItem, ToogleAllRoomsVizItem]
 
 class GameObjectMenuData(PulldownMenuData):
     items = [SpawnObjectItem, DuplicateObjectsItem, SeparatorItem,

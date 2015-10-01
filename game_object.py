@@ -63,6 +63,8 @@ class GameObject:
     art_charset, art_palette = None, None
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
+    # if False, don't do move physics updates for this object
+    physics_move = True
     # acceleration per update from player movement
     move_accel_x = move_accel_y = 200.
     ground_friction = 10.0
@@ -290,7 +292,7 @@ class GameObject:
         return 0, 0, 0
     
     def is_dynamic(self):
-        return self.collision_type in CTG_DYNAMIC
+        return self.physics_move and self.collision_type in CTG_DYNAMIC
     
     def start_dragging(self):
         self.disable_collision()
@@ -649,11 +651,12 @@ class GameObject:
     
     def update(self):
         # don't apply physics to selected objects being dragged
-        if not (self.world.dragging_object and self in self.world.selected_objects):
+        if self.physics_move and not (self.world.dragging_object and self in self.world.selected_objects):
             self.apply_move()
         self.update_state()
         self.update_state_sounds()
-        self.update_facing()
+        if self.facing_changes_art:
+            self.update_facing()
         # update collision shape before CollisionLord resolves any collisions
         self.collision.update()
     
@@ -726,6 +729,7 @@ class GameObjectAttachment(GameObject):
     collision_type = CT_NONE
     should_save = False
     selectable = False
+    physics_move = False
     # offset from parent object's origin
     offset_x, offset_y, offset_z = 0., 0., 0.
     editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
@@ -748,15 +752,18 @@ class BlobShadow(GameObjectAttachment):
 class StaticTileBG(GameObject):
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
+    physics_move = False
 
 class StaticTileObject(GameObject):
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
+    physics_move = False
     y_sort = True
 
 class StaticBoxObject(GameObject):
     collision_shape_type = CST_AABB
     collision_type = CT_GENERIC_STATIC
+    physics_move = False
 
 class DynamicBoxObject(GameObject):
     collision_shape_type = CST_AABB
@@ -827,6 +834,7 @@ class WorldPropertiesObject(GameObject):
     art_src = 'world_properties_object'
     visible = deleteable = selectable = False
     locked = True
+    physics_move = False
     do_not_list = True
     # properties we serialize on behalf of GameWorld
     # TODO: figure out how to make these defaults sync with those in GW?
@@ -896,14 +904,17 @@ class WorldGlobalsObject(GameObject):
     visible = deleteable = selectable = False
     locked = True
     do_not_list = True
+    physics_move = False
     serialized = []
     editable = []
 
 
 class StaticTileTrigger(GameObject):
+    
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
     noncolliding_classes = ['GameObject']
+    physics_move = False
     
     def started_colliding(self, other):
         #self.app.log('Trigger overlapped with %s' % other.name)
@@ -917,3 +928,10 @@ class RoomWarpTrigger(StaticTileTrigger):
     def started_colliding(self, other):
         if isinstance(other, Player):
             self.world.change_room(self.destination_room)
+
+class LocationMarker(GameObject):
+    art_src = 'loc_marker'
+    serialized = ['name', 'x', 'y', 'z', 'visible', 'locked']
+    editable = []
+    alpha = 0.5
+    physics_move = False
