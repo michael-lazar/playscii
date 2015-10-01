@@ -898,3 +898,22 @@ class WorldGlobalsObject(GameObject):
     do_not_list = True
     serialized = []
     editable = []
+
+
+class StaticTileTrigger(GameObject):
+    collision_shape_type = CST_TILE
+    collision_type = CT_GENERIC_STATIC
+    noncolliding_classes = ['GameObject']
+    
+    def started_colliding(self, other):
+        #self.app.log('Trigger overlapped with %s' % other.name)
+        pass
+
+class RoomWarpTrigger(StaticTileTrigger):
+    destination_room = 'SOME_ROOM'
+    serialized = StaticTileTrigger.serialized + ['destination_room']
+    # if player overlaps, change room to destination_room
+    # TODO: maybe also warp to a loc?
+    def started_colliding(self, other):
+        if isinstance(other, Player):
+            self.world.change_room(self.destination_room)
