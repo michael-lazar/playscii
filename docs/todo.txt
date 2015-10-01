@@ -2,20 +2,14 @@ TODO
 
 current tasks:
 
-- "rename object" in object menu
-
 fix: opening ladder2 from list after launching into another game crashes
 
 "rooms" concept - standardized object that contains/manages:
-- triggers (overlapping but not colliding objects) serve as portals to other rooms (edge of screen triggers, teleporters)
-- only update, collide with in-room objects (generally ensure near-zero overhead for out-of-room objects)
-- some objects are respawn-on-enter / destroy-on-exit
+- expand trigger functionality to allow warping to specific points etc
+- respawn-on-enter / destroy-on-exit object (+ loc?) lists for rooms
 - ambient sounds
 - support dynamically generated room definitions a la ELC2 as well as predefined
-
-load/save:
-- room entry: list of serializable properties
-- in GameWorld.load_game_state, after all objects have been spawned, load rooms and pass each room's data into its init, same as objects
+- ensure overhead for out-of-room objects is near zero
 
 room UI:
 - add/remove selected objects from room

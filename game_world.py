@@ -519,7 +519,13 @@ class GameWorld:
         x += obj.renderable.width
         y -= obj.renderable.height
         d['x'], d['y'] = x, y
+        # new object needs a unique name, use a temp one until object exists
+        # for real and we can give it a proper, more-likely-to-be-unique one
+        d['name'] = obj.name + ' TEMP COPY NAME'
         new_obj = self.spawn_object_from_data(d)
+        # give object a non-duplicate name
+        # TODO: decide if new object's rooms list needs to be modified
+        new_obj.rename(new_obj.get_unique_name())
         return new_obj
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
@@ -560,6 +566,9 @@ class GameWorld:
         room.destroy()
     
     def change_room(self, new_room_name):
+        if not new_room_name in self.rooms:
+            self.app("Couldn't change to missing room %s" % new_room_name)
+            return
         self.current_room = self.rooms[new_room_name]
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
