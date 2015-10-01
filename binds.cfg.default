@@ -139,5 +139,6 @@ self.edit_bind_src = {
 	'_add_room'     : 'add_room',
 	'_remove_room'  : 'remove_current_room',
 	'_room_objects' : 'set_room_objects',
-	'_show_all_rooms': 'toggle_all_rooms_visible'
+	'_show_all_rooms': 'toggle_all_rooms_visible',
+	'_set_room_cam' : 'set_room_camera_marker'
 }

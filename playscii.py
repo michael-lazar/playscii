@@ -70,7 +70,7 @@ class Application:
     max_art_width, max_art_height = 9999, 9999
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
-    bg_color = [0.1, 0.1, 0.1, 1]
+    bg_color = [0.2, 0.2, 0.2, 2]
     # scaling factor used when CRT filter is on during image export
     export_crt_scale_factor = 4
     # scale for export when no CRT

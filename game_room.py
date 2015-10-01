@@ -1,7 +1,9 @@
 
 class GameRoom:
     
-    serialized = ['name']
+    # if set, camera will move to marker with this name when room entered
+    camera_marker_name = ''
+    serialized = ['name', 'camera_marker']
     
     def __init__(self, world, name, room_data=None):
         self.world = world
@@ -29,8 +31,25 @@ class GameRoom:
         for obj_name in room_data.get('objects', []):
             self.add_object_by_name(obj_name)
     
+    def set_camera_marker_name(self, marker_name):
+        if not marker_name in self.world.objects:
+            self.world.app.log("Couldn't find camera marker with name %s" % marker_name)
+            return
+        self.camera_marker_name = marker_name
+        if self is self.world.current_room:
+            self.use_camera_marker()
+    
+    def use_camera_marker(self):
+        if not self.camera_marker_name in self.world.objects:
+            return
+        cam_mark = self.world.objects[self.camera_marker_name]
+        # TODO: figure out why this isn't working?!
+        print('warping camera from %s,%s,%s to %s,%s,%s' % (self.world.camera.x, self.world.camera.y, self.world.camera.z, cam_mark.x,cam_mark.y, cam_mark.z))
+        self.world.camera.set_loc(cam_mark.x, cam_mark.y, cam_mark.z)
+    
     def entered(self):
         self.world.app.log('Room %s entered' % self.name)
+        self.use_camera_marker()
     
     def add_object_by_name(self, obj_name):
         obj = self.world.objects.get(obj_name, None)
