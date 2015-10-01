@@ -39,3 +39,7 @@ class GameHUD:
             return
         for r in self.renderables:
             r.render()
+    
+    def destroy(self):
+        for r in self.renderables:
+            r.destroy()

@@ -102,7 +102,7 @@ class GameObject:
     # if True, write this object to save files
     should_save = True
     # list of members to serialize (no weak refs!)
-    serialized = ['x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
+    serialized = ['name', 'x', 'y', 'z', 'art_src', 'visible', 'locked', 'y_sort',
                   'art_off_pct_x', 'art_off_pct_y', 'alpha', 'state', 'facing',
                   'animating', 'scale_x', 'scale_y']
     # members that don't need to be serialized, but should be exposed to
@@ -135,9 +135,7 @@ class GameObject:
         # every object gets a state and facing, even if it never changes
         self.state = DEFAULT_STATE
         self.facing = GOF_FRONT
-        # generate, somewhat human-readable unique name for object
-        name = str(self)
-        self.name = '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
+        self.name = self.get_unique_name()
         # apply serialized data before most of init happens
         # properties that need non-None defaults should be declared above
         if obj_data:
@@ -210,6 +208,11 @@ class GameObject:
             self.start_animating()
         if self.log_spawn:
             self.app.log('Spawned %s with Art %s' % (self.name, os.path.basename(self.art.filename)))
+    
+    def get_unique_name(self):
+        # generate somewhat human-readable unique name for object
+        name = str(self)
+        return '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
     
     def pre_first_update(self):
         """
@@ -682,6 +685,7 @@ class GameObject:
     
     def destroy(self):
         self.stop_all_sounds()
+        self.rooms = {}
         if self in self.world.selected_objects:
             self.world.selected_objects.remove(self)
         self.origin_renderable.destroy()
