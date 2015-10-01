@@ -68,7 +68,6 @@ class EditWorldPropertiesItem(PulldownMenuItem):
 #
 
 # TODO room menu:
-# show all rooms / show only current room
 # [X] list only objects in current room
 
 class ChangeRoomItem(PulldownMenuItem):
@@ -97,9 +96,22 @@ class RemoveRoomItem(PulldownMenuItem):
     def should_dim(app):
         return app.gw.current_room is None
 
+class ToogleAllRoomsVizItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'toggle_all_rooms_visible'
+    def should_dim(app):
+        return len(app.gw.rooms) == 0
+    def get_label(app):
+        return ['Show all rooms', 'Show only current room'][app.gw.show_all_rooms]
+
+
 #
 # object menu
 #
+
+# TODO object menu:
+# edit selected's room list... (go to room list)
+
 class SpawnObjectItem(PulldownMenuItem):
     label = 'Spawn object…'
     command = 'choose_spawn_object_class'
@@ -126,8 +138,6 @@ class EditArtForObjectsItem(PulldownMenuItem):
     def should_dim(app):
         return len(app.gw.selected_objects) == 0
 
-# TODO object menu:
-# edit selected's room list... (go to room list)
 
 class GameMenuData(PulldownMenuData):
     items = [HideEditUIItem, SeparatorItem, NewGameDirItem, SetGameDirItem,
@@ -140,7 +150,8 @@ class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
-    items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, RemoveRoomItem]
+    items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, RemoveRoomItem,
+             SeparatorItem, ToogleAllRoomsVizItem]
 
 class GameObjectMenuData(PulldownMenuData):
     items = [SpawnObjectItem, DuplicateObjectsItem, SeparatorItem,

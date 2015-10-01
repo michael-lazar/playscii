@@ -41,6 +41,8 @@ class GameWorld:
     show_collision_all = False
     show_bounds_all = False
     show_origin_all = False
+    # if True, show all rooms not just current one
+    show_all_rooms = False
     
     def __init__(self, app):
         self.app = app
@@ -208,7 +210,12 @@ class GameWorld:
         self.cl.reset()
         self.camera.focus_object = None
         self.player = None
-        self.objects = {}
+        self.globals = None
+        self.properties = None
+        if self.hud:
+            self.hud.destroy()
+            self.hud = None
+        self.objects, self.new_objects = {}, {}
         self.rooms = {}
         # art_loaded is cleared when game dir is set
         self.selected_objects = []
@@ -372,7 +379,7 @@ class GameWorld:
             # (if no current room or object is in no rooms, render it always)
             in_room = self.current_room is None or len(obj.rooms) == 0 or self.current_room in obj.rooms.values()
             # respect object's "should render at all" flag
-            if obj.visible and in_room:
+            if obj.visible and (in_room or self.show_all_rooms):
                 visible_objects.append(obj)
         #
         # process non "Y sort" objects first
@@ -446,6 +453,12 @@ class GameWorld:
             if obj.should_save:
                 objects.append(obj.get_dict())
         d = {'objects': objects}
+        # save rooms if any exist
+        if len(self.rooms) > 0:
+            rooms = [room.get_dict() for room in self.rooms.values()]
+            d['rooms'] = rooms
+            if self.current_room:
+                d['current_room'] = self.current_room.name
         if filename and filename != '':
             if not filename.endswith(STATE_FILE_EXTENSION):
                 filename += '.' + STATE_FILE_EXTENSION
@@ -580,6 +593,21 @@ class GameWorld:
             self.properties = self.spawn_object_of_class(self.properties_object_class_name, 0, 0)
         # spawn a WorldGlobalStateObject
         self.globals = self.spawn_object_of_class(self.properties.globals_object_class_name, 0, 0)
+        # just for first update, merge new objects list into objects list
+        self.objects.update(self.new_objects)
+        # create rooms
+        for room_data in d.get('rooms', []):
+            # get room class
+            room_class_name = room_data.get('class_name', None)
+            room_class = self.classes.get(room_class_name, game_room.GameRoom)
+            room = room_class(self, room_data['name'])
+            # find objects by name, add them to room
+            for obj_name in room_data.get('objects', []):
+                room.add_object_by_name(obj_name)
+            self.rooms[room.name] = room
+        self.current_room = self.rooms.get(d['current_room'], None)
+        if self.current_room:
+            self.current_room.entered()
         # spawn hud
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
