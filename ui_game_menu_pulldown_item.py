@@ -1,5 +1,5 @@
 
-from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem
+from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem, ViewToggleCRTItem, ViewToggleCameraTiltItem
 
 #
 # game menu
@@ -53,6 +53,23 @@ class SaveNewStateItem(PulldownMenuItem):
     label = 'Save new state…'
     command = 'save_game_state'
     always_active = True
+
+#
+# view menu
+#
+class ObjectsToCameraItem(PulldownMenuItem):
+    label = 'Move selected object(s) to camera'
+    command = 'objects_to_camera'
+    close_on_select = True
+    def should_dim(app):
+        return len(app.gw.selected_objects) == 0
+
+class CameraToObjectsItem(PulldownMenuItem):
+    label = 'Move camera to selected object'
+    command = 'camera_to_objects'
+    close_on_select = True
+    def should_dim(app):
+        return len(app.gw.selected_objects) != 1
 
 #
 # world menu
@@ -152,12 +169,59 @@ class GameMenuData(PulldownMenuData):
 class GameStateMenuData(PulldownMenuData):
     items = [ResetStateItem, LoadStateItem, SaveStateItem, SaveNewStateItem]
 
+class GameViewMenuData(PulldownMenuData):
+    items = [ViewToggleCRTItem, ViewToggleCameraTiltItem, SeparatorItem,
+             ObjectsToCameraItem, CameraToObjectsItem]
+    
+    def should_mark_item(item, ui):
+        if hasattr(item, 'should_mark'):
+            return item.should_mark(ui)
+        return False
+
 class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
     items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, SetRoomCameraItem,
-             RemoveRoomItem, SeparatorItem, ToogleAllRoomsVizItem]
+             RemoveRoomItem, SeparatorItem, ToogleAllRoomsVizItem, SeparatorItem]
+    
+    def should_mark_item(item, ui):
+        "show checkmark for current room"
+        if not ui.app.gw.current_room:
+            return False
+        return ui.app.gw.current_room.name == item.cb_arg
+    
+    def get_items(app):
+        items = []
+        if len(app.gw.rooms) == 0:
+            return items
+        # TODO: this is almost c+p'd from LayerMenuData, generalize it
+        # first determine longest line to set width of items
+        longest_line = 0
+        for room_name in app.gw.rooms:
+            if len(room_name) > longest_line:
+                longest_line = len(room_name)
+        # check non-generated menu items too
+        for item in GameRoomMenuData.items:
+            if len(item.label) + 1 > longest_line:
+                longest_line = len(item.label) + 1
+        # cap at max allowed line length
+        for room_name,room in app.gw.rooms.items():
+            class TempMenuItemClass(PulldownMenuItem): pass
+            item = TempMenuItemClass
+            # leave spaces for mark
+            item.label = '  %s' % room_name
+            # pad, put Z depth on far right
+            item.label = item.label.ljust(longest_line)
+            # trim to keep below a max length
+            item.label = item.label[:longest_line]
+            # tell PulldownMenu's button creation process not to auto-pad
+            item.no_pad = True
+            item.command = 'change_current_room_to'
+            item.cb_arg = room_name
+            items.append(item)
+        return items
+
 
 class GameObjectMenuData(PulldownMenuData):
     items = [SpawnObjectItem, DuplicateObjectsItem, SeparatorItem,

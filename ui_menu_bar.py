@@ -3,7 +3,7 @@ from math import ceil
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_menu_pulldown_item import FileMenuData, EditMenuData, ToolMenuData, ViewMenuData, ArtMenuData, FrameMenuData, LayerMenuData, CharColorMenuData, HelpMenuData
-from ui_game_menu_pulldown_item import GameMenuData, GameStateMenuData, GameWorldMenuData, GameRoomMenuData, GameObjectMenuData
+from ui_game_menu_pulldown_item import GameMenuData, GameStateMenuData, GameViewMenuData, GameWorldMenuData, GameRoomMenuData, GameObjectMenuData
 from ui_info_dialog import AboutDialog
 from ui_colors import UIColors
 from renderable_sprite import UISpriteRenderable
@@ -116,6 +116,11 @@ class StateMenuButton(MenuButton):
     caption = 'State'
     menu_data = GameStateMenuData
 
+class GameViewMenuButton(MenuButton):
+    name = 'view'
+    caption = 'View'
+    menu_data = GameViewMenuData
+
 class WorldMenuButton(MenuButton):
     name = 'world'
     caption = 'World'
@@ -227,7 +232,8 @@ class MenuBar(UIElement):
             return
         for button in self.menu_buttons:
             if button.name == self.active_menu_name:
-                self.ui.pulldown.open_at(button)
+                # don't reset keyboard nav index
+                self.ui.pulldown.open_at(button, False)
     
     def open_menu_by_name(self, menu_name):
         if not self.ui.app.can_edit:
@@ -288,7 +294,8 @@ class ArtMenuBar(MenuBar):
     mode_button_class = GameModeMenuButton
 
 class GameMenuBar(MenuBar):
-    button_classes = [GameMenuButton, StateMenuButton, WorldMenuButton,
-                      RoomMenuButton, ObjectMenuButton, HelpMenuButton]
+    button_classes = [GameMenuButton, StateMenuButton, GameViewMenuButton,
+                      WorldMenuButton, RoomMenuButton, ObjectMenuButton,
+                      HelpMenuButton]
     game_mode_visible = True
     mode_button_class = ArtModeMenuButton

@@ -921,6 +921,10 @@ class InputLord:
     def BIND_change_current_room(self):
         self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM)
     
+    def BIND_change_current_room_to(self, new_room_name):
+        self.app.gw.change_room(new_room_name)
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_add_room(self):
         self.ui.open_dialog(AddRoomDialog)
     
@@ -936,3 +940,14 @@ class InputLord:
     
     def BIND_set_room_camera_marker(self):
         self.ui.open_dialog(SetRoomCamDialog)
+    
+    def BIND_objects_to_camera(self):
+        cam = self.app.gw.camera
+        for obj in self.app.gw.selected_objects:
+            obj.set_loc(cam.x, cam.y, cam.z)
+    
+    def BIND_camera_to_objects(self):
+        if len(self.app.gw.selected_objects) == 0:
+            return
+        obj = self.app.gw.selected_objects[0]
+        self.app.gw.camera.set_loc_from_obj(obj)

@@ -2,10 +2,9 @@ TODO
 
 current tasks:
 
-fix: opening ladder2 from list after launching into another game crashes
+fix: opening ladder2 from list after launching into another game crashes.  world.player is None, find out why
 
 "rooms" concept - standardized object that contains/manages:
-- "location marker" object - probably doesn't need to be a game object? - whose XYZ can be used to set camera loc/zoom, warp points, etc
 - Room menu show list of rooms w/ current one marked
 - expand trigger functionality to allow warping to specific points etc
 -- alternative "bounds" changes rooms based on bounds of arts? ie stop overlapping one screen-sized art & start overlapping another = transition
@@ -17,8 +16,6 @@ fix: opening ladder2 from list after launching into another game crashes
 room UI:
 - add/remove selected objects from room
 - add/remove rooms from an object's list: choose from list of rooms
-
-CameraPoint: non-GO markers (x, y, z) saved in state data, camera can be warped to them, locations can be added and removed via Camera in game menu
 
 - fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 
@@ -39,6 +36,8 @@ collision:
 ---
 
 new features / major improvements:
+
+grid for game mode? extends in all directions up to a reasonable limit
 
 "movement context" for handling movement/physics:
 - move accel, max velocity, stop velocity, gravity (if not global), friction, "specific-axis" bool

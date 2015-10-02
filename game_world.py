@@ -613,7 +613,7 @@ class GameWorld:
             room_class = self.classes.get(room_class_name, game_room.GameRoom)
             room = room_class(self, room_data['name'], room_data)
             self.rooms[room.name] = room
-        start_room = self.rooms.get(d['current_room'], None)
+        start_room = self.rooms.get(d.get('current_room', None), None)
         if start_room:
             self.change_room(start_room.name)
         # spawn hud
