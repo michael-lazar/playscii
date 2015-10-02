@@ -40,7 +40,7 @@ class PulldownMenu(UIElement):
     mark_char = 131
     all_modes_visible = True
     
-    def open_at(self, menu_button):
+    def open_at(self, menu_button, reset_keyboard_nav_index=True):
         # set X and Y based on calling menu button's location
         self.tile_x = menu_button.x
         self.tile_y = menu_button.y + 1
@@ -115,7 +115,8 @@ class PulldownMenu(UIElement):
                 if menu_button.menu_data.should_mark_item(item, self.ui):
                     self.art.set_char_index_at(0, 0, 1, i+1, self.mark_char)
         # reset keyboard nav state for popups
-        self.keyboard_nav_index = 0
+        if reset_keyboard_nav_index:
+            self.keyboard_nav_index = 0
         self.keyboard_navigate(0)
         self.visible = True
     

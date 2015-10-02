@@ -141,6 +141,9 @@ class Camera:
     def set_loc(self, x, y, z):
         self.x, self.y, self.z = x, y, (z or self.z) # z optional
     
+    def set_loc_from_obj(self, game_object):
+        self.set_loc(game_object.x, game_object.y, game_object.z)
+    
     def set_for_art(self, art):
         # set limits
         self.max_x = art.width * art.quad_width

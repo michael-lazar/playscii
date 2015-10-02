@@ -136,9 +136,12 @@ self.edit_bind_src = {
 	'_edit_world'   : 'edit_world_properties',
 	'_save_game'    : 'save_game_state',
 	'_change_room'  : 'change_current_room',
+    '_change_room_to': 'change_current_room_to',
 	'_add_room'     : 'add_room',
 	'_remove_room'  : 'remove_current_room',
 	'_room_objects' : 'set_room_objects',
 	'_show_all_rooms': 'toggle_all_rooms_visible',
-	'_set_room_cam' : 'set_room_camera_marker'
+	'_set_room_cam' : 'set_room_camera_marker',
+	'_obj_to_cam'   : 'objects_to_camera',
+	'_cam_to_obj'   : 'camera_to_objects'
 }
