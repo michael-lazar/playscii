@@ -5,19 +5,15 @@ current tasks:
 fix: opening ladder2 from list after launching into another game crashes.  world.player is None, find out why
 
 "rooms" concept - standardized object that contains/manages:
-- Room menu show list of rooms w/ current one marked
 - expand trigger functionality to allow warping to specific points etc
 -- alternative "bounds" changes rooms based on bounds of arts? ie stop overlapping one screen-sized art & start overlapping another = transition
 - respawn-on-enter / destroy-on-exit object (+ loc?) lists for rooms
-- ambient sounds
+- ambient sounds (spawn a LocationMarker at room center and play from that?)
 - support dynamically generated room definitions a la ELC2 as well as predefined
 - ensure overhead for out-of-room objects is near zero
+- fix thrashing of camera set when overlapping a room edge warp trigger
 
-room UI:
-- add/remove selected objects from room
-- add/remove rooms from an object's list: choose from list of rooms
-
-- fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
+fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 
 use new file chooser for:
 - convert image (any format supported by PIL)
@@ -79,6 +75,10 @@ standard useful paint tools: draw line, flood fill
 ---
 
 fixes / minor improvements:
+
+room UI:
+- add/remove selected objects from room
+- add/remove rooms from an object's list: choose from list of rooms
 
 game distribution: if autoplay_this_game is set, create a separate CFG file and don't create playscii documents/ + cache directories
 
