@@ -4,6 +4,7 @@ from ui_element import UIElement
 from ui_button import UIButton
 from ui_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
 from ui_chooser_dialog import ScrollArrowButton
+from ui_menu_pulldown import PulldownMenu
 from ui_colors import UIColors
 
 from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
@@ -156,6 +157,7 @@ class EditListPanel(GamePanel):
         self.list_buttons = []
         # set when game resets
         self.should_reset_list = False
+        self.keyboard_nav_index = 0
         GamePanel.__init__(self, ui)
     
     def create_buttons(self):
@@ -290,6 +292,19 @@ class EditListPanel(GamePanel):
                 else:
                     self.reset_button(b)
         self.draw_buttons()
+    
+    def has_keyboard_focus(self):
+        # TODO: set/get bool to signify whether we or object properties panel have focus
+        return self.is_visible()
+    
+    def keyboard_navigate(self, move_dir):
+        PulldownMenu.keyboard_navigate(self, move_dir, nav_offset=-2)
+    
+    def update_keyboard_hover(self):
+        PulldownMenu.update_keyboard_hover(self)
+    
+    def keyboard_select_item(self):
+        PulldownMenu.keyboard_select_item(self)
     
     def update(self):
         if self.should_reset_list:

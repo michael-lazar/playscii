@@ -121,9 +121,11 @@ class UIElement:
             self.ui.app.log('UIElement: %s %s with mouse button %s' % (self.__class__.__name__, event_type, mouse_button))
     
     def is_visible(self):
-        if not self.ui.app.game_mode and self.game_mode_visible and not self.all_modes_visible:
+        if self.all_modes_visible:
+            return self.visible
+        elif not self.ui.app.game_mode and self.game_mode_visible:
             return False
-        elif self.ui.app.game_mode and not self.game_mode_visible and not self.all_modes_visible:
+        elif self.ui.app.game_mode and not self.game_mode_visible:
             return False
         return self.visible
     

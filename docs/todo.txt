@@ -3,6 +3,8 @@ TODO
 current tasks:
 
 fix: opening ladder2 from list after launching into another game crashes.  world.player is None, find out why
+"Couldn't parse class [Player]" error, also clear out classes from previously loaded games
+- if module from previously loaded game has same name as module in new game, old one is still used
 
 "rooms" concept - standardized object that contains/manages:
 - expand trigger functionality to allow warping to specific points etc
@@ -14,6 +16,9 @@ fix: opening ladder2 from list after launching into another game crashes.  world
 - fix thrashing of camera set when overlapping a room edge warp trigger
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
+
+keyboard navigation for list panel - if no pulldown menu, up/down move simulated cursor in list, displaying hover
+- object properties list too - tab to switch between
 
 use new file chooser for:
 - convert image (any format supported by PIL)

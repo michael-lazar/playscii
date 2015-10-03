@@ -178,17 +178,20 @@ class PulldownMenu(UIElement):
         self.ui.app.log('Shortcut/command not found: %s' % menu_item.command)
         return '', null
     
-    def keyboard_navigate(self, move_dir):
+    def keyboard_navigate(self, move_dir, nav_offset=0):
+        # NOTE: this code is reused by EditListPanel!
         old_idx = self.keyboard_nav_index
         new_idx = self.keyboard_nav_index + move_dir
         self.keyboard_nav_index += move_dir
-        self.keyboard_nav_index %= len(self.buttons)
+        # if button list starts at >0 Y, use an offset
+        self.keyboard_nav_index %= len(self.buttons) + nav_offset
         tries = 0
-        while self.buttons[self.keyboard_nav_index].state == 'dimmed' and tries < len(self.buttons):
+        # recognize two different kinds of inactive items: empty caption and dim state
+        while tries < len(self.buttons) and (self.buttons[self.keyboard_nav_index].caption == '' or self.buttons[self.keyboard_nav_index].state == 'dimmed'):
             # move_dir might be zero, give it a direction to avoid infinite loop
             # if menu item 0 is dimmed
             self.keyboard_nav_index += move_dir or 1
-            self.keyboard_nav_index %= len(self.buttons)
+            self.keyboard_nav_index %= len(self.buttons) + nav_offset
             tries += 1
         if tries == len(self.buttons):
             return
@@ -210,6 +213,4 @@ class PulldownMenu(UIElement):
             button.callback(button.cb_arg)
         else:
             button.callback()
-        # mirror behavior from MenuItemButton.click: close on select if needed
-        if button.item.close_on_select:
-            self.ui.menu_bar.close_active_menu()
+        return button
