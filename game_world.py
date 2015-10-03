@@ -43,6 +43,7 @@ class GameWorld:
     show_origin_all = False
     # if True, show all rooms not just current one
     show_all_rooms = False
+    builtin_module_names = ['game_object', 'game_hud', 'game_room']
     
     def __init__(self, app):
         self.app = app
@@ -282,27 +283,64 @@ class GameWorld:
         if self.game_dir:
             self.sounds_dir = self.game_dir + SOUNDS_DIR
     
-    def import_all(self):
-        module_path = self.game_dir + GAME_SCRIPTS_DIR
+    def remove_non_current_game_modules(self):
+        """
+        removes modules from previously-loaded games from both sys and
+        GameWorld's dicts
+        """
+        modules_to_remove = []
+        games_dir_prefix = TOP_GAME_DIR.replace('/', '')
+        this_game_dir_prefix = '%s.%s' % (games_dir_prefix, self.game_name)
+        for module_name in sys.modules:
+            # remove any module that isn't for this game or part of its path
+            if module_name != games_dir_prefix and \
+               module_name != this_game_dir_prefix and \
+               module_name.startswith(games_dir_prefix) and \
+               not module_name.startswith(this_game_dir_prefix + '.'):
+                modules_to_remove.append(module_name)
+        for module_name in modules_to_remove:
+            sys.modules.pop(module_name)
+            if module_name in self.modules:
+                self.modules.pop(module_name)
+    
+    def get_game_modules_list(self):
+        "gets list of current game's modules from its scripts/ dir"
         # build list of module files
-        modules_list = ['game_object', 'game_hud', 'game_room']
-        for filename in os.listdir(module_path):
+        modules_list = self.builtin_module_names[:]
+        # create appropriately-formatted python import path
+        module_path_prefix = '%s.%s.%s.' % (TOP_GAME_DIR.replace('/', ''),
+                                            self.game_name,
+                                            GAME_SCRIPTS_DIR.replace('/', ''))
+        for filename in os.listdir(self.game_dir + GAME_SCRIPTS_DIR):
             # exclude emacs temp files and special world start script
             if not filename.endswith('.py'):
                 continue
             if filename.startswith('.#'):
                 continue
+            # TODO: probably remove the idea of the start script
             if filename == START_SCRIPT_FILENAME:
                 continue
-            modules_list.append(filename[:-3])
+            new_module_name = module_path_prefix + filename.replace('.py', '')
+            modules_list.append(new_module_name)
+        return modules_list
+    
+    def import_all(self):
+        """
+        populates GameWorld.modules with the modules GW.get_all_loaded_classes
+        refers to when finding classes to spawn
+        """
+        # on first load, documents dir may not be in import path
+        if not self.app.documents_dir in sys.path:
+            sys.path += [self.app.documents_dir]
+        # clean modules dict before (re)loading anything
+        self.remove_non_current_game_modules()
         # make copy of old modules table for import vs reload check
         old_modules = self.modules.copy()
         self.modules = {}
-        # add game dir to import path if it isn't there already
-        if not module_path in sys.path:
-            sys.path += [module_path]
-        for module_name in modules_list:
-            if module_name in old_modules:
+        # load/reload new modules
+        for module_name in self.get_game_modules_list():
+            # always reload built in modules
+            if module_name in self.builtin_module_names or module_name in old_modules:
                 self.modules[module_name] = importlib.reload(old_modules[module_name])
             else:
                 self.modules[module_name] = importlib.import_module(module_name)
@@ -480,7 +518,7 @@ class GameWorld:
         classes = {}
         for module in self.modules.values():
             for k,v in module.__dict__.items():
-                # skip anything that's not a class
+                # skip anything that's not a game class
                 if not type(v) is type:
                     continue
                 if issubclass(v, game_object.GameObject) or \
