@@ -269,7 +269,7 @@ class InputLord:
             return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]
         # prevent camera move if: console is up, text input is active, editing
         # is not allowed
-        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active and self.app.can_edit and not self.app.ui.pulldown.visible:
+        if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active and self.app.can_edit and not self.ui.pulldown.visible and not self.ui.edit_list_panel.is_visible():
             if pressing_up(ks):
                 app.camera.pan(0, 1, True)
             if pressing_down(ks):
@@ -285,7 +285,7 @@ class InputLord:
         if self.app.can_edit and app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
         # game mode: arrow keys and left gamepad stick move player
-        if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog and not self.app.ui.pulldown.visible:
+        if self.app.game_mode and not self.ui.console.visible and not self.ui.active_dialog and not self.ui.pulldown.visible and not self.ui.edit_list_panel.is_visible():
             if pressing_up(ks):
                 # shift = move selected
                 if self.shift_pressed and self.app.can_edit:
@@ -454,7 +454,7 @@ class InputLord:
             self.ui.menu_bar.close_active_menu()
         elif self.app.game_mode:
             # bail out of list if it's active
-            if self.ui.edit_list_panel.visible:
+            if self.ui.edit_list_panel.is_visible():
                 self.ui.edit_list_panel.cancel()
         else:
             self.ui.select_none()
@@ -597,8 +597,14 @@ class InputLord:
     
     def BIND_select_or_paint(self):
         # select menu item if navigating pulldown
-        if self.ui.menu_bar.active_menu_name:
-            self.ui.pulldown.keyboard_select_item()
+        if self.ui.pulldown.visible:
+            button = self.ui.pulldown.keyboard_select_item()
+            # mirror behavior from MenuItemButton.click: close on select if needed
+            if button.item.close_on_select:
+                self.ui.menu_bar.close_active_menu()
+            return
+        if self.ui.edit_list_panel.is_visible():
+            button = self.ui.edit_list_panel.keyboard_select_item()
             return
         if not self.ui.active_art:
             return
@@ -630,16 +636,20 @@ class InputLord:
     def BIND_arrow_up(self):
         if self.ui.popup.visible:
             self.ui.popup.move_popup_cursor(0, 1)
-        elif self.ui.menu_bar.active_menu_name:
+        elif self.ui.pulldown.visible:
             self.ui.pulldown.keyboard_navigate(-1)
+        elif self.ui.edit_list_panel.is_visible():
+            self.ui.edit_list_panel.keyboard_navigate(-1)
         else:
             self.app.cursor.keyboard_move(0, 1)
     
     def BIND_arrow_down(self):
         if self.ui.popup.visible:
             self.ui.popup.move_popup_cursor(0, -1)
-        elif self.ui.menu_bar.active_menu_name:
+        elif self.ui.pulldown.visible:
             self.ui.pulldown.keyboard_navigate(1)
+        elif self.ui.edit_list_panel.is_visible():
+            self.ui.edit_list_panel.keyboard_navigate(1)
         else:
             self.app.cursor.keyboard_move(0, -1)
     
@@ -889,7 +899,7 @@ class InputLord:
     # game mode binds
     #
     def accept_normal_game_input(self):
-        return self.app.game_mode and self.app.gw.player and not self.ui.active_dialog and not self.app.ui.pulldown.visible
+        return self.app.game_mode and self.app.gw.player and not self.ui.active_dialog and not self.ui.pulldown.visible
     
     def BIND_game_frob(self):
         if self.accept_normal_game_input():
