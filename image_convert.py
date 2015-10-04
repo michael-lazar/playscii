@@ -59,7 +59,7 @@ class ImageConverter:
             for j,other_color in enumerate(self.art.palette.colors):
                 self.color_diffs[i][j] = get_color_diff(color, other_color)
         # convert palettized source image to an array for fast comparisons
-        self.src_array = np.fromstring(self.src_img.tostring(), dtype=np.uint8)
+        self.src_array = np.fromstring(self.src_img.tobytes(), dtype=np.uint8)
         src_w, src_h = self.src_img.size
         self.src_array = np.reshape(self.src_array, (src_h, src_w))
         # convert charmap to 1-bit color for fast value swaps during
@@ -72,7 +72,7 @@ class ImageConverter:
             bw_pal.append(0)
         bw_pal_img.putpalette(tuple(bw_pal))
         self.char_img = self.char_img.quantize(palette=bw_pal_img)
-        self.char_array = np.fromstring(self.char_img.tostring(), dtype=np.uint8)
+        self.char_array = np.fromstring(self.char_img.tobytes(), dtype=np.uint8)
         self.char_array = np.reshape(self.char_array, (self.art.charset.image_height, self.art.charset.image_width))
         # create, size and position image preview
         preview_img = self.src_img.copy()

@@ -24,7 +24,7 @@ class Palette:
         src_img = src_img.convert('RGBA')
         width, height = src_img.size
         # store texture for chooser preview etc
-        self.src_texture = Texture(src_img.tostring(), width, height)
+        self.src_texture = Texture(src_img.tobytes(), width, height)
         # scan image L->R T->B for unique colors, store em as tuples
         # color 0 is always fully transparent
         self.colors = [(0, 0, 0, 0)]
@@ -56,7 +56,7 @@ class Palette:
             x += 1
         # debug: save out generated palette texture
         #img.save('palette.png')
-        self.texture = Texture(img.tostring(), MAX_COLORS, 1)
+        self.texture = Texture(img.tobytes(), MAX_COLORS, 1)
         self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
         if log and not self.app.game_mode:
             self.app.log("loaded palette '%s' from %s:" % (self.name, self.filename))
@@ -122,9 +122,11 @@ class Palette:
         # user-defined color 0 in case we want to do 8-bit transparency
         colors[0:3] = transparent_color
         # PIL will fill out <256 color palettes with bogus values :/
-        while len(colors) < 256 * 3:
+        while len(colors) < MAX_COLORS * 3:
             for i in range(3):
                 colors.append(0)
+        # palette for PIL must be exactly 256 colors
+        colors = colors[:256*3]
         pal_img.putpalette(tuple(colors))
         return out_img.quantize(palette=pal_img)
     
@@ -180,7 +182,7 @@ class PaletteFromList(Palette):
         for color in self.colors:
             img.putpixel((x, 0), color)
             x += 1
-        self.texture = Texture(img.tostring(), MAX_COLORS, 1)
+        self.texture = Texture(img.tobytes(), MAX_COLORS, 1)
         if log and not self.app.game_mode:
             self.app.log("generated new palette '%s'" % (self.name))
             self.app.log('  unique colors: %s' % int(len(self.colors)-1))
@@ -190,7 +192,7 @@ class PaletteFromList(Palette):
 
 class PaletteFromFile(Palette):
     
-    def __init__(self, app, src_filename, palette_filename, colors=256):
+    def __init__(self, app, src_filename, palette_filename, colors=MAX_COLORS):
         self.init_success = False
         src_filename = app.find_filename_path(src_filename)
         if not src_filename:

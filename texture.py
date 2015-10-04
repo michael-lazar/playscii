@@ -13,7 +13,7 @@ class Texture:
     
     def __init__(self, string_data, width, height):
         self.width, self.height = width, height
-        img_data = np.fromstring(string_data, np.uint8)
+        img_data = np.fromstring(string_data, dtype=np.uint8)
         self.gltex = GL.glGenTextures(1)
         GL.glPixelStorei(self.packing, 1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltex)

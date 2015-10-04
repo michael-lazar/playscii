@@ -31,7 +31,7 @@ class SpriteRenderable:
         if self.flip_y:
             image_data = image_data.transpose(Image.FLIP_TOP_BOTTOM)
         w, h = image_data.size
-        self.texture = Texture(image_data.tostring(), w, h)
+        self.texture = Texture(image_data.tobytes(), w, h)
         self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
         self.proj_matrix_uniform = self.shader.get_uniform_location('projection')
         self.view_matrix_uniform = self.shader.get_uniform_location('view')
