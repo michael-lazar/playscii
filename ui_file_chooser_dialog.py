@@ -88,7 +88,7 @@ class ArtChooserItem(ChooserItem):
         img = Image.open(thumbnail_filename)
         img = img.convert('RGBA')
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
-        return Texture(img.tostring(), *img.size)
+        return Texture(img.tobytes(), *img.size)
     
     def load(self, app):
         if os.path.isdir(self.name):

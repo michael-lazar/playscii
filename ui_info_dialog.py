@@ -80,7 +80,7 @@ nice people.
                      Patrons:
 
 Andrew Anderson, Evan Armour, Jason Bakker,
-Aaron Brown, Ben Burbank, Josh Closs,
+Aaron Brown, Jason Buck, Ben Burbank, Josh Closs,
 Lachlan Cooper, Sam Crisp,
 Torbjørn Grønnevik Dahle, Holger Dors,
 Matthew Duhamel, Jaron Eldon, Jacques Frechet,
@@ -120,6 +120,7 @@ Liz Ryerson
 Johnnemann Nordhagen
 Aubrey Hesselgren
 Zak McClendon
+Claire Hosking
 #tool-design
 """
 ]

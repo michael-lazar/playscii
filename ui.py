@@ -117,7 +117,7 @@ class UI:
         img = Image.open(UI_ASSET_DIR + self.grain_texture)
         img = img.convert('RGBA')
         width, height = img.size
-        self.grain_texture = Texture(img.tostring(), width, height)
+        self.grain_texture = Texture(img.tobytes(), width, height)
         self.grain_texture.set_wrap(GL.GL_REPEAT)
         self.grain_texture.set_filter(GL.GL_LINEAR, GL.GL_LINEAR_MIPMAP_LINEAR)
         # update elements that weren't created when UI scale was determined
