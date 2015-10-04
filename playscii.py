@@ -123,24 +123,7 @@ class Application:
         self.ui, self.al = None, None
         sdl2.ext.init()
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
-        # determine screen resolution
-        test_window = sdl2.SDL_CreateWindow(bytes(APP_NAME, 'utf-8'),
-                                            winpos, winpos,
-                                            128, 128,
-                                            sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
-        sdl2.SDL_HideWindow(test_window)
-        # SDL2 windows behavior differs, won't create window at desktop res :[
-        if platform.system() == 'Windows':
-            desktop = sdl2.video.SDL_DisplayMode()
-            sdl2.SDL_GetDesktopDisplayMode(0, desktop)
-            screen_width, screen_height = desktop.w, desktop.h
-        else:
-            screen_width, screen_height = ctypes.c_int(0), ctypes.c_int(0)
-            sdl2.SDL_GetWindowSize(test_window, ctypes.pointer(screen_width),
-                                   ctypes.pointer(screen_height))
-            screen_width = screen_width.value
-            screen_height = screen_height.value
-        sdl2.SDL_DestroyWindow(test_window)
+        screen_width, screen_height = self.get_desktop_resolution()
         # make sure main window won't be too big for screen
         max_width = int(screen_width * 0.8)
         max_height = int(screen_height * 0.8)
@@ -264,6 +247,27 @@ class Application:
             self.ui.set_game_edit_ui_visibility(False, False)
         elif self.gw.game_dir and self.always_launch_art_mode:
             self.exit_game_mode()
+    
+    def get_desktop_resolution(self):
+        winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
+        # SDL2 win/mac behavior differs, won't create window at desktop res :[
+        create_test_window = platform.system() in ['Linux']
+        if not create_test_window:
+            desktop = sdl2.video.SDL_DisplayMode()
+            sdl2.SDL_GetDesktopDisplayMode(0, desktop)
+            return desktop.w, desktop.h
+        test_window = sdl2.SDL_CreateWindow(bytes(APP_NAME, 'utf-8'),
+                                            winpos, winpos,
+                                            128, 128,
+                                            sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP)
+        sdl2.SDL_HideWindow(test_window)
+        screen_width, screen_height = ctypes.c_int(0), ctypes.c_int(0)
+        sdl2.SDL_GetWindowSize(test_window, ctypes.pointer(screen_width),
+                               ctypes.pointer(screen_height))
+        screen_width = screen_width.value
+        screen_height = screen_height.value
+        sdl2.SDL_DestroyWindow(test_window)
+        return screen_width, screen_height
     
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu, what am i missing?
