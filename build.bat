@@ -6,7 +6,7 @@ REM Build needs to know where your dlls are, modify line below as needed:
 set DLLPATH=".\"
 
 echo Creating new build...
-pyinstaller playscii.spec --icon-file=ui\playscii.ico
+pyinstaller --icon=ui\playscii.ico playscii.spec
 
 echo Copying DLLs...
 copy %DLLPATH%\*.dll dist\playscii
