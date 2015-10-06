@@ -1,0 +1,11 @@
+documentation TODO
+
+auto-generated docs, add strings to code as needed
+
+readme in each example game dir explaining what it demonstrates
+
+GameWorld/GameObject/GameHUD/GameRoom full public API
+
+underlying Playscii classes, eg Art and Renderable
+
+license clarification: any art or games you /create/ with Playscii does not inherit this license, you're free to set terms on your own work
