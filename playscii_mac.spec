@@ -18,7 +18,7 @@ include_files = [
 ]
 
 a = Analysis(['playscii.py'],
-             pathex=['/home/jpl/playscii'],
+             pathex=['./'],
              binaries=None,
              datas=include_files,
              hiddenimports=[],
@@ -37,7 +37,7 @@ exe = EXE(pyz,
           debug=False,
           strip=None,
           upx=True,
-          console=True )
+          console=False )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -45,3 +45,7 @@ coll = COLLECT(exe,
                strip=None,
                upx=True,
                name='playscii')
+app = BUNDLE(coll,
+             name='Playscii.app',
+             icon=None,
+             bundle_identifier=None)
