@@ -8,10 +8,10 @@ shaders/*.glsl
 ui/*.png
 profile
 *.bat
-zip_src.sh
+*.spec
+*.sh
 zip_src_include
 version
-Info.plist
 *.default
 README.md
 license.txt

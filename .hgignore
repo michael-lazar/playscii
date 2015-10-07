@@ -5,4 +5,4 @@ __pycache__/*.*
 playscii.profile
 profile.png
 autoplay_this_game
-
+.DS_Store
