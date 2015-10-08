@@ -1,6 +1,6 @@
 import os, sys, time, importlib, json
 
-import game_object, game_hud, game_room
+import game_object, game_util_objects, game_hud, game_room
 import collision
 from camera import Camera
 from art import ART_DIR
@@ -11,7 +11,6 @@ TOP_GAME_DIR = 'games/'
 DEFAULT_STATE_FILENAME = 'start'
 STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
-START_SCRIPT_FILENAME = 'start.py'
 SOUNDS_DIR = 'sounds/'
 
 
@@ -43,7 +42,10 @@ class GameWorld:
     show_origin_all = False
     # if True, show all rooms not just current one
     show_all_rooms = False
-    builtin_module_names = ['game_object', 'game_hud', 'game_room']
+    builtin_module_names = ['game_object', 'game_util_objects', 'game_hud',
+                            'game_room']
+    builtin_base_classes = (game_object.GameObject, game_hud.GameHUD,
+                            game_room.GameRoom)
     
     def __init__(self, app):
         self.app = app
@@ -57,7 +59,9 @@ class GameWorld:
         self.camera = Camera(self.app)
         self.player = None
         self.paused = False
-        self.modules = {'game_object': game_object, 'game_hud': game_hud, 'game_room': game_room}
+        self.modules = {'game_object': game_object,
+                        'game_util_objects': game_util_objects,
+                        'game_hud': game_hud, 'game_room': game_room}
         self.classname_to_spawn = None
         # dict of objects by name:object
         self.objects = {}
@@ -317,9 +321,6 @@ class GameWorld:
                 continue
             if filename.startswith('.#'):
                 continue
-            # TODO: probably remove the idea of the start script
-            if filename == START_SCRIPT_FILENAME:
-                continue
             new_module_name = module_path_prefix + filename.replace('.py', '')
             modules_list.append(new_module_name)
         return modules_list
@@ -521,9 +522,10 @@ class GameWorld:
                 # skip anything that's not a game class
                 if not type(v) is type:
                     continue
-                if issubclass(v, game_object.GameObject) or \
-                   issubclass(v, game_hud.GameHUD) or \
-                   issubclass(v, game_room.GameRoom):
+                base_classes = (game_object.GameObject, game_hud.GameHUD, game_room.GameRoom)
+                # TODO: find out why above works but below doesn't!!  O___O
+                #base_classes = self.builtin_base_classes
+                if issubclass(v, base_classes):
                     classes[k] = v
         return classes
     
@@ -641,7 +643,7 @@ class GameWorld:
         if not self.properties:
             self.properties = self.spawn_object_of_class(self.properties_object_class_name, 0, 0)
         # spawn a WorldGlobalStateObject
-        self.globals = self.spawn_object_of_class(self.properties.globals_object_class_name, 0, 0)
+        self.globals = self.spawn_object_of_class(self.globals_object_class_name, 0, 0)
         # just for first update, merge new objects list into objects list
         self.objects.update(self.new_objects)
         # create rooms
@@ -666,11 +668,6 @@ class GameWorld:
         self.set_for_all_objects('show_origin', self.show_origin_all)
         self.app.update_window_title()
         self.app.ui.edit_list_panel.refresh_items()
-        # run "world start" script if present
-        start_script = self.game_dir + GAME_SCRIPTS_DIR + START_SCRIPT_FILENAME
-        if os.path.exists(start_script):
-            world = self
-            exec(open(start_script).read())
         #self.report()
     
     def report(self):
