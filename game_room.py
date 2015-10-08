@@ -14,6 +14,7 @@ class GameRoom:
             return
         # restore serialized properties
         # TODO: this is copy-pasted from GameObject, find a way to unify
+        # TODO: GameWorld.set_data_for that takes instance, serialized list, data dict
         for v in self.serialized:
             if not v in room_data:
                 self.world.app.dev_log("Serialized property '%s' not found for room %s" % (v, self.name))
@@ -48,6 +49,9 @@ class GameRoom:
     def entered(self):
         self.world.app.log('Room %s entered' % self.name)
         self.use_camera_marker()
+        # tell objects in this room player has entered so eg spawners can fire
+        for obj in self.objects.values():
+            obj.room_entered(self)
     
     def add_object_by_name(self, obj_name):
         obj = self.world.objects.get(obj_name, None)

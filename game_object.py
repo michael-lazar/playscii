@@ -684,6 +684,10 @@ class GameObject:
     def is_in_current_room(self):
         return len(self.rooms) == 0 or self.world.current_room in self.rooms.values()
     
+    def room_entered(self, room):
+        "runs when a room we're in is entered"
+        pass
+    
     def render_debug(self):
         if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.render()
@@ -922,12 +926,18 @@ class StaticTileTrigger(GameObject):
 
 class RoomWarpTrigger(StaticTileTrigger):
     destination_room = 'SOME_ROOM'
-    serialized = StaticTileTrigger.serialized + ['destination_room']
-    # if player overlaps, change room to destination_room
-    # TODO: maybe also warp to a loc?
+    # if provided, warp to this location marker in destination room
+    destination_marker_name = None
+    serialized = StaticTileTrigger.serialized + ['destination_room',
+                                                 'destination_marker']
     def started_colliding(self, other):
-        if isinstance(other, Player):
-            self.world.change_room(self.destination_room)
+        # if player overlaps, change room to destination_room
+        if not isinstance(other, Player):
+            return
+        self.world.change_room(self.destination_room)
+        if self.destination_marker_name:
+            marker = self.world.objects[self.destination_marker_name]
+            self.set_loc(marker.x, marker.y, marker.z)
 
 class LocationMarker(GameObject):
     art_src = 'loc_marker'
