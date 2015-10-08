@@ -1,0 +1,214 @@
+{
+ "active_frame": 0,
+ "active_layer": 1,
+ "camera": [
+  0.5,
+  -7.5,
+  13.120374326841103
+ ],
+ "charset": "jpetscii",
+ "frames": [
+  {
+   "delay": 0.1,
+   "layers": [
+    {
+     "name": "collision",
+     "tiles": [
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 2,
+       "char": 255,
+       "fg": 8,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0
+    },
+    {
+     "name": "viz",
+     "tiles": [
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 127,
+       "fg": 2,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0.1
+    }
+   ]
+  }
+ ],
+ "height": 15,
+ "palette": "c64_original",
+ "width": 1
+}
