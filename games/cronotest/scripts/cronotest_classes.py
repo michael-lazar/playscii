@@ -1,6 +1,6 @@
 import math
 
-from game_object import TopDownPlayer, StaticTileBG, StaticTileObject, DynamicBoxObject, Pickup
+from game_util_objects import TopDownPlayer, StaticTileBG, StaticTileObject, DynamicBoxObject, Pickup
 
 class CronoPlayer(TopDownPlayer):
     art_src = 'crono'

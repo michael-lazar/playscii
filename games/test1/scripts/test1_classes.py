@@ -2,7 +2,8 @@ import math
 from random import randint
 
 from art import Art
-from game_object import GameObject, Player
+from game_object import GameObject
+from game_util_objects import Player
 
 class TestPlayer(Player):
     state_changes_art = False
