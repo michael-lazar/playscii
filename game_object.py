@@ -125,6 +125,8 @@ class GameObject:
     attachment_classes = {}
     # class blacklist for collisions - string names of classes, not class defs
     noncolliding_classes = []
+    # set True then False when hitting eg a WarpTrigger to prevent thrashing
+    warping = False
     # dict of sound filenames, keys are string "tags"
     sound_filenames = {}
     # looping sounds that should play while in a given state
@@ -389,7 +391,7 @@ class GameObject:
         return False
     
     def overlapped(self, other, dx, dy):
-        started = not other.name not in self.collision.contacts
+        started = other.name not in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
         # TODO: maybe use a named tuple here
         self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
