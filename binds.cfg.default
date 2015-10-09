@@ -65,6 +65,8 @@ self.edit_bind_src = {
     'q'        : 'quick_grab',
     'shift t'  : 'toggle_camera_tilt',
     'return'   : 'select_or_paint',
+	'shift return': 'add_to_list_selection',
+	'ctrl return': 'remove_from_list_selection',
     'f12'      : 'screenshot',
     'ctrl shift m'   : 'run_test_mutate',
     'up'       : 'arrow_up',
@@ -143,5 +145,7 @@ self.edit_bind_src = {
 	'_show_all_rooms': 'toggle_all_rooms_visible',
 	'_set_room_cam' : 'set_room_camera_marker',
 	'_obj_to_cam'   : 'objects_to_camera',
-	'_cam_to_obj'   : 'camera_to_objects'
+	'_cam_to_obj'   : 'camera_to_objects',
+	'_add_to_room'  : 'add_selected_to_room',
+	'_remove_from_room': 'remove_selected_from_room'
 }

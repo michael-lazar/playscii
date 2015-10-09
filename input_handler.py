@@ -456,6 +456,8 @@ class InputLord:
             # bail out of list if it's active
             if self.ui.edit_list_panel.is_visible():
                 self.ui.edit_list_panel.cancel()
+            else:
+                self.app.gw.deselect_all()
         else:
             self.ui.select_none()
     
@@ -594,6 +596,16 @@ class InputLord:
             self.app.camera.y_tilt = 2
             self.ui.message_line.post_line('Camera tilt engaged.')
         self.ui.menu_bar.refresh_active_menu()
+    
+    def BIND_add_to_list_selection(self):
+        if not self.ui.edit_list_panel.is_visible():
+            return
+        self.ui.edit_list_panel.keyboard_select_item()
+    
+    def BIND_remove_from_list_selection(self):
+        if not self.ui.edit_list_panel.is_visible():
+            return
+        self.ui.edit_list_panel.keyboard_select_item()
     
     def BIND_select_or_paint(self):
         # select menu item if navigating pulldown
@@ -961,3 +973,15 @@ class InputLord:
             return
         obj = self.app.gw.selected_objects[0]
         self.app.gw.camera.set_loc_from_obj(obj)
+    
+    def BIND_add_selected_to_room(self):
+        if not self.app.gw.current_room:
+            return
+        for obj in self.app.gw.selected_objects:
+            self.app.gw.current_room.add_object(obj)
+    
+    def BIND_remove_selected_from_room(self):
+        if not self.app.gw.current_room:
+            return
+        for obj in self.app.gw.selected_objects:
+            self.app.gw.current_room.remove_object(obj)
