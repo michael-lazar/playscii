@@ -86,6 +86,7 @@ class EditWorldPropertiesItem(PulldownMenuItem):
 
 # TODO room menu:
 # [X] list only objects in current room
+# rename room
 
 class ChangeRoomItem(PulldownMenuItem):
     label = 'Change current room…'
@@ -127,6 +128,17 @@ class SetRoomCameraItem(PulldownMenuItem):
     def should_dim(app):
         return app.gw.current_room is None
 
+class AddSelectedToCurrentRoomItem(PulldownMenuItem):
+    label = 'Add selected objects to this room'
+    command = 'add_selected_to_room'
+    def should_dim(app):
+        return app.gw.current_room is None or len(app.gw.selected_objects) == 0
+
+class RemoveSelectedFromCurrentRoomItem(PulldownMenuItem):
+    label = 'Remove selected objects from this room'
+    command = 'remove_selected_from_room'
+    def should_dim(app):
+        return app.gw.current_room is None or len(app.gw.selected_objects) == 0
 
 #
 # object menu
@@ -182,9 +194,11 @@ class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
-    items = [ChangeRoomItem, AddRoomItem, SetRoomObjectsItem, SetRoomCameraItem,
-             RemoveRoomItem, SeparatorItem, ToogleAllRoomsVizItem, SeparatorItem]
-    
+    items = [ChangeRoomItem, AddRoomItem, RemoveRoomItem, ToogleAllRoomsVizItem,
+             SeparatorItem, SetRoomCameraItem, SetRoomObjectsItem,
+             AddSelectedToCurrentRoomItem, RemoveSelectedFromCurrentRoomItem,
+             SeparatorItem
+    ]
     def should_mark_item(item, ui):
         "show checkmark for current room"
         if not ui.app.gw.current_room:

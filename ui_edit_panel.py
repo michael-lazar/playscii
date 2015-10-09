@@ -188,7 +188,6 @@ class EditListPanel(GamePanel):
                                  UIColors.medgrey)
     
     def cancel(self):
-        self.world.deselect_all()
         self.list_operation = LO_NONE
         self.world.classname_to_spawn = None
     
@@ -267,12 +266,14 @@ class EditListPanel(GamePanel):
     def game_reset(self):
         self.should_reset_list = True
     
+    def items_changed(self):
+        "called by anything that changes the items list, eg object add/delete"
+        self.items = self.list_functions[self.list_operation]()
+        # change selected item index if it's OOB
+        if self.keyboard_nav_index >= len(self.items):
+            self.keyboard_nav_index = len(self.items) - 1
+    
     def refresh_items(self):
-        # prune any objects that have been deleted from items
-        if self.list_functions[self.list_operation] is self.list_objects:
-            for item in self.items:
-                if not item.obj in self.world.objects.values():
-                    self.items.remove(item)
         for i,b in enumerate(self.list_buttons):
             if i >= len(self.items):
                 b.caption = ''
@@ -333,7 +334,10 @@ class EditListPanel(GamePanel):
     
     def list_objects(self):
         items = []
-        for obj in self.world.objects.values():
+        # include just-spawned objects too
+        all_objects = self.world.objects.copy()
+        all_objects.update(self.world.new_objects)
+        for obj in all_objects.values():
             if obj.do_not_list:
                 continue
             li = self.ListItem(obj.name, obj)

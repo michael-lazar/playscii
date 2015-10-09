@@ -4,14 +4,10 @@ current tasks:
 
 demo: paint onto UI art
 
-- ESC with list panel up shouldn't deselect objects
-- object list should update when object deleted or duplicated
-
 "rooms" concept - standardized object that contains/manages:
 - simple room-based traversal:
 -- left/right/top/bottom_edge_warp_dest: marker to warp to when player hits l/r/t/b edge of room
 -- warp_bounds_obj: this object's art's bounds determine the room's edges
-- fix thrashing of camera.set_loc when overlapping a room edge warp trigger
 - ambient sounds (spawn a LocationMarker at room center and play from that?)
 - support dynamically generated room definitions a la ELC2 as well as predefined
 - ensure overhead for out-of-room objects is near zero

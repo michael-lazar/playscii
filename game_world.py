@@ -407,6 +407,8 @@ class GameWorld:
                 to_destroy.append(obj.name)
         for obj_name in to_destroy:
             self.objects.pop(obj_name)
+        if len(to_destroy) > 0:
+            self.app.ui.edit_list_panel.items_changed()
         if self.hud:
             self.hud.update()
     
@@ -548,7 +550,7 @@ class GameWorld:
             new_objects.append(self.duplicate_object(obj))
         # report on objects created
         if len(new_objects) == 1:
-            self.app.log('%s created from %s' % (obj.name, new_objects[0].name))
+            self.app.log('%s created from %s' % (new_objects[0].name, obj.name))
         elif len(new_objects) > 1:
             self.app.log('%s new objects created' % len(new_objects))
     
@@ -564,8 +566,12 @@ class GameWorld:
         d['name'] = obj.name + ' TEMP COPY NAME'
         new_obj = self.spawn_object_from_data(d)
         # give object a non-duplicate name
-        # TODO: decide if new object's rooms list needs to be modified
         new_obj.rename(new_obj.get_unique_name())
+        # tell object's rooms about it
+        for room_name in new_obj.rooms:
+            self.world.rooms[room_name].add_object(new_obj)
+        # update list after changes have been applied to object
+        self.app.ui.edit_list_panel.items_changed()
         return new_obj
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
@@ -576,6 +582,7 @@ class GameWorld:
         if x is not None and y is not None:
             d['x'], d['y'] = x, y
         new_obj = self.spawn_object_from_data(d)
+        self.app.ui.edit_list_panel.items_changed()
         return new_obj
     
     def spawn_object_from_data(self, object_data):
@@ -670,7 +677,7 @@ class GameWorld:
         self.set_for_all_objects('show_bounds', self.show_bounds_all)
         self.set_for_all_objects('show_origin', self.show_origin_all)
         self.app.update_window_title()
-        self.app.ui.edit_list_panel.refresh_items()
+        self.app.ui.edit_list_panel.items_changed()
         #self.report()
     
     def report(self):
