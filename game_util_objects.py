@@ -189,19 +189,30 @@ class WorldGlobalsObject(GameObject):
     editable = []
 
 
+class LocationMarker(GameObject):
+    "very simple GameObject that marks an XYZ location for eg camera points"
+    art_src = 'loc_marker'
+    serialized = ['name', 'x', 'y', 'z', 'visible', 'locked']
+    editable = []
+    alpha = 0.5
+    physics_move = False
+
+
 class StaticTileTrigger(GameObject):
     
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
     noncolliding_classes = ['GameObject']
     physics_move = False
+    serialized = ['name', 'x', 'y', 'z', 'art_src', 'visible', 'locked']
     
     def started_colliding(self, other):
         #self.app.log('Trigger overlapped with %s' % other.name)
         pass
 
-class RoomWarpTrigger(StaticTileTrigger):
-    destination_room = 'SOME_ROOM'
+class WarpTrigger(StaticTileTrigger):
+    "warps player to a room/marker when they touch it"
+    destination_room = None
     # if provided, warp to this location marker in destination room
     destination_marker_name = None
     serialized = StaticTileTrigger.serialized + ['destination_room',
@@ -210,18 +221,21 @@ class RoomWarpTrigger(StaticTileTrigger):
         # if player overlaps, change room to destination_room
         if not isinstance(other, Player):
             return
-        self.world.change_room(self.destination_room)
+        # check/set "currently warping" to prevent thrash
+        if other.warping:
+            other.warping = False
+            return
+        warped = False
+        if self.destination_room:
+            self.world.change_room(self.destination_room)
+            warped = True
         if self.destination_marker_name:
             marker = self.world.objects[self.destination_marker_name]
             self.set_loc(marker.x, marker.y, marker.z)
+            warped = True
+        if warped:
+            other.warping = True
 
-class LocationMarker(GameObject):
-    "very simple GameObject that marks an XYZ location for eg camera points"
-    art_src = 'loc_marker'
-    serialized = ['name', 'x', 'y', 'z', 'visible', 'locked']
-    editable = []
-    alpha = 0.5
-    physics_move = False
 
 class ObjectSpawner(LocationMarker):
     "simple object that spawns an object when triggered"
@@ -253,7 +267,6 @@ class ObjectSpawner(LocationMarker):
     
     def room_entered(self, room, old_room):
         if self.times_to_fire != -1 and self.times_fired >= self.times_to_fire:
-            print('not firing %s' % self)
             return
         self.do_spawn()
         if self.times_fired != -1:
