@@ -216,8 +216,51 @@ class RoomWarpTrigger(StaticTileTrigger):
             self.set_loc(marker.x, marker.y, marker.z)
 
 class LocationMarker(GameObject):
+    "very simple GameObject that marks an XYZ location for eg camera points"
     art_src = 'loc_marker'
     serialized = ['name', 'x', 'y', 'z', 'visible', 'locked']
     editable = []
     alpha = 0.5
     physics_move = False
+
+class ObjectSpawner(LocationMarker):
+    "simple object that spawns an object when triggered"
+    spawn_class_name = None
+    spawn_obj_name = None
+    # dict of properties to set on newly spawned object
+    spawn_obj_data = {}
+    # number of times we can fire, -1 = infinite
+    times_to_fire = -1
+    # if True, spawned object will be destroyed when player leaves its room
+    destroy_on_room_exit = True
+    serialized = LocationMarker.serialized + ['spawn_class_name', 'spawn_obj_name',
+                                              'times_to_fire', 'destroy_on_room_exit'
+    ]
+    
+    def __init__(self, world, obj_data=None):
+        LocationMarker.__init__(self, world, obj_data)
+        self.times_fired = 0
+        # list of objects we've spawned
+        self.spawned_objects = []
+    
+    def do_spawn(self):
+        new_obj = self.world.spawn_object_of_class(self.spawn_class_name,
+                                                   self.x, self.y)
+        new_obj.name = self.spawn_obj_name
+        # new object should be in same rooms as us
+        new_obj.rooms.update(self.rooms)
+        # TODO: put new object in our room(s), apply spawn_obj_data
+    
+    def room_entered(self, room, old_room):
+        if self.times_to_fire != -1 and self.times_fired >= self.times_to_fire:
+            print('not firing %s' % self)
+            return
+        self.do_spawn()
+        if self.times_fired != -1:
+            self.times_fired += 1
+    
+    def room_exited(self, room, new_room):
+        if not self.destroy_on_room_exit:
+            return
+        for obj in self.spawned_objects:
+            obj.destroy()

@@ -609,9 +609,12 @@ class GameWorld:
         if not new_room_name in self.rooms:
             self.app.log("Couldn't change to missing room %s" % new_room_name)
             return
+        old_room = self.current_room
         self.current_room = self.rooms[new_room_name]
-        # set camera if marker is set
-        self.current_room.use_camera_marker()
+        # tell old and new rooms they've been exited and entered, respectively
+        if old_room:
+            old_room.exited(self.current_room)
+        self.current_room.entered(old_room)
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
         if not os.path.exists(filename):

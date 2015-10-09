@@ -684,8 +684,12 @@ class GameObject:
     def is_in_current_room(self):
         return len(self.rooms) == 0 or self.world.current_room in self.rooms.values()
     
-    def room_entered(self, room):
+    def room_entered(self, room, old_room):
         "runs when a room we're in is entered"
+        pass
+    
+    def room_exited(self, room, new_room):
+        "runs when a room we're in is exited"
         pass
     
     def render_debug(self):
