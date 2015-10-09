@@ -4,16 +4,17 @@ current tasks:
 
 demo: paint onto UI art
 
-remove start.py aka START_SCRIPT_FILENAME functionality unless it seems uniquely useful for something
+- ESC with list panel up shouldn't deselect objects
+- object list should update when object deleted or duplicated
 
 "rooms" concept - standardized object that contains/manages:
-- expand trigger functionality to allow warping to specific points etc
--- alternative "bounds" changes rooms based on bounds of arts? ie stop overlapping one screen-sized art & start overlapping another = transition
-- respawn-on-enter / destroy-on-exit object (+ loc?) lists for rooms
+- simple room-based traversal:
+-- left/right/top/bottom_edge_warp_dest: marker to warp to when player hits l/r/t/b edge of room
+-- warp_bounds_obj: this object's art's bounds determine the room's edges
+- fix thrashing of camera.set_loc when overlapping a room edge warp trigger
 - ambient sounds (spawn a LocationMarker at room center and play from that?)
 - support dynamically generated room definitions a la ELC2 as well as predefined
 - ensure overhead for out-of-room objects is near zero
-- fix thrashing of camera.set_loc when overlapping a room edge warp trigger
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 

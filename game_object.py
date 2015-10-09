@@ -125,6 +125,8 @@ class GameObject:
     attachment_classes = {}
     # class blacklist for collisions - string names of classes, not class defs
     noncolliding_classes = []
+    # set True then False when hitting eg a WarpTrigger to prevent thrashing
+    warping = False
     # dict of sound filenames, keys are string "tags"
     sound_filenames = {}
     # looping sounds that should play while in a given state
@@ -389,7 +391,7 @@ class GameObject:
         return False
     
     def overlapped(self, other, dx, dy):
-        started = not other.name not in self.collision.contacts
+        started = other.name not in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
         # TODO: maybe use a named tuple here
         self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
@@ -684,6 +686,14 @@ class GameObject:
     def is_in_current_room(self):
         return len(self.rooms) == 0 or self.world.current_room in self.rooms.values()
     
+    def room_entered(self, room, old_room):
+        "runs when a room we're in is entered"
+        pass
+    
+    def room_exited(self, room, new_room):
+        "runs when a room we're in is exited"
+        pass
+    
     def render_debug(self):
         if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.render()
@@ -720,218 +730,3 @@ class GameObject:
             attachment.destroy()
         self.renderable.destroy()
         self.should_destroy = True
-
-
-class GameObjectAttachment(GameObject):
-    
-    "GameObject that doesn't think about anything, just renders"
-    
-    collision_type = CT_NONE
-    should_save = False
-    selectable = False
-    physics_move = False
-    # offset from parent object's origin
-    offset_x, offset_y, offset_z = 0., 0., 0.
-    editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
-    
-    def attach_to(self, gobj):
-        self.parent = gobj
-    
-    def update(self):
-        if not self.art.updated_this_tick:
-            self.art.update()
-        self.x = self.parent.x + self.offset_x
-        self.y = self.parent.y + self.offset_y
-        self.z = self.parent.z + self.offset_z
-
-
-class BlobShadow(GameObjectAttachment):
-    art_src = 'blob_shadow'
-    alpha = 0.5
-
-class StaticTileBG(GameObject):
-    collision_shape_type = CST_TILE
-    collision_type = CT_GENERIC_STATIC
-    physics_move = False
-
-class StaticTileObject(GameObject):
-    collision_shape_type = CST_TILE
-    collision_type = CT_GENERIC_STATIC
-    physics_move = False
-    y_sort = True
-
-class StaticBoxObject(GameObject):
-    collision_shape_type = CST_AABB
-    collision_type = CT_GENERIC_STATIC
-    physics_move = False
-
-class DynamicBoxObject(GameObject):
-    collision_shape_type = CST_AABB
-    collision_type = CT_GENERIC_DYNAMIC
-    y_sort = True
-
-class Pickup(GameObject):
-    collision_shape_type = CST_CIRCLE
-    collision_type = CT_GENERIC_DYNAMIC
-    y_sort = True
-    attachment_classes = { 'shadow': 'BlobShadow' }
-
-class GameCharacter(GameObject):
-    
-    state_changes_art = True
-    stand_if_not_moving = True
-    # move state name - added to valid_states in init so subclasses recognized
-    move_state = 'walk'
-    collision_shape_type = CST_CIRCLE
-    collision_type = CT_GENERIC_DYNAMIC
-    
-    def __init__(self, world, obj_data=None):
-        if not self.move_state in self.valid_states:
-            self.valid_states.append(self.move_state)
-        GameObject.__init__(self, world, obj_data)
-    
-    def update_state(self):
-        GameObject.update_state(self)
-        if abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
-            self.state = self.move_state
-
-class Player(GameCharacter):
-    log_move = False
-    collision_type = CT_PLAYER
-    editable = GameCharacter.editable + ['move_accel_x', 'move_accel_y',
-                                         'ground_friction', 'air_friction',
-                                         'bounciness', 'stop_velocity']
-    
-    def pre_first_update(self):
-        if self.world.player is None:
-            self.world.player = self
-            if self.world.player_camera_lock:
-                self.world.camera.focus_object = self
-            else:
-                self.world.camera.focus_object = None
-    
-    def button_pressed(self, button_index):
-        pass
-    
-    def button_unpressed(self, button_index):
-        pass
-
-
-class TopDownPlayer(Player):
-    
-    y_sort = True
-    attachment_classes = { 'shadow': 'BlobShadow' }
-    facing_changes_art = True
-    
-    def get_facing_dir(self):
-        return FACING_DIRS[self.facing]
-
-
-class WorldPropertiesObject(GameObject):
-    
-    "special magic singleton object that stores and sets GameWorld properties"
-    
-    art_src = 'world_properties_object'
-    visible = deleteable = selectable = False
-    locked = True
-    physics_move = False
-    do_not_list = True
-    # properties we serialize on behalf of GameWorld
-    # TODO: figure out how to make these defaults sync with those in GW?
-    world_props = ['gravity_x', 'gravity_y', 'gravity_z',
-                   'hud_class_name', 'globals_object_class_name',
-                   'camera_x', 'camera_y', 'camera_z',
-                   'bg_color_r', 'bg_color_g', 'bg_color_b', 'bg_color_a',
-                   'player_camera_lock', 'object_grid_snap', 'draw_hud',
-                   'collision_enabled', 'show_collision_all', 'show_bounds_all',
-                   'show_origin_all'
-    ]
-    serialized = world_props
-    # all visible properties are serialized, not editable
-    editable = []
-    
-    def __init__(self, world, obj_data=None):
-        GameObject.__init__(self, world, obj_data)
-        for v in self.serialized:
-            if v in obj_data:
-                # if world has property from loaded data, use it
-                if hasattr(self.world, v):
-                    setattr(self.world, v, obj_data[v])
-                setattr(self, v, obj_data[v])
-            # if world has property but loaded data doesn't, use world's
-            elif hasattr(self.world, v):
-                setattr(self, v, getattr(self.world, v))
-            else:
-                setattr(self, v, 0)
-        # special handling of bg color (a list)
-        self.world.bg_color = [self.bg_color_r, self.bg_color_g, self.bg_color_b, self.bg_color_a]
-        self.world.camera.set_loc(self.camera_x, self.camera_y, self.camera_z)
-    
-    def set_object_property(self, prop_name, new_value):
-        setattr(self, prop_name, new_value)
-        # special handling for some values, eg bg color and camera
-        if prop_name.startswith('bg_color_'):
-            component = {'r': 0, 'g': 1, 'b': 2, 'a': 3}[prop_name[-1]]
-            self.world.bg_color[component] = float(new_value)
-        elif prop_name.startswith('camera_') and len(prop_name) == len('camera_x'):
-            setattr(self.world.camera, prop_name[-1], new_value)
-        # some properties have unique set methods in GW
-        elif prop_name == 'show_collision_all':
-            self.world.toggle_all_collision_viz()
-        elif prop_name == 'show_bounds_all':
-            self.world.toggle_all_bounds_viz()
-        elif prop_name == 'show_origin_all':
-            self.world.toggle_all_origin_viz()
-        elif prop_name == 'player_camera_lock':
-            self.world.toggle_player_camera_lock()
-        # normal properties you can just set: set em
-        elif hasattr(self.world, prop_name):
-            setattr(self.world, prop_name, new_value)
-    
-    def update_from_world(self):
-        self.camera_x = self.world.camera.x
-        self.camera_y = self.world.camera.y
-        self.camera_z = self.world.camera.z
-
-
-class WorldGlobalsObject(GameObject):
-    """
-    invisible object holding global state, variables etc in GameWorld.globals
-    subclass can be specified in WorldPropertiesObject
-    NOTE: this object is spawned from scratch every load, it's never serialized!
-    """
-    should_save = False
-    visible = deleteable = selectable = False
-    locked = True
-    do_not_list = True
-    physics_move = False
-    serialized = []
-    editable = []
-
-
-class StaticTileTrigger(GameObject):
-    
-    collision_shape_type = CST_TILE
-    collision_type = CT_GENERIC_STATIC
-    noncolliding_classes = ['GameObject']
-    physics_move = False
-    
-    def started_colliding(self, other):
-        #self.app.log('Trigger overlapped with %s' % other.name)
-        pass
-
-class RoomWarpTrigger(StaticTileTrigger):
-    destination_room = 'SOME_ROOM'
-    serialized = StaticTileTrigger.serialized + ['destination_room']
-    # if player overlaps, change room to destination_room
-    # TODO: maybe also warp to a loc?
-    def started_colliding(self, other):
-        if isinstance(other, Player):
-            self.world.change_room(self.destination_room)
-
-class LocationMarker(GameObject):
-    art_src = 'loc_marker'
-    serialized = ['name', 'x', 'y', 'z', 'visible', 'locked']
-    editable = []
-    alpha = 0.5
-    physics_move = False

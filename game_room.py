@@ -4,6 +4,8 @@ class GameRoom:
     # if set, camera will move to marker with this name when room entered
     camera_marker_name = ''
     serialized = ['name', 'camera_marker_name']
+    # log changes to and from this room
+    log_changes = False
     
     def __init__(self, world, name, room_data=None):
         self.world = world
@@ -14,6 +16,7 @@ class GameRoom:
             return
         # restore serialized properties
         # TODO: this is copy-pasted from GameObject, find a way to unify
+        # TODO: GameWorld.set_data_for that takes instance, serialized list, data dict
         for v in self.serialized:
             if not v in room_data:
                 self.world.app.dev_log("Serialized property '%s' not found for room %s" % (v, self.name))
@@ -45,9 +48,21 @@ class GameRoom:
         cam_mark = self.world.objects[self.camera_marker_name]
         self.world.camera.set_loc_from_obj(cam_mark)
     
-    def entered(self):
-        self.world.app.log('Room %s entered' % self.name)
+    def entered(self, old_room):
+        if self.log_changes:
+            self.world.app.log('Room "%s" entered' % self.name)
+        # set camera if marker is set
         self.use_camera_marker()
+        # tell objects in this room player has entered so eg spawners can fire
+        for obj in self.objects.values():
+            obj.room_entered(self, old_room)
+    
+    def exited(self, new_room):
+        if self.log_changes:
+            self.world.app.log('Room "%s" exited' % self.name)
+        # tell objects in this room player has exited
+        for obj in self.objects.values():
+            obj.room_exited(self, new_room)
     
     def add_object_by_name(self, obj_name):
         obj = self.world.objects.get(obj_name, None)
