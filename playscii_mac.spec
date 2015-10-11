@@ -17,9 +17,14 @@ include_files = [
     ('ui/*.png', 'ui')
 ]
 
+include_bins = [
+    ('/usr/local/Cellar/sdl2/2.0.3/lib/libSDL2-2.0.0.dylib', '.'),
+    ('/usr/local/Cellar/sdl2_mixer/2.0.0/lib/libSDL2_mixer-2.0.0.dylib', '.')
+]
+
 a = Analysis(['playscii.py'],
              pathex=['./'],
-             binaries=None,
+             binaries=include_bins,
              datas=include_files,
              hiddenimports=[],
              hookspath=None,
@@ -47,5 +52,5 @@ coll = COLLECT(exe,
                name='playscii')
 app = BUNDLE(coll,
              name='Playscii.app',
-             icon=None,
-             bundle_identifier=None)
+             icon='ui/playscii.icns',
+             bundle_identifier='net.jplebreton.playscii')
