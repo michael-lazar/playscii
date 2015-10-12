@@ -226,6 +226,8 @@ class MenuBar(UIElement):
                 button.set_state('normal')
         self.active_menu_name = None
         self.ui.pulldown.visible = False
+        self.ui.keyboard_focus_element = None
+        self.ui.refocus_keyboard()
     
     def refresh_active_menu(self):
         if not self.ui.pulldown.visible:

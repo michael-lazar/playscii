@@ -97,7 +97,8 @@ class GameRoom:
         return d
     
     def destroy(self):
-        self.world.rooms.pop(self.name)
+        if self.name in self.world.rooms:
+            self.world.rooms.pop(self.name)
         # remove references to us in each of our objects
         for obj in self.objects.values():
             obj.rooms.pop(self.name)
