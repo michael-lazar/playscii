@@ -2,7 +2,7 @@ import sys, os.path
 
 # obnoxious PyOpenGL workaround for py2exe
 import platform
-if platform.system() == 'Windows':
+if platform.system() == 'Windows' or platform.system() == 'Darwin':
     import os
     # set env variable so pysdl2 can find sdl2.dll
     os.environ['PYSDL2_DLL_PATH'] = '.'
