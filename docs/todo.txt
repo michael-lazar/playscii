@@ -10,11 +10,8 @@ demo: paint onto UI art
 -- warp_bounds_obj: this object's art's bounds determine the room's edges
 - ambient sounds (spawn a LocationMarker at room center and play from that?)
 - support dynamically generated room definitions a la ELC2 as well as predefined
-- ensure overhead for out-of-room objects is near zero
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
-
-- keyboard navigation for object properties list - tab to switch between it and list panel
 
 use new file chooser for:
 - convert image (any format supported by PIL)
