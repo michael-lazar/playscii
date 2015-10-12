@@ -185,13 +185,16 @@ class GameWorld:
             return
         if obj and (obj.selectable or force) and not obj in self.selected_objects:
             self.selected_objects.append(obj)
+        self.app.ui.object_selection_changed()
     
     def deselect_object(self, obj):
         if obj in self.selected_objects:
             self.selected_objects.remove(obj)
+        self.app.ui.object_selection_changed()
     
     def deselect_all(self):
         self.selected_objects = []
+        self.app.ui.object_selection_changed()
     
     def create_new_game(self, game_name):
         "creates appropriate dirs and files for a new game, returns success"

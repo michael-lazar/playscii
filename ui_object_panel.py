@@ -205,10 +205,10 @@ class EditObjectPanel(GamePanel):
     
     def update(self):
         # redraw contents every update
-        self.draw_titlebar()
-        #if len(self.world.selected_objects) > 0:
-        self.refresh_items()
-        GamePanel.update(self)
+        if self.is_visible():
+            self.draw_titlebar()
+            self.refresh_items()
+            GamePanel.update(self)
     
     def is_visible(self):
         return GamePanel.is_visible(self) and len(self.world.selected_objects) > 0

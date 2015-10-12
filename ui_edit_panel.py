@@ -35,6 +35,7 @@ class GamePanel(UIElement):
         UIElement.__init__(self, ui)
         self.buttons = []
         self.create_buttons()
+        self.keyboard_nav_index = 0
     
     def create_buttons(self): pass
     # label and main item draw functions - overridden in subclasses
@@ -83,6 +84,15 @@ class GamePanel(UIElement):
         # always handle input, even if we didn't hit a button
         UIElement.clicked(self, mouse_button)
         return True
+    
+    def keyboard_navigate(self, move_x, move_y):
+        PulldownMenu.keyboard_navigate(self, move_x, move_y, nav_offset=-2)
+    
+    def update_keyboard_hover(self):
+        PulldownMenu.update_keyboard_hover(self)
+    
+    def keyboard_select_item(self):
+        PulldownMenu.keyboard_select_item(self)
 
 
 class ListButton(UIButton):
@@ -157,7 +167,6 @@ class EditListPanel(GamePanel):
         self.list_buttons = []
         # set when game resets
         self.should_reset_list = False
-        self.keyboard_nav_index = 0
         GamePanel.__init__(self, ui)
     
     def create_buttons(self):
@@ -190,6 +199,7 @@ class EditListPanel(GamePanel):
     def cancel(self):
         self.list_operation = LO_NONE
         self.world.classname_to_spawn = None
+        self.ui.refocus_keyboard()
     
     def scroll_list_up(self):
         if self.list_scroll_index > 0:
@@ -202,8 +212,6 @@ class EditListPanel(GamePanel):
             self.list_scroll_index += 1
     
     def clicked_item(self, item):
-        # clear message line if not in class list
-        self.ui.message_line.post_line('')
         # do thing appropriate to current list operation
         self.click_functions[self.list_operation](item)
     
@@ -222,6 +230,8 @@ class EditListPanel(GamePanel):
         if new_op == LO_NONE:
             self.list_operation = new_op
             return
+        # list is doing something, set us as keyboard focus
+        self.ui.keyboard_focus_element = self
         self.items = []
         self.clear_buttons(self.list_buttons)
         # save old list type's scroll index so we can restore it later
@@ -293,19 +303,6 @@ class EditListPanel(GamePanel):
                 else:
                     self.reset_button(b)
         self.draw_buttons()
-    
-    def has_keyboard_focus(self):
-        # TODO: set/get bool to signify whether we or object properties panel have focus
-        return self.is_visible()
-    
-    def keyboard_navigate(self, move_dir):
-        PulldownMenu.keyboard_navigate(self, move_dir, nav_offset=-2)
-    
-    def update_keyboard_hover(self):
-        PulldownMenu.update_keyboard_hover(self)
-    
-    def keyboard_select_item(self):
-        PulldownMenu.keyboard_select_item(self)
     
     def update(self):
         if self.should_reset_list:
