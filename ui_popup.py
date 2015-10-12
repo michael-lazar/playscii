@@ -493,6 +493,8 @@ class ToolPopup(UIElement):
         if self.ui.active_dialog:
             return
         self.visible = True
+        # visible, grab keyboard focus
+        self.ui.keyboard_focus_element = self
         # set cursor as starting point for keyboard navigation
         self.charset_swatch.set_cursor_selection_index(self.ui.selected_char)
         if self.ui.pulldown.visible:
@@ -521,6 +523,8 @@ class ToolPopup(UIElement):
     
     def hide(self):
         self.visible = False
+        self.ui.keyboard_focus_element = None
+        self.ui.refocus_keyboard()
     
     def set_active_charset(self, new_charset):
         self.charset_swatch.art.charset = new_charset
@@ -561,11 +565,17 @@ class ToolPopup(UIElement):
             self.draw_tool_tab()
             self.draw_buttons()
     
-    def move_popup_cursor(self, dx, dy):
+    def keyboard_navigate(self, dx, dy):
         active_swatch = self.charset_swatch if self.cursor_char != -1 else self.palette_swatch
         # TODO: can't handle cross-swatch navigation properly, restrict to chars
         active_swatch = self.charset_swatch
-        active_swatch.move_cursor(self.cursor_box, dx, dy)
+        # reverse up/down direction
+        active_swatch.move_cursor(self.cursor_box, dx, -dy)
+    
+    def keyboard_select_item(self):
+        # called as ui.keyboard_focus_element
+        # simulate left/right click in popup to select stuff
+        self.select_key_pressed(self.ui.app.il.shift_pressed)
     
     def select_key_pressed(self, mod_pressed):
         mouse_button = [1, 3][mod_pressed]

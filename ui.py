@@ -56,6 +56,8 @@ class UI:
         self.active_art = active_art
         # dialog box set here
         self.active_dialog = None
+        # keyboard-navigabnle element with current focus
+        self.keyboard_focus_element = None
         # easy color index lookups
         self.colors = UIColors()
         # for UI, view /and/ projection matrix are identity
@@ -603,6 +605,36 @@ class UI:
             self.message_line.post_line(self.show_edit_ui_log % bind, 10)
         else:
             self.message_line.post_line('')
+    
+    def object_selection_changed(self):
+        if len(self.app.gw.selected_objects) == 0:
+            self.keyboard_focus_element = None
+        self.refocus_keyboard()
+    
+    def switch_edit_panel_focus(self):
+        if self.keyboard_focus_element is self.edit_list_panel:
+            self.keyboard_focus_element = self.edit_object_panel
+        elif self.keyboard_focus_element is self.edit_object_panel:
+            self.keyboard_focus_element = self.edit_list_panel
+        # update keyboard hover for both
+        self.edit_object_panel.update_keyboard_hover()
+        self.edit_list_panel.update_keyboard_hover()
+    
+    def refocus_keyboard(self):
+        "called when an element closes, sets new keyboard_focus_element"
+        if self.keyboard_focus_element:
+            return
+        if self.popup.visible:
+            self.keyboard_focus_element = self.popup
+        elif self.pulldown.visible:
+            self.keyboard_focus_element = self.pulldown
+        elif self.edit_list_panel.is_visible() and not self.edit_object_panel.is_visible():
+            self.keyboard_focus_element = self.edit_list_panel
+        elif self.edit_object_panel.is_visible() and not self.edit_list_panel.is_visible():
+            self.keyboard_focus_element = self.edit_object_panel
+    
+    def keyboard_navigate(self, move_x, move_y):
+        self.keyboard_focus_element.keyboard_navigate(move_x, move_y)
     
     def toggle_game_edit_ui(self):
         # if editing is disallowed, only run this once to disable UI

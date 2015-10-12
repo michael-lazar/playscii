@@ -117,8 +117,9 @@ class PulldownMenu(UIElement):
         # reset keyboard nav state for popups
         if reset_keyboard_nav_index:
             self.keyboard_nav_index = 0
-        self.keyboard_navigate(0)
+        self.keyboard_navigate(0, 0)
         self.visible = True
+        self.ui.keyboard_focus_element = self
     
     def draw_border(self, menu_button):
         "draws a fancy lil frame around the pulldown's edge"
@@ -178,19 +179,27 @@ class PulldownMenu(UIElement):
         self.ui.app.log('Shortcut/command not found: %s' % menu_item.command)
         return '', null
     
-    def keyboard_navigate(self, move_dir, nav_offset=0):
+    def keyboard_navigate(self, move_x, move_y, nav_offset=0):
+        # TODO: find a more elegant way to do this
+        if self is self.ui.pulldown:
+            if move_x < 0:
+                self.ui.menu_bar.previous_menu()
+                return
+            elif move_x > 0:
+                self.ui.menu_bar.next_menu()
+                return
         # NOTE: this code is reused by EditListPanel!
         old_idx = self.keyboard_nav_index
-        new_idx = self.keyboard_nav_index + move_dir
-        self.keyboard_nav_index += move_dir
+        new_idx = self.keyboard_nav_index + move_y
+        self.keyboard_nav_index += move_y
         # if button list starts at >0 Y, use an offset
         self.keyboard_nav_index %= len(self.buttons) + nav_offset
         tries = 0
         # recognize two different kinds of inactive items: empty caption and dim state
         while tries < len(self.buttons) and (self.buttons[self.keyboard_nav_index].caption == '' or self.buttons[self.keyboard_nav_index].state == 'dimmed'):
-            # move_dir might be zero, give it a direction to avoid infinite loop
+            # move_y might be zero, give it a direction to avoid infinite loop
             # if menu item 0 is dimmed
-            self.keyboard_nav_index += move_dir or 1
+            self.keyboard_nav_index += move_y or 1
             self.keyboard_nav_index %= len(self.buttons) + nav_offset
             tries += 1
         if tries == len(self.buttons):
@@ -199,7 +208,8 @@ class PulldownMenu(UIElement):
     
     def update_keyboard_hover(self):
         for i,button in enumerate(self.buttons):
-            if self.keyboard_nav_index == i:
+            # don't higlhight if this panel doesn't have focus
+            if self.keyboard_nav_index == i and self is self.ui.keyboard_focus_element:
                 button.set_state('hovered')
             elif button.state != 'dimmed':
                 button.set_state('normal')
