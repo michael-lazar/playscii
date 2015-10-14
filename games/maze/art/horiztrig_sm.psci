@@ -1,0 +1,70 @@
+{
+ "active_frame": 0,
+ "active_layer": 0,
+ "camera": [
+  0.5,
+  -1.0,
+  13.120374326841103
+ ],
+ "charset": "c64_petscii",
+ "frames": [
+  {
+   "delay": 0.1,
+   "layers": [
+    {
+     "name": "Layer 1",
+     "tiles": [
+      {
+       "bg": 0,
+       "char": 69,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 69,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 69,
+       "fg": 2,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0
+    },
+    {
+     "name": "collision",
+     "tiles": [
+      {
+       "bg": 0,
+       "char": 94,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 94,
+       "fg": 8,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 94,
+       "fg": 8,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0.1
+    }
+   ]
+  }
+ ],
+ "height": 1,
+ "palette": "c64_original",
+ "width": 3
+}

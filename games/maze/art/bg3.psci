@@ -1,6 +1,6 @@
 {
  "active_frame": 0,
- "active_layer": 1,
+ "active_layer": 0,
  "camera": [
   13.832260138819835,
   -8.112260138819838,
@@ -1030,7 +1030,7 @@
       },
       {
        "bg": 1,
-       "char": 62,
+       "char": 0,
        "fg": 3,
        "xform": 0
       },

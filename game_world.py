@@ -216,7 +216,7 @@ class GameWorld:
         for obj in self.objects.values():
             obj.destroy()
         self.cl.reset()
-        self.camera.focus_object = None
+        self.camera.reset()
         self.player = None
         self.globals = None
         self.properties = None

@@ -16,8 +16,10 @@ class MazeCritter(GameObject):
     
     def pre_first_update(self):
         self.z = 0.1
+        # TODO: each critter should have its own ArtInstance
         random_color = random.randint(0, len(self.art.palette.colors))
-        self.art.set_all_non_transparent_colors(random_color)
+        for art in self.arts.values():
+            art.set_all_non_transparent_colors(random_color)
     
     def update(self):
         x, y = (random.random() * 2) - 1, (random.random() * 2) - 1

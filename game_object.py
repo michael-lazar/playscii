@@ -127,6 +127,8 @@ class GameObject:
     noncolliding_classes = []
     # set True then False when hitting eg a WarpTrigger to prevent thrashing
     warping = False
+    # if True, warping objects will check us to see if they're no longer warping
+    warps_other = False
     # dict of sound filenames, keys are string "tags"
     sound_filenames = {}
     # looping sounds that should play while in a given state
@@ -661,6 +663,14 @@ class GameObject:
             self.update_facing()
         # update collision shape before CollisionLord resolves any collisions
         self.collision.update()
+        # update "is warping" status
+        still_warping = False
+        for obj_name in self.collision.contacts:
+            if self.world.objects[obj_name].warps_other:
+                still_warping = True
+                break
+        if not still_warping:
+            self.warping = False
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
