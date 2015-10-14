@@ -592,6 +592,7 @@ class UI:
             return
         dialog = dialog_class(self)
         self.active_dialog = dialog
+        self.keyboard_focus_element = self.active_dialog
         # insert dialog at index 0 so it draws first instead of last
         self.elements.insert(0, dialog)
     
@@ -612,8 +613,11 @@ class UI:
         self.refocus_keyboard()
     
     def switch_edit_panel_focus(self):
+        if self.active_dialog and self.edit_list_panel.is_visible():
+            self.keyboard_focus_element = self.edit_list_panel
         if self.keyboard_focus_element is self.edit_list_panel:
-            self.keyboard_focus_element = self.edit_object_panel
+            # prefer to switch to dialog if there is one
+            self.keyboard_focus_element = self.active_dialog or self.edit_object_panel
         elif self.keyboard_focus_element is self.edit_object_panel:
             self.keyboard_focus_element = self.edit_list_panel
         # update keyboard hover for both

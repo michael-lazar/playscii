@@ -128,6 +128,18 @@ class SetRoomCameraItem(PulldownMenuItem):
     def should_dim(app):
         return app.gw.current_room is None
 
+class SetRoomEdgeDestinationsItem(PulldownMenuItem):
+    label = "Set this room's edge warps…"
+    command = 'set_room_edge_warps'
+    def should_dim(app):
+        return app.gw.current_room is None
+
+class SetRoomBoundsObject(PulldownMenuItem):
+    label = "Set this room's edge object…"
+    command = 'set_room_bounds_obj'
+    def should_dim(app):
+        return app.gw.current_room is None
+
 class AddSelectedToCurrentRoomItem(PulldownMenuItem):
     label = 'Add selected objects to this room'
     command = 'add_selected_to_room'
@@ -195,8 +207,9 @@ class GameWorldMenuData(PulldownMenuData):
 
 class GameRoomMenuData(PulldownMenuData):
     items = [ChangeRoomItem, AddRoomItem, RemoveRoomItem, ToogleAllRoomsVizItem,
-             SeparatorItem, SetRoomCameraItem, SetRoomObjectsItem,
-             AddSelectedToCurrentRoomItem, RemoveSelectedFromCurrentRoomItem,
+             SeparatorItem, SetRoomObjectsItem, RemoveSelectedFromCurrentRoomItem,
+             AddSelectedToCurrentRoomItem, SeparatorItem, SetRoomCameraItem, 
+             SetRoomEdgeDestinationsItem, SetRoomBoundsObject,
              SeparatorItem
     ]
     def should_mark_item(item, ui):

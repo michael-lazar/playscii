@@ -39,6 +39,8 @@ class PulldownMenu(UIElement):
     border_vertical_line_char = 79
     mark_char = 131
     all_modes_visible = True
+    support_keyboard_navigation = True
+    keyboard_nav_left_right = True
     
     def open_at(self, menu_button, reset_keyboard_nav_index=True):
         # set X and Y based on calling menu button's location
@@ -178,49 +180,3 @@ class PulldownMenu(UIElement):
                     return shortcut, f
         self.ui.app.log('Shortcut/command not found: %s' % menu_item.command)
         return '', null
-    
-    def keyboard_navigate(self, move_x, move_y, nav_offset=0):
-        # TODO: find a more elegant way to do this
-        if self is self.ui.pulldown:
-            if move_x < 0:
-                self.ui.menu_bar.previous_menu()
-                return
-            elif move_x > 0:
-                self.ui.menu_bar.next_menu()
-                return
-        # NOTE: this code is reused by EditListPanel!
-        old_idx = self.keyboard_nav_index
-        new_idx = self.keyboard_nav_index + move_y
-        self.keyboard_nav_index += move_y
-        # if button list starts at >0 Y, use an offset
-        self.keyboard_nav_index %= len(self.buttons) + nav_offset
-        tries = 0
-        # recognize two different kinds of inactive items: empty caption and dim state
-        while tries < len(self.buttons) and (self.buttons[self.keyboard_nav_index].caption == '' or self.buttons[self.keyboard_nav_index].state == 'dimmed'):
-            # move_y might be zero, give it a direction to avoid infinite loop
-            # if menu item 0 is dimmed
-            self.keyboard_nav_index += move_y or 1
-            self.keyboard_nav_index %= len(self.buttons) + nav_offset
-            tries += 1
-        if tries == len(self.buttons):
-            return
-        self.update_keyboard_hover()
-    
-    def update_keyboard_hover(self):
-        for i,button in enumerate(self.buttons):
-            # don't higlhight if this panel doesn't have focus
-            if self.keyboard_nav_index == i and self is self.ui.keyboard_focus_element:
-                button.set_state('hovered')
-            elif button.state != 'dimmed':
-                button.set_state('normal')
-    
-    def keyboard_select_item(self):
-        button = self.buttons[self.keyboard_nav_index]
-        # don't allow selecting dimmed buttons
-        if button.state == 'dimmed':
-            return
-        if button.cb_arg:
-            button.callback(button.cb_arg)
-        else:
-            button.callback()
-        return button

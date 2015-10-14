@@ -1,15 +1,25 @@
 
+from game_object import GameObject
+
 class GameRoom:
     
     # if set, camera will move to marker with this name when room entered
     camera_marker_name = ''
-    serialized = ['name', 'camera_marker_name']
+    # if set, warp to room OR marker with this name when edge crossed
+    left_edge_warp_dest_name, right_edge_warp_dest_name = '', ''
+    top_edge_warp_dest_name, bottom_edge_warp_dest_name = '', ''
+    # object whose art's bounds should be used as our "edges" for above
+    warp_edge_bounds_obj_name = ''
+    serialized = ['name', 'camera_marker_name', 'left_edge_warp_dest_name',
+                  'right_edge_warp_dest_name', 'top_edge_warp_dest_name',
+                  'bottom_edge_warp_dest_name', 'warp_edge_bounds_obj_name']
     # log changes to and from this room
     log_changes = False
     
     def __init__(self, world, name, room_data=None):
         self.world = world
         self.name = name
+        self.pre_first_update_run = False
         # dict of objects by name:object
         self.objects = {}
         if not room_data:
@@ -33,6 +43,28 @@ class GameRoom:
         # find objects by name and add them
         for obj_name in room_data.get('objects', []):
             self.add_object_by_name(obj_name)
+    
+    def pre_first_update(self):
+        self.reset_edge_warps()
+    
+    def reset_edge_warps(self):
+        self.edge_obj = self.world.objects.get(self.warp_edge_bounds_obj_name, None)
+        # no warping if we don't know our bounds
+        if not self.edge_obj:
+            return
+        edge_dest_name_suffix = '_name'
+        def set_edge_dest(dest_property):
+            # property name to destination name
+            dest_name = getattr(self, dest_property)
+            # get room OR object with name
+            dest_room = self.world.rooms.get(dest_name, None)
+            dest_obj = self.world.objects.get(dest_name, None)
+            # derive member name from serialized property name
+            member_name = dest_property.replace(edge_dest_name_suffix, '')
+            setattr(self, member_name, dest_room or dest_obj or None)
+        for pname in ['left_edge_warp_dest_name', 'right_edge_warp_dest_name',
+                      'top_edge_warp_dest_name', 'bottom_edge_warp_dest_name']:
+            set_edge_dest(pname)
     
     def set_camera_marker_name(self, marker_name):
         if not marker_name in self.world.objects:
@@ -95,6 +127,37 @@ class GameRoom:
             if hasattr(self, prop_name):
                 d[prop_name] = getattr(self, prop_name)
         return d
+    
+    def check_edge_warp(self, gobj):
+        # bail if no bounds or edge warp destinations set
+        if not self.edge_obj:
+            return
+        if not self.left_edge_warp_dest and not self.right_edge_warp_dest and not self.top_edge_warp_dest and not self.bottom_edge_warp_dest:
+            return
+        px, py = gobj.x, gobj.y
+        if self.edge_obj.is_point_inside(px, py):
+            return
+        left, top, right, bottom = self.edge_obj.get_edges()
+        # which edge are we beyond?
+        warp_dest = None
+        if top > py > bottom and px < left:
+            warp_dest = self.left_edge_warp_dest
+        elif top > py > bottom and px > right:
+            warp_dest = self.right_edge_warp_dest
+        elif left < px < right and py > top:
+            warp_dest = self.top_edge_warp_dest
+        elif left < px < right and py < bottom:
+            warp_dest = self.bottom_edge_warp_dest
+        if not warp_dest:
+            return
+        if issubclass(type(warp_dest), GameRoom):
+            self.world.change_room(warp_dest.name)
+        elif issubclass(type(warp_dest), GameObject):
+            gobj.set_loc(warp_dest.x, warp_dest.y)
+    
+    def update(self):
+        if self is self.world.current_room:
+            self.check_edge_warp(self.world.player)
     
     def destroy(self):
         if self.name in self.world.rooms:

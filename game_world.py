@@ -387,6 +387,10 @@ class GameWorld:
             if not obj.pre_first_update_run:
                 obj.pre_first_update()
                 obj.pre_first_update_run = True
+        for room in self.rooms.values():
+            if not room.pre_first_update_run:
+                room.pre_first_update()
+                room.pre_first_update_run = True
     
     def update(self):
         self.mouse_moved(self.app.mouse_dx, self.app.mouse_dy)
@@ -398,6 +402,8 @@ class GameWorld:
                 obj.update()
             if self.collision_enabled:
                 self.cl.resolve_overlaps()
+            for room in self.rooms.values():
+                room.update()
         # display debug text for selected object(s)
         for obj in self.selected_objects:
             s = obj.get_debug_text()

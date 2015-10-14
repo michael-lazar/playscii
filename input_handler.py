@@ -5,10 +5,11 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_dialog import NewArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, ImportEDSCIIDialog, AddRoomDialog, SetRoomCamDialog
+from ui_art_dialog import NewArtDialog, SaveAsDialog, ConvertImageDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportEDSCIIDialog
+from ui_game_dialog import NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, AddRoomDialog, SetRoomCamDialog, SetRoomEdgeWarpsDialog, SetRoomBoundsObjDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog
-from ui_edit_panel import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR
+from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ
 from collision import CT_NONE
 from image_export import export_still_image, export_animation
 from art import ART_DIR, ART_FILE_EXTENSION
@@ -73,7 +74,7 @@ class InputLord:
             self.app.log("SDL2: Couldn't initialize joystick subsystem, code %s" % js_init)
             return
         sticks = sdl2.SDL_NumJoysticks()
-        print('%s gamepads found' % sticks)
+        #self.app.log('%s gamepads found' % sticks)
         self.gamepad = None
         self.gamepad_left_x, self.gamepad_left_y = 0, 0
         # for now, just grab first pad
@@ -82,7 +83,7 @@ class InputLord:
             pad_name = sdl2.SDL_JoystickName(pad).decode('utf-8')
             pad_axes = sdl2.SDL_JoystickNumAxes(pad)
             pad_buttons = sdl2.SDL_JoystickNumButtons(pad)
-            print('Gamepad found: %s with %s axes, %s buttons' % (pad_name, pad_axes, pad_buttons))
+            self.app.log('Gamepad found: %s with %s axes, %s buttons' % (pad_name, pad_axes, pad_buttons))
             self.gamepad = pad
     
     def parse_key_bind(self, in_string):
@@ -170,7 +171,7 @@ class InputLord:
                     self.ui.console.handle_input(event.key.keysym.sym,
                         self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                 # same with dialog box
-                elif self.ui.active_dialog:
+                elif self.ui.active_dialog and self.ui.active_dialog is self.ui.keyboard_focus_element:
                     self.ui.active_dialog.handle_input(event.key.keysym.sym,
                         self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                     sdl2.SDL_PumpEvents()
@@ -620,8 +621,6 @@ class InputLord:
             return
         if not self.ui.active_art:
             return
-        if self.ui.active_dialog:
-            return
         elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
             self.ui.text_tool.start_entry()
         elif self.ui.selected_tool is self.ui.select_tool:
@@ -972,4 +971,13 @@ class InputLord:
             self.app.gw.current_room.remove_object(obj)
     
     def BIND_switch_edit_panel_focus(self):
-        self.app.ui.switch_edit_panel_focus()
+        self.ui.switch_edit_panel_focus()
+    
+    def BIND_set_room_edge_warps(self):
+        # bring up dialog before setting list so list knows about it
+        self.ui.open_dialog(SetRoomEdgeWarpsDialog)
+        self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM_EDGE_WARP)
+    
+    def BIND_set_room_bounds_obj(self):
+        self.ui.open_dialog(SetRoomBoundsObjDialog)
+        self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM_EDGE_OBJ)

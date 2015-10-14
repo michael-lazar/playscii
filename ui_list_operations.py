@@ -1,0 +1,13 @@
+
+# list operations - tells ListPanel what to do when clicked
+
+LO_NONE = 0
+LO_SELECT_OBJECTS = 1
+LO_SET_SPAWN_CLASS = 2
+LO_LOAD_STATE = 3
+LO_SET_ROOM = 4
+LO_SET_ROOM_OBJECTS = 5
+LO_SET_OBJECT_ROOMS = 6
+LO_OPEN_GAME_DIR = 7
+LO_SET_ROOM_EDGE_WARP = 8
+LO_SET_ROOM_EDGE_OBJ = 9

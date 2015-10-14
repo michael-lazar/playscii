@@ -22,9 +22,13 @@ class UIElement:
     # always return True for clicked/unclicked, "consuming" the input
     always_consume_input = False
     buttons = []
+    # if True, use shared keyboard navigation controls
+    support_keyboard_navigation = False
+    keyboard_nav_left_right = False
     # renders in "game mode"
     game_mode_visible = False
     all_modes_visible = False
+    keyboard_nav_offset = 0
     
     def __init__(self, ui):
         self.ui = ui
@@ -41,6 +45,8 @@ class UIElement:
         self.renderables.append(self.renderable)
         self.reset_art()
         self.reset_loc()
+        if self.support_keyboard_navigation:
+            self.keyboard_nav_index = 0
     
     def is_inside(self, x, y):
         "returns True if given point is inside this element's bounds"
@@ -143,6 +149,56 @@ class UIElement:
         elif self.tile_x:
             self.x = -1 + (self.tile_x * self.art.quad_width)
         self.renderable.x, self.renderable.y = self.x, self.y
+    
+    def keyboard_navigate(self, move_x, move_y):
+        if not self.support_keyboard_navigation:
+            return
+        if self.keyboard_nav_left_right:
+            if move_x < 0:
+                self.ui.menu_bar.previous_menu()
+                return
+            elif move_x > 0:
+                self.ui.menu_bar.next_menu()
+                return
+        old_idx = self.keyboard_nav_index
+        new_idx = self.keyboard_nav_index + move_y
+        self.keyboard_nav_index += move_y
+        # if button list starts at >0 Y, use an offset
+        self.keyboard_nav_index %= len(self.buttons) + self.keyboard_nav_offset
+        tries = 0
+        # recognize two different kinds of inactive items: empty caption and dim state
+        while tries < len(self.buttons) and (self.buttons[self.keyboard_nav_index].caption == '' or self.buttons[self.keyboard_nav_index].state == 'dimmed'):
+            # move_y might be zero, give it a direction to avoid infinite loop
+            # if menu item 0 is dimmed
+            self.keyboard_nav_index += move_y or 1
+            self.keyboard_nav_index %= len(self.buttons) + self.keyboard_nav_offset
+            tries += 1
+        if tries == len(self.buttons):
+            return
+        self.update_keyboard_hover()
+    
+    def update_keyboard_hover(self):
+        if not self.support_keyboard_navigation:
+            return
+        for i,button in enumerate(self.buttons):
+            # don't higlhight if this panel doesn't have focus
+            if self.keyboard_nav_index == i and self is self.ui.keyboard_focus_element:
+                button.set_state('hovered')
+            elif button.state != 'dimmed':
+                button.set_state('normal')
+    
+    def keyboard_select_item(self):
+        if not self.support_keyboard_navigation:
+            return
+        button = self.buttons[self.keyboard_nav_index]
+        # don't allow selecting dimmed buttons
+        if button.state == 'dimmed':
+            return
+        if button.cb_arg:
+            button.callback(button.cb_arg)
+        else:
+            button.callback()
+        return button
     
     def update(self):
         "runs every frame, checks button states"
