@@ -7,7 +7,9 @@ demo: paint onto UI art
 "rooms" concept - standardized object that contains/manages:
 - simple room-based traversal:
 -- left/right/top/bottom_edge_warp_dest: marker to warp to when player hits l/r/t/b edge of room
--- warp_bounds_obj: this object's art's bounds determine the room's edges
+--- if this destination marker has a room
+-- "set room edge warps" room menu item, 1 field for each edge
+-- "set room warp bounds object": set this object's art's bounds determine the room's edges
 - ambient sounds (spawn a LocationMarker at room center and play from that?)
 - support dynamically generated room definitions a la ELC2 as well as predefined
 

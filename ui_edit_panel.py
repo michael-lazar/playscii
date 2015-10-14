@@ -2,22 +2,13 @@ import os
 
 from ui_element import UIElement
 from ui_button import UIButton
-from ui_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
+from ui_game_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
 from ui_chooser_dialog import ScrollArrowButton
-from ui_menu_pulldown import PulldownMenu
 from ui_colors import UIColors
 
 from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
+from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ
 
-# list operations - tells list what to do when clicked
-LO_NONE = 0
-LO_SELECT_OBJECTS = 1
-LO_SET_SPAWN_CLASS = 2
-LO_LOAD_STATE = 3
-LO_SET_ROOM = 4
-LO_SET_ROOM_OBJECTS = 5
-LO_SET_OBJECT_ROOMS = 6
-LO_OPEN_GAME_DIR = 7
 
 class GamePanel(UIElement):
     "base class of game edit UI panels"
@@ -28,6 +19,8 @@ class GamePanel(UIElement):
     titlebar_fg = UIColors.white
     titlebar_bg = UIColors.darkgrey
     text_left = True
+    support_keyboard_navigation = True
+    keyboard_nav_offset = -2
     
     def __init__(self, ui):
         self.ui = ui
@@ -84,15 +77,6 @@ class GamePanel(UIElement):
         # always handle input, even if we didn't hit a button
         UIElement.clicked(self, mouse_button)
         return True
-    
-    def keyboard_navigate(self, move_x, move_y):
-        PulldownMenu.keyboard_navigate(self, move_x, move_y, nav_offset=-2)
-    
-    def update_keyboard_hover(self):
-        PulldownMenu.update_keyboard_hover(self)
-    
-    def keyboard_select_item(self):
-        PulldownMenu.keyboard_select_item(self)
 
 
 class ListButton(UIButton):
@@ -128,7 +112,9 @@ class EditListPanel(GamePanel):
         LO_SET_ROOM: 'Change room:',
         LO_SET_ROOM_OBJECTS: "Set objects for %s:",
         LO_SET_OBJECT_ROOMS: "Set rooms for %s:",
-        LO_OPEN_GAME_DIR: 'Open game:'
+        LO_OPEN_GAME_DIR: 'Open game:',
+        LO_SET_ROOM_EDGE_WARP: 'Set edge warp room/object:',
+        LO_SET_ROOM_EDGE_OBJ: 'Set edge bounds object:'
     }
     
     class ListItem:
@@ -152,7 +138,9 @@ class EditListPanel(GamePanel):
                                LO_SET_ROOM: self.list_rooms,
                                LO_SET_ROOM_OBJECTS: self.list_objects,
                                LO_SET_OBJECT_ROOMS: self.list_rooms,
-                               LO_OPEN_GAME_DIR: self.list_games
+                               LO_OPEN_GAME_DIR: self.list_games,
+                               LO_SET_ROOM_EDGE_WARP: self.list_rooms_and_objects,
+                               LO_SET_ROOM_EDGE_OBJ: self.list_objects
         }
         # map list operations to "item clicked" functions
         self.click_functions = {LO_SELECT_OBJECTS: self.select_object,
@@ -161,7 +149,9 @@ class EditListPanel(GamePanel):
                                 LO_SET_ROOM: self.set_room,
                                 LO_SET_ROOM_OBJECTS: self.set_room_object,
                                 LO_SET_OBJECT_ROOMS: self.set_object_room,
-                                LO_OPEN_GAME_DIR: self.open_game_dir
+                                LO_OPEN_GAME_DIR: self.open_game_dir,
+                                LO_SET_ROOM_EDGE_WARP: self.set_room_edge_warp,
+                                LO_SET_ROOM_EDGE_OBJ: self.set_room_bounds_obj
         }
         # separate lists for item buttons vs other controls
         self.list_buttons = []
@@ -231,7 +221,9 @@ class EditListPanel(GamePanel):
             self.list_operation = new_op
             return
         # list is doing something, set us as keyboard focus
-        self.ui.keyboard_focus_element = self
+        # (but not if a dialog just came up)
+        if not self.ui.active_dialog:
+            self.ui.keyboard_focus_element = self
         self.items = []
         self.clear_buttons(self.list_buttons)
         # save old list type's scroll index so we can restore it later
@@ -376,6 +368,14 @@ class EditListPanel(GamePanel):
             items.append(li)
         return items
     
+    def list_rooms_and_objects(self):
+        items = self.list_rooms()
+        # prefix room names with "ROOM:"
+        for i,item in enumerate(items):
+            item.name = 'ROOM: %s' % item.name
+        items += self.list_objects()
+        return items
+    
     def list_none(self):
         return []
     
@@ -416,3 +416,11 @@ class EditListPanel(GamePanel):
     
     def open_game_dir(self, item):
         self.world.set_game_dir(item.name, True)
+    
+    def set_room_edge_warp(self, item):
+        dialog = self.ui.active_dialog
+        dialog.set_field_text(dialog.active_field, item.obj.name)
+    
+    def set_room_bounds_obj(self, item):
+        dialog = self.ui.active_dialog
+        dialog.set_field_text(dialog.active_field, item.obj.name)
