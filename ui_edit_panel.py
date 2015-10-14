@@ -187,9 +187,8 @@ class EditListPanel(GamePanel):
                                  UIColors.medgrey)
     
     def cancel(self):
-        self.list_operation = LO_NONE
+        self.set_list_operation(LO_NONE)
         self.world.classname_to_spawn = None
-        self.ui.refocus_keyboard()
     
     def scroll_list_up(self):
         if self.list_scroll_index > 0:
@@ -219,6 +218,8 @@ class EditListPanel(GamePanel):
             return
         if new_op == LO_NONE:
             self.list_operation = new_op
+            self.ui.keyboard_focus_element = None
+            self.ui.refocus_keyboard()
             return
         # list is doing something, set us as keyboard focus
         # (but not if a dialog just came up)

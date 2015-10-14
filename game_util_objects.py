@@ -212,6 +212,8 @@ class StaticTileTrigger(GameObject):
 
 class WarpTrigger(StaticTileTrigger):
     "warps player to a room/marker when they touch it"
+    art_src = 'trigger_default'
+    warps_other = True
     # if set, warp to this location marker
     destination_marker_name = None
     # if set, make this room the world's current
@@ -224,25 +226,25 @@ class WarpTrigger(StaticTileTrigger):
         # if player overlaps, change room to destination_room
         if not isinstance(other, Player):
             return
+        # TODO: understand why player isn't warping to maze south room B
+        #print('player collided with %s' % self.name)
         # check/set "currently warping" to prevent thrash
         if other.warping:
             other.warping = False
             return
-        warped = False
         if self.destination_room:
             self.world.change_room(self.destination_room)
-            warped = True
-        if self.destination_marker_name:
+            other.warping = True
+            return
+        elif self.destination_marker_name:
             marker = self.world.objects[self.destination_marker_name]
             other.set_loc(marker.x, marker.y, marker.z)
-            warped = True
             # warp to marker's room if specified, but only if it's only in one
             if self.use_marker_room and len(marker.rooms) == 1:
                 room = random.choice(marker.rooms.values())
                 if self.destination_room and room.name != self.destination_room:
                     self.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
                     self.world.change_room(room)
-        if warped:
             other.warping = True
 
 

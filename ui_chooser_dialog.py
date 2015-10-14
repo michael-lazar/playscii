@@ -174,6 +174,7 @@ class ChooserDialog(UIDialog):
             self.current_dir += '/'
         # redo items and redraw
         self.selected_item_index = 0
+        self.scroll_index = 0
         self.set_field_text(self.active_field, self.current_dir)
         self.items = self.get_items()
         self.reset_art(False)

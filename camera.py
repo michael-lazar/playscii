@@ -37,6 +37,9 @@ class Camera:
     
     def __init__(self, app):
         self.app = app
+        self.reset()
+    
+    def reset(self):
         self.x, self.y = self.start_x, self.start_y
         self.z = self.start_zoom
         self.vel_x, self.vel_y, self.vel_z = 0,0,0

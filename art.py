@@ -901,7 +901,7 @@ class TileIter:
     
     def __iter__(self):
         self.frame, self.layer = 0, 0
-        self.x, self.y = 0, 0
+        self.x, self.y = -1, 0
         return self
     
     def __next__(self):
