@@ -4,11 +4,20 @@ current tasks:
 
 demo: paint onto UI art
 
+fix teleport warping:
+- overlap A: warping_to = B, warping_from = A, do warp to B
+- overlap B: if warping_from = our dest, don't
+- obj update: if warping_to is current room, clear it and warping_from
+
+AmbientSoundMarker: child of LocationMarker, has a sound it starts and stops when its room is entered and exited if play_if_room_visible=True, "active" property too and provide functions to start and stop from other script as well
+
 "rooms" concept - standardized object that contains/manages:
-- ambient sounds (spawn a LocationMarker at room center and play from that?)
 - support dynamically generated room definitions a la ELC2 as well as predefined
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
+-- on mouse click, write dict of {obj_name:(xoff,yoff)} of offsets from mouse to each dragged object's origin
+-- on mouse move, update object's loc to mouse + its offset
+-- on mouse unclick, wipe object offset dict
 
 use new file chooser for:
 - convert image (any format supported by PIL)

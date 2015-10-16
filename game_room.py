@@ -150,9 +150,13 @@ class GameRoom:
             warp_dest = self.bottom_edge_warp_dest
         if not warp_dest:
             return
+        if gobj.warped_to_recently([self.name, warp_dest.name]):
+            return
+        gobj.set_warping(warp_dest.name, self.name)
         if issubclass(type(warp_dest), GameRoom):
             self.world.change_room(warp_dest.name)
         elif issubclass(type(warp_dest), GameObject):
+            # TODO: change room or not? use_marker_room flag a la WarpTrigger?
             gobj.set_loc(warp_dest.x, warp_dest.y)
     
     def update(self):

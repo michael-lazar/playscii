@@ -213,7 +213,6 @@ class StaticTileTrigger(GameObject):
 class WarpTrigger(StaticTileTrigger):
     "warps player to a room/marker when they touch it"
     art_src = 'trigger_default'
-    warps_other = True
     # if set, warp to this location marker
     destination_marker_name = None
     # if set, make this room the world's current
@@ -226,26 +225,26 @@ class WarpTrigger(StaticTileTrigger):
         # if player overlaps, change room to destination_room
         if not isinstance(other, Player):
             return
-        # TODO: understand why player isn't warping to maze south room B
-        #print('player collided with %s' % self.name)
-        # check/set "currently warping" to prevent thrash
-        if other.warping:
-            other.warping = False
-            return
         if self.destination_room:
+            if other.warped_to_recently([self.world.current_room.name, self.destination_room]):
+                return
+            other.set_warping(self.destination_room, self.name)
             self.world.change_room(self.destination_room)
-            other.warping = True
-            return
         elif self.destination_marker_name:
+            if other.warped_to_recently([self.world.current_room.name, self.destination_marker_name]):
+                return
             marker = self.world.objects[self.destination_marker_name]
             other.set_loc(marker.x, marker.y, marker.z)
             # warp to marker's room if specified, but only if it's only in one
             if self.use_marker_room and len(marker.rooms) == 1:
                 room = random.choice(marker.rooms.values())
+                # warn if both room and marker are set but they conflict
                 if self.destination_room and room.name != self.destination_room:
                     self.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
-                    self.world.change_room(room)
-            other.warping = True
+                other.set_warping(room.name, self.name)
+                self.world.change_room(room)
+            else:
+                other.set_warping(self.destination_marker_name, self.name)
 
 
 class ObjectSpawner(LocationMarker):
@@ -271,7 +270,7 @@ class ObjectSpawner(LocationMarker):
     def do_spawn(self):
         new_obj = self.world.spawn_object_of_class(self.spawn_class_name,
                                                    self.x, self.y)
-        new_obj.name = self.spawn_obj_name
+        self.world.rename_object(new_obj, self.spawn_obj_name)
         # new object should be in same rooms as us
         new_obj.rooms.update(self.rooms)
         # TODO: put new object in our room(s), apply spawn_obj_data
