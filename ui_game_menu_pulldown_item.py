@@ -114,13 +114,21 @@ class RemoveRoomItem(PulldownMenuItem):
     def should_dim(app):
         return app.gw.current_room is None
 
-class ToogleAllRoomsVizItem(PulldownMenuItem):
+class ToggleAllRoomsVizItem(PulldownMenuItem):
     label = 'blah'
     command = 'toggle_all_rooms_visible'
     def should_dim(app):
         return len(app.gw.rooms) == 0
     def get_label(app):
         return ['Show all rooms', 'Show only current room'][app.gw.show_all_rooms]
+
+class ToggleRoomCamerasItem(PulldownMenuItem):
+    label = '  Camera changes with room'
+    command = 'toggle_room_camera_changes'
+    def should_dim(app):
+        return len(app.gw.rooms) == 0
+    def should_mark(ui):
+        return ui.app.gw.room_camera_changes_enabled
 
 class SetRoomCameraItem(PulldownMenuItem):
     label = "Set this room's camera marker…"
@@ -206,8 +214,9 @@ class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
-    items = [ChangeRoomItem, AddRoomItem, RemoveRoomItem, ToogleAllRoomsVizItem,
-             SeparatorItem, SetRoomObjectsItem, RemoveSelectedFromCurrentRoomItem,
+    items = [ChangeRoomItem, AddRoomItem, RemoveRoomItem, ToggleAllRoomsVizItem,
+             ToggleRoomCamerasItem, SeparatorItem,
+             SetRoomObjectsItem, RemoveSelectedFromCurrentRoomItem,
              AddSelectedToCurrentRoomItem, SeparatorItem, SetRoomCameraItem, 
              SetRoomEdgeDestinationsItem, SetRoomBoundsObject,
              SeparatorItem
@@ -216,6 +225,8 @@ class GameRoomMenuData(PulldownMenuData):
         "show checkmark for current room"
         if not ui.app.gw.current_room:
             return False
+        if hasattr(item, 'should_mark'):
+            return item.should_mark(ui)
         return ui.app.gw.current_room.name == item.cb_arg
     
     def get_items(app):

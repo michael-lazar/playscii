@@ -42,6 +42,8 @@ class GameWorld:
     show_origin_all = False
     # if True, show all rooms not just current one
     show_all_rooms = False
+    # if True, snap camera to new room's associated camera marker
+    room_camera_changes_enabled = True
     builtin_module_names = ['game_object', 'game_util_objects', 'game_hud',
                             'game_room']
     builtin_base_classes = (game_object.GameObject, game_hud.GameHUD,

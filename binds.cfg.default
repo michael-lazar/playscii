@@ -150,5 +150,6 @@ self.edit_bind_src = {
 	'_add_to_room'  : 'add_selected_to_room',
 	'_remove_from_room': 'remove_selected_from_room',
 	'_room_edge_warps': 'set_room_edge_warps',
-	'_room_bounds'  : 'set_room_bounds_obj'
+	'_room_bounds'  : 'set_room_bounds_obj',
+	'_room_cameras' : 'toggle_room_camera_changes'
 }

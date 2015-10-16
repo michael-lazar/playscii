@@ -944,6 +944,10 @@ class InputLord:
         self.app.gw.show_all_rooms = not self.app.gw.show_all_rooms
         self.ui.menu_bar.refresh_active_menu()
     
+    def BIND_toggle_room_camera_changes(self):
+        self.app.gw.properties.set_object_property('room_camera_changes_enabled', not self.app.gw.room_camera_changes_enabled)
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_set_room_camera_marker(self):
         self.ui.open_dialog(SetRoomCamDialog)
     
