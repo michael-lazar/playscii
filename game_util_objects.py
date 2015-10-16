@@ -124,7 +124,7 @@ class WorldPropertiesObject(GameObject):
                    'bg_color_r', 'bg_color_g', 'bg_color_b', 'bg_color_a',
                    'player_camera_lock', 'object_grid_snap', 'draw_hud',
                    'collision_enabled', 'show_collision_all', 'show_bounds_all',
-                   'show_origin_all'
+                   'show_origin_all', 'show_all_rooms', 'room_camera_changes_enabled'
     ]
     serialized = world_props
     # all visible properties are serialized, not editable
@@ -225,14 +225,11 @@ class WarpTrigger(StaticTileTrigger):
         # if player overlaps, change room to destination_room
         if not isinstance(other, Player):
             return
+        if other.warped_recently():
+            return
         if self.destination_room:
-            if other.warped_to_recently([self.world.current_room.name, self.destination_room]):
-                return
-            other.set_warping(self.destination_room, self.name)
             self.world.change_room(self.destination_room)
         elif self.destination_marker_name:
-            if other.warped_to_recently([self.world.current_room.name, self.destination_marker_name]):
-                return
             marker = self.world.objects[self.destination_marker_name]
             other.set_loc(marker.x, marker.y, marker.z)
             # warp to marker's room if specified, but only if it's only in one
@@ -241,10 +238,8 @@ class WarpTrigger(StaticTileTrigger):
                 # warn if both room and marker are set but they conflict
                 if self.destination_room and room.name != self.destination_room:
                     self.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
-                other.set_warping(room.name, self.name)
                 self.world.change_room(room)
-            else:
-                other.set_warping(self.destination_marker_name, self.name)
+        other.last_warp_update = self.world.app.updates
 
 
 class ObjectSpawner(LocationMarker):

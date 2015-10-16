@@ -84,7 +84,8 @@ class GameRoom:
         if self.log_changes:
             self.world.app.log('Room "%s" entered' % self.name)
         # set camera if marker is set
-        self.use_camera_marker()
+        if self.world.room_camera_changes_enabled:
+            self.use_camera_marker()
         # tell objects in this room player has entered so eg spawners can fire
         for obj in self.objects.values():
             obj.room_entered(self, old_room)
@@ -134,6 +135,8 @@ class GameRoom:
             return
         if not self.left_edge_warp_dest and not self.right_edge_warp_dest and not self.top_edge_warp_dest and not self.bottom_edge_warp_dest:
             return
+        if gobj.warped_recently():
+            return
         px, py = gobj.x, gobj.y
         if self.edge_obj.is_point_inside(px, py):
             return
@@ -150,14 +153,12 @@ class GameRoom:
             warp_dest = self.bottom_edge_warp_dest
         if not warp_dest:
             return
-        if gobj.warped_to_recently([self.name, warp_dest.name]):
-            return
-        gobj.set_warping(warp_dest.name, self.name)
         if issubclass(type(warp_dest), GameRoom):
             self.world.change_room(warp_dest.name)
         elif issubclass(type(warp_dest), GameObject):
             # TODO: change room or not? use_marker_room flag a la WarpTrigger?
             gobj.set_loc(warp_dest.x, warp_dest.y)
+        gobj.last_warp_update = self.world.app.updates
     
     def update(self):
         if self is self.world.current_room:

@@ -39,14 +39,6 @@ class GameObjectRenderable(TileRenderable):
             z += off_z
         return x, y, z
 
-class Warp:
-    def __init__(self, obj, dest, src):
-        self.src = obj.world.current_room.name
-        self.dest = dest
-        self.time = obj.world.app.get_elapsed_time()
-    def __str__(self):
-        return 'Warp: to "%s" @ %.2f' % (self.dest, self.time / 1000)
-
 class GameObject:
     
     # if specified, this art will be loaded from disk and used as object's
@@ -82,8 +74,6 @@ class GameObject:
     bounciness = 0.25
     # near-zero point at which velocity is set to zero
     stop_velocity = 0.1
-    # time in seconds before we can warp to same point again
-    warp_cooldown = 0.1
     log_move = False
     log_load = False
     log_spawn = False
@@ -216,8 +206,8 @@ class GameObject:
         # flag that tells us we should run post_init next update
         self.pre_first_update_run = False
         self.last_state = None
-        # recent warp destinations and times, to prevent thrashing
-        self.recent_warps = []
+        # most recent warp world update, to prevent thrashing
+        self.last_warp_update = -1
         if self.animating and self.art.frames > 0:
             self.start_animating()
         if self.log_spawn:
@@ -609,6 +599,9 @@ class GameObject:
         delta = math.sqrt(abs(self.last_x - self.x) ** 2 + abs(self.last_y - self.y) ** 2 + abs(self.last_z - self.z) ** 2)
         return delta > self.stop_velocity
     
+    def warped_recently(self):
+        return self.world.app.updates - self.last_warp_update <= 0
+    
     def update_state(self):
         "update state based on things like movement"
         if self.stand_if_not_moving and not self.moved_this_frame():
@@ -631,28 +624,6 @@ class GameObject:
                 self.play_sound(sound, loops=-1)
             elif self.is_exiting_state(state):
                 self.stop_sound(sound)
-    
-    def set_warping(self, destination_name, source_name):
-        print('%s warping %s to %s' % (source_name, self.name, destination_name))
-        warp = Warp(self, destination_name, source_name)
-        self.recent_warps.append(warp)
-        while len(self.recent_warps) > 3:
-            self.recent_warps.pop(0)
-        #for rw in self.recent_warps:
-        #    print(rw)
-        #print('----')
-    
-    def warped_to_recently(self, destination_names):
-        #if not destination_name:
-        #    return False
-        time = self.world.app.get_elapsed_time()
-        for dest in destination_names:
-            for warp in self.recent_warps:
-                if warp.dest == dest or warp.src == dest:
-                    if time - warp.time < self.warp_cooldown * 1000:
-                        return True
-                print("%s didn't warp to %s recently" % (self.name, warp.dest))
-        return False
     
     def frame_begin(self):
         self.move_x, self.move_y = 0, 0
