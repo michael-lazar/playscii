@@ -575,13 +575,29 @@ class GameWorld:
         d['name'] = obj.name + ' TEMP COPY NAME'
         new_obj = self.spawn_object_from_data(d)
         # give object a non-duplicate name
-        new_obj.rename(new_obj.get_unique_name())
+        self.rename_object(new_obj, new_obj.get_unique_name())
         # tell object's rooms about it
         for room_name in new_obj.rooms:
             self.world.rooms[room_name].add_object(new_obj)
         # update list after changes have been applied to object
         self.app.ui.edit_list_panel.items_changed()
         return new_obj
+    
+    def rename_object(self, obj, new_name):
+        "gives specified object a new name. doesn't accept already-in-use names"
+        self.objects.update(self.new_objects)
+        for other_obj in self.objects.values():
+            if not other_obj is self and other_obj.name == new_name:
+                print("Can't rename %s to %s, name already in use" % (obj.name, new_name))
+                return
+        self.objects.pop(obj.name)
+        old_name = obj.name
+        obj.name = new_name
+        self.objects[obj.name] = obj
+        for room in self.rooms.values():
+            if obj in room.objects.values():
+                room.objects.pop(old_name)
+                room.objects[obj.name] = self
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
         if not class_name in self.classes:
@@ -679,7 +695,6 @@ class GameWorld:
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
         self.hud_class_name = hud_class.__name__
-        
         self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.show_collision_all)

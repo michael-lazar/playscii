@@ -39,6 +39,13 @@ class GameObjectRenderable(TileRenderable):
             z += off_z
         return x, y, z
 
+class Warp:
+    def __init__(self, obj, dest, src):
+        self.src = obj.world.current_room.name
+        self.dest = dest
+        self.time = obj.world.app.get_elapsed_time()
+    def __str__(self):
+        return 'Warp: to "%s" @ %.2f' % (self.dest, self.time / 1000)
 
 class GameObject:
     
@@ -75,6 +82,8 @@ class GameObject:
     bounciness = 0.25
     # near-zero point at which velocity is set to zero
     stop_velocity = 0.1
+    # time in seconds before we can warp to same point again
+    warp_cooldown = 0.1
     log_move = False
     log_load = False
     log_spawn = False
@@ -125,10 +134,6 @@ class GameObject:
     attachment_classes = {}
     # class blacklist for collisions - string names of classes, not class defs
     noncolliding_classes = []
-    # set True then False when hitting eg a WarpTrigger to prevent thrashing
-    warping = False
-    # if True, warping objects will check us to see if they're no longer warping
-    warps_other = False
     # dict of sound filenames, keys are string "tags"
     sound_filenames = {}
     # looping sounds that should play while in a given state
@@ -211,6 +216,8 @@ class GameObject:
         # flag that tells us we should run post_init next update
         self.pre_first_update_run = False
         self.last_state = None
+        # recent warp destinations and times, to prevent thrashing
+        self.recent_warps = []
         if self.animating and self.art.frames > 0:
             self.start_animating()
         if self.log_spawn:
@@ -222,16 +229,8 @@ class GameObject:
         return '%s_%s' % (type(self).__name__, name[name.rfind('x')+1:-1])
     
     def rename(self, new_name):
-        "gives this object a new name. doesn't accept already-in-use names"
-        for obj in self.world.objects.values():
-            if not obj is self and obj.name == new_name:
-                return
-        old_name = self.name
-        self.name = new_name
-        for room in self.world.rooms.values():
-            if self in room.objects.values():
-                room.objects.pop(old_name)
-                room.objects[self.name] = self
+        # pass thru to world, this method exists for edit set method
+        self.world.rename_object(self, new_name)
     
     def pre_first_update(self):
         """
@@ -633,6 +632,28 @@ class GameObject:
             elif self.is_exiting_state(state):
                 self.stop_sound(sound)
     
+    def set_warping(self, destination_name, source_name):
+        print('%s warping %s to %s' % (source_name, self.name, destination_name))
+        warp = Warp(self, destination_name, source_name)
+        self.recent_warps.append(warp)
+        while len(self.recent_warps) > 3:
+            self.recent_warps.pop(0)
+        #for rw in self.recent_warps:
+        #    print(rw)
+        #print('----')
+    
+    def warped_to_recently(self, destination_names):
+        #if not destination_name:
+        #    return False
+        time = self.world.app.get_elapsed_time()
+        for dest in destination_names:
+            for warp in self.recent_warps:
+                if warp.dest == dest or warp.src == dest:
+                    if time - warp.time < self.warp_cooldown * 1000:
+                        return True
+                print("%s didn't warp to %s recently" % (self.name, warp.dest))
+        return False
+    
     def frame_begin(self):
         self.move_x, self.move_y = 0, 0
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
@@ -663,14 +684,6 @@ class GameObject:
             self.update_facing()
         # update collision shape before CollisionLord resolves any collisions
         self.collision.update()
-        # update "is warping" status
-        still_warping = False
-        for obj_name in self.collision.contacts:
-            if self.world.objects[obj_name].warps_other:
-                still_warping = True
-                break
-        if not still_warping:
-            self.warping = False
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
