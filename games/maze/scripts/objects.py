@@ -2,6 +2,7 @@
 import random
 
 from game_object import GameObject
+from game_util_objects import Player
 from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
 
 class MazeCritter(GameObject):
@@ -27,3 +28,19 @@ class MazeCritter(GameObject):
         y *= self.move_rate
         self.move(x, y)
         GameObject.update(self)
+
+
+class MazePickup(GameObject):
+    collision_shape_type = CST_CIRCLE
+    collision_type = CT_GENERIC_DYNAMIC
+    col_radius = 0.5
+    
+    def started_colliding(self, other):
+        if not isinstance(other, Player):
+            return
+        # TODO: make object player's carried item
+        print('got %s!' % self.name)
+
+
+class MazeKey(MazePickup):
+    art_src = 'key'

@@ -1,4 +1,6 @@
 
+import os.path
+
 from game_object import GameObject, FACING_DIRS
 from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
 
@@ -282,3 +284,32 @@ class ObjectSpawner(LocationMarker):
             return
         for obj in self.spawned_objects:
             obj.destroy()
+
+
+class SoundPlayer(LocationMarker):
+    "simple object that plays sound when triggered"
+    # sound to play, minus any extension
+    sound_name = ''
+    # if False, won't play sound when triggered
+    can_play = True
+    play_on_room_enter = True
+    # number of times to loop, if -1 loop indefinitely
+    loops = -1
+    serialized = LocationMarker.serialized + ['sound_name', 'can_play',
+                                              'play_on_room_enter']
+    
+    def __init__(self, world, obj_data=None):
+        LocationMarker.__init__(self, world, obj_data)
+        # find file, try common extensions
+        for ext in ['ogg', 'wav']:
+            filename = '%s.%s' % (self.sound_name, ext)
+            if os.path.exists(self.world.sounds_dir + filename):
+                self.sound_filenames[self.sound_name] = filename
+                return
+        self.world.app.log("Couldn't find sound file %s for SoundPlayer %s" % (self.sound_name, self.name))
+    
+    def room_entered(self, room, old_room):
+        self.play_sound(self.sound_name, self.loops)
+    
+    def room_exited(self, room, new_room):
+        self.stop_sound(self.sound_name)

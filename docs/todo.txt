@@ -4,13 +4,6 @@ current tasks:
 
 demo: paint onto UI art
 
-fix teleport warping:
-- overlap A: warping_to = B, warping_from = A, do warp to B
-- overlap B: if warping_from = our dest, don't
-- obj update: if warping_to is current room, clear it and warping_from
-
-AmbientSoundMarker: child of LocationMarker, has a sound it starts and stops when its room is entered and exited if play_if_room_visible=True, "active" property too and provide functions to start and stop from other script as well
-
 "rooms" concept - standardized object that contains/manages:
 - support dynamically generated room definitions a la ELC2 as well as predefined
 
