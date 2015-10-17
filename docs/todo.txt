@@ -2,6 +2,13 @@ TODO
 
 current tasks:
 
+maze example game:
+- turn west screen into "town" w/ multiple critters milling about
+- lock door into caves
+- quest in forest cave - get key in town, mention "outside"
+- what's to the north?
+- final room = portal to "outside", tilts camera, makes player flash, you can go outside all the rooms (one room with all objects!)
+
 demo: paint onto UI art
 
 "rooms" concept - standardized object that contains/manages:
