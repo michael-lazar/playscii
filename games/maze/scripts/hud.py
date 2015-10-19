@@ -15,7 +15,8 @@ class MazeHUD(GameHUD):
         self.msg.scale_x = 0.1
         self.msg.scale_y = 0.1
         self.current_msg = ''
-        self.post_msg('hellooo')
+        self.msg_art.clear_frame_layer(0, 0, 0, 4)
+        #self.post_msg('hudd')
     
     def post_msg(self, msg_text):
         self.current_msg = msg_text
