@@ -330,6 +330,8 @@ class EditListPanel(GamePanel):
         for obj in all_objects.values():
             if obj.do_not_list:
                 continue
+            if self.world.list_only_current_room_objects and not self.world.current_room.name in obj.rooms:
+                continue
             li = self.ListItem(obj.name, obj)
             items.append(li)
         # sort object names alphabetically

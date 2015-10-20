@@ -1,5 +1,5 @@
 
-import os.path
+import os.path, random
 
 from game_object import GameObject, FACING_DIRS
 from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
@@ -215,6 +215,7 @@ class StaticTileTrigger(GameObject):
 class WarpTrigger(StaticTileTrigger):
     "warps player to a room/marker when they touch it"
     art_src = 'trigger_default'
+    alpha = 0.5
     # if set, warp to this location marker
     destination_marker_name = None
     # if set, make this room the world's current
@@ -222,7 +223,8 @@ class WarpTrigger(StaticTileTrigger):
     # if True, change to destination marker's room
     use_marker_room = True
     serialized = StaticTileTrigger.serialized + ['destination_room',
-                                                 'destination_marker']
+                                                 'destination_marker_name',
+                                                 'use_marker_room']
     def started_colliding(self, other):
         # if player overlaps, change room to destination_room
         if not isinstance(other, Player):
@@ -236,11 +238,11 @@ class WarpTrigger(StaticTileTrigger):
             other.set_loc(marker.x, marker.y, marker.z)
             # warp to marker's room if specified, but only if it's only in one
             if self.use_marker_room and len(marker.rooms) == 1:
-                room = random.choice(marker.rooms.values())
+                room = random.choice(list(marker.rooms.values()))
                 # warn if both room and marker are set but they conflict
                 if self.destination_room and room.name != self.destination_room:
                     self.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
-                self.world.change_room(room)
+                self.world.change_room(room.name)
         other.last_warp_update = self.world.app.updates
 
 
@@ -286,7 +288,7 @@ class ObjectSpawner(LocationMarker):
             obj.destroy()
 
 
-class SoundPlayer(LocationMarker):
+class SoundBlaster(LocationMarker):
     "simple object that plays sound when triggered"
     # sound to play, minus any extension
     sound_name = ''
@@ -306,7 +308,7 @@ class SoundPlayer(LocationMarker):
             if os.path.exists(self.world.sounds_dir + filename):
                 self.sound_filenames[self.sound_name] = filename
                 return
-        self.world.app.log("Couldn't find sound file %s for SoundPlayer %s" % (self.sound_name, self.name))
+        self.world.app.log("Couldn't find sound file %s for SoundBlaster %s" % (self.sound_name, self.name))
     
     def room_entered(self, room, old_room):
         self.play_sound(self.sound_name, self.loops)

@@ -2,12 +2,14 @@ TODO
 
 current tasks:
 
+- "play mode", hides debug stuff like markers and triggers, disables camera nav
+- when renaming rooms/objects, search for and correct references eg warps
+
 maze example game:
-- turn west screen into "town" w/ multiple critters milling about
-- lock door into caves
-- quest in forest cave - get key in town, mention "outside"
-- what's to the north?
-- final room = portal to "outside", tilts camera, makes player flash, you can go outside all the rooms (one room with all objects!)
+- caves and way into forest are blocked by debris axe, enter ruins to access cave where axe is
+- to north, ocean path leading to castle where talisman is
+- to east, clearing with portal which requires talisman to activate
+- portal leads to "outside", tilts camera, makes player flash, you can go outside all the rooms (one room with all objects!)
 
 demo: paint onto UI art
 
