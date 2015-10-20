@@ -84,10 +84,6 @@ class EditWorldPropertiesItem(PulldownMenuItem):
 # room menu
 #
 
-# TODO room menu:
-# [X] list only objects in current room
-# rename room
-
 class ChangeRoomItem(PulldownMenuItem):
     label = 'Change current room…'
     command = 'change_current_room'
@@ -114,6 +110,12 @@ class RemoveRoomItem(PulldownMenuItem):
     def should_dim(app):
         return app.gw.current_room is None
 
+class RenameRoomItem(PulldownMenuItem):
+    label = 'Rename this room…'
+    command = 'rename_current_room'
+    def should_dim(app):
+        return app.gw.current_room is None
+
 class ToggleAllRoomsVizItem(PulldownMenuItem):
     label = 'blah'
     command = 'toggle_all_rooms_visible'
@@ -121,6 +123,14 @@ class ToggleAllRoomsVizItem(PulldownMenuItem):
         return len(app.gw.rooms) == 0
     def get_label(app):
         return ['Show all rooms', 'Show only current room'][app.gw.show_all_rooms]
+
+class ToggleListOnlyRoomObjectItem(PulldownMenuItem):
+    label = '  List only objects in this room'
+    command = 'toggle_list_only_room_objects'
+    def should_dim(app):
+        return len(app.gw.rooms) == 0
+    def should_mark(ui):
+        return ui.app.gw.list_only_current_room_objects
 
 class ToggleRoomCamerasItem(PulldownMenuItem):
     label = '  Camera changes with room'
@@ -214,11 +224,11 @@ class GameWorldMenuData(PulldownMenuData):
     items = [EditWorldPropertiesItem]
 
 class GameRoomMenuData(PulldownMenuData):
-    items = [ChangeRoomItem, AddRoomItem, RemoveRoomItem, ToggleAllRoomsVizItem,
-             ToggleRoomCamerasItem, SeparatorItem,
-             SetRoomObjectsItem, RemoveSelectedFromCurrentRoomItem,
-             AddSelectedToCurrentRoomItem, SeparatorItem, SetRoomCameraItem, 
-             SetRoomEdgeDestinationsItem, SetRoomBoundsObject,
+    items = [ChangeRoomItem, AddRoomItem, RemoveRoomItem, RenameRoomItem,
+             ToggleAllRoomsVizItem, ToggleListOnlyRoomObjectItem, ToggleRoomCamerasItem, SeparatorItem,
+             AddSelectedToCurrentRoomItem, RemoveSelectedFromCurrentRoomItem,
+             SetRoomObjectsItem, SeparatorItem,
+             SetRoomCameraItem, SetRoomEdgeDestinationsItem, SetRoomBoundsObject,
              SeparatorItem
     ]
     def should_mark_item(item, ui):
@@ -258,6 +268,8 @@ class GameRoomMenuData(PulldownMenuData):
             item.command = 'change_current_room_to'
             item.cb_arg = room_name
             items.append(item)
+        # sort room list alphabetically so it's stable, if arbitrary
+        items.sort(key=lambda item: item.label, reverse=False)
         return items
 
 

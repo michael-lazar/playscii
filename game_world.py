@@ -44,6 +44,8 @@ class GameWorld:
     show_all_rooms = False
     # if True, snap camera to new room's associated camera marker
     room_camera_changes_enabled = True
+    # if True, list UI will only show objects in current room
+    list_only_current_room_objects = False
     builtin_module_names = ['game_object', 'game_util_objects', 'game_hud',
                             'game_room']
     builtin_base_classes = (game_object.GameObject, game_hud.GameHUD,
@@ -118,7 +120,9 @@ class GameWorld:
         if self.classname_to_spawn:
             x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
                                                       self.app.mouse_y)
-            self.spawn_object_of_class(self.classname_to_spawn, x, y)
+            new_obj = self.spawn_object_of_class(self.classname_to_spawn, x, y)
+            if self.current_room:
+                self.current_room.add_object(new_obj)
     
     def unclicked(self, button):
         # clicks on UI are consumed and flag world to not accept unclicks
@@ -649,6 +653,17 @@ class GameWorld:
         if old_room:
             old_room.exited(self.current_room)
         self.current_room.entered(old_room)
+    
+    def rename_room(self, room, new_room_name):
+        old_name = room.name
+        room.name = new_room_name
+        self.rooms.pop(old_name)
+        self.rooms[new_room_name] = room
+        # update all objects in this room
+        for obj in self.objects.values():
+            if old_name in obj.rooms:
+                obj.rooms.pop(old_name)
+                obj.rooms[new_room_name] = room
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
         if not os.path.exists(filename):

@@ -139,3 +139,19 @@ class SetRoomBoundsObjDialog(UIDialog):
         room.warp_edge_bounds_obj_name = self.field0_text
         room.reset_edge_warps()
         self.dismiss()
+
+class RenameRoomDialog(UIDialog):
+    title = 'Rename room'
+    fields = 1
+    field0_label = 'New name for current room:'
+    confirm_caption = 'Rename'
+    game_mode_visible = True
+    
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return self.ui.app.gw.current_room.name
+    
+    def confirm_pressed(self):
+        world = self.ui.app.gw
+        world.rename_room(world.current_room, self.field0_text)
+        self.dismiss()
