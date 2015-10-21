@@ -1,4 +1,4 @@
-import os.path, json
+import os.path, json, time
 import numpy as np
 
 from edit_command import CommandStack
@@ -526,6 +526,7 @@ class Art:
     
     def save_to_file(self):
         "build a dict representing all this art's data and write it to disk"
+        start_time = time.time()
         # cursor might be hovering, undo any preview changes
         for edit in self.app.cursor.preview_edits:
             edit.undo()
@@ -570,8 +571,9 @@ class Art:
         # MAYBE-TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
+        end_time = time.time()
         self.set_unsaved_changes(False)
-        self.app.log('saved %s to disk.' % self.filename)
+        self.app.log('saved %s to disk in %.5f seconds' % (self.filename, end_time - start_time))
         # write thumbnail
         new_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
         write_thumbnail(self.app, self.filename, new_thumb_filename)
