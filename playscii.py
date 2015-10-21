@@ -8,6 +8,10 @@ if platform.system() == 'Windows' or platform.system() == 'Darwin':
     os.environ['PYSDL2_DLL_PATH'] = '.'
     sys.path += ['.']
 
+# fix the working directory when running in a mac app
+if platform.system() == 'Darwin' and hasattr(sys, 'frozen'):
+    os.chdir(os.path.abspath(os.path.dirname(sys.executable)))
+
 # app imports
 import ctypes, time, hashlib
 import sdl2
