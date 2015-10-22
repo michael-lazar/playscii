@@ -1,23 +1,17 @@
 {
- "current_room": "starting",
+ "current_room": "tha_next",
  "objects": [
   {
-   "alpha": 1.0,
-   "animating": false,
-   "art_off_pct_x": 0.5,
-   "art_off_pct_y": 0.5,
-   "art_src": "portalBG",
-   "class_name": "StaticTileBG",
-   "facing": 2,
-   "locked": false,
-   "name": "portalBG",
-   "scale_x": 1.0,
-   "scale_y": 1.0,
-   "state": "stand",
-   "visible": true,
-   "x": 26.0,
-   "y": 2.5,
-   "y_sort": false,
+   "art_src": "trigger_default",
+   "class_name": "WarpTrigger",
+   "destination_marker_name": null,
+   "destination_room": "southroom",
+   "locked": true,
+   "name": "Tstart2southA",
+   "use_marker_room": true,
+   "visible": false,
+   "x": -16.0,
+   "y": -13.0,
    "z": 0.0
   },
   {
@@ -42,11 +36,11 @@
   {
    "class_name": "LocationMarker",
    "locked": false,
-   "name": "portalcam",
+   "name": "room2cam",
    "visible": true,
-   "x": 18.824760089659534,
+   "x": -44.10279257082698,
    "y": 4.0,
-   "z": 16.0
+   "z": 17.070995359986807
   },
   {
    "class_name": "ObjectSpawner",
@@ -64,11 +58,30 @@
   {
    "class_name": "LocationMarker",
    "locked": false,
-   "name": "room2cam",
+   "name": "portalcam",
    "visible": true,
-   "x": -44.10279257082698,
+   "x": 18.824760089659534,
    "y": 4.0,
-   "z": 17.070995359986807
+   "z": 16.0
+  },
+  {
+   "alpha": 1.0,
+   "animating": false,
+   "art_off_pct_x": 0.5,
+   "art_off_pct_y": 0.5,
+   "art_src": "lock",
+   "class_name": "MazeLock",
+   "facing": 2,
+   "locked": false,
+   "name": "cavelock2",
+   "scale_x": 1.0,
+   "scale_y": 1.0,
+   "state": "stand",
+   "visible": true,
+   "x": 11.5,
+   "y": 3.5,
+   "y_sort": false,
+   "z": 0.1
   },
   {
    "alpha": 1.0,
@@ -153,6 +166,30 @@
    "z": 0.0
   },
   {
+   "bg_color_a": 0,
+   "bg_color_b": 0,
+   "bg_color_g": 0,
+   "bg_color_r": 0,
+   "camera_x": -44.10279257082698,
+   "camera_y": 4.0,
+   "camera_z": 17.070995359986807,
+   "class_name": "WorldPropertiesObject",
+   "collision_enabled": true,
+   "draw_hud": true,
+   "globals_object_class_name": "WorldGlobalsObject",
+   "gravity_x": 0.0,
+   "gravity_y": 0.0,
+   "gravity_z": 0.0,
+   "hud_class_name": "MazeHUD",
+   "object_grid_snap": true,
+   "player_camera_lock": false,
+   "room_camera_changes_enabled": true,
+   "show_all_rooms": false,
+   "show_bounds_all": false,
+   "show_collision_all": false,
+   "show_origin_all": false
+  },
+  {
    "art_src": "trigger_default",
    "class_name": "WarpTrigger",
    "destination_marker_name": null,
@@ -219,19 +256,19 @@
    "animating": false,
    "art_off_pct_x": 0.5,
    "art_off_pct_y": 0.5,
-   "art_src": "lock",
-   "class_name": "MazeLock",
-   "facing": 2,
+   "art_src": "bg2",
+   "class_name": "StaticTileBG",
+   "facing": 3,
    "locked": false,
-   "name": "cavelock2",
+   "name": "otherBG",
    "scale_x": 1.0,
    "scale_y": 1.0,
    "state": "stand",
    "visible": true,
-   "x": 11.5,
-   "y": 3.5,
+   "x": -44.0,
+   "y": 4.0,
    "y_sort": false,
-   "z": 0.1
+   "z": 0.0
   },
   {
    "alpha": 1.0,
@@ -290,30 +327,6 @@
    "z": 11.429005565617334
   },
   {
-   "bg_color_a": 0,
-   "bg_color_b": 0,
-   "bg_color_g": 0,
-   "bg_color_r": 0,
-   "camera_x": -4.0,
-   "camera_y": 4.0,
-   "camera_z": 16.0,
-   "class_name": "WorldPropertiesObject",
-   "collision_enabled": true,
-   "draw_hud": true,
-   "globals_object_class_name": "WorldGlobalsObject",
-   "gravity_x": 0.0,
-   "gravity_y": 0.0,
-   "gravity_z": 0.0,
-   "hud_class_name": "MazeHUD",
-   "object_grid_snap": true,
-   "player_camera_lock": false,
-   "room_camera_changes_enabled": true,
-   "show_all_rooms": false,
-   "show_bounds_all": false,
-   "show_collision_all": false,
-   "show_origin_all": false
-  },
-  {
    "art_src": "trigger_default",
    "class_name": "WarpTrigger",
    "destination_marker_name": null,
@@ -327,16 +340,22 @@
    "z": 0.1
   },
   {
-   "art_src": "trigger_default",
-   "class_name": "WarpTrigger",
-   "destination_marker_name": null,
-   "destination_room": "southroom",
-   "locked": true,
-   "name": "Tstart2southA",
-   "use_marker_room": true,
-   "visible": false,
-   "x": -16.0,
-   "y": -13.0,
+   "alpha": 1.0,
+   "animating": false,
+   "art_off_pct_x": 0.5,
+   "art_off_pct_y": 0.5,
+   "art_src": "portalBG",
+   "class_name": "StaticTileBG",
+   "facing": 2,
+   "locked": false,
+   "name": "portalBG",
+   "scale_x": 1.0,
+   "scale_y": 1.0,
+   "state": "stand",
+   "visible": true,
+   "x": 26.0,
+   "y": 2.5,
+   "y_sort": false,
    "z": 0.0
   },
   {
@@ -381,29 +400,10 @@
    "scale_y": 1.0,
    "state": "stand",
    "visible": true,
-   "x": -13.847327157466035,
-   "y": 10.719447215019928,
+   "x": -34.365757693640894,
+   "y": 8.502984326568075,
    "y_sort": false,
    "z": 0.1
-  },
-  {
-   "alpha": 1.0,
-   "animating": false,
-   "art_off_pct_x": 0.5,
-   "art_off_pct_y": 0.5,
-   "art_src": "bg2",
-   "class_name": "StaticTileBG",
-   "facing": 3,
-   "locked": false,
-   "name": "otherBG",
-   "scale_x": 1.0,
-   "scale_y": 1.0,
-   "state": "stand",
-   "visible": true,
-   "x": -44.0,
-   "y": 4.0,
-   "y_sort": false,
-   "z": 0.0
   }
  ],
  "rooms": [
@@ -427,6 +427,21 @@
   },
   {
    "bottom_edge_warp_dest_name": "",
+   "camera_marker_name": "southBcam",
+   "class_name": "GameRoom",
+   "left_edge_warp_dest_name": "",
+   "name": "southroomB",
+   "objects": [
+    "southBbg",
+    "southBcam",
+    "SoundBlaster_7fa0ec7e3a58"
+   ],
+   "right_edge_warp_dest_name": "",
+   "top_edge_warp_dest_name": "starting",
+   "warp_edge_bounds_obj_name": "southBbg"
+  },
+  {
+   "bottom_edge_warp_dest_name": "",
    "camera_marker_name": "room2cam",
    "class_name": "GameRoom",
    "left_edge_warp_dest_name": "",
@@ -442,20 +457,6 @@
    "right_edge_warp_dest_name": "starting",
    "top_edge_warp_dest_name": "",
    "warp_edge_bounds_obj_name": "otherBG"
-  },
-  {
-   "bottom_edge_warp_dest_name": "",
-   "camera_marker_name": "roomScam",
-   "class_name": "GameRoom",
-   "left_edge_warp_dest_name": "",
-   "name": "southroom",
-   "objects": [
-    "southBG",
-    "roomScam"
-   ],
-   "right_edge_warp_dest_name": "",
-   "top_edge_warp_dest_name": "starting",
-   "warp_edge_bounds_obj_name": "southBG"
   },
   {
    "bottom_edge_warp_dest_name": "",
@@ -488,18 +489,17 @@
   },
   {
    "bottom_edge_warp_dest_name": "",
-   "camera_marker_name": "southBcam",
+   "camera_marker_name": "roomScam",
    "class_name": "GameRoom",
    "left_edge_warp_dest_name": "",
-   "name": "southroomB",
+   "name": "southroom",
    "objects": [
-    "southBbg",
-    "southBcam",
-    "SoundBlaster_7fa0ec7e3a58"
+    "southBG",
+    "roomScam"
    ],
    "right_edge_warp_dest_name": "",
    "top_edge_warp_dest_name": "starting",
-   "warp_edge_bounds_obj_name": "southBbg"
+   "warp_edge_bounds_obj_name": "southBG"
   },
   {
    "bottom_edge_warp_dest_name": "",
