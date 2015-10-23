@@ -375,6 +375,8 @@ class Thingy(UIElement):
     game_mode_visible = True
     
     def update(self):
+        # TODO: remove when Cursor.world_to_screen is fixed
+        return
         if len(self.ui.app.gw.selected_objects) == 0:
             return
         obj = self.ui.app.gw.selected_objects[0]
