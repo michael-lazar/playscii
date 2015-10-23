@@ -159,6 +159,20 @@ class Cursor:
                 tiles.append((x, y))
         return tiles
     
+    def world_to_screen(self, world_x, world_y, world_z):
+        # TODO: this is broken, fix it!
+        # TODO: move these into a more appropriate class/module
+        vpm = np.matrix(self.app.camera.projection_matrix) + np.matrix(self.app.camera.view_matrix)
+        world_point = np.array([world_x, world_y, world_z, 0]) * vpm
+        print(world_point, world_point.shape)
+        #x, y = world_point[0][0], world_point[1][1]
+        #x, y = world_point[0][0], world_point[0][1]
+        x, y = world_point[0], world_point[1]
+        #print('%s, %s' % (x, y))
+        screen_x = round(((x + 1) / 2.0) * self.app.window_width)
+        screen_y = round(((1 - y) / 2.0) * self.app.window_height)
+        return int(screen_x), int(screen_y)
+    
     def screen_to_world(self, screen_x, screen_y):
         # normalized device coordinates
         x = (2 * screen_x) / self.app.window_width - 1
