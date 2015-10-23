@@ -368,3 +368,15 @@ class DebugTextUI(UIElement):
         if self.clear_lines_after_render:
             self.lines = []
             #self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
+
+
+class Thingy(UIElement):
+    tile_width, tile_height = 10, 1
+    game_mode_visible = True
+    
+    def update(self):
+        if len(self.ui.app.gw.selected_objects) == 0:
+            return
+        obj = self.ui.app.gw.selected_objects[0]
+        self.x, self.y = self.ui.app.cursor.world_to_screen(obj.x, obj.y, obj.z)
+        self.art.write_string(0, 0, 0, 0, obj.name[:self.tile_width-1], -1)

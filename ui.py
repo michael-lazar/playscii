@@ -4,7 +4,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, Thingy
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -113,6 +113,8 @@ class UI:
                           self.message_line, self.debug_text, self.pulldown,
                           self.art_menu_bar, self.game_menu_bar,
                           self.edit_list_panel, self.edit_object_panel]
+        thingy = Thingy(self)
+        self.elements += [thingy]
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
