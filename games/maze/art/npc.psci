@@ -1,0 +1,33 @@
+{
+ "active_frame": 0,
+ "active_layer": 0,
+ "camera": [
+  1,
+  -1.0,
+  16
+ ],
+ "charset": "jpetscii",
+ "frames": [
+  {
+   "delay": 0.1,
+   "layers": [
+    {
+     "name": "Layer 1",
+     "tiles": [
+      {
+       "bg": 0,
+       "char": 251,
+       "fg": 2,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0
+    }
+   ]
+  }
+ ],
+ "height": 1,
+ "palette": "c64_original",
+ "width": 1
+}
