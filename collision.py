@@ -167,25 +167,25 @@ class CollisionLord:
     
     def resolve_overlaps(self):
         iterations = 5
+        # filter shape lists for anything out of room etc
+        valid_dynamic_shapes, valid_static_shapes = [], []
+        for shape in self.dynamic_shapes:
+            if shape.game_object.should_collide():
+                valid_dynamic_shapes.append(shape)
+        for shape in self.static_shapes:
+            if shape.game_object.should_collide():
+                valid_static_shapes.append(shape)
         for i in range(iterations):
             # push all dynamic circles out of each other
-            for a in self.dynamic_shapes:
-                if not a.game_object.should_collide():
-                    continue
-                for b in self.dynamic_shapes:
-                    if not b.game_object.should_collide():
-                        continue
+            for a in valid_dynamic_shapes:
+                for b in valid_dynamic_shapes:
                     if a is b:
                         continue
                     # TODO: handle different shape type combinations
                     collide_circles(a, b)
             # now push all dynamic circles out of all static circles
-            for a in self.dynamic_shapes:
-                if not a.game_object.should_collide():
-                    continue
-                for b in self.static_shapes:
-                    if not b.game_object.should_collide():
-                        continue
+            for a in valid_dynamic_shapes:
+                for b in valid_static_shapes:
                     collide_circles(a, b)
         # check which objects stopped colliding
         for obj in self.world.objects.values():
