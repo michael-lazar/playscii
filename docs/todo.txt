@@ -6,13 +6,9 @@ current tasks:
 - when renaming rooms/objects, search for and correct references eg warps
 
 maze example game:
-- cool animations for portal gate and portal key
 - BG art for outside room (colorful, animating)
 - one-shot sounds: pick up axe, pick up key, pick up talisman, "fall" into ruins, use axe to clear debris, use key to open lock, use talisman with gate, teleport through gate to outside
 - ambient sounds: starting screen, caves, town, ocean, portal
-- clear message line when exiting room
-- fix townsfolk changing player color
-- set z=-0.1 for all BG objects, everything else at z 0
 
 demo: paint onto UI art
 
