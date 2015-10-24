@@ -28,6 +28,7 @@ class MazePlayer(Player):
         pickup.holder = None
     
     def use_item(self):
+        self.world.hud.post_msg(self.held_object.used_message)
         if self.held_object.consume_on_use:
             obj, self.held_object = self.held_object, None
             obj.holder = None

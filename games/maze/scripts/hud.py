@@ -2,6 +2,8 @@
 from game_hud import GameHUD, GameHUDRenderable
 
 class MazeHUD(GameHUD):
+
+    message_color = 4
     
     def __init__(self, world):
         GameHUD.__init__(self, world)
@@ -16,10 +18,9 @@ class MazeHUD(GameHUD):
         self.msg.scale_x = 0.075 * aspect
         self.msg.scale_y = 0.05
         self.current_msg = ''
-        self.msg_art.clear_frame_layer(0, 0, 0, 4)
-        #self.post_msg('hudd')
+        self.msg_art.clear_frame_layer(0, 0, 0, self.message_color)
     
     def post_msg(self, msg_text):
         self.current_msg = msg_text
-        self.msg_art.clear_frame_layer(0, 0, 0, 4)
+        self.msg_art.clear_frame_layer(0, 0, 0, self.message_color)
         self.msg_art.write_string(0, 0, 0, 0, self.current_msg)

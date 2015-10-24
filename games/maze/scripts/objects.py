@@ -1,9 +1,13 @@
 
 import math, random
 
+from art import TileIter
 from game_object import GameObject
 from game_util_objects import Player, StaticTileBG
 from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
+
+class MazeBG(StaticTileBG):
+    z = -0.1
 
 class MazeCritter(GameObject):
     art_src = 'npc'
@@ -68,16 +72,33 @@ class MazePickup(GameObject):
 class MazeKey(MazePickup):
     art_src = 'key'
     display_name = 'a gold key'
+    used_message = 'unlocked!'
 
 class MazeAx(MazePickup):
     art_src = 'ax'
     display_name = 'an ax'
     consume_on_use = False
+    used_message = 'chop!'
 
 class MazePortalKey(MazePickup):
     art_src = 'artifact'
-    # TODO: before artifact is held, change its colors and chars? (after, just its colors)
     display_name = 'the Artifact of Zendor'
+    used_message = '!!??!?!!?!?!?!!'
+    
+    def update(self):
+        MazePickup.update(self)
+        ch, fg, bg, xform = self.art.get_tile_at(0, 0, 0, 0)
+        # before artifact is held, fluctuate char
+        if not self.holder:
+            ch += 1
+            ch %= self.art.charset.last_index
+            if ch == 0:
+                ch = 1
+        # always fluctuate its color
+        fg += 1
+        fg %= len(self.art.palette.colors)
+        self.art.set_tile_at(0, 0, 0, 0, ch, fg, bg, xform)
+
 
 class MazeLock(StaticTileBG):
     art_src = 'lock'
@@ -99,13 +120,41 @@ class MazeLock(StaticTileBG):
         self.visible = False
         other.use_item()
 
+
 class MazeBlockage(MazeLock):
     art_src = 'debris'
     key_type = MazeAx
 
+
 class MazePortalGate(MazeLock):
-    # TODO: animate in a cool way
+    
     art_src = 'portal'
     key_type = MazePortalKey
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
+    
+    def update(self):
+        MazeLock.update(self)
+        if self.collision_type == CT_NONE:
+            if not self.art.is_script_running('conway'):
+                self.art.run_script_every('conway')
+            return
+        # cycle non-black colors
+        BLACK = 1
+        LAST_COLOR = len(self.art.palette.colors) - 1
+        for frame, layer, x, y in TileIter(self.art):
+            ch, fg, bg, xform = self.art.get_tile_at(frame, layer, x, y)
+            # alternate wedge characters
+            if ch == 148:
+                ch = 149
+            elif ch == 149:
+                ch = 148
+            if fg != BLACK:
+                fg += 1
+                if fg > LAST_COLOR:
+                    fg = 2
+            if bg != BLACK:
+                bg += 1
+                if bg > LAST_COLOR:
+                    bg = 2
+            self.art.set_tile_at(frame, layer, x, y, ch, fg, bg, xform)
