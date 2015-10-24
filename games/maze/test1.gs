@@ -62,8 +62,8 @@
    "scale_y": 1.0,
    "state": "stand",
    "visible": true,
-   "x": 9.5,
-   "y": 15.5,
+   "x": 15.5,
+   "y": 1.5,
    "y_sort": false,
    "z": 0.1
   },
@@ -140,30 +140,6 @@
    "z": 0.0
   },
   {
-   "bg_color_a": 0,
-   "bg_color_b": 0,
-   "bg_color_g": 0,
-   "bg_color_r": 0,
-   "camera_x": 9.10333899373129,
-   "camera_y": 6.687236182256069,
-   "camera_z": 18.979871285168425,
-   "class_name": "WorldPropertiesObject",
-   "collision_enabled": true,
-   "draw_hud": true,
-   "globals_object_class_name": "WorldGlobalsObject",
-   "gravity_x": 0.0,
-   "gravity_y": 0.0,
-   "gravity_z": 0.0,
-   "hud_class_name": "MazeHUD",
-   "object_grid_snap": true,
-   "player_camera_lock": false,
-   "room_camera_changes_enabled": true,
-   "show_all_rooms": false,
-   "show_bounds_all": false,
-   "show_collision_all": false,
-   "show_origin_all": false
-  },
-  {
    "art_src": "trigger_default",
    "class_name": "WarpTrigger",
    "destination_marker_name": null,
@@ -179,11 +155,11 @@
   {
    "class_name": "LocationMarker",
    "locked": false,
-   "name": "ruinswarp",
+   "name": "room2cam",
    "visible": true,
-   "x": -59.5,
-   "y": -26.5,
-   "z": 0.1
+   "x": -44.10279257082698,
+   "y": 4.0,
+   "z": 17.070995359986807
   },
   {
    "alpha": 1.0,
@@ -237,8 +213,8 @@
    "scale_y": 1.0,
    "state": "stand",
    "visible": true,
-   "x": -9.858825468598333,
-   "y": 7.5020933494251665,
+   "x": -13.720640023117276,
+   "y": 7.84194180651748,
    "y_sort": false,
    "z": 0.1
   },
@@ -427,6 +403,30 @@
    "z": 0.1
   },
   {
+   "bg_color_a": 0,
+   "bg_color_b": 0,
+   "bg_color_g": 0,
+   "bg_color_r": 0,
+   "camera_x": -4.0,
+   "camera_y": 4.0,
+   "camera_z": 16.0,
+   "class_name": "WorldPropertiesObject",
+   "collision_enabled": true,
+   "draw_hud": true,
+   "globals_object_class_name": "WorldGlobalsObject",
+   "gravity_x": 0.0,
+   "gravity_y": 0.0,
+   "gravity_z": 0.0,
+   "hud_class_name": "MazeHUD",
+   "object_grid_snap": true,
+   "player_camera_lock": false,
+   "room_camera_changes_enabled": true,
+   "show_all_rooms": false,
+   "show_bounds_all": false,
+   "show_collision_all": false,
+   "show_origin_all": false
+  },
+  {
    "class_name": "LocationMarker",
    "locked": false,
    "name": "room1cam",
@@ -450,18 +450,18 @@
    "state": "stand",
    "visible": true,
    "x": -16.5,
-   "y": -13.5,
+   "y": -12.5,
    "y_sort": false,
    "z": 0.1
   },
   {
    "class_name": "LocationMarker",
    "locked": false,
-   "name": "room2cam",
+   "name": "ruinswarp",
    "visible": true,
-   "x": -44.10279257082698,
-   "y": 4.0,
-   "z": 17.070995359986807
+   "x": -59.5,
+   "y": -26.5,
+   "z": 0.1
   },
   {
    "alpha": 1.0,
@@ -499,36 +499,43 @@
   {
    "bottom_edge_warp_dest_name": "",
    "camera_follow_player": true,
-   "camera_marker_name": "ruinscam",
-   "class_name": "GameRoom",
+   "camera_marker_name": "",
+   "class_name": "OutsideRoom",
    "left_edge_warp_dest_name": "",
-   "name": "ruins",
+   "name": "outside",
    "objects": [
+    "southBbg",
+    "southBG",
     "ruinsBG",
-    "ruinscam",
-    "ruinswarp"
+    "portalBG",
+    "startBG",
+    "seaBG",
+    "outsidemark",
+    "otherBG"
    ],
-   "right_edge_warp_dest_name": "southroom",
+   "right_edge_warp_dest_name": "",
    "top_edge_warp_dest_name": "",
-   "warp_edge_bounds_obj_name": "ruinsBG"
+   "warp_edge_bounds_obj_name": ""
   },
   {
    "bottom_edge_warp_dest_name": "",
    "camera_follow_player": false,
-   "camera_marker_name": "room2cam",
+   "camera_marker_name": "room1cam",
    "class_name": "GameRoom",
-   "left_edge_warp_dest_name": "",
-   "name": "tha_next",
+   "left_edge_warp_dest_name": "tha_next",
+   "name": "starting",
    "objects": [
-    "critterspawner2",
-    "critterspawner1",
-    "room2cam",
-    "otherBG",
-    "Ttown2ruins"
+    "Tstart2southB",
+    "Tstart2southA",
+    "MazeBlockage_7fa9d67fd828",
+    "cavelock2",
+    "southblockage",
+    "startBG",
+    "Tstart2southC"
    ],
-   "right_edge_warp_dest_name": "starting",
-   "top_edge_warp_dest_name": "",
-   "warp_edge_bounds_obj_name": "otherBG"
+   "right_edge_warp_dest_name": "portalroom",
+   "top_edge_warp_dest_name": "sea",
+   "warp_edge_bounds_obj_name": "startBG"
   },
   {
    "bottom_edge_warp_dest_name": "",
@@ -596,44 +603,37 @@
   },
   {
    "bottom_edge_warp_dest_name": "",
-   "camera_follow_player": true,
-   "camera_marker_name": "",
-   "class_name": "OutsideRoom",
+   "camera_follow_player": false,
+   "camera_marker_name": "room2cam",
+   "class_name": "GameRoom",
    "left_edge_warp_dest_name": "",
-   "name": "outside",
+   "name": "tha_next",
    "objects": [
-    "southBbg",
-    "southBG",
-    "ruinsBG",
-    "portalBG",
-    "startBG",
-    "seaBG",
-    "outsidemark",
+    "critterspawner2",
+    "critterspawner1",
+    "Ttown2ruins",
+    "room2cam",
     "otherBG"
    ],
-   "right_edge_warp_dest_name": "",
+   "right_edge_warp_dest_name": "starting",
    "top_edge_warp_dest_name": "",
-   "warp_edge_bounds_obj_name": ""
+   "warp_edge_bounds_obj_name": "otherBG"
   },
   {
    "bottom_edge_warp_dest_name": "",
-   "camera_follow_player": false,
-   "camera_marker_name": "room1cam",
+   "camera_follow_player": true,
+   "camera_marker_name": "ruinscam",
    "class_name": "GameRoom",
-   "left_edge_warp_dest_name": "tha_next",
-   "name": "starting",
+   "left_edge_warp_dest_name": "",
+   "name": "ruins",
    "objects": [
-    "Tstart2southB",
-    "Tstart2southA",
-    "MazeBlockage_7fa9d67fd828",
-    "cavelock2",
-    "southblockage",
-    "startBG",
-    "Tstart2southC"
+    "ruinsBG",
+    "ruinscam",
+    "ruinswarp"
    ],
-   "right_edge_warp_dest_name": "portalroom",
-   "top_edge_warp_dest_name": "sea",
-   "warp_edge_bounds_obj_name": "startBG"
+   "right_edge_warp_dest_name": "southroom",
+   "top_edge_warp_dest_name": "",
+   "warp_edge_bounds_obj_name": "ruinsBG"
   }
  ]
 }

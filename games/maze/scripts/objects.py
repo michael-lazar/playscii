@@ -6,9 +6,7 @@ from game_util_objects import Player, StaticTileBG
 from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
 
 class MazeCritter(GameObject):
-    art_src = 'player'
-    state_changes_art = True
-    move_state = 'stand'
+    art_src = 'npc'
     col_radius = 0.5
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
@@ -37,6 +35,7 @@ class MazePickup(GameObject):
     col_radius = 0.5
     
     hold_offset_y = 1.2
+    consume_on_use = True
     
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
@@ -47,13 +46,13 @@ class MazePickup(GameObject):
             return
         if self is other.held_object:
             return
-        self.picked_up(other)
+        other.pick_up(self)
     
-    def picked_up(self, other):
-        other.held_object = self
-        self.holder = other
-        print('got %s!' % self.name)
-        self.collision_type = CT_NONE
+    def stopped_colliding(self, other):
+        if not isinstance(other, Player):
+            return
+        if self is not other.held_object:
+            self.enable_collision()
     
     def update(self):
         GameObject.update(self)
@@ -68,7 +67,17 @@ class MazePickup(GameObject):
 
 class MazeKey(MazePickup):
     art_src = 'key'
+    display_name = 'a gold key'
 
+class MazeAx(MazePickup):
+    art_src = 'ax'
+    display_name = 'an ax'
+    consume_on_use = False
+
+class MazePortalKey(MazePickup):
+    art_src = 'artifact'
+    # TODO: before artifact is held, change its colors and chars? (after, just its colors)
+    display_name = 'the Artifact of Zendor'
 
 class MazeLock(StaticTileBG):
     art_src = 'lock'
@@ -83,12 +92,20 @@ class MazeLock(StaticTileBG):
         if other.held_object and type(other.held_object) is self.key_type:
             self.unlocked(other)
         else:
-            self.world.hud.post_msg('need a key!')
+            self.world.hud.post_msg('need %s!' % self.key_type.display_name)
     
     def unlocked(self, other):
-        self.collision_type = CT_NONE
+        self.disable_collision()
         self.visible = False
-        # consume key
-        other.held_object.destroy()
-        other.held_object = None
-        # TODO: any benefit to destroying? (savegame?)
+        other.use_item()
+
+class MazeBlockage(MazeLock):
+    art_src = 'debris'
+    key_type = MazeAx
+
+class MazePortalGate(MazeLock):
+    # TODO: animate in a cool way
+    art_src = 'portal'
+    key_type = MazePortalKey
+    collision_shape_type = CST_TILE
+    collision_type = CT_GENERIC_STATIC

@@ -339,6 +339,10 @@ class GameObject:
         pass
     
     def stopped_colliding(self, other):
+        if not other.name in self.collision.contacts:
+            # TODO: understand why this spams when player has a MazePickup
+            #self.world.app.log("%s stopped colliding with %s but wasn't in its contacts!" % (self.name, other.name))
+            return
         # called from check_finished_contacts
         self.collision.contacts.pop(other.name)
     

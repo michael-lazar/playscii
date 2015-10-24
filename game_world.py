@@ -21,6 +21,8 @@ class RenderItem:
     def __str__(self):
         return '%s layer %s sort %s' % (self.obj.art.filename, self.layer, self.sort_value)
 
+class GameCamera(Camera):
+    pan_friction = 0.2
 
 class GameWorld:
     
@@ -60,7 +62,7 @@ class GameWorld:
         self.last_click_on_ui = False
         self.properties = None
         self.globals = None
-        self.camera = Camera(self.app)
+        self.camera = GameCamera(self.app)
         self.player = None
         self.paused = False
         self.modules = {'game_object': game_object,
@@ -123,6 +125,7 @@ class GameWorld:
             new_obj = self.spawn_object_of_class(self.classname_to_spawn, x, y)
             if self.current_room:
                 self.current_room.add_object(new_obj)
+            self.app.ui.message_line.post_line('Spawned %s' % new_obj.name)
     
     def unclicked(self, button):
         # clicks on UI are consumed and flag world to not accept unclicks
@@ -360,13 +363,20 @@ class GameWorld:
         s = 'Game %spaused.' % ['un', ''][self.paused]
         self.app.ui.message_line.post_line(s)
     
-    def toggle_player_camera_lock(self):
-        self.player_camera_lock = not self.player_camera_lock
-        if self.player_camera_lock:
-            if self.player:
-                self.camera.focus_object = self.player
-        else:
+    def enable_player_camera_lock(self):
+        if self.player:
+            self.camera.focus_object = self.player
+    
+    def disable_player_camera_lock(self):
+        # change only if player has focus
+        if self.player and self.camera.focus_object is self.player:
             self.camera.focus_object = None
+    
+    def toggle_player_camera_lock(self):
+        if self.player and self.camera.focus_object is self.player:
+            self.disable_player_camera_lock()
+        else:
+            self.enable_player_camera_lock()
     
     def toggle_grid_snap(self):
         self.object_grid_snap = not self.object_grid_snap

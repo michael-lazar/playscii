@@ -5,6 +5,8 @@ class GameRoom:
     
     # if set, camera will move to marker with this name when room entered
     camera_marker_name = ''
+    # if True, camera will follow player while in this room
+    camera_follow_player = False
     # if set, warp to room OR marker with this name when edge crossed
     left_edge_warp_dest_name, right_edge_warp_dest_name = '', ''
     top_edge_warp_dest_name, bottom_edge_warp_dest_name = '', ''
@@ -12,7 +14,8 @@ class GameRoom:
     warp_edge_bounds_obj_name = ''
     serialized = ['name', 'camera_marker_name', 'left_edge_warp_dest_name',
                   'right_edge_warp_dest_name', 'top_edge_warp_dest_name',
-                  'bottom_edge_warp_dest_name', 'warp_edge_bounds_obj_name']
+                  'bottom_edge_warp_dest_name', 'warp_edge_bounds_obj_name',
+                  'camera_follow_player']
     # log changes to and from this room
     log_changes = False
     
@@ -86,6 +89,10 @@ class GameRoom:
         # set camera if marker is set
         if self.world.room_camera_changes_enabled:
             self.use_camera_marker()
+        if self.camera_follow_player:
+            self.world.enable_player_camera_lock()
+        else:
+            self.world.disable_player_camera_lock()
         # tell objects in this room player has entered so eg spawners can fire
         for obj in self.objects.values():
             obj.room_entered(self, old_room)

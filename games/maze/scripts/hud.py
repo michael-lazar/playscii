@@ -5,15 +5,16 @@ class MazeHUD(GameHUD):
     
     def __init__(self, world):
         GameHUD.__init__(self, world)
-        self.msg_art = self.world.app.new_art('mazehud_msg', 20, 1,
+        self.msg_art = self.world.app.new_art('mazehud_msg', 30, 1,
                                               'jpetscii', 'c64_original')
         self.msg = GameHUDRenderable(self.world.app, self.msg_art)
         self.arts = [self.msg_art]
         self.renderables = [self.msg]
         self.msg.x = -0.9
         self.msg.y = 0.9
-        self.msg.scale_x = 0.1
-        self.msg.scale_y = 0.1
+        aspect = self.world.app.window_height / self.world.app.window_width
+        self.msg.scale_x = 0.075 * aspect
+        self.msg.scale_y = 0.05
         self.current_msg = ''
         self.msg_art.clear_frame_layer(0, 0, 0, 4)
         #self.post_msg('hudd')
