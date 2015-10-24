@@ -128,6 +128,9 @@ class GameObject:
     sound_filenames = {}
     # looping sounds that should play while in a given state
     looping_state_sounds = {}
+    # if True, object's update function will run even if it's
+    # outside the world's current room
+    update_if_outside_room = False
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
@@ -679,10 +682,10 @@ class GameObject:
         return self.collision_type != CT_NONE and self.is_in_current_room()
     
     def is_in_room(self, room):
-        return len(self.rooms) == 0 or room in self.rooms.values()
+        return len(self.rooms) == 0 or room.name in self.rooms
     
     def is_in_current_room(self):
-        return len(self.rooms) == 0 or self.world.current_room in self.rooms.values()
+        return len(self.rooms) == 0 or (self.world.current_room and self.world.current_room.name in self.rooms)
     
     def room_entered(self, room, old_room):
         "runs when a room we're in is entered"

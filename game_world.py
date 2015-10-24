@@ -415,7 +415,8 @@ class GameWorld:
         if not self.paused:
             # update objects based on movement, then resolve collisions
             for obj in self.objects.values():
-                obj.update()
+                if obj.is_in_current_room() or obj.update_if_outside_room:
+                    obj.update()
             if self.collision_enabled:
                 self.cl.resolve_overlaps()
             for room in self.rooms.values():
