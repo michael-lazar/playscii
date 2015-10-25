@@ -249,6 +249,7 @@ class Application:
         if not self.can_edit:
             self.enter_game_mode()
             self.ui.set_game_edit_ui_visibility(False, False)
+            self.gw.draw_debug_objects = False
         elif self.gw.game_dir and self.always_launch_art_mode:
             self.exit_game_mode()
     

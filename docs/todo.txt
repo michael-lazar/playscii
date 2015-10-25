@@ -7,8 +7,9 @@ current tasks:
 
 maze example game:
 - BG art for outside room (colorful, animating)
-- one-shot sounds: pick up axe, pick up key, pick up talisman, "fall" into ruins, use axe to clear debris, use key to open lock, use talisman with gate, teleport through gate to outside
-- ambient sounds: starting screen, caves, town, ocean, portal
+- use talisman with gate, teleport through gate to outside
+
+keyboard nav should scroll list box at bottom!
 
 demo: paint onto UI art
 
