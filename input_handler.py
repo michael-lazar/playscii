@@ -992,3 +992,7 @@ class InputLord:
     
     def BIND_rename_current_room(self):
         self.ui.open_dialog(RenameRoomDialog)
+    
+    def BIND_toggle_debug_objects(self):
+        self.app.gw.properties.set_object_property('draw_debug_objects', not self.app.gw.draw_debug_objects)
+        self.ui.menu_bar.refresh_active_menu()

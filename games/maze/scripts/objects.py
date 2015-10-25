@@ -40,6 +40,7 @@ class MazePickup(GameObject):
     
     hold_offset_y = 1.2
     consume_on_use = True
+    sound_filenames = {'pickup': 'pickup.ogg'}
     
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
@@ -57,6 +58,24 @@ class MazePickup(GameObject):
             return
         if self is not other.held_object:
             self.enable_collision()
+    
+    def picked_up(self, new_holder):
+        self.holder = new_holder
+        self.world.hud.post_msg('got %s!' % self.display_name)
+        self.disable_collision()
+        self.play_sound('pickup')
+    
+    def used(self, user):
+        if 'used' in self.sound_filenames:
+            self.play_sound('used')
+        if self.consume_on_use:
+            self.destroy()
+    
+    def destroy(self):
+        if self.holder:
+            self.holder.held_object = None
+            self.holder = None
+        GameObject.destroy(self)
     
     def update(self):
         GameObject.update(self)
@@ -79,11 +98,15 @@ class MazeAx(MazePickup):
     display_name = 'an ax'
     consume_on_use = False
     used_message = 'chop!'
+    # TODO: see if there's a way to add to MazePickup's sound dict here :/
+    sound_filenames = {'pickup': 'pickup.ogg',
+                       'used': 'break.ogg'}
 
 class MazePortalKey(MazePickup):
     art_src = 'artifact'
     display_name = 'the Artifact of Zendor'
     used_message = '!!??!?!!?!?!?!!'
+    sound_filenames = {'pickup': 'artifact.ogg'}
     
     def update(self):
         MazePickup.update(self)
@@ -113,7 +136,7 @@ class MazeLock(StaticTileBG):
         if other.held_object and type(other.held_object) is self.key_type:
             self.unlocked(other)
         else:
-            self.world.hud.post_msg('need %s!' % self.key_type.display_name)
+            self.world.hud.post_msg('blocked - need %s!' % self.key_type.display_name)
     
     def unlocked(self, other):
         self.disable_collision()
@@ -128,7 +151,7 @@ class MazeBlockage(MazeLock):
 
 class MazePortalGate(MazeLock):
     
-    art_src = 'portal'
+    art_src = 'portalgate'
     key_type = MazePortalKey
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
@@ -136,8 +159,8 @@ class MazePortalGate(MazeLock):
     def update(self):
         MazeLock.update(self)
         if self.collision_type == CT_NONE:
-            if not self.art.is_script_running('conway'):
-                self.art.run_script_every('conway')
+            if not self.art.is_script_running('dissolv'):
+                self.art.run_script_every('dissolv')
             return
         # cycle non-black colors
         BLACK = 1
@@ -149,12 +172,23 @@ class MazePortalGate(MazeLock):
                 ch = 149
             elif ch == 149:
                 ch = 148
-            if fg != BLACK:
+            if fg != BLACK and fg != 0:
                 fg += 1
                 if fg > LAST_COLOR:
                     fg = 2
-            if bg != BLACK:
+            if bg != BLACK and bg != 0:
                 bg += 1
                 if bg > LAST_COLOR:
                     bg = 2
+            self.art.set_tile_at(frame, layer, x, y, ch, fg, bg, xform)
+
+
+class MazePortal(GameObject):
+    art_src = 'portal'
+    def update(self):
+        GameObject.update(self)
+        ramps = {11: 10, 10: 3, 3: 11}
+        for frame, layer, x, y in TileIter(self.art):
+            ch, fg, bg, xform = self.art.get_tile_at(frame, layer, x, y)
+            fg = ramps.get(fg, None)
             self.art.set_tile_at(frame, layer, x, y, ch, fg, bg, xform)

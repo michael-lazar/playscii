@@ -1,6 +1,6 @@
 {
  "active_frame": 0,
- "active_layer": 1,
+ "active_layer": 0,
  "camera": [
   5.261098742185768,
   -4.57161302230278,
@@ -15,19 +15,19 @@
      "name": "Layer 1",
      "tiles": [
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
@@ -51,31 +51,31 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
@@ -111,19 +111,19 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 0,
        "xform": 0
@@ -171,7 +171,7 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
@@ -339,7 +339,7 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
@@ -387,19 +387,19 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
@@ -435,31 +435,31 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
@@ -483,19 +483,19 @@
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
-       "bg": 1,
+       "bg": 0,
        "char": 0,
        "fg": 2,
        "xform": 0

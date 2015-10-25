@@ -44,6 +44,8 @@ class GameWorld:
     show_origin_all = False
     # if True, show all rooms not just current one
     show_all_rooms = False
+    # if False, objects with is_debug=True won't be drawn
+    draw_debug_objects = True
     # if True, snap camera to new room's associated camera marker
     room_camera_changes_enabled = True
     # if True, list UI will only show objects in current room
@@ -445,8 +447,10 @@ class GameWorld:
             # filter out objects outside current room here
             # (if no current room or object is in no rooms, render it always)
             in_room = self.current_room is None or obj.is_in_current_room()
+            hide_debug = obj.is_debug and not self.draw_debug_objects
             # respect object's "should render at all" flag
-            if obj.visible and (self.show_all_rooms or in_room):
+            if obj.visible and not hide_debug and \
+               (self.show_all_rooms or in_room):
                 visible_objects.append(obj)
         #
         # process non "Y sort" objects first

@@ -118,6 +118,8 @@ class GameObject:
     selectable = True
     # can delete in edit mode
     deleteable = True
+    # if True, object's visibility can be toggled with View menu option
+    is_debug = False
     # do not list in edit mode UI - system use only!
     do_not_list = False
     # objects to spawn as attachments: key is member name, value is class
