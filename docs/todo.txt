@@ -5,10 +5,6 @@ current tasks:
 - "play mode", hides debug stuff like markers and triggers, disables camera nav
 - when renaming rooms/objects, search for and correct references eg warps
 
-maze example game:
-- BG art for outside room (colorful, animating)
-- use talisman with gate, teleport through gate to outside
-
 keyboard nav should scroll list box at bottom!
 
 demo: paint onto UI art
