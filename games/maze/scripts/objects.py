@@ -106,7 +106,9 @@ class MazePortalKey(MazePickup):
     art_src = 'artifact'
     display_name = 'the Artifact of Zendor'
     used_message = '!!??!?!!?!?!?!!'
-    sound_filenames = {'pickup': 'artifact.ogg'}
+    consume_on_use = False
+    sound_filenames = {'pickup': 'artifact.ogg',
+                       'used': 'portal.ogg'}
     
     def update(self):
         MazePickup.update(self)
@@ -159,8 +161,8 @@ class MazePortalGate(MazeLock):
     def update(self):
         MazeLock.update(self)
         if self.collision_type == CT_NONE:
-            if not self.art.is_script_running('dissolv'):
-                self.art.run_script_every('dissolv')
+            if not self.art.is_script_running('evap'):
+                self.art.run_script_every('evap')
             return
         # cycle non-black colors
         BLACK = 1
@@ -187,6 +189,8 @@ class MazePortal(GameObject):
     art_src = 'portal'
     def update(self):
         GameObject.update(self)
+        if self.world.app.updates % 2 != 0:
+            return
         ramps = {11: 10, 10: 3, 3: 11}
         for frame, layer, x, y in TileIter(self.art):
             ch, fg, bg, xform = self.art.get_tile_at(frame, layer, x, y)
