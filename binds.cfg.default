@@ -153,5 +153,6 @@ self.edit_bind_src = {
 	'_room_bounds'  : 'set_room_bounds_obj',
 	'_room_cameras' : 'toggle_room_camera_changes',
 	'_list_room_objs': 'toggle_list_only_room_objects',
-	'_rename_room'  : 'rename_current_room'
+	'_rename_room'  : 'rename_current_room',
+	'_toggle_debug_objects': 'toggle_debug_objects'
 }

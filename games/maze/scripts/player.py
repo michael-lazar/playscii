@@ -15,9 +15,7 @@ class MazePlayer(Player):
         if self.held_object:
             self.drop(self.held_object, pickup)
         self.held_object = pickup
-        pickup.holder = self
-        self.world.hud.post_msg('got %s!' % pickup.display_name)
-        pickup.disable_collision()
+        pickup.picked_up(self)
     
     def drop(self, pickup, new_pickup=None):
         # drop pickup in place of one we're swapping with, else drop at feet
@@ -29,7 +27,4 @@ class MazePlayer(Player):
     
     def use_item(self):
         self.world.hud.post_msg(self.held_object.used_message)
-        if self.held_object.consume_on_use:
-            obj, self.held_object = self.held_object, None
-            obj.holder = None
-            obj.destroy()
+        self.held_object.used(self)

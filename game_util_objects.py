@@ -126,7 +126,8 @@ class WorldPropertiesObject(GameObject):
                    'bg_color_r', 'bg_color_g', 'bg_color_b', 'bg_color_a',
                    'player_camera_lock', 'object_grid_snap', 'draw_hud',
                    'collision_enabled', 'show_collision_all', 'show_bounds_all',
-                   'show_origin_all', 'show_all_rooms', 'room_camera_changes_enabled'
+                   'show_origin_all', 'show_all_rooms',
+                   'room_camera_changes_enabled', 'draw_debug_objects'
     ]
     serialized = world_props
     # all visible properties are serialized, not editable
@@ -198,10 +199,12 @@ class LocationMarker(GameObject):
     editable = []
     alpha = 0.5
     physics_move = False
+    is_debug = True
 
 
 class StaticTileTrigger(GameObject):
     
+    is_debug = True
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
     noncolliding_classes = ['GameObject']
@@ -214,6 +217,7 @@ class StaticTileTrigger(GameObject):
 
 class WarpTrigger(StaticTileTrigger):
     "warps player to a room/marker when they touch it"
+    is_debug = True
     art_src = 'trigger_default'
     alpha = 0.5
     # if set, warp to this location marker
@@ -248,6 +252,7 @@ class WarpTrigger(StaticTileTrigger):
 
 class ObjectSpawner(LocationMarker):
     "simple object that spawns an object when triggered"
+    is_debug = True
     spawn_class_name = None
     spawn_obj_name = None
     # dict of properties to set on newly spawned object
@@ -290,6 +295,7 @@ class ObjectSpawner(LocationMarker):
 
 class SoundBlaster(LocationMarker):
     "simple object that plays sound when triggered"
+    is_debug = True
     # sound to play, minus any extension
     sound_name = ''
     # if False, won't play sound when triggered

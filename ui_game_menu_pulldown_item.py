@@ -71,6 +71,13 @@ class CameraToObjectsItem(PulldownMenuItem):
     def should_dim(app):
         return len(app.gw.selected_objects) != 1
 
+class ToggleDebugObjectsItem(PulldownMenuItem):
+    label = '  Draw debug objects'
+    command = 'toggle_debug_objects'
+    always_active = True
+    def should_mark(ui):
+        return ui.app.gw.properties.draw_debug_objects
+
 #
 # world menu
 #
@@ -213,7 +220,7 @@ class GameStateMenuData(PulldownMenuData):
 
 class GameViewMenuData(PulldownMenuData):
     items = [ViewToggleCRTItem, ViewToggleCameraTiltItem, SeparatorItem,
-             ObjectsToCameraItem, CameraToObjectsItem]
+             ObjectsToCameraItem, CameraToObjectsItem, ToggleDebugObjectsItem]
     
     def should_mark_item(item, ui):
         if hasattr(item, 'should_mark'):
