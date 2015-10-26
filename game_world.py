@@ -272,7 +272,7 @@ class GameWorld:
             self.load_game_state(self.last_state_loaded)
     
     def set_game_dir(self, dir_name, reset=False):
-        if dir_name == self.game_dir:
+        if self.game_dir and dir_name == self.game_dir:
             self.load_game_state(DEFAULT_STATE_FILENAME)
             return
         # loading a new game, wipe art list
@@ -288,6 +288,8 @@ class GameWorld:
             if not d.endswith('/'):
                 self.game_dir += '/'
             self.app.log('Game data directory is now %s' % self.game_dir)
+            # set sounds dir before loading state; some obj inits depend on it
+            self.sounds_dir = self.game_dir + SOUNDS_DIR
             if reset:
                 # load in a default state, eg start.gs
                 self.load_game_state(DEFAULT_STATE_FILENAME)
@@ -296,10 +298,8 @@ class GameWorld:
                 self.import_all()
                 self.classes = self.get_all_loaded_classes()
             break
-        else:
+        if not self.game_dir:
             self.app.log("Couldn't find game directory %s" % dir_name)
-        if self.game_dir:
-            self.sounds_dir = self.game_dir + SOUNDS_DIR
     
     def remove_non_current_game_modules(self):
         """

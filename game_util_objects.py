@@ -309,9 +309,9 @@ class SoundBlaster(LocationMarker):
     def __init__(self, world, obj_data=None):
         LocationMarker.__init__(self, world, obj_data)
         # find file, try common extensions
-        for ext in ['ogg', 'wav']:
-            filename = '%s.%s' % (self.sound_name, ext)
-            if os.path.exists(self.world.sounds_dir + filename):
+        for ext in ['', '.ogg', '.wav']:
+            filename = self.sound_name + ext
+            if self.world.sounds_dir and os.path.exists(self.world.sounds_dir + filename):
                 self.sound_filenames[self.sound_name] = filename
                 return
         self.world.app.log("Couldn't find sound file %s for SoundBlaster %s" % (self.sound_name, self.name))
