@@ -723,6 +723,10 @@ class GameObject:
     
     def destroy(self):
         self.stop_all_sounds()
+        # remove rooms' references to us
+        for room in self.rooms.values():
+            if self.name in room.objects:
+                room.objects.pop(self.name)
         self.rooms = {}
         if self in self.world.selected_objects:
             self.world.selected_objects.remove(self)
