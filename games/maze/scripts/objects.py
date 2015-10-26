@@ -9,13 +9,17 @@ from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENE
 class MazeBG(StaticTileBG):
     z = -0.1
 
-class MazeCritter(GameObject):
+class MazeNPC(GameObject):
     art_src = 'npc'
     col_radius = 0.5
     collision_shape_type = CST_CIRCLE
-    collision_type = CT_GENERIC_DYNAMIC
-    should_save = False
-    move_rate = 0.5
+    collision_type = CT_GENERIC_STATIC
+    bark = 'Well hello there!'
+    
+    def started_colliding(self, other):
+        if not isinstance(other, Player):
+            return
+        self.world.hud.post_msg(self.bark)
     
     def pre_first_update(self):
         self.z = 0.1
@@ -23,8 +27,21 @@ class MazeCritter(GameObject):
         random_color = random.randint(3, len(self.art.palette.colors))
         for art in self.arts.values():
             art.set_all_non_transparent_colors(random_color)
+
+class MazeBaker(MazeNPC):
+    bark = 'Sorry, all outta bread today!'
+
+class MazeCritter(MazeNPC):
+    
+    "dynamically-spawned NPC that wobbles around"
+    
+    collision_type = CT_GENERIC_DYNAMIC
+    should_save = False
+    move_rate = 0.25
+    bark = 'wheee!'
     
     def update(self):
+        # skitter around randomly
         x, y = (random.random() * 2) - 1, (random.random() * 2) - 1
         x *= self.move_rate
         y *= self.move_rate
@@ -196,3 +213,16 @@ class MazePortal(GameObject):
             ch, fg, bg, xform = self.art.get_tile_at(frame, layer, x, y)
             fg = ramps.get(fg, None)
             self.art.set_tile_at(frame, layer, x, y, ch, fg, bg, xform)
+
+
+class MazeStandingNPC(GameObject):
+    art_src = 'npc'
+    col_radius = 0.5
+    collision_shape_type = CST_CIRCLE
+    collision_type = CT_GENERIC_DYNAMIC
+    bark = 'Well hello there!'
+    
+    def started_colliding(self, other):
+        if not isinstance(other, Player):
+            return
+        self.world.hud.post_msg(self.bark)

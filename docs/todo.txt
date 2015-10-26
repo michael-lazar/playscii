@@ -7,6 +7,8 @@ current tasks:
 
 keyboard nav should scroll list box at bottom!
 
+crash: place object, rename it, exit room
+
 "used" sound for consumable pickups gets immediately cut off by destroy
 
 edit-deleting objects - remove them from room list!
