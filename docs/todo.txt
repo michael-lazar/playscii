@@ -7,6 +7,10 @@ current tasks:
 
 keyboard nav should scroll list box at bottom!
 
+"used" sound for consumable pickups gets immediately cut off by destroy
+
+edit-deleting objects - remove them from room list!
+
 demo: paint onto UI art
 
 "rooms" concept - standardized object that contains/manages:
