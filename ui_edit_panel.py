@@ -241,29 +241,28 @@ class EditListPanel(GamePanel):
         # some labels contain variables
         if '%s' in label:
             if self.list_operation == LO_SET_ROOM_OBJECTS:
-                label %= self.world.current_room.name
+                if self.world.current_room:
+                    label %= self.world.current_room.name
             elif self.list_operation == LO_SET_OBJECT_ROOMS:
-                label %= '[multiple objects]' if len(self.world.selected_objects) > 1 else self.world.selected_objects[0].name
+                if len(self.world.selected_objects) == 1:
+                    label %= self.world.selected_objects[0].name
         return label
     
     def should_highlight(self, item):
         if self.list_operation == LO_SELECT_OBJECTS:
-            if item.obj in self.world.selected_objects:
-                return True
+            return item.obj in self.world.selected_objects
         elif self.list_operation == LO_SET_SPAWN_CLASS:
-            if item.name == self.world.classname_to_spawn:
-                return True
+            return item.name == self.world.classname_to_spawn
         elif self.list_operation == LO_LOAD_STATE:
             last_gs = os.path.basename(self.world.last_state_loaded)
             last_gs = os.path.splitext(last_gs)[0]
-            if item.name == last_gs:
-                return True
+            return item.name == last_gs
         elif self.list_operation == LO_SET_ROOM:
-            if self.world.current_room and item.name == self.world.current_room.name:
-                return True
+            return self.world.current_room and item.name == self.world.current_room.name
         elif self.list_operation == LO_SET_ROOM_OBJECTS:
-            if self.world.current_room and item.name in self.world.current_room.objects:
-                return True
+            return self.world.current_room and item.name in self.world.current_room.objects
+        elif self.list_operation == LO_SET_OBJECT_ROOMS:
+            return len(self.world.selected_objects) == 1 and item.name in self.world.selected_objects[0].rooms
         return False
     
     def game_reset(self):
@@ -414,8 +413,16 @@ class EditListPanel(GamePanel):
             self.world.current_room.add_object_by_name(item.name)
     
     def set_object_room(self, item):
-        # TODO: add/remove room from object
-        pass
+        # UI can only show a single object's rooms, do nothing if many selected
+        if len(self.world.selected_objects) != 1:
+            return
+        # add if not in room, remove if in room
+        obj = self.world.selected_objects[0]
+        room = self.world.rooms[item.name]
+        if room.name in obj.rooms:
+            room.remove_object(obj)
+        else:
+            room.add_object(obj)
     
     def open_game_dir(self, item):
         self.world.set_game_dir(item.name, True)
