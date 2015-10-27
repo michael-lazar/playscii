@@ -73,7 +73,7 @@ class Art:
     - an Art contains 1 or more frames
     - each frame contains 1 or more layers
     - each layer contains WxH tiles
-    - each tile has a character, foreground color, and background color
+    - each tile has: character, foreground color, background color, & transform
     - all layers in an Art are the same dimensions
     """
     quad_width,quad_height = 1, 1
@@ -81,7 +81,7 @@ class Art:
     recalc_quad_height = True
     log_creation = False
     
-    def __init__(self, filename, app, charset, palette, width, height):
+    def __init__(self, filename, app, charset, palette, width, height, auto_update=True):
         "creates a new, blank document"
         self.valid = False
         if filename and not filename.endswith('.%s' % ART_FILE_EXTENSION):
@@ -96,27 +96,14 @@ class Art:
         self.width, self.height = width, height
         # camera position - updated in Art.update, saved in .psci
         self.update_saved_camera(self.app.camera)
-        self.frames = 0
-        # current frame being edited
-        self.active_frame = 0
-        # list of frame delays
-        self.frame_delays = []
-        self.layers = 1
-        # current layer being edited
-        self.active_layer = 0
-        # lists of layer Z values and names
-        self.layers_z = [DEFAULT_LAYER_Z]
-        self.layers_visibility = [True]
-        self.layer_names = ['Layer 1']
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
-        # add one frame to start
-        self.add_frame_to_end(DEFAULT_FRAME_DELAY, False)
-        # clear our single layer to a sensible BG color
-        self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
+        # init frames and layers - ArtFromDisk has its own logic for this
+        self.init_layers()
+        self.init_frames()
         # support non-square characters:
         # derive quad_height from chars aspect; quad_width always 1.0
         if self.recalc_quad_height:
@@ -131,15 +118,41 @@ class Art:
         self.geo_changed = True
         # run update once before renderables initialize so they have
         # something to bind
-        self.update()
+        self.first_update()
         if self.log_creation and not self.app.game_mode:
-            self.app.log('created new document:')
-            self.app.log('  character set: %s' % self.charset.name)
-            self.app.log('  palette: %s' % self.palette.name)
-            self.app.log('  width/height: %s x %s' % (self.width, self.height))
-            self.app.log('  frames: %s' % self.frames)
-            self.app.log('  layers: %s' % self.layers)
+            self.log_init()
         self.valid = True
+    
+    def log_init(self):
+        self.app.log('created new document:')
+        self.app.log('  character set: %s' % self.charset.name)
+        self.app.log('  palette: %s' % self.palette.name)
+        self.app.log('  width/height: %s x %s' % (self.width, self.height))
+        self.app.log('  frames: %s' % self.frames)
+        self.app.log('  layers: %s' % self.layers)
+    
+    def init_layers(self):
+        self.layers = 1
+        # current layer being edited
+        self.active_layer = 0
+        # lists of layer Z values and names
+        self.layers_z = [DEFAULT_LAYER_Z]
+        self.layers_visibility = [True]
+        self.layer_names = ['Layer 1']
+    
+    def init_frames(self):
+        self.frames = 0
+        # current frame being edited
+        self.active_frame = 0
+        # list of frame delays
+        self.frame_delays = []
+        # add one frame to start
+        self.add_frame_to_end(DEFAULT_FRAME_DELAY, False)
+        # clear our single layer to a sensible BG color
+        self.clear_frame_layer(0, 0, bg_color=self.palette.darkest_index)
+    
+    def first_update(self):
+        self.update()
     
     def insert_frame_before_index(self, index, delay=DEFAULT_FRAME_DELAY, log=True):
         "adds a blank frame at the specified index (len+1 to add to end)"
@@ -578,6 +591,10 @@ class Art:
         new_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
         write_thumbnail(self.app, self.filename, new_thumb_filename)
     
+    def create_instance(self):
+        #instance = Art()
+        pass
+    
     def set_unsaved_changes(self, new_status):
         if new_status == self.unsaved_changes:
             return
@@ -715,49 +732,59 @@ class ArtFromDisk(Art):
             d = json.load(open(filename))
         except:
             return
-        self.filename = filename
-        self.app = app
-        self.time_loaded = 0
-        self.width = d['width']
-        self.height = d['height']
-        self.charset = self.app.load_charset(d['charset'])
-        if not self.charset:
-            self.app.log('Character set %s not found!' % d['charset'])
+        width = d['width']
+        height = d['height']
+        charset = app.load_charset(d['charset'])
+        if not charset:
+            app.log('Character set %s not found!' % d['charset'])
             return
-        self.palette = self.app.load_palette(d['palette'])
-        if not self.palette:
-            self.app.log('Palette %s not found!' % d['palette'])
+        palette = app.load_palette(d['palette'])
+        if not palette:
+            app.log('Palette %s not found!' % d['palette'])
             return
-        # use correct character aspect
-        self.quad_height = self.charset.char_height / self.charset.char_width
+        # store loaded data for init_layers/frames
+        self.loaded_data = d
+        # base Art class initializes all vars, thereafter we just populate
+        Art.__init__(self, filename, app, charset, palette,
+                     width, height)
+        # still loading...
+        self.valid = False
         if not self.app.override_saved_camera:
             cam = d['camera']
             self.camera_x, self.camera_y, self.camera_z = cam[0], cam[1], cam[2]
         else:
             self.update_saved_camera(self.app.camera)
-        frames = d['frames']
-        self.frames = len(frames)
-        self.frame_delays = []
-        # active frame will be set properly near end of init
-        self.active_frame = 0
+        # update renderables with new data
+        self.update()
+        # signify to app that this file loaded successfully
+        self.valid = True
+    
+    def log_init(self):
+        self.app.log('Loaded %s from disk:' % filename)
+        self.app.log('  character set: %s' % self.charset.name)
+        self.app.log('  palette: %s' % self.palette.name)
+        self.app.log('  width/height: %s x %s' % (self.width, self.height))
+        self.app.log('  frames: %s' % self.frames)
+        self.app.log('  layers: %s' % self.layers)
+    
+    def init_layers(self):
+        frames = self.loaded_data['frames']
         # number of layers should be same for all frames
         self.layers = len(frames[0]['layers'])
-        # get layer z depths from first frame's data
-        self.layers_z = []
-        self.layers_visibility = []
-        self.layer_names = []
-        # active frame will be set properly near end of init
-        self.active_layer = 0
+        self.layers_z, self.layers_visibility, self.layer_names = [], [], []
         for i,layer in enumerate(frames[0]['layers']):
             self.layers_z.append(layer['z'])
             self.layers_visibility.append(bool(layer.get('visible', 1)))
             layer_num = str(i + 1)
             self.layer_names.append(layer.get('name', 'Layer %s' % layer_num))
-        self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
-        # lists of changed frames
-        self.char_changed_frames, self.uv_changed_frames = [], []
-        self.fg_changed_frames, self.bg_changed_frames = [], []
-        tiles = self.layers * self.width * self.height
+        active_layer = self.loaded_data.get('active_layer', 0)
+        self.set_active_layer(active_layer)
+    
+    def init_frames(self):
+        frames = self.loaded_data['frames']
+        self.frames = len(frames)
+        self.active_frame = 0
+        self.frame_delays = []
         # build tile data arrays from frame+layer lists
         shape = (self.layers, self.height, self.width, 4)
         for frame in frames:
@@ -781,29 +808,13 @@ class ArtFromDisk(Art):
             self.fg_colors.append(fg_colors)
             self.bg_colors.append(bg_colors)
             self.uv_mods.append(uvs)
-        self.renderables = []
-        self.command_stack = CommandStack(self)
-        self.unsaved_changes = False
-        # running scripts and timing info
-        self.scripts = []
-        self.script_rates = []
-        self.scripts_next_exec_time = []
-        self.geo_changed = True
-        # set active frame and layer properly
-        active_frame = d.get('active_frame', 0)
+        # set active frame properly
+        active_frame = self.loaded_data.get('active_frame', 0)
         self.set_active_frame(active_frame)
-        active_layer = d.get('active_layer', 0)
-        self.set_active_layer(active_layer)
-        self.update()
-        if self.log_creation and not self.app.game_mode:
-            self.app.log('Loaded %s from disk:' % filename)
-            self.app.log('  character set: %s' % self.charset.name)
-            self.app.log('  palette: %s' % self.palette.name)
-            self.app.log('  width/height: %s x %s' % (self.width, self.height))
-            self.app.log('  frames: %s' % self.frames)
-            self.app.log('  layers: %s' % self.layers)
-        # signify to app that this file loaded successfully
-        self.valid = True
+    
+    def first_update(self):
+        # do nothing on first update during Art.init; we update after loading
+        pass
 
 
 class ArtFromEDSCII(Art):
@@ -811,6 +822,7 @@ class ArtFromEDSCII(Art):
     file loader for legacy EDSCII format.
     assumes single frames, single layer, default charset and palette.
     """
+    # TODO: make this init more like ArtFromDisk, ie use mostly Art.init
     def __init__(self, filename, app, width_override=None):
         # once load process is complete set this true to signify valid data
         self.valid = False
