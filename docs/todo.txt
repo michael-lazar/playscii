@@ -7,13 +7,9 @@ current tasks:
 
 keyboard nav should scroll list box at bottom!
 
-crash: place object, rename it, exit room
+crash: place object, rename it, exit room (can't repro now?!)
 
 "used" sound for consumable pickups gets immediately cut off by destroy
-
-edit-deleting objects - remove them from room list!
-
-demo: paint onto UI art
 
 "rooms" concept - standardized object that contains/manages:
 - support dynamically generated room definitions a la ELC2 as well as predefined

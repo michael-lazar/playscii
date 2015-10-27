@@ -123,8 +123,14 @@ class GameRoom:
         self.remove_object(obj)
     
     def remove_object(self, obj):
-        self.objects.pop(obj.name)
-        obj.rooms.pop(self.name)
+        if obj.name in self.objects:
+            self.objects.pop(obj.name)
+        else:
+            self.world.app.log("GameRoom %s doesn't contain GameObject %s" % (self.name, obj.name))
+        if self.name in obj.rooms:
+            obj.rooms.pop(self.name)
+        else:
+            self.world.app.log("GameObject %s not found in GameRoom %s" % (obj.name, self.name))
     
     def get_dict(self):
         "return a dict that GameWorld.save_to_file can dump to JSON"
