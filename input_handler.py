@@ -940,6 +940,9 @@ class InputLord:
     def BIND_set_room_objects(self):
         self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM_OBJECTS)
     
+    def BIND_set_object_rooms(self):
+        self.ui.edit_list_panel.set_list_operation(LO_SET_OBJECT_ROOMS)
+    
     def BIND_toggle_all_rooms_visible(self):
         self.app.gw.show_all_rooms = not self.app.gw.show_all_rooms
         self.ui.menu_bar.refresh_active_menu()

@@ -181,9 +181,6 @@ class RemoveSelectedFromCurrentRoomItem(PulldownMenuItem):
 # object menu
 #
 
-# TODO object menu:
-# edit selected's room list... (go to room list)
-
 class SpawnObjectItem(PulldownMenuItem):
     label = 'Spawn object…'
     command = 'choose_spawn_object_class'
@@ -210,6 +207,12 @@ class EditArtForObjectsItem(PulldownMenuItem):
     def should_dim(app):
         return len(app.gw.selected_objects) == 0
 
+class SetObjectRoomsItem(PulldownMenuItem):
+    label = 'Add/remove this object from rooms…'
+    command = 'set_object_rooms'
+    close_on_select = True
+    def should_dim(app):
+        return len(app.gw.selected_objects) != 1
 
 class GameMenuData(PulldownMenuData):
     items = [HideEditUIItem, SeparatorItem, NewGameDirItem, SetGameDirItem,
@@ -282,4 +285,4 @@ class GameRoomMenuData(PulldownMenuData):
 
 class GameObjectMenuData(PulldownMenuData):
     items = [SpawnObjectItem, DuplicateObjectsItem, SeparatorItem,
-             SelectObjectsItem, EditArtForObjectsItem]
+             SelectObjectsItem, EditArtForObjectsItem, SetObjectRoomsItem]

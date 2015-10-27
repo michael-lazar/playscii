@@ -194,7 +194,8 @@ class Cursor:
         # TODO: below doesn't properly account for distance between current
         # layer and camera - close but still inaccurate as cursor gets further
         # from world origin
-        y += self.app.camera.look_y.y
+        #y += self.app.camera.look_y.y
+        y += self.app.camera.y_tilt
         return x, y, z
     
     def undo_preview_edits(self):
