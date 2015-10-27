@@ -25,9 +25,9 @@ Art "instance" capabilities, so a script can change one object using the same as
 -- write Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
 - goals:
+-- multiple objects with the same art can run different scripts (or the same, with unique random permutations) without affecting each other
 -- "save as" should create a new editable art in the session, not replace current one
 -- an object in game mode running scripts on its art shouldn't mess it up in art mode
--- multiple objects with the same art can run different scripts (or the same, with unique random permutations) without affecting each other
 
 
 ---
