@@ -2,9 +2,6 @@ TODO
 
 current tasks:
 
-- "play mode", hides debug stuff like markers and triggers, disables camera nav
-- when renaming rooms/objects, search for and correct references eg warps
-
 keyboard nav should scroll list box at bottom!
 
 crash: place object, rename it, exit room (can't repro now?!)
@@ -24,10 +21,13 @@ use new file chooser for:
 collision:
 - AABB support (sometimes perfectly flat edges are needed)
 
-- Art "instance" capabilities, so a script can change one object using the same as another without affecting both
+Art "instance" capabilities, so a script can change one object using the same as another without affecting both
 -- write Art.copy to create an instance, save a reference to source, "restore" method
 -- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
+- goals:
 -- "save as" should create a new editable art in the session, not replace current one
+-- an object in game mode running scripts on its art shouldn't mess it up in art mode
+-- multiple objects with the same art can run different scripts (or the same, with unique random permutations) without affecting each other
 
 
 ---
@@ -35,6 +35,8 @@ collision:
 new features / major improvements:
 
 grid for game mode? extends in all directions up to a reasonable limit
+
+- when renaming rooms/objects, search for and correct references eg warps
 
 "movement context" for handling movement/physics:
 - move accel, max velocity, stop velocity, gravity (if not global), friction, "specific-axis" bool
