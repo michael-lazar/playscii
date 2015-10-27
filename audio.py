@@ -4,10 +4,11 @@ from sdl2 import sdlmixer
 
 class PlayingSound:
     "represents a currently playing sound"
-    def __init__(self, filename, channel, game_object):
+    def __init__(self, filename, channel, game_object, looping=False):
         self.filename = filename
         self.channel = channel
         self.game_object = game_object
+        self.looping = looping
 
 class AudioLord:
     
@@ -70,7 +71,8 @@ class AudioLord:
         sound = self.register_sound(sound_filename)
         channel = sdlmixer.Mix_PlayChannel(-1, sound, loops)
         # add sound to dicts of playing sounds and channels
-        new_playing_sound = PlayingSound(sound_filename, channel, game_object)
+        new_playing_sound = PlayingSound(sound_filename, channel, game_object,
+                                         loops == -1)
         if sound_filename in self.playing_sounds:
             self.playing_sounds[sound_filename].append(new_playing_sound)
         else:

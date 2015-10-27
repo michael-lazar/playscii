@@ -174,9 +174,9 @@ class Cursor:
         return int(screen_x), int(screen_y)
     
     def screen_to_world(self, screen_x, screen_y):
-        # normalized device coordinates
-        x = (2 * screen_x) / self.app.window_width - 1
-        y = (-2 * screen_y) / self.app.window_height + 1
+        # "normalized device coordinates"
+        ndc_x = (2 * screen_x) / self.app.window_width - 1
+        ndc_y = (-2 * screen_y) / self.app.window_height + 1
         # reverse camera projection
         pjm = np.matrix(self.app.camera.projection_matrix)
         vm = np.matrix(self.app.camera.view_matrix)
@@ -185,15 +185,16 @@ class Cursor:
             z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
         else:
             z = 0
-        point = vp_inverse.dot(np.array([x, y, z, 0]))
+        point = vp_inverse.dot(np.array([ndc_x, ndc_y, z, 0]))
         point = point.getA()
         cz = self.app.camera.z - z
         # apply camera offsets
         x = point[0][0] * cz + self.app.camera.x
         y = point[0][1] * cz + self.app.camera.y
-        # TODO: does below properly account for distance between current
-        # layer and camera? close but maybe still inaccurate
-        y += self.app.camera.y_tilt
+        # TODO: below doesn't properly account for distance between current
+        # layer and camera - close but still inaccurate as cursor gets further
+        # from world origin
+        y += self.app.camera.look_y.y
         return x, y, z
     
     def undo_preview_edits(self):

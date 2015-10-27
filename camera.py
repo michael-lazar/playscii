@@ -42,6 +42,8 @@ class Camera:
     def reset(self):
         self.x, self.y = self.start_x, self.start_y
         self.z = self.start_zoom
+        # store look vectors so world/screen space conversions can refer to it
+        self.look_x, self.look_y, self.look_z = None,None,None
         self.vel_x, self.vel_y, self.vel_z = 0,0,0
         self.mouse_panned, self.moved_this_frame = False, False
         # GameObject to focus on
@@ -88,6 +90,7 @@ class Camera:
         m[1][3] = 0
         m[2][3] = 0
         m[3][3] = 1
+        self.look_x, self.look_y, self.look_z = look_x, look_y, look_z
         self.view_matrix = m
     
     def get_perspective_matrix(self):
