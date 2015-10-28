@@ -2,6 +2,11 @@ TODO
 
 current tasks:
 
+ArtInstance:
+- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
+- "save as" should create a new editable art in the session, not replace current one
+-- for this, it may be better to just save and reload the file under its new name
+
 keyboard nav should scroll list box at bottom!
 
 crash: place object, rename it, exit room (can't repro now?!)
@@ -20,16 +25,6 @@ use new file chooser for:
 
 collision:
 - AABB support (sometimes perfectly flat edges are needed)
-
-Art "instance" capabilities, so a script can change one object using the same as another without affecting both
--- write Art.copy to create an instance, save a reference to source, "restore" method
--- GameObject has its own "run script once / every N seconds" function which talks to its art instance, also function which calls art instance's "restore"
-- goals:
--- multiple objects with the same art can run different scripts (or the same, with unique random permutations) without affecting each other
--- "save as" should create a new editable art in the session, not replace current one
---- for this, it may be better to just save and reload the file under its new name
--- an object in game mode running scripts on its art shouldn't mess it up in art mode
-
 
 ---
 
