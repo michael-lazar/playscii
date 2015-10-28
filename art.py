@@ -543,9 +543,8 @@ class Art:
         # update instances if we chaned
         if self.changed_this_frame() and self.instances:
             for instance in self.instances:
-                print('%s will change' % instance.filename)
                 if instance.update_when_source_changes:
-                    instance.deep_copy_source()
+                    instance.restore_from_source()
         # empty lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
@@ -845,10 +844,17 @@ class ArtInstance(Art):
         self.filename = '%s_Instance%i' % (source.filename, time.time())
         self.app = source.app
         self.instances = None
-        self.deep_copy_source()
+        self.char_changed_frames, self.uv_changed_frames = [], []
+        self.fg_changed_frames, self.bg_changed_frames = [], []
+        # init lists that should be retained across refreshes
+        self.scripts = []
+        self.script_rates = []
+        self.scripts_next_exec_time = []
+        self.renderables = []
+        self.restore_from_source()
         self.source.instances.append(self)
     
-    def deep_copy_source(self):
+    def restore_from_source(self):
         # copy common references/values
         for prop in ['app', 'width', 'height', 'charset', 'palette',
                      'quad_width', 'quad_height', 'layers', 'frames']:
@@ -858,7 +864,7 @@ class ArtInstance(Art):
         self.layers_visibility = self.source.layers_visibility[:]
         self.layer_names = self.source.layer_names[:]
         self.frame_delays = self.source.frame_delays[:]
-        # clone tile data lists
+        # deep copy tile data lists
         self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
         for frame_chars in self.source.chars:
             self.chars.append(frame_chars.copy())
@@ -868,13 +874,8 @@ class ArtInstance(Art):
             self.fg_colors.append(frame_fg_colors.copy())
         for frame_bg_colors in self.source.bg_colors:
             self.bg_colors.append(frame_bg_colors.copy())
-        self.char_changed_frames, self.uv_changed_frames = [], []
-        self.fg_changed_frames, self.bg_changed_frames = [], []
-        self.renderables = []
-        self.scripts = []
-        self.script_rates = []
-        self.scripts_next_exec_time = []
         self.geo_changed = True
+        self.mark_all_frames_changed()
         self.update()
 
 
