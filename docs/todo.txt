@@ -2,10 +2,6 @@ TODO
 
 current tasks:
 
-ArtInstance:
-- "save as" should create a new editable art in the session, not replace current one
--- for this, it may be better to just save and reload the file under its new name
-
 "used" sound for consumable pickups gets immediately cut off by destroy (allow non-looping sounds to finish even if their object gets destroyed
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
