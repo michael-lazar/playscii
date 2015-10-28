@@ -24,6 +24,7 @@ class UIElement:
     buttons = []
     # if True, use shared keyboard navigation controls
     support_keyboard_navigation = False
+    support_scrolling = False
     keyboard_nav_left_right = False
     # renders in "game mode"
     game_mode_visible = False
@@ -163,18 +164,20 @@ class UIElement:
         old_idx = self.keyboard_nav_index
         new_idx = self.keyboard_nav_index + move_y
         self.keyboard_nav_index += move_y
-        # if button list starts at >0 Y, use an offset
-        self.keyboard_nav_index %= len(self.buttons) + self.keyboard_nav_offset
-        tries = 0
-        # recognize two different kinds of inactive items: empty caption and dim state
-        while tries < len(self.buttons) and (self.buttons[self.keyboard_nav_index].caption == '' or self.buttons[self.keyboard_nav_index].state == 'dimmed'):
-            # move_y might be zero, give it a direction to avoid infinite loop
-            # if menu item 0 is dimmed
-            self.keyboard_nav_index += move_y or 1
+        if not self.support_scrolling:
+            # if button list starts at >0 Y, use an offset
             self.keyboard_nav_index %= len(self.buttons) + self.keyboard_nav_offset
-            tries += 1
-        if tries == len(self.buttons):
-            return
+            tries = 0
+            # recognize two different kinds of inactive items: empty caption and dim state
+            while tries < len(self.buttons) and (self.buttons[self.keyboard_nav_index].caption == '' or self.buttons[self.keyboard_nav_index].state == 'dimmed'):
+                # move_y might be zero, give it a direction to avoid infinite loop
+                # if menu item 0 is dimmed
+                self.keyboard_nav_index += move_y or 1
+                self.keyboard_nav_index %= len(self.buttons) + self.keyboard_nav_offset
+                tries += 1
+            if tries == len(self.buttons):
+                return
+        self.post_keyboard_navigate()
         self.update_keyboard_hover()
     
     def update_keyboard_hover(self):
@@ -199,6 +202,10 @@ class UIElement:
         else:
             button.callback()
         return button
+    
+    def post_keyboard_navigate(self):
+        # subclasses can put stuff here to check scrolling etc
+        pass
     
     def update(self):
         "runs every frame, checks button states"

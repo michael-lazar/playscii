@@ -20,6 +20,7 @@ class GamePanel(UIElement):
     titlebar_bg = UIColors.darkgrey
     text_left = True
     support_keyboard_navigation = True
+    support_scrolling = True
     keyboard_nav_offset = -2
     
     def __init__(self, ui):
@@ -295,6 +296,27 @@ class EditListPanel(GamePanel):
                 else:
                     self.reset_button(b)
         self.draw_buttons()
+    
+    def post_keyboard_navigate(self):
+        # check for scrolling
+        if len(self.items) <= len(self.list_buttons):
+            return
+        # wrap if at end of list
+        if self.keyboard_nav_index + self.list_scroll_index >= len(self.items):
+            self.keyboard_nav_index = 0
+            self.list_scroll_index = 0
+        # scroll down
+        elif self.keyboard_nav_index >= len(self.list_buttons):
+            self.scroll_list_down()
+            self.keyboard_nav_index -= 1
+        # wrap if at top of list
+        elif self.list_scroll_index == 0 and self.keyboard_nav_index < 0:
+            self.list_scroll_index = len(self.items) - len(self.list_buttons)
+            self.keyboard_nav_index = len(self.list_buttons) - 1
+        # scroll up
+        elif self.keyboard_nav_index < 0:
+            self.scroll_list_up()
+            self.keyboard_nav_index += 1
     
     def update(self):
         if self.should_reset_list:
