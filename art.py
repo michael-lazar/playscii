@@ -110,6 +110,8 @@ class Art:
             self.quad_height *= self.charset.char_height / self.charset.char_width
         # list of TileRenderables using us - each new Renderable adds itself
         self.renderables = []
+        # list of ArtInstances using us as their source
+        self.instances = []
         # running scripts and timing info
         self.scripts = []
         self.script_rates = []
@@ -514,6 +516,12 @@ class Art:
     def update_saved_camera(self, camera):
         self.camera_x, self.camera_y, self.camera_z = camera.x, camera.y, camera.z
     
+    def changed_this_frame(self):
+        return self.geo_changed or len(self.char_changed_frames) > 0 or \
+            len(self.uv_changed_frames) > 0 or \
+            len(self.fg_changed_frames) > 0 or \
+            len(self.bg_changed_frames) > 0
+    
     def update(self):
         self.update_scripts()
         # update our camera if we're active
@@ -532,6 +540,12 @@ class Art:
             do_bg = r.frame in self.bg_changed_frames
             if do_char or do_fg or do_bg or do_uvs:
                 r.update_tile_buffers(do_char, do_uvs, do_fg, do_bg)
+        # update instances if we chaned
+        if self.changed_this_frame() and self.instances:
+            for instance in self.instances:
+                print('%s will change' % instance.filename)
+                if instance.update_when_source_changes:
+                    instance.deep_copy_source()
         # empty lists of changed frames
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
@@ -815,6 +829,53 @@ class ArtFromDisk(Art):
     def first_update(self):
         # do nothing on first update during Art.init; we update after loading
         pass
+
+
+class ArtInstance(Art):
+    
+    """
+    deep copy / clone of a source Art that can hold unique changes and be
+    restored to source
+    """
+    update_when_source_changes = True
+    
+    def __init__(self, source):
+        self.source = source
+        # unique(?) filename
+        self.filename = '%s_Instance%i' % (source.filename, time.time())
+        self.app = source.app
+        self.instances = None
+        self.deep_copy_source()
+        self.source.instances.append(self)
+    
+    def deep_copy_source(self):
+        # copy common references/values
+        for prop in ['app', 'width', 'height', 'charset', 'palette',
+                     'quad_width', 'quad_height', 'layers', 'frames']:
+            setattr(self, prop, getattr(self.source, prop))
+        # copy lists
+        self.layers_z = self.source.layers_z[:]
+        self.layers_visibility = self.source.layers_visibility[:]
+        self.layer_names = self.source.layer_names[:]
+        self.frame_delays = self.source.frame_delays[:]
+        # clone tile data lists
+        self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
+        for frame_chars in self.source.chars:
+            self.chars.append(frame_chars.copy())
+        for frame_uvs in self.source.uv_mods:
+            self.uv_mods.append(frame_uvs.copy())
+        for frame_fg_colors in self.source.fg_colors:
+            self.fg_colors.append(frame_fg_colors.copy())
+        for frame_bg_colors in self.source.bg_colors:
+            self.bg_colors.append(frame_bg_colors.copy())
+        self.char_changed_frames, self.uv_changed_frames = [], []
+        self.fg_changed_frames, self.bg_changed_frames = [], []
+        self.renderables = []
+        self.scripts = []
+        self.script_rates = []
+        self.scripts_next_exec_time = []
+        self.geo_changed = True
+        self.update()
 
 
 class ArtFromEDSCII(Art):
