@@ -9,10 +9,6 @@ fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 -- on mouse move, update object's loc to mouse + its offset
 -- on mouse unclick, wipe object offset dict
 
-use new file chooser for:
-- convert image (any format supported by PIL)
-- create palette from image (same)
-
 collision:
 - AABB support (sometimes perfectly flat edges are needed)
 

@@ -6,6 +6,7 @@ from PIL import Image
 from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
 from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand, ConvertImageCommand
+from ui_art_dialog import PaletteFromFileDialog
 from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
@@ -237,6 +238,20 @@ class ConvertImageChooserDialog(BaseFileChooserDialog):
             return
         ConvertImageCommand.execute(self.ui.console, [self.get_field_text(0)])
         self.dismiss()
+
+class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
+    
+    title = 'Palette from image'
+    confirm_caption = 'Choose'
+    
+    def confirm_pressed(self):
+        if not os.path.exists(self.get_field_text(0)):
+            return
+        # open new dialog, pipe our field 0 into its field 0
+        filename = self.get_field_text(0)
+        self.dismiss()
+        self.ui.open_dialog(PaletteFromFileDialog)
+        self.ui.active_dialog.set_field_text(0, filename)
 
 #
 # palette chooser
