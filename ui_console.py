@@ -30,8 +30,13 @@ class SaveCommand(ConsoleCommand):
         art = console.ui.active_art
         # set new filename if given
         if len(args) > 0:
+            old_filename = art.filename
             art.set_filename(' '.join(args))
-        art.save_to_file()
+            art.save_to_file()
+            console.ui.app.load_art_for_edit(old_filename)
+            console.ui.set_active_art(art)
+        else:
+            art.save_to_file()
         console.ui.app.update_window_title()
 
 
