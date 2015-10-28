@@ -5,7 +5,7 @@ from PIL import Image
 
 from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
-from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand
+from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand, ConvertImageCommand
 from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
@@ -16,9 +16,35 @@ class BaseFileChooserDialog(ChooserDialog):
     "base class for choosers whose items correspond with files"
     show_filenames = True
     
+    def set_initial_dir(self):
+        self.current_dir = self.ui.app.documents_dir
+        self.set_field_text(self.active_field, self.current_dir)
+    
     def get_filenames(self):
         "subclasses override: get list of desired filenames"
         return []
+    
+    def get_sorted_dir_list(self, extensions=[]):
+        "common code for getting sorted directory + file lists"
+        # list parent, then dirs, then filenames with extension(s)
+        parent = [] if self.current_dir == '/' else ['..']
+        dirs, files = [], []
+        print(self.current_dir)
+        for filename in os.listdir(self.current_dir):
+            # skip unix-hidden files
+            if filename.startswith('.'):
+                continue
+            full_filename = self.current_dir + filename
+            for ext in extensions:
+                if os.path.isdir(full_filename):
+                    dirs += [full_filename + '/']
+                    break
+                elif filename.endswith(ext):
+                    files += [full_filename]
+                    break
+        dirs.sort()
+        files.sort()
+        return parent + dirs + files
     
     def get_items(self):
         "populate and return items from list of files, loading as needed"
@@ -35,14 +61,9 @@ class BaseFileChooserDialog(ChooserDialog):
             i += 1
         return items
 
-#
-# art chooser
-#
-
-class ArtChooserItem(ChooserItem):
+class BaseFileChooserItem(ChooserItem):
     
-    # set in load()
-    art_width = None
+    hide_file_extension = False
     
     def get_short_dir_name(self):
         # name should end in / but don't assume
@@ -54,7 +75,10 @@ class ArtChooserItem(ChooserItem):
             return self.get_short_dir_name()
         else:
             label = os.path.basename(self.name)
-            return os.path.splitext(label)[0]
+            if self.hide_file_extension:
+                return os.path.splitext(label)[0]
+            else:
+                return label
     
     def get_description_lines(self):
         if os.path.isdir(self.name):
@@ -62,6 +86,44 @@ class ArtChooserItem(ChooserItem):
                 return ['[parent directory]']
             # TODO: # of items in dir?
             return []
+        return None
+    
+    def picked(self, element):
+        # if this is different from the last clicked item, pick it
+        if element.selected_item_index != self.index:
+            ChooserItem.picked(self, element)
+            element.first_selection_made = True
+            return
+        # if we haven't yet clicked something in this view, require another
+        # click before opening it (consistent double click behavior for
+        # initial selections)
+        if not element.first_selection_made:
+            element.first_selection_made = True
+            return
+        if self.name == '..' and self.name != '/':
+            new_dir = os.path.abspath(os.path.abspath(element.current_dir) + '/..')
+            element.change_current_dir(new_dir)
+        elif os.path.isdir(self.name):
+            new_dir = element.current_dir + self.get_short_dir_name()
+            element.change_current_dir(new_dir)
+        else:
+            element.confirm_pressed()
+        element.first_selection_made = False
+
+#
+# art chooser
+#
+
+class ArtChooserItem(BaseFileChooserItem):
+    
+    # set in load()
+    art_width = None
+    hide_file_extension = True
+    
+    def get_description_lines(self):
+        lines = BaseFileChooserItem.get_description_lines(self)
+        if lines is not None:
+            return lines
         if not self.art_width:
             return []
         mod_time = time.gmtime(self.art_mod_time)
@@ -106,28 +168,6 @@ class ArtChooserItem(ChooserItem):
         self.art_layers = len(d['frames'][0]['layers'])
         self.art_charset = d['charset']
         self.art_palette = d['palette']
-    
-    def picked(self, element):
-        # if this is different from the last clicked item, pick it
-        if element.selected_item_index != self.index:
-            ChooserItem.picked(self, element)
-            element.first_selection_made = True
-            return
-        # if we haven't yet clicked something in this view, require another
-        # click before opening it (consistent double click behavior for
-        # initial selections)
-        if not element.first_selection_made:
-            element.first_selection_made = True
-            return
-        if self.name == '..' and self.name != '/':
-            new_dir = os.path.abspath(element.current_dir + '..')
-            element.change_current_dir(new_dir)
-        elif os.path.isdir(self.name):
-            new_dir = element.current_dir + self.get_short_dir_name()
-            element.change_current_dir(new_dir)
-        else:
-            element.confirm_pressed()
-        element.first_selection_made = False
 
 
 class ArtChooserDialog(BaseFileChooserDialog):
@@ -154,27 +194,48 @@ class ArtChooserDialog(BaseFileChooserDialog):
         return 0
     
     def get_filenames(self):
-        # list parent, then dirs, then filenames with art extension
-        parent = [] if self.current_dir == '/' else ['..']
-        dirs, files = [], []
-        for filename in os.listdir(self.current_dir):
-            # skip unix-hidden files
-            if filename.startswith('.'):
-                continue
-            full_filename = self.current_dir + filename
-            if os.path.isdir(full_filename):
-                dirs += [full_filename + '/']
-            elif filename.endswith(ART_FILE_EXTENSION):
-                files += [full_filename]
-        dirs.sort()
-        files.sort()
-        return parent + dirs + files
+        return self.get_sorted_dir_list([ART_FILE_EXTENSION])
     
     def confirm_pressed(self):
         if not os.path.exists(self.get_field_text(0)):
             return
         self.ui.app.last_art_dir = self.current_dir
         OpenCommand.execute(self.ui.console, [self.get_field_text(0)])
+        self.dismiss()
+
+#
+# image chooser
+#
+
+class ImageChooserItem(BaseFileChooserItem):
+    
+    def get_preview_texture(self, app):
+        if os.path.isdir(self.name):
+            return
+        img = Image.open(self.name)
+        img = img.convert('RGBA')
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        return Texture(img.tobytes(), *img.size)
+
+
+class ConvertImageChooserDialog(BaseFileChooserDialog):
+    
+    title = 'Convert image'
+    confirm_caption = 'Convert'
+    cancel_caption = 'Cancel'
+    chooser_item_class = ImageChooserItem
+    flip_preview_y = False
+    directory_aware = True
+    
+    supported_formats = ['png', 'jpg', 'jpeg', 'bmp']
+    
+    def get_filenames(self):
+        return self.get_sorted_dir_list(self.supported_formats)
+    
+    def confirm_pressed(self):
+        if not os.path.exists(self.get_field_text(0)):
+            return
+        ConvertImageCommand.execute(self.ui.console, [self.get_field_text(0)])
         self.dismiss()
 
 #

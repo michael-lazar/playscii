@@ -164,7 +164,7 @@ class ChooserDialog(UIDialog):
         self.down_arrow_button.up = False
         self.buttons += [self.up_arrow_button, self.down_arrow_button]
     
-    def set_initial_dir(self, ui):
+    def set_initial_dir(self):
         # for directory-aware dialogs, subclasses specify here where to start
         self.current_dir = '.'
     
@@ -311,7 +311,7 @@ class ChooserDialog(UIDialog):
         lines = []
         if self.show_filenames:
             lines += [self.get_description_filename(item)]
-        lines += item.get_description_lines()
+        lines += item.get_description_lines() or []
         return lines
     
     def draw_selected_description(self):

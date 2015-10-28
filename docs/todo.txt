@@ -12,7 +12,6 @@ fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 use new file chooser for:
 - convert image (any format supported by PIL)
 - create palette from image (same)
-- game dir (only show dirs in app/games/ and ~/documents/games/)
 
 collision:
 - AABB support (sometimes perfectly flat edges are needed)
