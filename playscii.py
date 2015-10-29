@@ -154,7 +154,10 @@ class Application:
         self.log('CPU: %s' % (cpu if cpu != '' else "Couldn't detect :["))
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
         self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
-        # report GL version, vendor, GLSL version etc
+        # report GL vendor, version, GLSL version etc
+        gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
+        gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
+        self.log('GPU: %s - %s' % (gpu_vendor, gpu_renderer))
         # try single-argument GL2.0 version first
         gl_ver = GL.glGetString(GL.GL_VERSION)
         if not gl_ver:
