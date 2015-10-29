@@ -9,7 +9,7 @@ from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, 
 from ui_game_dialog import NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, AddRoomDialog, SetRoomCamDialog, SetRoomEdgeWarpsDialog, SetRoomBoundsObjDialog, RenameRoomDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog, ConvertImageChooserDialog, PaletteFromImageChooserDialog
-from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ
+from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ, LO_SET_ROOM_CAMERA
 from collision import CT_NONE
 from image_export import export_still_image, export_animation
 from art import ART_DIR, ART_FILE_EXTENSION
@@ -953,6 +953,7 @@ class InputLord:
     
     def BIND_set_room_camera_marker(self):
         self.ui.open_dialog(SetRoomCamDialog)
+        self.ui.edit_list_panel.set_list_operation(LO_SET_ROOM_CAMERA)
     
     def BIND_objects_to_camera(self):
         cam = self.app.gw.camera

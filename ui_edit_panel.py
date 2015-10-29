@@ -7,7 +7,7 @@ from ui_chooser_dialog import ScrollArrowButton
 from ui_colors import UIColors
 
 from game_world import TOP_GAME_DIR, STATE_FILE_EXTENSION
-from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ
+from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ, LO_SET_ROOM_CAMERA
 
 
 class GamePanel(UIElement):
@@ -115,7 +115,8 @@ class EditListPanel(GamePanel):
         LO_SET_OBJECT_ROOMS: "Set rooms for %s:",
         LO_OPEN_GAME_DIR: 'Open game:',
         LO_SET_ROOM_EDGE_WARP: 'Set edge warp room/object:',
-        LO_SET_ROOM_EDGE_OBJ: 'Set edge bounds object:'
+        LO_SET_ROOM_EDGE_OBJ: 'Set edge bounds object:',
+        LO_SET_ROOM_CAMERA: 'Set room camera marker:'
     }
     
     class ListItem:
@@ -141,7 +142,8 @@ class EditListPanel(GamePanel):
                                LO_SET_OBJECT_ROOMS: self.list_rooms,
                                LO_OPEN_GAME_DIR: self.list_games,
                                LO_SET_ROOM_EDGE_WARP: self.list_rooms_and_objects,
-                               LO_SET_ROOM_EDGE_OBJ: self.list_objects
+                               LO_SET_ROOM_EDGE_OBJ: self.list_objects,
+                               LO_SET_ROOM_CAMERA: self.list_objects
         }
         # map list operations to "item clicked" functions
         self.click_functions = {LO_SELECT_OBJECTS: self.select_object,
@@ -152,7 +154,8 @@ class EditListPanel(GamePanel):
                                 LO_SET_OBJECT_ROOMS: self.set_object_room,
                                 LO_OPEN_GAME_DIR: self.open_game_dir,
                                 LO_SET_ROOM_EDGE_WARP: self.set_room_edge_warp,
-                                LO_SET_ROOM_EDGE_OBJ: self.set_room_bounds_obj
+                                LO_SET_ROOM_EDGE_OBJ: self.set_room_bounds_obj,
+                                LO_SET_ROOM_CAMERA: self.set_room_camera
         }
         # separate lists for item buttons vs other controls
         self.list_buttons = []
@@ -454,5 +457,9 @@ class EditListPanel(GamePanel):
         dialog.set_field_text(dialog.active_field, item.obj.name)
     
     def set_room_bounds_obj(self, item):
+        dialog = self.ui.active_dialog
+        dialog.set_field_text(dialog.active_field, item.obj.name)
+    
+    def set_room_camera(self, item):
         dialog = self.ui.active_dialog
         dialog.set_field_text(dialog.active_field, item.obj.name)
