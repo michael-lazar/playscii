@@ -99,3 +99,4 @@ exporters for:
 - C64 PRG file: single layer, C64 res (48x35 / 40x25) - see source of PETSCII editor http://www.kameli.net/marq/?page_id=2717 which does this
 - ENDOOM (DOS charset, EGA palette)
 - ASCII/ANSI art scene formats
+- plain ANSI (text format)
