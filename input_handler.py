@@ -337,7 +337,7 @@ class InputLord:
         self.ui.open_dialog(ConvertImageChooserDialog)
     
     def BIND_export_image(self):
-        if not self.ui.active_art:
+        if not self.ui.active_art or self.app.game_mode:
             return
         export_still_image(self.app, self.ui.active_art)
     
