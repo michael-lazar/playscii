@@ -101,6 +101,10 @@ class Art:
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
+        # list of TileRenderables using us - each new Renderable adds itself
+        self.renderables = []
+        # list of ArtInstances using us as their source
+        self.instances = []
         # init frames and layers - ArtFromDisk has its own logic for this
         self.init_layers()
         self.init_frames()
@@ -108,10 +112,6 @@ class Art:
         # derive quad_height from chars aspect; quad_width always 1.0
         if self.recalc_quad_height:
             self.quad_height *= self.charset.char_height / self.charset.char_width
-        # list of TileRenderables using us - each new Renderable adds itself
-        self.renderables = []
-        # list of ArtInstances using us as their source
-        self.instances = []
         # running scripts and timing info
         self.scripts = []
         self.script_rates = []

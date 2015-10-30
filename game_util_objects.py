@@ -238,14 +238,17 @@ class WarpTrigger(StaticTileTrigger):
         if self.destination_room:
             self.world.change_room(self.destination_room)
         elif self.destination_marker_name:
-            marker = self.world.objects[self.destination_marker_name]
+            marker = self.world.objects.get(self.destination_marker_name, None)
+            if not marker:
+                self.app.log('Warp destination object %s not found' % self.destination_marker_name)
+                return
             other.set_loc(marker.x, marker.y, marker.z)
             # warp to marker's room if specified, but only if it's only in one
             if self.use_marker_room and len(marker.rooms) == 1:
                 room = random.choice(list(marker.rooms.values()))
                 # warn if both room and marker are set but they conflict
                 if self.destination_room and room.name != self.destination_room:
-                    self.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
+                    self.app.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
                 self.world.change_room(room.name)
         other.last_warp_update = self.world.app.updates
 
