@@ -1,5 +1,7 @@
 import os, sys, time, importlib, json
 
+import sdl2
+
 import game_object, game_util_objects, game_hud, game_room
 import collision
 from camera import Camera
@@ -382,6 +384,15 @@ class GameWorld:
     
     def toggle_grid_snap(self):
         self.object_grid_snap = not self.object_grid_snap
+    
+    def handle_input(self, event, shift_pressed, alt_pressed, ctrl_pressed):
+        # pass event's key to any objects that want to handle it
+        if event.type != sdl2.SDL_KEYDOWN:
+            return
+        key = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode()
+        for obj in self.objects.values():
+            if obj.handle_input_events:
+                obj.handle_input(key, shift_pressed, alt_pressed, ctrl_pressed)
     
     def frame_begin(self):
         "runs at start of game loop iteration, before input/update/render"
