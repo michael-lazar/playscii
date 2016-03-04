@@ -186,6 +186,9 @@ class InputLord:
                     if flist:
                         for f in flist:
                             f()
+                    # if game mode active, pass to world as well as any binds
+                    if self.app.game_mode:
+                        self.app.gw.handle_input(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this

@@ -648,16 +648,8 @@ class Art:
     
     def get_valid_script_filename(self, script_filename):
         if not type(script_filename) is str: return None
-        if os.path.exists(script_filename): return script_filename
-        # try adding scripts/ subdir
-        script_filename = '%s%s' % (SCRIPT_DIR, script_filename)
-        if os.path.exists(script_filename): return script_filename
-        # try adding extension
-        script_filename += '.%s' % SCRIPT_FILE_EXTENSION
-        if not os.path.exists(script_filename):
-            self.app.log("Couldn't find script %s" % script_filename)
-            return
-        return script_filename
+        return self.app.find_filename_path(script_filename, SCRIPT_DIR,
+                                           SCRIPT_FILE_EXTENSION)
     
     def run_script_every(self, script_filename, rate=0.1):
         "starts a script running on this Art at a regular rate."
@@ -977,7 +969,7 @@ class TileIter:
     
     def __iter__(self):
         self.frame, self.layer = 0, 0
-        self.x, self.y = -1, 0
+        self.x, self.y = 0, 0
         return self
     
     def __next__(self):
@@ -985,12 +977,16 @@ class TileIter:
         self.x += 1
         if self.x >= self.width:
             self.x = 0
+            #return frame, layer, x, y
+            #print('row end')
             self.y += 1
         if self.y >= self.height:
             self.y = 0
+            #print('layer end')
             self.layer += 1
         if self.layer >= self.layers:
             self.layer = 0
+            #print('frame end')
             self.frame += 1
         if self.frame >= self.frames:
             raise StopIteration

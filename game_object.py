@@ -133,6 +133,8 @@ class GameObject:
     # if True, object's update function will run even if it's
     # outside the world's current room
     update_if_outside_room = False
+    # if True, handle input events from world
+    handle_input_events = False
     
     def __init__(self, world, obj_data=None):
         self.x, self.y, self.z = 0., 0., 0.
@@ -610,6 +612,13 @@ class GameObject:
     
     def warped_recently(self):
         return self.world.app.updates - self.last_warp_update <= 0
+    
+    def handle_input(self, event, shift_pressed, alt_pressed, ctrl_pressed):
+        """
+        handle event w/ keyboard mods.
+        subclasses can do stuff here if handle_input_events=True
+        """
+        pass
     
     def update_state(self):
         "update state based on things like movement"
