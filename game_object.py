@@ -274,14 +274,20 @@ class GameObject:
         return left, top, right, bottom
     
     def distance_to_object(self, other):
-        dx = self.x - other.x
-        dy = self.y - other.y
+        return self.distance_to_point(other.x, other.y)
+    
+    def distance_to_point(self, point_x, point_y):
+        dx = self.x - point_x
+        dy = self.y - point_y
         return math.sqrt(dx ** 2 + dy ** 2)
     
     def normal_to_object(self, other):
         "returns tuple normal pointing in direction of given object"
-        dist = self.distance_to_object(other)
-        dx, dy = other.x - self.x, other.y - self.y
+        return self.normal_to_point(other.x, other.y)
+    
+    def normal_to_point(self, point_x, point_y):
+        dist = self.distance_to_point(point_x, point_y)
+        dx, dy = point_x - self.x, point_y - self.y
         if dist == 0:
             return 0, 0
         inv_dist = 1 / dist
@@ -292,7 +298,8 @@ class GameObject:
         return 0, 0, 0
     
     def is_dynamic(self):
-        return self.physics_move and self.collision_type in CTG_DYNAMIC
+        #return self.physics_move and self.collision_type in CTG_DYNAMIC
+        return self.collision_type in CTG_DYNAMIC
     
     def start_dragging(self):
         self.disable_collision()
@@ -405,6 +412,18 @@ class GameObject:
             if isinstance(other, ncc):
                 return False
         return True
+    
+    def get_tile_loc(self, tile_x, tile_y, tile_center=True):
+        "returns top left / center of current art's tile in world coordinates"
+        left, top, right, bottom = self.get_edges()
+        x = left
+        x += self.art.quad_width * tile_x
+        y = top
+        y -= self.art.quad_height * tile_y
+        if tile_center:
+            x += self.art.quad_width / 2
+            y -= self.art.quad_height / 2
+        return x, y
     
     def get_all_art(self):
         "returns a list of all Art used by this object"
