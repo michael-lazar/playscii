@@ -725,6 +725,25 @@ class Art:
             if bg_color_index:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
+    
+    def get_filtered_tiles(self, frame, layer, char_value, invert_filter=False):
+        "returns list of (x,y) tile coords that match (or don't) a char value"
+        tiles = []
+        for y in range(self.height):
+            for x in range(self.width):
+                char = self.get_char_index_at(frame, layer, x, y)
+                if (not invert_filter and char == char_value) or \
+                   (invert_filter and char != char_value):
+                    tiles.append((x, y))
+        return tiles
+    
+    def get_blank_tiles(self, frame, layer):
+        "returns a list of (x,y) tile coords whose character is blank (0)"
+        return self.get_filtered_tiles(frame, layer, 0)
+    
+    def get_nonblank_tiles(self, frame, layer):
+        "returns a list of (x,y) tile coords whose character is NOT blank (0)"
+        return self.get_filtered_tiles(frame, layer, 0, invert_filter=True)
 
 
 class ArtFromDisk(Art):

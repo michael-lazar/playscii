@@ -242,6 +242,11 @@ class GameWorld:
         self.selected_objects = []
         self.app.al.stop_all_music()
     
+    def get_first_object_of_type(self, class_name):
+        for obj in self.objects.values():
+            if type(obj).__name__ == class_name:
+                return obj
+    
     def get_all_objects_of_type(self, class_name):
         # TODO: "allow subclasses" optional flag
         objects = []
