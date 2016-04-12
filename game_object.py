@@ -108,7 +108,7 @@ class GameObject:
                   'animating', 'scale_x', 'scale_y']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
-    editable = ['show_collision', 'mass', 'bounciness', 'stop_velocity']
+    editable = ['show_collision', 'col_radius', 'mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
     set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha',
                    'scale_x': 'set_scale_x', 'scale_y': 'set_scale_y',
@@ -298,7 +298,6 @@ class GameObject:
         return 0, 0, 0
     
     def is_dynamic(self):
-        #return self.physics_move and self.collision_type in CTG_DYNAMIC
         return self.collision_type in CTG_DYNAMIC
     
     def start_dragging(self):
@@ -398,6 +397,35 @@ class GameObject:
             if other.is_point_inside(x, y):
                 return True
         return False
+    
+    def get_tile_at_point(self, point_x, point_y):
+        "returns (x, y) tile coord for given worldspace point"
+        left, top, right, bottom = self.get_edges()
+        x = (point_x - left) / self.art.quad_width
+        x = math.floor(x)
+        y = (point_y - top) / self.art.quad_height
+        y = math.ceil(-y)
+        return x, y
+    
+    def get_tiles_overlapping_box(self, box_left, box_top, box_right, box_bottom, log=False):
+        "returns (x, y) coords for each tile overlapping given box"
+        if self.collision_shape_type != CST_TILE:
+            return []
+        left, top = self.get_tile_at_point(box_left, box_top)
+        right, bottom = self.get_tile_at_point(box_right, box_bottom)
+        if bottom < top:
+            top, bottom = bottom, top
+        # stay in bounds
+        left = max(0, left)
+        right = min(right, self.art.width - 1)
+        top = max(1, top)
+        bottom = min(bottom, self.art.height)
+        tiles = []
+        # account for range start being inclusive, end being exclusive
+        for x in range(left, right + 1):
+            for y in range(top - 1, bottom):
+                tiles.append((x, y))
+        return tiles
     
     def overlapped(self, other, dx, dy):
         started = other.name not in self.collision.contacts
