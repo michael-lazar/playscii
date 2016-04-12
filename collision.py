@@ -21,21 +21,17 @@ CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 
 
 class CircleCollisionShape:
+    
     def __init__(self, loc_x, loc_y, radius, gobj):
         self.x, self.y = loc_x, loc_y
         self.radius = radius
         self.game_object = gobj
         self.mass = self.game_object.mass
+    
+    def get_box(self):
+        "returns coords of our bounds (left, top, right, bottom)"
+        return self.x - self.radius, self.y - self.radius, self.x + self.radius, self.y + self.radius
 
-class AxisAlignedRoundedRectangle:
-    # AAAARRRR matey
-    # TODO: AARR-on-AARR collision detection and resolution!
-    def __init__(self, loc_x, loc_y, radius, halfwidth_x, halfwidth_y, gobj):
-        self.x, self.y = loc_x, loc_y
-        self.radius = radius
-        self.halfwidth_x, self.halfwidth_y = halfwidth_x, halfwidth_y
-        self.game_object = gobj
-        self.mass = self.game_object.mass
 
 class Collideable:
     
@@ -46,6 +42,8 @@ class Collideable:
         self.game_object = obj
         self.cl = self.game_object.world.cl
         self.renderables, self.shapes = [], []
+        # dict of shapes accessible by (x,y) tile coordinates
+        self.tile_shapes = {}
         # contacts with other objects
         self.contacts = {}
         # list of objects processed for collision this frame
@@ -60,7 +58,6 @@ class Collideable:
             self.create_circle()
         elif self.game_object.collision_shape_type == CST_TILE:
             self.create_tiles()
-        # TODO: AARR creation
         # update renderables once if static
         if not self.game_object.is_dynamic():
             self.update_renderables()
@@ -103,10 +100,21 @@ class Collideable:
                 wy -= -obj.y - (obj.renderable.height * obj.art_off_pct_y)
                 shape = self.cl.add_circle_shape(wx, wy, radius, obj)
                 self.shapes.append(shape)
+                self.tile_shapes[(x, y)] = shape
                 r = TileCircleCollisionRenderable(shape)
                 # update renderable once to set location correctly
                 r.update()
                 self.renderables.append(r)
+    
+    def get_shapes_overlapping_box(self, left, top, right, bottom):
+        "returns a list of our shapes that overlap given box"
+        shapes = []
+        tiles = self.game_object.get_tiles_overlapping_box(left, top, right, bottom)
+        for (x, y) in tiles:
+            shape = self.tile_shapes.get((x, y), None)
+            if shape:
+                shapes.append(shape)
+        return shapes
     
     def update(self):
         if self.game_object and self.game_object.is_dynamic():
@@ -165,27 +173,44 @@ class CollisionLord:
         elif shape in self.static_shapes:
             self.static_shapes.remove(shape)
     
+    def get_overlapping_static_shapes(self, shape):
+        "returns a list of static shapes that overlap with given shape"
+        overlapping_shapes = []
+        shape_left, shape_top, shape_right, shape_bottom = shape.get_box()
+        for obj in self.world.objects.values():
+            if obj is shape.game_object or not obj.should_collide() or obj.is_dynamic():
+                continue
+            # always check non-tile-based static shapes
+            if obj.collision_shape_type != CST_TILE:
+                overlapping_shapes += obj.collision.shapes
+            else:
+                # skip if even bounds don't overlap
+                obj_left, obj_top, obj_right, obj_bottom = obj.get_edges()
+                if not boxes_overlap(shape_left, shape_top, shape_right, shape_bottom,
+                                     obj_left, obj_top, obj_right, obj_bottom):
+                    continue
+                overlapping_shapes += obj.collision.get_shapes_overlapping_box(shape_left, shape_top, shape_right, shape_bottom)
+        return overlapping_shapes
+    
     def resolve_overlaps(self):
         iterations = 5
         # filter shape lists for anything out of room etc
-        valid_dynamic_shapes, valid_static_shapes = [], []
+        valid_dynamic_shapes = []
         for shape in self.dynamic_shapes:
             if shape.game_object.should_collide():
                 valid_dynamic_shapes.append(shape)
-        for shape in self.static_shapes:
-            if shape.game_object.should_collide():
-                valid_static_shapes.append(shape)
         for i in range(iterations):
             # push all dynamic circles out of each other
             for a in valid_dynamic_shapes:
                 for b in valid_dynamic_shapes:
                     if a is b:
                         continue
-                    # TODO: handle different shape type combinations
+                    # TODO: collide_shapes handles different shape type combinations
                     collide_circles(a, b)
             # now push all dynamic circles out of all static circles
             for a in valid_dynamic_shapes:
-                for b in valid_static_shapes:
+                # check against list of static shapes pared down by broadphase
+                for b in self.get_overlapping_static_shapes(a):
                     collide_circles(a, b)
         # check which objects stopped colliding
         for obj in self.world.objects.values():
@@ -237,7 +262,7 @@ def collide_circles(a, b):
         obj_a, obj_b = a.game_object, b.game_object
         # tell objects they're overlapping, pass penetration vector
         a_coll_b = obj_a.overlapped(obj_b, dx, dy)
-        shoulds = ["shouldn't", 'should']
+        #shoulds = ["shouldn't", 'should']
         #print('%s %s collide with %s' % (obj_a.name, shoulds[a_coll_b], obj_b.name))
         b_coll_a = obj_b.overlapped(obj_a, dx, dy)
         #print('%s %s collide with %s' % (obj_b.name, shoulds[b_coll_a], obj_a.name))
@@ -263,3 +288,9 @@ def collide_circles(a, b):
             obj_b.x -= b_push * dx
             obj_b.y -= b_push * dy
             obj_b.collision.update_transform_from_object()
+
+def boxes_overlap(left_a, top_a, right_a, bottom_a, left_b, top_b, right_b, bottom_b):
+    for (x, y) in ((left_a, top_a), (right_a, top_a), (right_a, bottom_a), (left_a, bottom_a)):
+        if left_b <= x <= right_b and bottom_b <= y <= top_b:
+            return True
+    return False

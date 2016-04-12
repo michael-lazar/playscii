@@ -147,6 +147,7 @@ class MazeLock(StaticTileBG):
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
     col_radius = 0.5
+    mass = 0.0
     key_type = MazeKey
     
     def started_colliding(self, other):
