@@ -1,3 +1,5 @@
+precision mediump float;
+
 uniform sampler2D charset;
 uniform sampler2D palette;
 uniform sampler2D grain;
