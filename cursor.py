@@ -212,7 +212,7 @@ class Cursor:
             self.preview_edits = []
     
     def start_paint(self):
-        if self.app.ui.popup.visible or self.app.ui.console.visible:
+        if self.app.ui.console.visible or self.app.ui.popup in self.app.ui.hovered_elements:
             return
         # start a new command group, commit and clear any preview edits
         self.current_command = EditCommand(self.app.ui.active_art)
@@ -223,7 +223,7 @@ class Cursor:
     
     def finish_paint(self):
         "invoked by mouse button up and undo"
-        if self.app.ui.popup.visible or self.app.ui.console.visible:
+        if self.app.ui.console.visible or self.app.ui.popup in self.app.ui.hovered_elements:
             return
         # push current command group onto undo stack
         if not self.current_command:

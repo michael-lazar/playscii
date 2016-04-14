@@ -335,7 +335,7 @@ class MessageLineUI(UIElement):
     
     def render(self):
         # TODO: draw if popup is visible but not obscuring message line?
-        if not self.ui.popup.visible and not self.ui.console.visible:
+        if not self.ui.popup in self.ui.hovered_elements and not self.ui.console.visible:
             UIElement.render(self)
 
 

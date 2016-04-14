@@ -574,7 +574,7 @@ class UI:
     def quick_grab(self):
         if self.app.game_mode:
             return
-        if self.popup.visible or self.console.visible:
+        if self.console.visible or self.popup in self.hovered_elements:
             return
         self.grab_tool.grab()
         self.tool_settings_changed = True

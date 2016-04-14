@@ -630,7 +630,7 @@ class Application:
         else:
             for art in self.art_loaded_for_edit:
                 art.update()
-        if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
+        if self.ui.active_art and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update()
         self.camera.update()
         if not self.game_mode:
@@ -685,7 +685,7 @@ class Application:
             if self.grid.visible and self.ui.active_art:
                 self.grid.render()
             self.ui.select_tool.render_selections()
-            if self.ui.active_art and not self.ui.popup.visible and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
+            if self.ui.active_art and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
                 self.cursor.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)

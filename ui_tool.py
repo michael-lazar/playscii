@@ -219,6 +219,7 @@ class TextTool(UITool):
         # for now, do nothing on ctrl/alt
         if ctrl_pressed or alt_pressed:
             return
+        # popup should get input if it's up
         if self.ui.popup.visible:
             return
         keystr = sdl2.SDL_GetKeyName(key).decode()

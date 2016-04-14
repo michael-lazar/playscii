@@ -150,6 +150,18 @@ class EditSelectInvertItem(PulldownMenuItem):
 #
 # tool menu
 #
+
+class ToolTogglePickerItem(PulldownMenuItem):
+    # two spaces in front of each label to leave room for mark
+    label = 'Show char/color picker'
+    command = 'toggle_picker'
+
+class ToolTogglePickerHoldItem(PulldownMenuItem):
+    label = 'blah'
+    command = 'toggle_picker_hold'
+    def get_label(app):
+        return 'Picker toggle key: %s' % ['press', 'hold'][app.ui.popup_hold_to_show]
+
 class ToolPaintItem(PulldownMenuItem):
     # two spaces in front of each label to leave room for mark
     label = '  %s' % PencilTool.button_caption
@@ -501,7 +513,8 @@ class EditMenuData(PulldownMenuData):
              EditSelectNoneItem, EditSelectInvertItem]
 
 class ToolMenuData(PulldownMenuData):
-    items = [ToolPaintItem, ToolEraseItem, ToolRotateItem, ToolGrabItem,
+    items = [ToolTogglePickerItem, ToolTogglePickerHoldItem, SeparatorItem,
+             ToolPaintItem, ToolEraseItem, ToolRotateItem, ToolGrabItem,
              ToolTextItem, ToolSelectItem, ToolPasteItem, SeparatorItem,
              ToolIncreaseBrushSizeItem, ToolDecreaseBrushSizeItem,
              ToolToggleAffectsCharItem, ToolToggleAffectsFGItem,
