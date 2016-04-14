@@ -517,6 +517,10 @@ class InputLord:
         else:
             self.ui.popup.toggle()
     
+    def BIND_toggle_picker_hold(self):
+        self.ui.popup_hold_to_show = not self.ui.popup_hold_to_show
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_swap_fg_bg_colors(self):
         self.ui.swap_fg_bg_colors()
     
