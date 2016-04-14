@@ -1,3 +1,4 @@
+# coding=utf-8
 
 from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem, ViewToggleCRTItem, ViewToggleCameraTiltItem, ViewSetZoomItem
 

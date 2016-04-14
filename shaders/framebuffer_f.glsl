@@ -1,5 +1,7 @@
 // plain vanilla (non CRT) screen shader
 
+precision mediump float;
+
 uniform sampler2D fbo_texture;
 uniform float elapsed_time;
 in vec2 f_texcoord;

@@ -1,6 +1,8 @@
 // CRT shader via Mattias Gustavsson - https://www.shadertoy.com/view/lsB3DV
 // (screen warp, scanlines, and vignetting removed)
 
+precision mediump float;
+
 uniform sampler2D fbo_texture;
 uniform float elapsed_time;
 uniform vec2 resolution;

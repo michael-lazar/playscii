@@ -1,3 +1,5 @@
+precision mediump float;
+
 uniform sampler2D texture0;
 uniform float alpha;
 
