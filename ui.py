@@ -235,6 +235,9 @@ class UI:
             return
         if new_tool == self.selected_tool:
             return
+        # bail out of text entry if active
+        if self.selected_tool is self.text_tool:
+            self.text_tool.finish_entry()
         self.previous_tool = self.selected_tool
         self.selected_tool = new_tool
         self.popup.reset_art()
@@ -426,9 +429,6 @@ class UI:
             tile_command.set_tile(frame, layer, x, y)
         self.clipboard_width = max_x - min_x
         self.clipboard_height = max_y - min_y
-        # switch to PasteTool
-        self.set_selected_tool(self.paste_tool)
-        self.tool_settings_changed = True
     
     def crop_to_selection(self, art):
         # ignore non-rectangular selection features, use top left and bottom
