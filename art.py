@@ -261,6 +261,7 @@ class Art:
         if self is self.app.ui.active_art:
             self.app.ui.set_active_layer(self.layers - 1)
         self.app.log('Added new layer %s' % new_name)
+        self.set_unsaved_changes(True)
     
     def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
         "clears given layer of given frame to transparent BG + no characters"
@@ -294,6 +295,7 @@ class Art:
         self.mark_all_frames_changed()
         if self.active_layer > self.layers - 1:
             self.app.ui.set_active_layer(self.layers - 1)
+        self.set_unsaved_changes(True)
     
     def set_charset(self, new_charset):
         if new_charset is self.charset:

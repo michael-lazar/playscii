@@ -398,6 +398,7 @@ class SetLayerNameDialog(AddLayerDialog):
         if not valid: return
         new_name = self.get_field_text(0)
         self.ui.active_art.layer_names[self.ui.active_art.active_layer] = new_name
+        self.ui.active_art.set_unsaved_changes(True)
         self.dismiss()
 
 
@@ -424,6 +425,7 @@ class SetLayerZDialog(UIDialog):
         if not valid: return
         new_z = float(self.get_field_text(0))
         self.ui.active_art.layers_z[self.ui.active_art.active_layer] = new_z
+        self.ui.active_art.set_unsaved_changes(True)
         self.ui.app.grid.reset()
         self.dismiss()
 
@@ -463,4 +465,31 @@ class PaletteFromFileDialog(UIDialog):
         palette_filename = self.get_field_text(1)
         colors = int(self.get_field_text(2))
         new_pal = PaletteFromFile(self.ui.app, src_filename, palette_filename, colors)
+        self.dismiss()
+
+
+class SetCameraZoomDialog(UIDialog):
+    title = 'Set camera zoom'
+    confirm_caption = 'Set'
+    fields = 1
+    field0_type = float
+    field0_label = 'New camera zoom:'
+    invalid_zoom_error = 'Invalid number.'
+    all_modes_visible = True
+    game_mode_visible = True
+    
+    def __init__(self, ui):
+        UIDialog.__init__(self, ui)
+        self.field0_text = str(ui.app.camera.z)
+    
+    def is_input_valid(self):
+        try: zoom = float(self.get_field_text(0))
+        except: return False, self.invalid_zoom_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        new_zoom = float(self.get_field_text(0))
+        self.ui.app.camera.z = new_zoom
         self.dismiss()

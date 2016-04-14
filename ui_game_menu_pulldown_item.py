@@ -1,5 +1,5 @@
 
-from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem, ViewToggleCRTItem, ViewToggleCameraTiltItem
+from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem, ViewToggleCRTItem, ViewToggleCameraTiltItem, ViewSetZoomItem
 
 #
 # game menu
@@ -222,7 +222,7 @@ class GameStateMenuData(PulldownMenuData):
     items = [ResetStateItem, LoadStateItem, SaveStateItem, SaveNewStateItem]
 
 class GameViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTItem, ViewToggleCameraTiltItem, SeparatorItem,
+    items = [ViewToggleCRTItem, ViewSetZoomItem, ViewToggleCameraTiltItem, SeparatorItem,
              ObjectsToCameraItem, CameraToObjectsItem, ToggleDebugObjectsItem]
     
     def should_mark_item(item, ui):

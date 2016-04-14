@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportEDSCIIDialog
+from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportEDSCIIDialog, SetCameraZoomDialog
 from ui_game_dialog import NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, AddRoomDialog, SetRoomCamDialog, SetRoomEdgeWarpsDialog, SetRoomBoundsObjDialog, RenameRoomDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog, ConvertImageChooserDialog, PaletteFromImageChooserDialog
@@ -433,9 +433,19 @@ class InputLord:
     
     def BIND_cut_selection(self):
         self.ui.cut_selection()
+        # switch to PasteTool
+        self.ui.set_selected_tool(self.ui.paste_tool)
+        # clear selection
+        self.ui.select_none()
+        self.ui.tool_settings_changed = True
     
     def BIND_copy_selection(self):
         self.ui.copy_selection()
+        # switch to PasteTool
+        self.ui.set_selected_tool(self.ui.paste_tool)
+        # clear selection
+        self.ui.select_none()
+        self.ui.tool_settings_changed = True
     
     def BIND_select_paste_tool(self):
         self.ui.set_selected_tool(self.ui.paste_tool)
@@ -595,6 +605,9 @@ class InputLord:
     def BIND_quick_grab(self):
         self.app.keyboard_editing = True
         self.ui.quick_grab()
+    
+    def BIND_set_camera_zoom(self):
+        self.ui.open_dialog(SetCameraZoomDialog)
     
     def BIND_toggle_camera_tilt(self):
         if self.app.camera.y_tilt == 2:
@@ -815,6 +828,7 @@ class InputLord:
         art = self.ui.active_art
         is_visible = art.layers_visibility[art.active_layer]
         art.layers_visibility[art.active_layer] = not is_visible
+        art.set_unsaved_changes(True)
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_hidden_layers_visible(self):

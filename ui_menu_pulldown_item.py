@@ -264,6 +264,10 @@ class ViewToggleGridItem(PulldownMenuItem):
     def should_mark(ui):
         return ui.app.grid.visible
 
+class ViewSetZoomItem(PulldownMenuItem):
+    label = 'Set camera zoom…'
+    command = 'set_camera_zoom'
+
 class ViewToggleCameraTiltItem(PulldownMenuItem):
     label = '  Camera tilt'
     command = 'toggle_camera_tilt'
@@ -528,7 +532,7 @@ class ToolMenuData(PulldownMenuData):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 class ViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTItem, ViewToggleGridItem, ViewToggleCameraTiltItem]
+    items = [ViewToggleCRTItem, ViewToggleGridItem, ViewSetZoomItem, ViewToggleCameraTiltItem]
              
     def should_mark_item(item, ui):
         if hasattr(item, 'should_mark'):

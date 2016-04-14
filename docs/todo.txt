@@ -60,9 +60,6 @@ general framework for importers/exporters - read scripts from eg a formats/ dir,
 fixes / minor improvements:
 
 usablity notes from Jim:
-- add popup to Tool menu, add toggle for hold vs tap space behavior
-- view menu: "set custom zoom"
-- deselect after auto-switching to paste after cut/copy
 - way to toggle a layer's visibility without selecting it - some kind of layer list?
 - enlarge brush on separate axes
 - copy-paste on multiple layers?
@@ -71,11 +68,8 @@ usablity notes from Jim:
 bugs from Jim:
 - When I select text from the row at the very bottom of the document, the center of the selection is way off to the left.
 - When I click to set the cursor for the text tool, moving the mouse after clicking moves the cursor, and not in a useful way.
-- If I select another tool while the text tool is active, clicking does nothing until I *re*-select text and hit escape to leave text entry mode.
 - I keep running into this bug, difficult to reproduce, where switching tasks back to Playscii -- maybe mid-click? -- starts a continuous paint that keeps going until I click again to stop it. This paint is not added to the undo list! Either that, or it is undone internally and it sticks around as a rendering glitch. I always revert to my save, just in case.
 - If you cancel a "save as," the document loses the "unsaved" asterisk and you have to change it to save
-- Changing a layer's info doesn't flag the document as unsaved.
-
 
 - port ELC2 to use rooms as proof of concept for dynamically generated rooms
 
