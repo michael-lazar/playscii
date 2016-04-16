@@ -30,7 +30,6 @@ class BaseFileChooserDialog(ChooserDialog):
         # list parent, then dirs, then filenames with extension(s)
         parent = [] if self.current_dir == '/' else ['..']
         dirs, files = [], []
-        print(self.current_dir)
         for filename in os.listdir(self.current_dir):
             # skip unix-hidden files
             if filename.startswith('.'):

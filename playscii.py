@@ -738,6 +738,9 @@ def get_paths():
     DOCUMENTS_SUBDIR = '/Documents'
     if platform.system() == 'Windows':
         documents_dir = get_win_documents_path()
+        # issue #18: win documents path may not exist?!
+        if not os.path.exists(documents_dir):
+            os.mkdir(documents_dir)
     elif platform.system() == 'Darwin':
         documents_dir = os.path.expanduser('~') + DOCUMENTS_SUBDIR
     elif platform.system() == 'Linux':

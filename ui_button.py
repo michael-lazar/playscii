@@ -74,6 +74,8 @@ class UIButton:
         # just bail if we're trying to draw something out of bounds
         if self.x + self.width > self.element.art.width:
             return
+        elif self.y + self.height > self.element.art.height:
+            return
         fg, bg = self.get_state_colors(self.state)
         for y in range(self.height):
             for x in range(self.width):
