@@ -71,7 +71,7 @@ void main(void) {
     // warbley in X
     float x = sin(0.1*elapsed_time+uv.y*21.0)*sin(0.23*elapsed_time+uv.y*29.0)*sin(0.3+0.11*elapsed_time+uv.y*31.0)*0.0017;
     // tone it waay down
-    x *= 0.25;
+    x *= 0.05;
     float o = 2.0*mod(gl_FragCoord.y,1.0)/resolution.x;
     x += o;
     col.r = 1.0*blur(fbo_texture,vec2(x+uv.x+0.0009,uv.y+0.0009),1.2).x+0.005;

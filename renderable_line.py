@@ -118,6 +118,9 @@ class LineRenderable():
     def get_view_matrix(self):
         return np.eye(4, 4)
     
+    def get_loc(self):
+        return self.x, self.y, self.z
+    
     def get_size(self):
         # overriden in subclasses that need specific width/height data
         return 1, 1
@@ -138,7 +141,7 @@ class LineRenderable():
         GL.glUseProgram(self.shader.program)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.get_view_matrix())
-        GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
+        GL.glUniform3f(self.position_uniform, *self.get_loc())
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform2f(self.quad_size_uniform, *self.get_quad_size())
         GL.glUniform4f(self.color_uniform, *self.get_color())
@@ -157,7 +160,7 @@ class LineRenderable():
         GL.glUseProgram(0)
 
 
-# TODO: this is probably not a very useful refactor, revisit later
+# common data/code used by various boxes
 BOX_VERTS = [(0, 0), (1, 0), (1, -1), (0, -1)]
 
 def get_box_arrays(vert_list=None, color=(1, 1, 1, 1)):
@@ -345,11 +348,30 @@ class CircleCollisionRenderable(CollisionRenderable):
         self.elem_array = np.array(elements, dtype=np.uint32)
         self.color_array = np.array(colors, dtype=np.float32)
 
-class TileCircleCollisionRenderable(CircleCollisionRenderable):
-    "circle for each tile in a CST_TILE object"
+
+class BoxCollisionRenderable(CollisionRenderable):
+    
+    line_width = 2
+    
+    def get_quad_size(self):
+        return self.shape.halfwidth * 2, self.shape.halfheight * 2
+    
+    def get_size(self):
+        w, h = self.shape.halfwidth * 2, self.shape.halfheight * 2
+        w *= self.game_object.scale_x
+        h *= self.game_object.scale_y
+        return w, h
+    
+    def build_geo(self):
+        verts = [(-0.5, 0.5), (0.5, 0.5), (0.5, -0.5), (-0.5, -0.5)]
+        self.vert_array, self.elem_array, self.color_array = get_box_arrays(verts, self.color)
+
+
+class TileBoxCollisionRenderable(BoxCollisionRenderable):
+    "box for each tile in a CST_TILE object"
     line_width = 1
-    segments = 8
-
-
-# TODO: rewrite BoxCollisionRenderable once AABB collision exists
-# TODO: rewrite TileCollisionRenderable once/if tile collision doesn't use circles
+    def get_loc(self):
+        # draw at Z level of collision layer
+        art = self.game_object.art
+        col_index = art.layer_names.index(self.game_object.col_layer_name)
+        return self.x, self.y, self.z + art.layers_z[col_index]
