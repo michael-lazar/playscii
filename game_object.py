@@ -87,16 +87,13 @@ class GameObject:
     # collision shape (tile, circle, AABB) and type (channel)
     collision_shape_type = CST_NONE
     collision_type = CT_NONE
-    # segment thickness for AABB / tile based collision
-    seg_thickness = 0.1
     # collision layer name for CST_TILE objects
     col_layer_name = 'collision'
     # collision circle/box offset from origin
     col_offset_x, col_offset_y = 0., 0.
+    # circle / AABB dimensions
     col_radius = 1.
-    # AABB top left / bottom right coordinates
-    col_box_left_x, col_box_right_x = -1, 1
-    col_box_top_y, col_box_bottom_y = -1, 1
+    col_width, col_height = 1., 1.
     # art offset from pivot: renderable's origin_pct set to this if !None
     # 0,0 = top left; 1,1 = bottom right; 0.5,0.5 = center
     art_off_pct_x, art_off_pct_y = 0.5, 0.5
@@ -108,11 +105,13 @@ class GameObject:
                   'animating', 'scale_x', 'scale_y']
     # members that don't need to be serialized, but should be exposed to
     # object edit UI
-    editable = ['show_collision', 'col_radius', 'mass', 'bounciness', 'stop_velocity']
+    editable = ['show_collision', 'col_radius', 'col_width', 'col_height',
+                'mass', 'bounciness', 'stop_velocity']
     # if setting a given property should run some logic, specify method here
     set_methods = {'art_src': 'set_art_src', 'alpha': 'set_alpha',
                    'scale_x': 'set_scale_x', 'scale_y': 'set_scale_y',
-                   'name': 'rename'
+                   'name': 'rename', 'col_radius': 'set_col_radius',
+                   'col_width': 'set_col_width', 'col_height': 'set_col_height'
     }
     # can select in edit mode
     selectable = True
@@ -575,6 +574,18 @@ class GameObject:
     
     def set_scale_y(self, new_y):
         self.set_scale(self.scale_x, new_y, self.scale_z)
+    
+    def set_col_radius(self, new_radius):
+        self.col_radius = new_radius
+        self.collision.shapes[0].radius = new_radius
+    
+    def set_col_width(self, new_width):
+        self.col_width = new_width
+        self.collision.shapes[0].halfwidth = new_width / 2
+    
+    def set_col_height(self, new_height):
+        self.col_height = new_height
+        self.collision.shapes[0].halfheight = new_height / 2
     
     def set_alpha(self, new_alpha):
         self.renderable.alpha = self.alpha = new_alpha

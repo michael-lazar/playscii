@@ -1,17 +1,23 @@
 import math
 
 from game_util_objects import TopDownPlayer, StaticTileBG, StaticTileObject, DynamicBoxObject, Pickup
+from collision import CST_AABB
 
 class CronoPlayer(TopDownPlayer):
     art_src = 'crono'
-    col_offset_x, col_offset_y = 0, 1.25
+    
     col_radius = 1.5
+    
+    #collision_shape_type = CST_AABB
+    #col_offset_x, col_offset_y = 0, 1.25
+    
+    col_width = 3
+    col_height = 3
     art_off_pct_y = 0.9
 
 class Chest(DynamicBoxObject):
     art_src = 'chest'
-    col_box_left_x, col_box_right_x = -3, 3
-    col_box_top_y, col_box_bottom_y = -2, 2
+    col_width, col_height = 6, 4
     col_offset_y = -0.5
 
 class Urn(Pickup):
