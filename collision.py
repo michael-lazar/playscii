@@ -104,9 +104,49 @@ class Collideable:
         self.shapes = [shape]
         self.renderables = [BoxCollisionRenderable(shape)]
     
+    def create_tiles_merged(self):
+        # TODO: generate fewer, larger boxes!
+        obj = self.game_object
+        frame = obj.renderable.frame
+        if not obj.col_layer_name in obj.art.layer_names:
+            obj.app.dev_log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
+            return
+        layer = obj.art.layer_names.index(obj.col_layer_name)
+        def tile_empty(x, y):
+            return obj.art.get_char_index_at(frame, layer, x, y) == 0
+        x, y = 0, 0
+        while y < obj.art_height:
+            while x < obj.art.width:
+                if tile_empty(x, y):
+                    continue
+                if (x, y) in self.tile_shapes:
+                    continue
+                end_x = start_x = x
+                while x < obj.art.width - 1 and tile_empty(x + 1, y) and not (x + 1, y) in self.tile_shapes:
+                    end_x += 1
+                # TODO: if start_x == end_x, try to merge downward instead
+                wx1, wy = obj.get_tile_loc(start_x, y, tile_center=True)
+                wx2, wy = obj.get_tile_loc(end_x, y, tile_center=True)
+                # create box from start_x to end_x
+                wx = (wx1 + wx2) / 2
+                halfwidth = obj.art.quad_width * (end_x - start_x)
+                halfheight = obj.art.quad_height / 2
+                shape = self.cl.add_box_shape(wx, wy, halfwidth, halfheight, obj)
+                self.shapes.append(shape)
+                # fill in cells in tile collision dict
+                for tile_x in range(start_x, end_x):
+                    self.tile_shapes[(tile_x, y)] = shape
+                r = TileBoxCollisionRenderable(shape)
+                # update renderable once to set location correctly
+                r.update()
+                self.renderables.append(r)
+                x += 1
+            x = 0
+            y += 1
+    
     def create_tiles(self):
         # fill shapes list with one box for each solid tile
-        # TODO: generate fewer, larger boxes!
+
         obj = self.game_object
         frame = obj.renderable.frame
         if not obj.col_layer_name in obj.art.layer_names:
@@ -118,13 +158,7 @@ class Collideable:
                 if obj.art.get_char_index_at(frame, layer, x, y) == 0:
                     continue
                 # get world space coordinates of this tile's center
-                wx = x * obj.art.quad_width
-                wx += obj.x - (obj.renderable.width * obj.art_off_pct_x)
-                # offset center of box by half a tile
-                wx += obj.art.quad_width / 2
-                wy = y * -obj.art.quad_height
-                wy -= -obj.y - (obj.renderable.height * obj.art_off_pct_y)
-                wy -= obj.art.quad_height / 2
+                wx, wy = obj.get_tile_loc(x, y, tile_center=True)
                 shape = self.cl.add_box_shape(wx, wy, obj.art.quad_width / 2,
                                               obj.art.quad_height / 2, obj)
                 self.shapes.append(shape)
