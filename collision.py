@@ -325,8 +325,17 @@ def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
 
 def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
                            box_hw, box_hh):
-    # TODO
-    return 1, 0, 5
+    # find point on AABB closest to center of circle
+    # clamp = min(highest, max(lowest, val))
+    px = min(box_x + box_hw, max(box_x - box_hw, circle_x))
+    py = min(box_y + box_hh, max(box_y - box_hh, circle_y))
+    closest_x = circle_x - px
+    closest_y = circle_y - py
+    d = math.sqrt(closest_x ** 2 + closest_y ** 2)
+    pdist = circle_radius - d
+    if d == 0:
+        return 1, 0, pdist
+    return -closest_x / d, -closest_y / d, -pdist
 
 def collide_shapes(a, b):
     "detect and resolve collision between two collision shapes"
@@ -344,6 +353,8 @@ def collide_shapes(a, b):
     elif type(a) is AABBCollisionShape and type(b) is CircleCollisionShape:
         px, py, pdist = circle_box_penetration(b.x, b.y, a.x, a.y, b.radius,
                                                a.halfwidth, a.halfheight)
+    else:
+        a.game_object.app.log('Unhandled collision: %s on %s' % (a.game_object.name, b.game_object.name))
     if pdist >= 0:
         return
     obj_a, obj_b = a.game_object, b.game_object
