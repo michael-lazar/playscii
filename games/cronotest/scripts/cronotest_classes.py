@@ -8,6 +8,7 @@ class CronoPlayer(TopDownPlayer):
     
     col_radius = 1.5
     
+    # AABB testing
     #collision_shape_type = CST_AABB
     #col_offset_x, col_offset_y = 0, 1.25
     
