@@ -73,7 +73,7 @@ class Collideable:
         elif self.game_object.collision_shape_type == CST_AABB:
             self.create_box()
         elif self.game_object.collision_shape_type == CST_TILE:
-            self.create_tiles()
+            self.create_merged_tile_boxes()
         # update renderables once if static
         if not self.game_object.is_dynamic():
             self.update_renderables()
@@ -104,49 +104,62 @@ class Collideable:
         self.shapes = [shape]
         self.renderables = [BoxCollisionRenderable(shape)]
     
-    def create_tiles_merged(self):
-        # TODO: generate fewer, larger boxes!
+    def create_merged_tile_boxes(self):
+        "create AABB shapes for a CST_TILE object"
+        # generate fewer, larger boxes!
         obj = self.game_object
         frame = obj.renderable.frame
         if not obj.col_layer_name in obj.art.layer_names:
             obj.app.dev_log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
             return
         layer = obj.art.layer_names.index(obj.col_layer_name)
-        def tile_empty(x, y):
-            return obj.art.get_char_index_at(frame, layer, x, y) == 0
-        x, y = 0, 0
-        while y < obj.art_height:
-            while x < obj.art.width:
-                if tile_empty(x, y):
+        # tile is available if it's not empty and not already covered by a shape
+        def tile_available(tile_x, tile_y):
+            return obj.art.get_char_index_at(frame, layer, tile_x, tile_y) != 0 and not (tile_x, tile_y) in self.tile_shapes
+        def tile_range_available(start_x, end_x, start_y, end_y):
+            for y in range(start_y, end_y + 1):
+                for x in range(start_x, end_x + 1):
+                    if not tile_available(x, y):
+                        return False
+            return True
+        for y in range(obj.art.height):
+            for x in range(obj.art.width):
+                if not tile_available(x, y):
                     continue
-                if (x, y) in self.tile_shapes:
-                    continue
-                end_x = start_x = x
-                while x < obj.art.width - 1 and tile_empty(x + 1, y) and not (x + 1, y) in self.tile_shapes:
+                # determine how big we can make this box
+                # first fill left to right
+                end_x = x
+                while end_x < obj.art.width - 1 and tile_available(end_x + 1, y):
                     end_x += 1
-                # TODO: if start_x == end_x, try to merge downward instead
-                wx1, wy = obj.get_tile_loc(start_x, y, tile_center=True)
-                wx2, wy = obj.get_tile_loc(end_x, y, tile_center=True)
-                # create box from start_x to end_x
+                # then fill top to bottom
+                end_y = y
+                while end_y < obj.art.height - 1 and tile_range_available(x, end_x, y, end_y + 1):
+                    end_y += 1
+                # compute origin and halfsizes of box covering tile range
+                wx1, wy1 = obj.get_tile_loc(x, y, tile_center=True)
+                wx2, wy2 = obj.get_tile_loc(end_x, end_y, tile_center=True)
                 wx = (wx1 + wx2) / 2
-                halfwidth = obj.art.quad_width * (end_x - start_x)
-                halfheight = obj.art.quad_height / 2
+                halfwidth = (end_x - x) * obj.art.quad_width
+                halfwidth /= 2
+                halfwidth += obj.art.quad_width / 2
+                wy = (wy1 + wy2) / 2
+                halfheight = (end_y - y) * obj.art.quad_height
+                halfheight /= 2
+                halfheight += obj.art.quad_height / 2
                 shape = self.cl.add_box_shape(wx, wy, halfwidth, halfheight, obj)
                 self.shapes.append(shape)
-                # fill in cells in tile collision dict
-                for tile_x in range(start_x, end_x):
-                    self.tile_shapes[(tile_x, y)] = shape
+                # fill in cell(s) in tile collision dict
+                for tile_y in range(y, end_y + 1):
+                    for tile_x in range(x, end_x + 1):
+                        self.tile_shapes[(tile_x, tile_y)] = shape
                 r = TileBoxCollisionRenderable(shape)
                 # update renderable once to set location correctly
                 r.update()
                 self.renderables.append(r)
-                x += 1
-            x = 0
-            y += 1
     
-    def create_tiles(self):
+    def create_tile_boxes(self):
+        "create AABB shapes for each solid tile in a CST_TILE object"
         # fill shapes list with one box for each solid tile
-
         obj = self.game_object
         frame = obj.renderable.frame
         if not obj.col_layer_name in obj.art.layer_names:
@@ -247,6 +260,13 @@ class CollisionLord:
         "returns a list of static shapes that overlap with given shape"
         overlapping_shapes = []
         shape_left, shape_top, shape_right, shape_bottom = shape.get_box()
+        # add padding to overlapping tiles check
+        if False:
+            padding = 0.01
+            shape_left -= padding
+            shape_top -= padding
+            shape_right += padding
+            shape_bottom += padding
         for obj in self.world.objects.values():
             if obj is shape.game_object or not obj.should_collide() or obj.is_dynamic():
                 continue
