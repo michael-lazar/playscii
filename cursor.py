@@ -159,21 +159,29 @@ class Cursor:
                 tiles.append((x, y))
         return tiles
     
+    # world space <-> screen space maths
+    # TODO: move into a more general class/module once they're reliable
+    
     def world_to_screen(self, world_x, world_y, world_z):
-        # TODO: this is broken, fix it!
-        # TODO: move these into a more appropriate class/module
+        """
+        returns 2D (int) screen space coordinates for given 3D (float)
+        world space coordinates.
+        FIXME: more or less totally broken
+        not used anywhere yet (except debug code)
+        """
+        # all camera matrices are 4x4 numpy float32 matrices
         vpm = np.matrix(self.app.camera.projection_matrix) + np.matrix(self.app.camera.view_matrix)
         world_point = np.array([world_x, world_y, world_z, 0]) * vpm
-        print(world_point, world_point.shape)
-        #x, y = world_point[0][0], world_point[1][1]
-        #x, y = world_point[0][0], world_point[0][1]
         x, y = world_point[0], world_point[1]
-        #print('%s, %s' % (x, y))
         screen_x = round(((x + 1) / 2.0) * self.app.window_width)
         screen_y = round(((1 - y) / 2.0) * self.app.window_height)
         return int(screen_x), int(screen_y)
     
     def screen_to_world(self, screen_x, screen_y):
+        """
+        returns 3D (float) world space coordinates for given 2D (int)
+        screen space coordinates.
+        """
         # "normalized device coordinates"
         ndc_x = (2 * screen_x) / self.app.window_width - 1
         ndc_y = (-2 * screen_y) / self.app.window_height + 1
