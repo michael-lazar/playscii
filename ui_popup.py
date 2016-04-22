@@ -378,7 +378,7 @@ class ToolPopup(UIElement):
         # position & caption palette button
         pal_caption_y = (cqh * charset.map_height) / self.art.quad_height
         pal_caption_y += self.tab_height + 5
-        self.choose_palette_button.y = pal_caption_y
+        self.choose_palette_button.y = int(pal_caption_y)
         self.choose_palette_button.caption = ' %s %s ' % (PaletteChooserButton.caption, palette.name)
         self.choose_palette_button.width = len(self.choose_palette_button.caption)
         # set button states so captions draw properly
