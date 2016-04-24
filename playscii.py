@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
+# coding=utf-8
 
+from __future__ import print_function
 import sys, os.path
+
+if sys.version_info.major < 3:
+    print('Python 3 is required to run Playscii', file=sys.stderr)
+    sys.exit(1)
 
 # obnoxious PyOpenGL workaround for py2exe
 import platform
