@@ -2,6 +2,7 @@ import math, ctypes
 import numpy as np
 from OpenGL import GL
 
+import vector
 from edit_command import EditCommand
 
 """
@@ -159,53 +160,6 @@ class Cursor:
                 tiles.append((x, y))
         return tiles
     
-    # world space <-> screen space maths
-    # TODO: move into a more general class/module once they're reliable
-    
-    def world_to_screen(self, world_x, world_y, world_z):
-        """
-        returns 2D (int) screen space coordinates for given 3D (float)
-        world space coordinates.
-        FIXME: more or less totally broken
-        not used anywhere yet (except debug code)
-        """
-        # all camera matrices are 4x4 numpy float32 matrices
-        vpm = np.matrix(self.app.camera.projection_matrix) + np.matrix(self.app.camera.view_matrix)
-        world_point = np.array([world_x, world_y, world_z, 0]) * vpm
-        x, y = world_point[0], world_point[1]
-        screen_x = round(((x + 1) / 2.0) * self.app.window_width)
-        screen_y = round(((1 - y) / 2.0) * self.app.window_height)
-        return int(screen_x), int(screen_y)
-    
-    def screen_to_world(self, screen_x, screen_y):
-        """
-        returns 3D (float) world space coordinates for given 2D (int)
-        screen space coordinates.
-        """
-        # "normalized device coordinates"
-        ndc_x = (2 * screen_x) / self.app.window_width - 1
-        ndc_y = (-2 * screen_y) / self.app.window_height + 1
-        # reverse camera projection
-        pjm = np.matrix(self.app.camera.projection_matrix)
-        vm = np.matrix(self.app.camera.view_matrix)
-        vp_inverse = (pjm * vm).getI()
-        if self.app.ui.active_art and not self.app.game_mode:
-            z = self.app.ui.active_art.layers_z[self.app.ui.active_art.active_layer]
-        else:
-            z = 0
-        point = vp_inverse.dot(np.array([ndc_x, ndc_y, z, 0]))
-        point = point.getA()
-        cz = self.app.camera.z - z
-        # apply camera offsets
-        x = point[0][0] * cz + self.app.camera.x
-        y = point[0][1] * cz + self.app.camera.y
-        # TODO: below doesn't properly account for distance between current
-        # layer and camera - close but still inaccurate as cursor gets further
-        # from world origin
-        #y += self.app.camera.look_y.y
-        y += self.app.camera.y_tilt
-        return x, y, z
-    
     def undo_preview_edits(self):
         for edit in self.preview_edits:
             edit.undo()
@@ -257,7 +211,9 @@ class Cursor:
         if mouse_moved or (not self.app.keyboard_editing and self.app.camera.moved_this_frame):
             # don't let mouse move cursor if text tool input is happening
             if not self.app.ui.text_tool.input_active:
-                self.x, self.y, self.z = self.screen_to_world(self.app.mouse_x, self.app.mouse_y)
+                self.x, self.y, self.z = vector.screen_to_world_OLD(self.app,
+                                                                self.app.mouse_x,
+                                                                self.app.mouse_y)
             self.moved = True
         if not self.moved and not self.app.ui.tool_settings_changed:
             return
