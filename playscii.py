@@ -29,6 +29,7 @@ from charset import CharacterSet, CHARSET_DIR
 from palette import Palette, PALETTE_DIR
 from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION
 from renderable import TileRenderable, OnionTileRenderable
+from renderable_line import DebugLineRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION, SCRIPT_DIR
 from ui import UI
@@ -205,6 +206,8 @@ class Application:
         # if game dir specified, set it before we try to load any art
         if game_dir_to_load or autoplay_game:
             self.gw.set_game_dir(game_dir_to_load or autoplay_game, False)
+        # debug line renderable
+        self.debug_line_renderable = DebugLineRenderable(self, None)
         # onion skin renderables
         self.onion_frames_visible = False
         self.onion_show_frames = MAX_ONION_FRAMES
@@ -687,6 +690,7 @@ class Application:
             self.ui.select_tool.render_selections()
             if self.ui.active_art and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
                 self.cursor.render()
+        self.debug_line_renderable.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render()
