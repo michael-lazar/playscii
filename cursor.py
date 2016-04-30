@@ -211,7 +211,7 @@ class Cursor:
         if mouse_moved or (not self.app.keyboard_editing and self.app.camera.moved_this_frame):
             # don't let mouse move cursor if text tool input is happening
             if not self.app.ui.text_tool.input_active:
-                self.x, self.y, self.z = vector.screen_to_world_OLD(self.app,
+                self.x, self.y, self.z = vector.screen_to_world(self.app,
                                                                 self.app.mouse_x,
                                                                 self.app.mouse_y)
             self.moved = True
