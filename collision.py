@@ -290,17 +290,34 @@ class CollisionLord:
             if shape.game_object.should_collide():
                 valid_dynamic_shapes.append(shape)
         for i in range(iterations):
+            # track test pairs so we don't do B->A if we've already done A->B
+            tests = {}
             # push all dynamic circles out of each other
             for a in valid_dynamic_shapes:
+                # create list for objects this object has tested against
+                if not a in tests:
+                    tests[a] = []
                 for b in valid_dynamic_shapes:
                     if a is b:
                         continue
+                    if not b in tests:
+                        tests[b] = []
+                    # have these two objects already tested this iteration?
+                    if a in tests[b] or b in tests[a]:
+                        continue
+                    # mark A->B as tested
+                    tests[a].append(b)
                     # collide_shapes handles different shape type combinations
                     collide_shapes(a, b)
             # now push all dynamic circles out of all static circles
             for a in valid_dynamic_shapes:
                 # check against list of static shapes pared down by broadphase
                 for b in self.get_overlapping_static_shapes(a):
+                    if not b in tests:
+                        tests[b] = []
+                    if a in tests[b] or b in tests[a]:
+                        continue
+                    tests[a].append(b)
                     collide_shapes(a, b)
         # check which objects stopped colliding
         for obj in self.world.objects.values():
@@ -361,21 +378,20 @@ def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
     px = right_a - left_b if ax <= bx else right_b - left_a
     # A above or below B?
     py = top_b - bottom_a if ay >= by else top_a - bottom_b
-    # return separating axis + penetration depth
     dx, dy = bx - ax, by - ay
-    if abs(dx) >= abs(dy):
+    widths, heights = ahw + bhw, ahh + bhh
+    # return separating axis + penetration depth
+    if widths + px - abs(dx) < heights + py - abs(dy):
         if dx >= 0:
             return 1, 0, -px
-        else:
+        elif dx < 0:
             return -1, 0, -px
-    elif abs(dx) < abs(dy):
+    else:
         if dy >= 0:
             return 0, 1, -py
-        else:
+        elif dy < 0:
             return 0, -1, -py
-    else:
-        # TODO: this is probably wrong
-        return 0.5, 0.5, math.sqrt(px ** 2 + py ** 2)
+    return 1, 0, -px
 
 def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
                            box_hw, box_hh):
@@ -407,6 +423,8 @@ def collide_shapes(a, b):
     elif type(a) is AABBCollisionShape and type(b) is CircleCollisionShape:
         px, py, pdist = circle_box_penetration(b.x, b.y, a.x, a.y, b.radius,
                                                a.halfwidth, a.halfheight)
+        # reverse penetration result
+        px, py = -px, -py
     else:
         a.game_object.app.log('Unhandled collision: %s on %s' % (a.game_object.name, b.game_object.name))
     if pdist >= 0:

@@ -3,7 +3,7 @@ import os, sys, time, importlib, json
 import sdl2
 
 import game_object, game_util_objects, game_hud, game_room
-import collision
+import collision, vector
 from camera import Camera
 from art import ART_DIR
 from charset import CHARSET_DIR
@@ -124,8 +124,8 @@ class GameWorld:
     
     def clicked(self, button):
         if self.classname_to_spawn:
-            x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
-                                                      self.app.mouse_y)
+            x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                             self.app.mouse_y)
             new_obj = self.spawn_object_of_class(self.classname_to_spawn, x, y)
             if self.current_room:
                 self.current_room.add_object(new_obj)
@@ -140,8 +140,8 @@ class GameWorld:
         # if we're clicking to spawn something, don't drag/select
         if self.classname_to_spawn:
             return
-        x, y, z = self.app.cursor.screen_to_world(self.app.mouse_x,
-                                                  self.app.mouse_y)
+        x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                         self.app.mouse_y)
         was_dragging = self.dragging_object
         self.dragging_object = False
         if not self.app.il.ctrl_pressed and not self.app.il.shift_pressed:
@@ -177,10 +177,10 @@ class GameWorld:
         if len(self.selected_objects) == 0:
             return
         # get mouse delta in world space
-        mx1, my1, mz1 = self.app.cursor.screen_to_world(self.app.mouse_x,
-                                                        self.app.mouse_y)
-        mx2, my2, mz2 = self.app.cursor.screen_to_world(self.app.mouse_x + dx,
-                                                        self.app.mouse_y + dy)
+        mx1, my1, mz1 = vector.screen_to_world(self.app, self.app.mouse_x,
+                                               self.app.mouse_y)
+        mx2, my2, mz2 = vector.screen_to_world(self.app, self.app.mouse_x + dx,
+                                               self.app.mouse_y + dy)
         world_dx, world_dy = mx2 - mx1, my2 - my1
         if self.app.left_mouse and world_dx != 0 and world_dy != 0:
             for obj in self.selected_objects:

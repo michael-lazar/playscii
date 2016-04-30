@@ -210,6 +210,48 @@ class WorldLineRenderable(LineRenderable):
         return self.app.camera.view_matrix
 
 
+class DebugLineRenderable(WorldLineRenderable):
+    
+    """
+    renderable for drawing debug lines in the world.
+    use set_lines and add_lines to replace and add to, respectively, the list
+    of 3D vertex locations (and, optionally, colors).
+    """
+    
+    color = (0.5, 0, 0, 1)
+    vert_items = 3
+    line_width = 5
+    
+    def set_lines(self, new_lines, new_colors=None):
+        self.vert_array = np.array(new_lines, dtype=np.float32)
+        elements = []
+        for i in range(1, len(new_lines)):
+            elements += [i, i - 1]
+        self.elem_array = np.array(elements, dtype=np.uint32)
+        self.color_array = np.array(new_colors or self.color * len(new_lines),
+                                    dtype=np.float32)
+        self.rebind_buffers()
+    
+    def get_quad_size(self):
+        return 1, 1
+    
+    def add_lines(self, new_lines, new_colors=None):
+        # TODO: add to existing line data arrays - grow then write in new values
+        print('ERROR: DebugLineRenderable.add_lines not implemented yet')
+    
+    def build_geo(self):
+        # start empty
+        self.vert_array = np.array([], dtype=np.float32)
+        self.elem_array = np.array([], dtype=np.uint32)
+        self.color_array = np.array([], dtype=np.float32)
+    
+    def render(self):
+        # only render if we have any data
+        if len(self.vert_array) == 0:
+            return
+        WorldLineRenderable.render(self)
+
+
 class OriginIndicatorRenderable(WorldLineRenderable):
     
     "classic 3-axis thingy showing location/rotation/scale"
