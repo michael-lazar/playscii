@@ -42,17 +42,6 @@ class Vec3:
         return Vec3(self.x, self.y, self.z)
 
 
-def screen_to_world_NEW2(app, screen_x, screen_y):
-    #worldPoint = inverse(projectionMatrix) * vec4(x * 2.0 / screenWidth - 1.0, (screenHeight - y) * 2.0 / screenHeight - 1.0, 0.0, 1.0)
-    x = screen_x * 2 / app.window_width - 1
-    y = (app.window_height - screen_y) * 2 / app.window_height - 1
-    inv_proj = np.matrix(app.camera.projection_matrix).getI()
-    #x, y, z = inv_proj.dot(np.array([x, y, 0, 1]))
-    #x, y, z = inv_proj.dot([x, y, 0, 1])
-    hi = inv_proj.dot([x, y, 0, 1]).getA()
-    return hi[0][0], hi[0][1], hi[0][2]
-    #return x, y, z
-
 def transform_vec4(x, y, z, w, m):
     "transforms given 4d vector by given matrix"
     m = m.T
@@ -121,6 +110,7 @@ def screen_to_world_NEW(app, screen_x, screen_y):
     """
     returns 3D (float) world space coordinates for given 2D (int)
     screen space coordinates.
+    (alternative implementation)
     """
     #near, far = app.camera.near_z, app.camera.far_z
     near, far = 0, 1#app.camera.z
@@ -137,10 +127,11 @@ def screen_to_world_NEW(app, screen_x, screen_y):
         d = app.ui.active_art.layers_z[app.ui.active_art.active_layer]
     else:
         d = 0
-    #print('ray start: %.4f, %.4f, %.4f\nray end: %.4f, %.4f, %.4f' % (start_x, start_y, start_z, end_x, end_y, end_z))
     x, y, z = line_plane_intersection(0, 0, 1, d, start_x, start_y, start_z,
                                       end_x, end_y, end_z)
     if not x: return 0, 0, 0
+    # DEBUG
+    #print('ray start: %.4f, %.4f, %.4f\nray end: %.4f, %.4f, %.4f' % (start_x, start_y, start_z, end_x, end_y, end_z))
     colors = [(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)]
     app.debug_line_renderable.set_lines([(start_x, start_y, start_z),
                                          (end_x, end_y, end_z),
@@ -148,10 +139,23 @@ def screen_to_world_NEW(app, screen_x, screen_y):
                                         colors)
     return x, y, z
 
+def screen_to_world_NEW2(app, screen_x, screen_y):
+    "2nd alternative implementation"
+    #worldPoint = inverse(projectionMatrix) * vec4(x * 2.0 / screenWidth - 1.0, (screenHeight - y) * 2.0 / screenHeight - 1.0, 0.0, 1.0)
+    x = screen_x * 2 / app.window_width - 1
+    y = (app.window_height - screen_y) * 2 / app.window_height - 1
+    inv_proj = np.matrix(app.camera.projection_matrix).getI()
+    #x, y, z = inv_proj.dot(np.array([x, y, 0, 1]))
+    #x, y, z = inv_proj.dot([x, y, 0, 1])
+    hi = inv_proj.dot([x, y, 0, 1]).getA()
+    return hi[0][0], hi[0][1], hi[0][2]
+    #return x, y, z
+
 def screen_to_world_OLD(app, screen_x, screen_y):
     """
     returns 3D (float) world space coordinates for given 2D (int)
     screen space coordinates.
+    (existing Playscii 0.7.3 implementation)
     """
     # "normalized device coordinates"
     ndc_x = (2 * screen_x) / app.window_width - 1
@@ -175,8 +179,9 @@ def screen_to_world_OLD(app, screen_x, screen_y):
     # from world origin
     #y += self.app.camera.look_y.y
     y += app.camera.y_tilt
-    #colors = [(1, 0, 0, 1), (0, 0, 1, 1), (0, 1, 0, 1), (1, 1, 0, 1)]
+    # DEBUG
     #print('%s, %s, %s' % (app.camera.x, app.camera.y, app.camera.z))
+    #colors = [(1, 0, 0, 1), (0, 0, 1, 1), (0, 1, 0, 1), (1, 1, 0, 1)]
     #app.debug_line_renderable.set_lines(
     #    [(0, 0, 0), (x, y, z), (x, y, 0), (app.camera.x, app.camera.y, app.camera.z)],
     return x, y, z
