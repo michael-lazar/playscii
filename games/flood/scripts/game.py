@@ -63,7 +63,7 @@ class Board(GameObject):
             print('lose')
             # TODO: reset after delay / feedback
     
-    def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+    def handle_key(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         # get list of valid keys from length of tile_colors
         valid_keys = ['%s' % str(i + 1) for i in range(len(TILE_COLORS))]
         if not key in valid_keys:

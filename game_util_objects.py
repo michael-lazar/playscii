@@ -211,7 +211,7 @@ class StaticTileTrigger(GameObject):
     physics_move = False
     serialized = ['name', 'x', 'y', 'z', 'art_src', 'visible', 'locked']
     
-    def started_colliding(self, other):
+    def started_overlapping(self, other):
         #self.app.log('Trigger overlapped with %s' % other.name)
         pass
 
@@ -229,7 +229,7 @@ class WarpTrigger(StaticTileTrigger):
     serialized = StaticTileTrigger.serialized + ['destination_room',
                                                  'destination_marker_name',
                                                  'use_marker_room']
-    def started_colliding(self, other):
+    def started_overlapping(self, other):
         # if player overlaps, change room to destination_room
         if not isinstance(other, Player):
             return

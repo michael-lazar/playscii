@@ -144,11 +144,14 @@ def screen_to_world_NEW2(app, screen_x, screen_y):
     #worldPoint = inverse(projectionMatrix) * vec4(x * 2.0 / screenWidth - 1.0, (screenHeight - y) * 2.0 / screenHeight - 1.0, 0.0, 1.0)
     x = screen_x * 2 / app.window_width - 1
     y = (app.window_height - screen_y) * 2 / app.window_height - 1
-    inv_proj = np.matrix(app.camera.projection_matrix).getI()
+    #inv_proj = np.matrix(app.camera.projection_matrix).getI()
+    pjm = np.matrix(app.camera.projection_matrix)
+    vm = np.matrix(app.camera.view_matrix)
+    inv_proj = (pjm * vm).getI()
     #x, y, z = inv_proj.dot(np.array([x, y, 0, 1]))
     #x, y, z = inv_proj.dot([x, y, 0, 1])
     hi = inv_proj.dot([x, y, 0, 1]).getA()
-    return hi[0][0], hi[0][1], hi[0][2]
+    return hi[0][0] + app.camera.x, hi[0][1] + app.camera.y, hi[0][2]
     #return x, y, z
 
 def screen_to_world_OLD(app, screen_x, screen_y):

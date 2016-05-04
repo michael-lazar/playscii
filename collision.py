@@ -353,6 +353,9 @@ class CollisionLord:
 
 # collision handling
 
+def point_in_box(x, y, box_left, box_top, box_right, box_bottom):
+    return box_left <= x <= box_right and box_bottom <= y <= box_top
+
 def boxes_overlap(left_a, top_a, right_a, bottom_a, left_b, top_b, right_b, bottom_b):
     for (x, y) in ((left_a, top_a), (right_a, top_a), (right_a, bottom_a), (left_a, bottom_a)):
         if left_b <= x <= right_b and bottom_b <= y <= top_b:
@@ -395,10 +398,16 @@ def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
 
 def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
                            box_hw, box_hh):
-    # find point on AABB closest to center of circle
+    box_left, box_right = box_x - box_hw, box_x + box_hw
+    box_top, box_bottom = box_y + box_hh, box_y - box_hh
+    # if circle center inside box, use box-on-box penetration vector + distance
+    if point_in_box(circle_x, circle_y, box_left, box_top, box_right, box_bottom):
+        return box_penetration(circle_x, circle_y, box_x, box_y,
+                               circle_radius, circle_radius, box_hw, box_hh)
+    # find point on AABB edges closest to center of circle
     # clamp = min(highest, max(lowest, val))
-    px = min(box_x + box_hw, max(box_x - box_hw, circle_x))
-    py = min(box_y + box_hh, max(box_y - box_hh, circle_y))
+    px = min(box_right, max(box_left, circle_x))
+    py = min(box_top, max(box_bottom, circle_y))
     closest_x = circle_x - px
     closest_y = circle_y - py
     d = math.sqrt(closest_x ** 2 + closest_y ** 2)
