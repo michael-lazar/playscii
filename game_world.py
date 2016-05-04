@@ -397,7 +397,8 @@ class GameWorld:
         key = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode()
         for obj in self.objects.values():
             if obj.handle_input_events:
-                obj.handle_input(key, shift_pressed, alt_pressed, ctrl_pressed)
+                obj.handle_key(key, shift_pressed, alt_pressed, ctrl_pressed)
+                # TODO: handle_ functions for other types of input
     
     def frame_begin(self):
         "runs at start of game loop iteration, before input/update/render"
@@ -459,6 +460,8 @@ class GameWorld:
     def render(self):
         visible_objects = []
         for obj in self.objects.values():
+            if obj.should_destroy:
+                continue
             obj.update_renderables()
             # filter out objects outside current room here
             # (if no current room or object is in no rooms, render it always)

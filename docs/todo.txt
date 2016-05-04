@@ -2,10 +2,10 @@ TODO
 
 for 0.8.0:
 
-collision:
-- investigate quirks with box-on-box collision (tunneling in corner of cronotest when player is a box)
-- investigate why player doesn't collide with environment in maze (unless their collision radius is increased to ~1) but does in wordmaze!
-- use some kind of merging algo in Collideable.create_tiles so fewer, larger AABBs are created for objects with tile-based collision
+collision issues to investigate:
+- player doesn't collide with environment in maze (unless their collision radius is increased to ~1) but does in wordmaze!
+- player gets hung up on boundaries between AABBs in
+- make sure projectiles (very fast moving GOs) actually hit walls etc
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 -- on mouse click, write dict of {obj_name:(xoff,yoff)} of offsets from mouse to each dragged object's origin

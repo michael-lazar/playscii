@@ -4,7 +4,7 @@ from art import Art
 from renderable import TileRenderable
 from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
-from collision import Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
+from collision import Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC, point_in_box
 
 # facings
 GOF_LEFT = 0
@@ -262,7 +262,7 @@ class GameObject:
     def is_point_inside(self, x, y):
         "returns True if given point is inside our bounds"
         left, top, right, bottom = self.get_edges()
-        return left <= x <= right and bottom <= y <= top
+        return point_in_box(x, y, left, top, right, bottom)
     
     def get_edges(self):
         "returns coords of our bounds (left, top, right, bottom)"
@@ -346,6 +346,9 @@ class GameObject:
         # remember prior collision type
         self.orig_collision_type = self.collision_type
         self.collision_type = CT_NONE
+    
+    def started_overlapping(self, other):
+        pass
     
     def started_colliding(self, other):
         pass
@@ -431,13 +434,15 @@ class GameObject:
         # create or update contact info: (depth_x, depth_y, timestamp)
         # TODO: maybe use a named tuple here
         self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
-        if started:
-            self.started_colliding(other)
         # return False if we shouldn't collide with this class
         for ncc_name in self.noncolliding_classes:
             ncc = self.world.classes[ncc_name]
             if isinstance(other, ncc):
+                if started:
+                    self.started_overlapping(other)
                 return False
+        if started:
+            self.started_colliding(other)
         return True
     
     def get_tile_loc(self, tile_x, tile_y, tile_center=True):
@@ -671,7 +676,7 @@ class GameObject:
     def warped_recently(self):
         return self.world.app.updates - self.last_warp_update <= 0
     
-    def handle_input(self, event, shift_pressed, alt_pressed, ctrl_pressed):
+    def handle_key(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         """
         handle event w/ keyboard mods.
         subclasses can do stuff here if handle_input_events=True
