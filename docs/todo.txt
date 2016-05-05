@@ -11,8 +11,6 @@ fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 -- on mouse move, update object's loc to mouse + its offset
 -- on mouse unclick, wipe object offset dict
 
-- fix art.TileIter off-by-one bug(s)
-
 - make sure windows and OSX builds can play sound (ie have the correct sound libs included)
 
 ---
