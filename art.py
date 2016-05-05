@@ -63,7 +63,9 @@ uv_types_reverse = {
     uv_types[UV_FLIPY]: UV_FLIPY
 }
 
+
 class Art:
+    
     """
     Art asset:
     Contains the data that is modified by user edits and gets saved to disk.
@@ -72,10 +74,13 @@ class Art:
     assumptions:
     - an Art contains 1 or more frames
     - each frame contains 1 or more layers
-    - each layer contains WxH tiles
+    - each layer is a rectangular grid of Width x Height tiles
     - each tile has: character, foreground color, background color, & transform
+    - char/color tile values are expressed as indices into charset / palette
     - all layers in an Art are the same dimensions
     """
+    
+    # size of each tile in world space
     quad_width,quad_height = 1, 1
     log_size_changes = False
     recalc_quad_height = True
@@ -984,31 +989,28 @@ class ArtFromEDSCII(Art):
 
 class TileIter:
     
+    "Iterates over all tiles in all layers and frames in an Art"
+    
     def __init__(self, art):
         self.width, self.height = art.width, art.height
         self.frames, self.layers = art.frames, art.layers
     
     def __iter__(self):
         self.frame, self.layer = 0, 0
-        self.x, self.y = 0, 0
+        self.x, self.y = -1, 0
         return self
     
     def __next__(self):
-        frame, layer, x, y = self.frame, self.layer, self.x, self.y
         self.x += 1
         if self.x >= self.width:
             self.x = 0
-            #return frame, layer, x, y
-            #print('row end')
             self.y += 1
         if self.y >= self.height:
             self.y = 0
-            #print('layer end')
             self.layer += 1
         if self.layer >= self.layers:
             self.layer = 0
-            #print('frame end')
             self.frame += 1
         if self.frame >= self.frames:
             raise StopIteration
-        return frame, layer, x, y
+        return self.frame, self.layer, self.x, self.y

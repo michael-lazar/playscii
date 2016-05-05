@@ -9,6 +9,11 @@ TILE_COLORS = [3, 4, 5, 6, 7]
 STARTING_TURNS = 15
 BOARD_WIDTH, BOARD_HEIGHT = 10, 10
 
+# game states
+GS_PLAYING = 0
+GS_WON = 1
+GS_LOST = 2
+
 
 class Board(GameObject):
     generate_art = True
@@ -26,17 +31,18 @@ class Board(GameObject):
             color = choice(TILE_COLORS)
             self.art.set_color_at(frame, layer, x, y, color, False)
         self.captured_tiles = [(0, 0)]
-        self.turns = 20
+        self.turns = STARTING_TURNS
+        self.game_state = GS_PLAYING
     
     def get_adjacent_tiles(self, x, y):
         tiles = []
         if x > 0:
             tiles.append((x-1, y))
-        if x < BOARD_WIDTH:
+        if x < BOARD_WIDTH - 1:
             tiles.append((x+1, y))
         if y > 0:
             tiles.append((x, y-1))
-        if y < BOARD_HEIGHT:
+        if y < BOARD_HEIGHT - 1:
             tiles.append((x, y+1))
         return tiles
     
@@ -58,12 +64,15 @@ class Board(GameObject):
         self.flood_with_color(TILE_COLORS[color])
         self.turns -= 1
         if len(self.captured_tiles) == BOARD_WIDTH * BOARD_HEIGHT:
-            print('win!')
+            self.game_state = GS_WON
         elif self.turns == 0:
-            print('lose')
-            # TODO: reset after delay / feedback
+            self.game_state = GS_LOST
+            # TODO: reset after delay / feedback?
     
     def handle_key(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+        if self.game_state != GS_PLAYING:
+            self.reset()
+            return
         # get list of valid keys from length of tile_colors
         valid_keys = ['%s' % str(i + 1) for i in range(len(TILE_COLORS))]
         if not key in valid_keys:
@@ -82,7 +91,6 @@ class ColorBar(GameObject):
         GameObject.__init__(self, world, obj_data)
         i = 0
         for frame, layer, x, y in TileIter(self.art):
-            print('%s, %s' % (x, y))
             self.art.set_color_at(frame, layer, x, y, TILE_COLORS[i], False)
             self.art.write_string(frame, layer, x, y, str(i + 1), 1)
             i += 1
@@ -105,7 +113,13 @@ class TurnsBar(GameObject):
     def draw_text(self):
         if not self.board:
             return
-        self.art.write_string(0, 0, 0, 0, self.text % self.board.turns, -1)
+        self.art.clear_frame_layer(0, 0)
+        new_text = self.text % self.board.turns
+        if self.board.game_state == GS_WON:
+            new_text = 'won!!'
+        elif self.board.game_state == GS_LOST:
+            new_text = 'lost :('
+        self.art.write_string(0, 0, 0, 0, new_text, -1)
     
     def update(self):
         GameObject.update(self)
