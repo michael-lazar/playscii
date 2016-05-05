@@ -62,6 +62,8 @@ class GameObject:
     art_charset, art_palette = None, None
     # Y-sort: if true, object will sort according to its Y position
     y_sort = False
+    # if >0, object will self-destroy after this many seconds
+    lifespan = 0.
     # if False, don't do move physics updates for this object
     physics_move = True
     # acceleration per update from player movement
@@ -169,6 +171,11 @@ class GameObject:
         self.flip_x = False
         self.world = world
         self.app = self.world.app
+        # if this is >0, object will self-destroy at/after that time (in ms)
+        self.destroy_time = 0
+        # lifespan property = easy auto-set for fixed lifetime objects
+        if self.lifespan > 0:
+            self.set_destroy_timer(self.lifespan)
         # load/create assets
         self.arts = {}
         # if art_src not specified, create a new art according to dimensions
@@ -600,7 +607,7 @@ class GameObject:
         return True
     
     def move(self, dir_x, dir_y):
-        "handle player-initiated velocity"
+        "handle player/sim-initiated velocity"
         # don't handle moves while game paused
         # (add override flag if this becomes necessary)
         if self.world.paused:
@@ -612,7 +619,7 @@ class GameObject:
         self.move_y += dir_y
     
     def is_on_ground(self):
-        "logic for determining if object is on ground vs not"
+        "subclasses can define logic for determining if obj is on ground vs not"
         return True
     
     def get_friction(self):
@@ -727,6 +734,8 @@ class GameObject:
         pass
     
     def update(self):
+        if 0 < self.destroy_time <= self.app.get_elapsed_time():
+            self.destroy()
         # don't apply physics to selected objects being dragged
         if self.physics_move and not (self.world.dragging_object and self in self.world.selected_objects):
             self.apply_move()
@@ -792,6 +801,10 @@ class GameObject:
     
     def reset_in_place(self):
         self.world.reset_object_in_place(self)
+    
+    def set_destroy_timer(self, destroy_in_seconds):
+        "set object to destroy itself given number of seconds from now"
+        self.destroy_time = self.app.get_elapsed_time() + destroy_in_seconds * 1000
     
     def destroy(self):
         self.stop_all_sounds()

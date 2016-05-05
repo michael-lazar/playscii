@@ -262,6 +262,7 @@ class TileRenderable:
             new_frame += 1
             new_frame %= self.art.frames
             this_frame_delay = self.art.frame_delays[new_frame] * 1000
+            # TODO: if new_frame < self.frame, count anim loop?
         self.set_frame(new_frame)
         self.last_frame_time = self.app.get_elapsed_time()
     
