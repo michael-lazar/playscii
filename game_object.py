@@ -4,7 +4,7 @@ from art import Art
 from renderable import TileRenderable
 from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
-from collision import Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC, point_in_box
+from collision import Contact, Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC, point_in_box
 
 # facings
 GOF_LEFT = 0
@@ -378,7 +378,7 @@ class GameObject:
         # keep separate list of names of objects no longer present
         destroyed = []
         for obj_name,contact in self.collision.contacts.items():
-            if contact[2] < self.world.cl.ticks:
+            if contact.timestamp < self.world.cl.ticks:
                 # object might have been destroyed
                 obj = self.world.objects.get(obj_name, None)
                 if obj:
@@ -439,8 +439,8 @@ class GameObject:
     def overlapped(self, other, dx, dy):
         started = other.name not in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
-        # TODO: maybe use a named tuple here
-        self.collision.contacts[other.name] = (dx, dy, self.world.cl.ticks)
+        self.collision.contacts[other.name] = Contact(dx, dy,
+                                                      self.world.cl.ticks)
         # return False if we shouldn't collide with this class
         for ncc_name in self.noncolliding_classes:
             ncc = self.world.classes[ncc_name]
@@ -463,6 +463,10 @@ class GameObject:
             x += self.art.quad_width / 2
             y -= self.art.quad_height / 2
         return x, y
+    
+    def get_layer_z(self, layer_name):
+        "returns Z of layer with given name"
+        return self.z + self.art.layers_z[self.art.layer_names.index(layer_name)]
     
     def get_all_art(self):
         "returns a list of all Art used by this object"

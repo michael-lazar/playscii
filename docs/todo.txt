@@ -13,6 +13,10 @@ fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 
 - make sure windows and OSX builds can play sound (ie have the correct sound libs included)
 
+- when changing art via properties editor, art doesn't update until reload
+- if Framebuffer.start_crt_enabled = False but crt = True, exported image is always un-CRT'd
+- image convert sometimes results in 0 alpha, see e3sky.png
+
 ---
 
 new features / major improvements:

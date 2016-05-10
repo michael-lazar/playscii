@@ -1,7 +1,11 @@
 import math
+from collections import namedtuple
 
 from renderable import TileRenderable
 from renderable_line import CircleCollisionRenderable, BoxCollisionRenderable, TileBoxCollisionRenderable
+
+# number of times to resolve collisions per update
+ITERATIONS = 6
 
 # collision shape types
 CST_NONE = 0
@@ -19,6 +23,12 @@ CT_GENERIC_DYNAMIC = 3
 CTG_STATIC = [CT_GENERIC_STATIC]
 CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 
+# named tuples for collision structs that don't merit a class
+Contact = namedtuple('Contact', ['depth_x', 'depth_y', 'timestamp'])
+
+SharedEdge = namedtuple('SharedEdge', ['x1', 'y1', 'x2', 'y2', 'normal',
+                                       'other_shape'])
+
 
 class CircleCollisionShape:
     
@@ -27,6 +37,10 @@ class CircleCollisionShape:
         self.radius = radius
         self.game_object = gobj
         self.mass = self.game_object.mass
+    
+    def overlaps_line(self, x1, y1, x2, y2):
+        "returns True if this circle overlaps given line segment"
+        return circle_overlaps_line(self.x, self.y, self.radius, x1, y1, x2, y2)
     
     def get_box(self):
         "returns coords of our bounds (left, top, right, bottom)"
@@ -42,6 +56,14 @@ class AABBCollisionShape:
         self.halfwidth, self.halfheight = halfwidth, halfheight
         self.game_object = gobj
         self.mass = self.game_object.mass
+        # for CST_TILE objects, lists of tile(s) we cover and shared edges
+        self.tiles = []
+        self.shared_edges = []
+    
+    def overlaps_line(self, x1, y1, x2, y2):
+        "returns True if this box overlaps given line segment"
+        # TODO
+        return False
     
     def get_box(self):
         return self.x - self.halfwidth, self.y - self.halfheight, self.x + self.halfwidth, self.y + self.halfheight
@@ -74,6 +96,7 @@ class Collideable:
             self.create_box()
         elif self.game_object.collision_shape_type == CST_TILE:
             self.create_merged_tile_boxes()
+            self.find_shared_edges()
         # update renderables once if static
         if not self.game_object.is_dynamic():
             self.update_renderables()
@@ -103,6 +126,56 @@ class Collideable:
                                       self.game_object)
         self.shapes = [shape]
         self.renderables = [BoxCollisionRenderable(shape)]
+    
+    def find_shared_edges(self):
+        """
+        finds shared (interior) edges between boxes in CST_TILE objects and
+        writes shared edge info into each affected shape
+        """
+        gobj = self.game_object
+        for shape in self.shapes:
+            for (tile_x, tile_y) in shape.tiles:
+                for (adj_x, adj_y) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                    if not 0 < tile_x + adj_x < gobj.art.width or \
+                       not 0 < tile_y + adj_y < gobj.art.height:
+                        continue
+                    adjacent_shape = self.tile_shapes.get((tile_x + adj_x,
+                                                           tile_y + adj_y),None)
+                    if not adjacent_shape or adjacent_shape is shape:
+                        continue
+                    # calculate world space coordinates of edge ends
+                    # get_tile_loc returns top left if tile_center=False
+                    x1, y1 = self.game_object.get_tile_loc(tile_x, tile_y,
+                                                           tile_center=False)
+                    qw, qh = gobj.art.quad_width, gobj.art.quad_height
+                    # right edge
+                    if (adj_x, adj_y) == (1, 0):
+                        x1 += qw
+                        x2 = x1
+                        y2 = y1 - qh
+                    # left edge
+                    elif (adj_x, adj_y) == (-1, 0):
+                        x2 = x1
+                        y2 = y1 - qh
+                    # bottom edge
+                    elif (adj_x, adj_y) == (0, 1):
+                        y1 -= qh
+                        y2 = y1
+                        x2 = x1 + qw
+                    # top edge
+                    elif (adj_x, adj_y) == (0, -1):
+                        x2 = x1 + qw
+                        y2 = y1
+                    # DEBUG: highlight shared edges
+                    if True:
+                        # Z should be height of collision layer
+                        z = gobj.get_layer_z(gobj.col_layer_name)
+                        lines = [(x1, y1, z), (x2, y2, z)]
+                        gobj.world.app.debug_line_renderable.add_lines(lines)
+                    edge = SharedEdge(x1=x1, y1=y1, x2=x2, y2=y2,
+                                      normal=(adj_x, adj_y),
+                                      other_shape=adjacent_shape)
+                    shape.shared_edges.append(edge)
     
     def create_merged_tile_boxes(self):
         "create AABB shapes for a CST_TILE object"
@@ -147,35 +220,13 @@ class Collideable:
                 halfheight /= 2
                 halfheight += obj.art.quad_height / 2
                 shape = self.cl.add_box_shape(wx, wy, halfwidth, halfheight, obj)
-                self.shapes.append(shape)
-                # fill in cell(s) in tile collision dict
+                # fill in cell(s) in our tile collision dict,
+                # write list of tiles shape covers to shape.tiles
                 for tile_y in range(y, end_y + 1):
                     for tile_x in range(x, end_x + 1):
                         self.tile_shapes[(tile_x, tile_y)] = shape
-                r = TileBoxCollisionRenderable(shape)
-                # update renderable once to set location correctly
-                r.update()
-                self.renderables.append(r)
-    
-    def create_tile_boxes(self):
-        "create AABB shapes for each solid tile in a CST_TILE object"
-        # fill shapes list with one box for each solid tile
-        obj = self.game_object
-        frame = obj.renderable.frame
-        if not obj.col_layer_name in obj.art.layer_names:
-            obj.app.dev_log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
-            return
-        layer = obj.art.layer_names.index(obj.col_layer_name)
-        for y in range(obj.art.height):
-            for x in range(obj.art.width):
-                if obj.art.get_char_index_at(frame, layer, x, y) == 0:
-                    continue
-                # get world space coordinates of this tile's center
-                wx, wy = obj.get_tile_loc(x, y, tile_center=True)
-                shape = self.cl.add_box_shape(wx, wy, obj.art.quad_width / 2,
-                                              obj.art.quad_height / 2, obj)
+                        shape.tiles.append((tile_x, tile_y))
                 self.shapes.append(shape)
-                self.tile_shapes[(x, y)] = shape
                 r = TileBoxCollisionRenderable(shape)
                 # update renderable once to set location correctly
                 r.update()
@@ -283,13 +334,12 @@ class CollisionLord:
         return overlapping_shapes
     
     def resolve_overlaps(self):
-        iterations = 5
         # filter shape lists for anything out of room etc
         valid_dynamic_shapes = []
         for shape in self.dynamic_shapes:
             if shape.game_object.should_collide():
                 valid_dynamic_shapes.append(shape)
-        for i in range(iterations):
+        for i in range(ITERATIONS):
             # track test pairs so we don't do B->A if we've already done A->B
             tests = {}
             # push all dynamic circles out of each other
@@ -338,12 +388,14 @@ class CollisionLord:
             return
         # redistribute velocity based on mass we're colliding with
         if obj_a.is_dynamic() and obj_a.mass >= 0:
-            ax, ay = obj_a.collision.contacts[obj_b.name][:2]
+            ax = obj_a.collision.contacts[obj_b.name].x
+            ay = obj_a.collision.contacts[obj_b.name].y
             a_vel = total_vel * (obj_a.mass / total_mass)
             a_vel *= obj_a.bounciness
             obj_a.vel_x, obj_a.vel_y = -ax * a_vel, -ay * a_vel
         if obj_b.is_dynamic() and obj_b.mass >= 0:
-            bx, by = obj_b.collision.contacts[obj_a.name][:2]
+            bx = obj_b.collision.contacts[obj_a.name].x
+            by = obj_b.collision.contacts[obj_a.name].y
             b_vel = total_vel * (obj_b.mass / total_mass)
             b_vel *= obj_b.bounciness
             obj_b.vel_x, obj_b.vel_y = -bx * b_vel, -by * b_vel
@@ -361,6 +413,51 @@ def boxes_overlap(left_a, top_a, right_a, bottom_a, left_b, top_b, right_b, bott
         if left_b <= x <= right_b and bottom_b <= y <= top_b:
             return True
     return False
+
+def line_point_closest_to_point(point_x, point_y, x1, y1, x2, y2):
+    "returns point on given line that's closest to given point"
+    wx, wy = point_x - x1, point_y - y1
+    dir_x, dir_y = x2 - x1, y2 - y1
+    proj = wx * dir_x + wy * dir_y
+    if proj <= 0:
+        # line point 1 is closest
+        return x1, y1
+    vsq = dir_x ** 2 + dir_y ** 2
+    if proj >= vsq:
+        # line point 2 is closest
+        return x2, y2
+    else:
+        # closest point is between 1 and 2
+        return x1 + (proj / vsq) * dir_x, y1 + (proj / vsq) * dir_y
+
+def circle_overlaps_line(circle_x, circle_y, radius, x1, y1, x2, y2):
+    "returns True if given circle overlaps given line"
+    # get closest point on line to circle center
+    closest_x, closest_y = line_point_closest_to_point(circle_x, circle_y,
+                                                       x1, y1, x2, y2)
+    dist_x, dist_y = closest_x - circle_x, closest_y - circle_y
+    return dist_x ** 2 + dist_y ** 2 <= radius ** 2
+
+def circle_overlaps_lineY(circle_x, circle_y, radius, x1, y1, x2, y2):
+    px, py = circle_x + radius, circle_y + radius
+    m = (y2 - y1) / (x2 - x1) if x2 - x1 != 0 else 0
+    constant = (m * x1) - y1
+    b = -2 * (m * constant) + px + (m * py)
+    a = 1 + m * m
+    c = (px * px) + (py * py) - (radius * radius) + (2 * constant * py) + constant * constant
+    D = (b * b) - (4 * a * c)
+    return D > 0
+
+def circle_overlaps_lineX(circle_x, circle_y, radius, x1, y1, x2, y2):
+    wx, wy = circle_x - x1, circle_y - y1
+    wsq = wx ** 2 + wy ** 2
+    dir_x, dir_y = x2 - x1, y2 - y1
+    proj = wx * dir_x + wy * dir_y
+    rsq = radius ** 2
+    if (proj < 0 or proj > 1) and wsq > rsq:
+        return False
+    vsq = dir_x ** 2 + dir_y ** 2
+    return vsq * wsq - proj ** 2 <= vsq * rsq
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     "returns normalized penetration x, y, and distance"
@@ -394,7 +491,6 @@ def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
             return 0, 1, -py
         elif dy < 0:
             return 0, -1, -py
-    return 1, 0, -px
 
 def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
                            box_hw, box_hh):
@@ -445,6 +541,23 @@ def collide_shapes(a, b):
     # if either object says it shouldn't collide with other, don't
     if not a_coll_b or not b_coll_a:
         return
+    # A should ignore any collision with B's shared (interior) edges
+    if obj_b.collision_shape_type == CST_TILE:
+        for edge in b.shared_edges:
+            if a.overlaps_line(edge.x1, edge.y1, edge.x2, edge.y2):
+                # DEBUG: light up colliding edge
+                if True:
+                    z = obj_b.get_layer_z(obj_b.col_layer_name)
+                    lines = [(edge.x1, edge.y1, z), (edge.x2, edge.y2, z)]
+                    obj_b.world.app.debug_line_renderable.add_lines(lines, (1, 1, 0, 1) * 2)
+                # cancel out edge's part of resolution vector
+                # TODO: this approach isn't working, decactivating
+                if abs(edge.normal[0]) > 0:
+                    pass
+                    #px = 0
+                elif abs(edge.normal[1]) > 0:
+                    #py = 0
+                    pass
     total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
     if obj_a.is_dynamic():
         if not obj_b.is_dynamic() or obj_b.mass < 0:
