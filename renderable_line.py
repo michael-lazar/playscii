@@ -220,24 +220,56 @@ class DebugLineRenderable(WorldLineRenderable):
     
     color = (0.5, 0, 0, 1)
     vert_items = 3
-    line_width = 5
+    line_width = 3
     
-    def set_lines(self, new_lines, new_colors=None):
-        self.vert_array = np.array(new_lines, dtype=np.float32)
+    def set_lines(self, new_verts, new_colors=None):
+        "replace current debug lines with new given lines"
+        self.vert_array = np.array(new_verts, dtype=np.float32)
         elements = []
-        for i in range(1, len(new_lines)):
-            elements += [i, i - 1]
+        # TODO: possible OB1 bug here, sometimes draws line to object origin(?)
+        for i in range(1, len(new_verts)):
+            elements += [i - 1, i]
         self.elem_array = np.array(elements, dtype=np.uint32)
-        self.color_array = np.array(new_colors or self.color * len(new_lines),
+        self.color_array = np.array(new_colors or self.color * len(new_verts),
                                     dtype=np.float32)
+        self.rebind_buffers()
+    
+    def set_color(self, new_color):
+        "changes all debug lines to given color"
+        self.color = new_color
+        lines = int(len(self.vert_array) / self.vert_items)
+        self.color_array = np.array(self.color * lines, dtype=np.float32)
         self.rebind_buffers()
     
     def get_quad_size(self):
         return 1, 1
     
-    def add_lines(self, new_lines, new_colors=None):
-        # TODO: add to existing line data arrays - grow then write in new values
-        print('ERROR: DebugLineRenderable.add_lines not implemented yet')
+    def add_lines(self, new_verts, new_colors=None):
+        "add lines to the current ones"
+        line_items = len(self.vert_array)
+        lines = int(line_items / self.vert_items)
+        # if new_verts is a list of tuples, unpack into flat list
+        if type(new_verts[0]) is tuple:
+            new_verts_unpacked = []
+            for (x, y, z) in new_verts:
+                new_verts_unpacked += [x, y, z]
+            new_verts = new_verts_unpacked
+        new_size = int(line_items + len(new_verts))
+        self.vert_array.resize(new_size)
+        self.vert_array[line_items:new_size] = new_verts
+        # grow elem buffer
+        old_elem_size = len(self.elem_array)
+        new_elem_size = int(old_elem_size + len(new_verts) / self.vert_items)
+        # TODO: "contiguous" parameter that joins new lines with previous
+        self.elem_array.resize(new_elem_size)
+        self.elem_array[old_elem_size:new_elem_size] = range(old_elem_size,
+                                                             new_elem_size)
+        # grow color buffer
+        old_color_size = len(self.color_array)
+        new_color_size = int(old_color_size + len(new_verts) / self.vert_items * 4)
+        self.color_array.resize(new_color_size)
+        self.color_array[old_color_size:new_color_size] = new_colors or self.color * int(len(new_verts) / self.vert_items)
+        self.rebind_buffers()
     
     def build_geo(self):
         # start empty
@@ -414,6 +446,4 @@ class TileBoxCollisionRenderable(BoxCollisionRenderable):
     line_width = 1
     def get_loc(self):
         # draw at Z level of collision layer
-        art = self.game_object.art
-        col_index = art.layer_names.index(self.game_object.col_layer_name)
-        return self.x, self.y, self.z + art.layers_z[col_index]
+        return self.x, self.y, self.game_object.get_layer_z(self.game_object.col_layer_name)
