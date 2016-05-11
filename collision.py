@@ -62,8 +62,7 @@ class AABBCollisionShape:
     
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this box overlaps given line segment"
-        # TODO
-        return False
+        return box_overlaps_line(*self.get_box(), x1, y1, x2, y2)
     
     def get_box(self):
         return self.x - self.halfwidth, self.y - self.halfheight, self.x + self.halfwidth, self.y + self.halfheight
@@ -414,6 +413,21 @@ def boxes_overlap(left_a, top_a, right_a, bottom_a, left_b, top_b, right_b, bott
             return True
     return False
 
+def lines_intersect(x1, y1, x2, y2, x3, y3, x4, y4):
+    "returns True if given lines intersect"
+    denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+    numer = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
+    numer2 = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
+    if denom == 0:
+        if numer == 0 and numer2 == 0:
+            # coincident
+            return False
+        # parallel
+        return False
+    ua = numer / denom
+    ub = numer2 / denom
+    return ua >= 0 and ua <= 1 and ub >= 0 and ub <= 1
+
 def line_point_closest_to_point(point_x, point_y, x1, y1, x2, y2):
     "returns point on given line that's closest to given point"
     wx, wy = point_x - x1, point_y - y1
@@ -438,26 +452,52 @@ def circle_overlaps_line(circle_x, circle_y, radius, x1, y1, x2, y2):
     dist_x, dist_y = closest_x - circle_x, closest_y - circle_y
     return dist_x ** 2 + dist_y ** 2 <= radius ** 2
 
-def circle_overlaps_lineY(circle_x, circle_y, radius, x1, y1, x2, y2):
-    px, py = circle_x + radius, circle_y + radius
-    m = (y2 - y1) / (x2 - x1) if x2 - x1 != 0 else 0
-    constant = (m * x1) - y1
-    b = -2 * (m * constant) + px + (m * py)
-    a = 1 + m * m
-    c = (px * px) + (py * py) - (radius * radius) + (2 * constant * py) + constant * constant
-    D = (b * b) - (4 * a * c)
-    return D > 0
+def box_overlaps_line(left, top, right, bottom, x1, y1, x2, y2):
+    "returns True if given box overlaps given line"
+    # TODO: determine if this is less efficient than slab method below
+    if point_in_box(x1, y1, left, top, right, bottom) and \
+       point_in_box(x2, y2, left, top, right, bottom):
+        return True
+    # check left/top/right/bottoms edges
+    return lines_intersect(left, top, left, bottom, x1, y1, x2, y2) or \
+        lines_intersect(left, top, right, top, x1, y1, x2, y2) or \
+        lines_intersect(right, top, right, bottom, x1, y1, x2, y2) or \
+        lines_intersect(left, bottom, right, bottom, x1, y1, x2, y2)
 
-def circle_overlaps_lineX(circle_x, circle_y, radius, x1, y1, x2, y2):
-    wx, wy = circle_x - x1, circle_y - y1
-    wsq = wx ** 2 + wy ** 2
+def box_overlaps_ray(left, top, right, bottom, x1, y1, x2, y2):
+    # TODO: determine if this can be adapted for line segments
+    # (just a matter of setting tmin/tmax properly?)
+    tmin, tmax = -math.inf, math.inf
     dir_x, dir_y = x2 - x1, y2 - y1
-    proj = wx * dir_x + wy * dir_y
-    rsq = radius ** 2
-    if (proj < 0 or proj > 1) and wsq > rsq:
-        return False
-    vsq = dir_x ** 2 + dir_y ** 2
-    return vsq * wsq - proj ** 2 <= vsq * rsq
+    if abs(dir_x) > 0:
+        tx1 = (left - x1) / dir_x
+        tx2 = (right - x1) / dir_x
+        tmin = max(tmin, min(tx1, tx2))
+        tmax = min(tmax, max(tx1, tx2))
+    if abs(dir_y) > 0:
+        ty1 = (top - y1) / dir_y
+        ty2 = (bottom - y1) / dir_y
+        tmin = max(tmin, min(ty1, ty2))
+        tmax = min(tmax, max(ty1, ty2))
+    return tmax >= tmin
+
+def box_overlaps_lineX(left, top, right, bottom, x1, y1, x2, y2):
+    line_origin = (x1, y1)
+    line_dir = (dir_x, dir_y) = x2 - x1, y2 - y1
+    box_min = (left, top)
+    box_max = (right, bottom)
+    tmin, tmax = -1, 1
+    for i in range(2):
+        inv = 1 / line_dir[i]
+        t0 = box_min[i] - line_origin[i] * inv
+        t1 = box_max[i] - line_origin[i] * inv
+        if inv < 0:
+            t0, t1 = t1, t0
+        tmin = max(t0, tmin)
+        tmax = min(t1, tmax)
+        if tmax <= tmin:
+            return False
+    return True
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     "returns normalized penetration x, y, and distance"
