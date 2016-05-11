@@ -333,6 +333,7 @@ class CollisionLord:
         return overlapping_shapes
     
     def resolve_overlaps(self):
+        "resolve overlaps between all relevant world objects"
         # filter shape lists for anything out of room etc
         valid_dynamic_shapes = []
         for shape in self.dynamic_shapes:
@@ -480,24 +481,6 @@ def box_overlaps_ray(left, top, right, bottom, x1, y1, x2, y2):
         tmin = max(tmin, min(ty1, ty2))
         tmax = min(tmax, max(ty1, ty2))
     return tmax >= tmin
-
-def box_overlaps_lineX(left, top, right, bottom, x1, y1, x2, y2):
-    line_origin = (x1, y1)
-    line_dir = (dir_x, dir_y) = x2 - x1, y2 - y1
-    box_min = (left, top)
-    box_max = (right, bottom)
-    tmin, tmax = -1, 1
-    for i in range(2):
-        inv = 1 / line_dir[i]
-        t0 = box_min[i] - line_origin[i] * inv
-        t1 = box_max[i] - line_origin[i] * inv
-        if inv < 0:
-            t0, t1 = t1, t0
-        tmin = max(t0, tmin)
-        tmax = min(t1, tmax)
-        if tmax <= tmin:
-            return False
-    return True
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     "returns normalized penetration x, y, and distance"
