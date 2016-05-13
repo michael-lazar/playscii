@@ -503,15 +503,15 @@ def get_penetration(a, b):
 def collide_shapes(a, b):
     "detect and resolve collision between two collision shapes"
     px, py, pdist = get_penetration(a, b)
+    obj_a, obj_b = a.game_object, b.game_object
     if px is None:
-        a.game_object.app.log('Unhandled collision: %s on %s' % (a.game_object.name, b.game_object.name))
+        obj_a.app.log('Unhandled collision: %s on %s' % (obj_a.name, obj_b.name))
         return
     if pdist >= 0:
         return
-    obj_a, obj_b = a.game_object, b.game_object
     # tell objects they're overlapping, pass penetration vector
-    a_coll_b = obj_a.overlapped(obj_b, px, py)
-    b_coll_a = obj_b.overlapped(obj_a, px, py)
+    a_coll_b, a_started_b = obj_a.overlapped(obj_b, px, py)
+    b_coll_a, b_started_a = obj_b.overlapped(obj_a, px, py)
     # if either object says it shouldn't collide with other, don't
     if not a_coll_b or not b_coll_a:
         return
@@ -534,3 +534,8 @@ def collide_shapes(a, b):
         obj_b.x -= b_push * px
         obj_b.y -= b_push * py
         obj_b.collision.update_transform_from_object()
+    # call objs' started_colliding once collisions have been resolved
+    if a_started_b:
+        obj_a.started_colliding(obj_b)
+    if b_started_a:
+        obj_b.started_colliding(obj_a)
