@@ -72,7 +72,7 @@ class PagedInfoDialog(UIDialog):
 
 about_message = [
 """
-          by JP LeBreton (c) 2014-2015           |
+          by JP LeBreton (c) 2014-2016           |
 
 Playscii was made with the support of many
 nice people.

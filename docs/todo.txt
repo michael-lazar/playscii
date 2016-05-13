@@ -4,7 +4,7 @@ for 0.8.0:
 
 collision issues to investigate:
 - player gets hung up on boundaries between AABBs in maze aka "the crack problem"
--- calculate area of overlap for all shapes, resolve collisions in order of most overlap to least. requires calculating overlap separately from resolution, re-evaluating before each resolution? maybe good enough to only determine order once at start, though.
+-- calculate area of overlap for all shapes (simple as abs of px * py?), resolve collisions in order of most overlap to least. requires calculating overlap separately from resolution, re-evaluating before each resolution? maybe good enough to only determine order once at start, though.
 - spot in maze starting screen near barrier where player can tunnel through diagonally
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
@@ -14,7 +14,9 @@ fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 
 - make sure windows and OSX builds can play sound (ie have the correct sound libs included)
 
-- when changing art via properties editor, art doesn't update until reload
+- some keyboard input events don't make it through to text fields?
+
+- when changing art via properties editor, art sometimes doesn't update until reload
 
 ---
 

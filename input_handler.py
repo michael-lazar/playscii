@@ -174,8 +174,9 @@ class InputLord:
                 elif self.ui.active_dialog and self.ui.active_dialog is self.ui.keyboard_focus_element:
                     self.ui.active_dialog.handle_input(event.key.keysym.sym,
                         self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
-                    sdl2.SDL_PumpEvents()
-                    return
+                    # bail, process no further input
+                    #sdl2.SDL_PumpEvents()
+                    #return
                 # handle text input if text tool is active
                 elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
                     self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym,
@@ -196,8 +197,11 @@ class InputLord:
                 # dismiss selector popup
                 flist = self.get_bind_functions(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
                 if not flist:
-                    break
-                if self.BIND_game_grab in flist:
+                    pass
+                elif self.ui.active_dialog:
+                    # keyup shouldn't have any special meaning in a dialog
+                    pass
+                elif self.BIND_game_grab in flist:
                     if self.app.game_mode and not self.ui.active_dialog:
                         self.app.gw.player.button_unpressed(0)
                         return
