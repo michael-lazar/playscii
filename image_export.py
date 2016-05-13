@@ -45,6 +45,7 @@ def get_frame_image(app, art, frame, force_no_crt=False, bg_color=(0, 0, 0, 0)):
     GL.glViewport(0, 0, app.window_width, app.window_height)
     GL.glDeleteFramebuffers(1, [export_fb])
     GL.glDeleteRenderbuffers(1, [render_buffer])
+    post_fb.destroy()
     # GL pixel data as numpy array -> bytes for PIL image export
     pixel_bytes = pixels.flatten().tobytes()
     src_img = Image.frombytes(mode='RGBA', size=(w, h), data=pixel_bytes)

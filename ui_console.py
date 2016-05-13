@@ -34,7 +34,7 @@ class SaveCommand(ConsoleCommand):
             art.set_filename(' '.join(args))
             art.save_to_file()
             console.ui.app.load_art_for_edit(old_filename)
-            console.ui.set_active_art(art)
+            console.ui.set_active_art_by_filename(art.filename)
         else:
             art.save_to_file()
         console.ui.app.update_window_title()

@@ -256,7 +256,7 @@ class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
 # palette chooser
 #
 
-class PaletteChooserItem(ChooserItem):
+class PaletteChooserItem(BaseFileChooserItem):
     
     def get_label(self):
         return os.path.splitext(self.name)[0]
@@ -270,9 +270,7 @@ class PaletteChooserItem(ChooserItem):
     
     def load(self, app):
         self.palette = app.load_palette(self.name)
-    
-    def picked(self, element):
-        element.confirm_pressed()
+
 
 class PaletteChooserDialog(BaseFileChooserDialog):
     
@@ -310,7 +308,7 @@ class PaletteChooserDialog(BaseFileChooserDialog):
 # charset chooser
 #
 
-class CharsetChooserItem(ChooserItem):
+class CharsetChooserItem(BaseFileChooserItem):
     
     def get_label(self):
         return os.path.splitext(self.name)[0]
@@ -324,8 +322,6 @@ class CharsetChooserItem(ChooserItem):
     def load(self, app):
         self.charset = app.load_charset(self.name)
     
-    def picked(self, element):
-        element.confirm_pressed()
 
 class CharSetChooserDialog(BaseFileChooserDialog):
     
