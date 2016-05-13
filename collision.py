@@ -36,7 +36,6 @@ class CircleCollisionShape:
         self.x, self.y = loc_x, loc_y
         self.radius = radius
         self.game_object = gobj
-        self.mass = self.game_object.mass
     
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this circle overlaps given line segment"
@@ -55,7 +54,6 @@ class AABBCollisionShape:
         self.x, self.y = loc_x, loc_y
         self.halfwidth, self.halfheight = halfwidth, halfheight
         self.game_object = gobj
-        self.mass = self.game_object.mass
         # for CST_TILE objects, lists of tile(s) we cover and shared edges
         self.tiles = []
         self.shared_edges = []
@@ -166,7 +164,7 @@ class Collideable:
                         x2 = x1 + qw
                         y2 = y1
                     # DEBUG: highlight shared edges
-                    if True:
+                    if False:
                         # Z should be height of collision layer
                         z = gobj.get_layer_z(gobj.col_layer_name)
                         lines = [(x1, y1, z), (x2, y2, z)]
@@ -237,9 +235,22 @@ class Collideable:
         tiles = self.game_object.get_tiles_overlapping_box(left, top, right, bottom)
         for (x, y) in tiles:
             shape = self.tile_shapes.get((x, y), None)
-            if shape:
+            if shape and not shape in shapes:
                 shapes.append(shape)
         return shapes
+    
+    def resolve_overlaps(self, axis):
+        # TODO alternative implementation
+        shape = self.shapes[0]
+        valid_dynamic_shapes = []
+        cl = self.game_object.world.cl
+        for other in cl.dynamic_shapes:
+            if other.game_object.should_collide() and other is not shape:
+                valid_dynamic_shapes.append(other)
+        for other in valid_dynamic_shapes:
+            collide_shapes_axis(shape, other, axis)
+        for other in cl.get_overlapping_static_shapes(shape):
+            collide_shapes_axis(shape, other, axis)
     
     def update(self):
         if self.game_object and self.game_object.is_dynamic():
@@ -248,10 +259,11 @@ class Collideable:
     def update_transform_from_object(self, obj=None):
         obj = obj or self.game_object
         # CST_TILE shouldn't run here, it's static-only
-        if obj.collision_shape_type != CST_TILE:
-            for shape in self.shapes:
-                shape.x = obj.x + obj.col_offset_x
-                shape.y = obj.y + obj.col_offset_y
+        if obj.collision_shape_type == CST_TILE:
+            return
+        for shape in self.shapes:
+            shape.x = obj.x + obj.col_offset_x
+            shape.y = obj.y + obj.col_offset_y
     
     def update_renderables(self):
         for r in self.renderables:
@@ -535,26 +547,65 @@ def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
         return 1, 0, pdist
     return -closest_x / d, -closest_y / d, -pdist
 
-def collide_shapes(a, b):
-    "detect and resolve collision between two collision shapes"
+def get_penetration(a, b):
+    "returns penetration vector and distance between pair of given shapes"
     # handle all combinations of shape types
     if type(a) is CircleCollisionShape and type(b) is CircleCollisionShape:
-        px, py, pdist = point_circle_penetration(a.x, a.y, b.x, b.y,
-                                                 a.radius + b.radius)
+        return point_circle_penetration(a.x, a.y, b.x, b.y,
+                                        a.radius + b.radius)
     elif type(a) is AABBCollisionShape and type(b) is AABBCollisionShape:
-        px, py, pdist = box_penetration(a.x, a.y, b.x, b.y,
-                                        a.halfwidth, a.halfheight,
-                                        b.halfwidth, b.halfheight)
+        return box_penetration(a.x, a.y, b.x, b.y,
+                               a.halfwidth, a.halfheight,
+                               b.halfwidth, b.halfheight)
     elif type(a) is CircleCollisionShape and type(b) is AABBCollisionShape:
-        px, py, pdist = circle_box_penetration(a.x, a.y, b.x, b.y, a.radius,
-                                               b.halfwidth, b.halfheight)
+        return circle_box_penetration(a.x, a.y, b.x, b.y, a.radius,
+                                      b.halfwidth, b.halfheight)
     elif type(a) is AABBCollisionShape and type(b) is CircleCollisionShape:
         px, py, pdist = circle_box_penetration(b.x, b.y, a.x, a.y, b.radius,
                                                a.halfwidth, a.halfheight)
         # reverse penetration result
-        px, py = -px, -py
+        return -px, -py, pdist
     else:
+        return None, None, None
+
+def resolve_collision_axis(obj_a, obj_b, axis, px, py, pdist):
+    total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
+    if obj_a.is_dynamic():
+        if not obj_b.is_dynamic() or obj_b.mass < 0:
+            a_push = pdist
+        else:
+            a_push = (obj_a.mass / total_mass) * pdist
+        # move parent object, not shape
+        if axis == 'X':
+            obj_a.x += a_push * px
+        elif axis == 'Y':
+            obj_a.y += a_push * py
+        # update all shapes based on object's new position
+        obj_a.collision.update_transform_from_object()
+    if obj_b.is_dynamic():
+        if not obj_a.is_dynamic() or obj_a.mass < 0:
+            b_push = pdist
+        else:
+            b_push = (obj_b.mass / total_mass) * pdist
+        if axis == 'X':
+            obj_b.x -= b_push * px
+        elif axis == 'Y':
+            obj_b.y -= b_push * py
+        obj_b.collision.update_transform_from_object()
+
+def collide_shapes_axis(a, b, axis):
+    # TODO alternative implementation
+    px, py, pdist = get_penetration(a, b)
+    if pdist >= 0:
+        return
+    resolve_collision_axis(a.game_object, b.game_object, axis, px, py, pdist)
+
+def collide_shapes(a, b):
+    "detect and resolve collision between two collision shapes"
+    px, py, pdist = get_penetration(a, b)
+    if px is None:
         a.game_object.app.log('Unhandled collision: %s on %s' % (a.game_object.name, b.game_object.name))
+        return
     if pdist >= 0:
         return
     obj_a, obj_b = a.game_object, b.game_object
@@ -569,7 +620,7 @@ def collide_shapes(a, b):
         for edge in b.shared_edges:
             if a.overlaps_line(edge.x1, edge.y1, edge.x2, edge.y2):
                 # DEBUG: light up colliding edge
-                if True:
+                if False:
                     z = obj_b.get_layer_z(obj_b.col_layer_name)
                     lines = [(edge.x1, edge.y1, z), (edge.x2, edge.y2, z)]
                     obj_b.world.app.debug_line_renderable.add_lines(lines, (1, 1, 0, 1) * 2)
@@ -586,7 +637,7 @@ def collide_shapes(a, b):
         if not obj_b.is_dynamic() or obj_b.mass < 0:
             a_push = pdist
         else:
-            a_push = (a.mass / total_mass) * pdist
+            a_push = (obj_a.mass / total_mass) * pdist
         # move parent object, not shape
         obj_a.x += a_push * px
         obj_a.y += a_push * py
@@ -596,7 +647,7 @@ def collide_shapes(a, b):
         if not obj_a.is_dynamic() or obj_a.mass < 0:
             b_push = pdist
         else:
-            b_push = (b.mass / total_mass) * pdist
+            b_push = (obj_b.mass / total_mass) * pdist
         obj_b.x -= b_push * px
         obj_b.y -= b_push * py
         obj_b.collision.update_transform_from_object()
