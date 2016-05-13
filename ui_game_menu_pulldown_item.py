@@ -79,6 +79,24 @@ class ToggleDebugObjectsItem(PulldownMenuItem):
     def should_mark(ui):
         return ui.app.gw.properties.draw_debug_objects
 
+class ToggleOriginVizItem(PulldownMenuItem):
+    label = '  Show all object origins'
+    command = 'toggle_all_origin_viz'
+    def should_mark(ui):
+        return ui.app.gw.show_origin_all
+
+class ToggleBoundsVizItem(PulldownMenuItem):
+    label = '  Show all object bounds'
+    command = 'toggle_all_bounds_viz'
+    def should_mark(ui):
+        return ui.app.gw.show_bounds_all
+
+class ToggleCollisionVizItem(PulldownMenuItem):
+    label = '  Show all object collision'
+    command = 'toggle_all_collision_viz'
+    def should_mark(ui):
+        return ui.app.gw.show_collision_all
+
 #
 # world menu
 #
@@ -224,7 +242,8 @@ class GameStateMenuData(PulldownMenuData):
 
 class GameViewMenuData(PulldownMenuData):
     items = [ViewToggleCRTItem, ViewSetZoomItem, ViewToggleCameraTiltItem, SeparatorItem,
-             ObjectsToCameraItem, CameraToObjectsItem, ToggleDebugObjectsItem]
+             ObjectsToCameraItem, CameraToObjectsItem, ToggleDebugObjectsItem,
+             ToggleOriginVizItem, ToggleBoundsVizItem, ToggleCollisionVizItem]
     
     def should_mark_item(item, ui):
         if hasattr(item, 'should_mark'):
