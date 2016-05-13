@@ -16,6 +16,8 @@ fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 - when changing art via properties editor, art doesn't update until reload
 - if Framebuffer.start_crt_enabled = False but crt = True, exported image is always un-CRT'd
 - image convert sometimes results in 0 alpha, see e3sky.png
+- double-click in chooser should act like a confirm press
+- "save as" doesn't switch to new instance properly
 
 ---
 
