@@ -178,7 +178,6 @@ class TileRenderable:
         self.art.renderables.append(self)
         # make sure frame is valid
         self.frame %= self.art.frames
-        #self.create_buffers()
         self.update_geo_buffers()
         self.update_tile_buffers(True, True, True, True)
         #print('%s now uses Art %s' % (self, self.art.filename))

@@ -28,7 +28,7 @@ class Framebuffer:
         self.plain_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f.glsl')
         if not self.disable_crt:
             self.crt_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f_crt.glsl')
-        self.crt = self.disable_crt or self.start_crt_enabled
+        self.crt = self.get_crt_enabled()
         # shader uniforms and attributes
         self.plain_tex_uniform = self.plain_shader.get_uniform_location('fbo_texture')
         self.plain_attrib = self.plain_shader.get_attrib_location('v_coord')
@@ -40,6 +40,9 @@ class Framebuffer:
             self.crt_res_uniform = self.crt_shader.get_uniform_location('resolution')
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindVertexArray(0)
+    
+    def get_crt_enabled(self):
+        return self.disable_crt or self.start_crt_enabled
     
     def setup_texture_and_buffers(self):
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
@@ -96,6 +99,11 @@ class Framebuffer:
         GL.glUseProgram(0)
 
 
-class ExportFramebuffer(Framebuffer): clear_color = (0, 0, 0, 0)
+class ExportFramebuffer(Framebuffer):
+    clear_color = (0, 0, 0, 0)
+    def get_crt_enabled(self): return True
 
-class ExportFramebufferNoCRT(ExportFramebuffer): disable_crt = True
+
+class ExportFramebufferNoCRT(Framebuffer):
+    clear_color = (0, 0, 0, 0)
+    def get_crt_enabled(self): return False

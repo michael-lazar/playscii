@@ -128,6 +128,10 @@ class ImageConverter:
             x_end, y_end = x_start + self.char_w, y_start + self.char_h
             block = self.src_array[y_start:y_end, x_start:x_end]
             char, fg, bg = self.get_best_tile_for_block(block)
+            # get_best_etc sometimes returns 0 for darkest blocks,
+            # but transparency isn't properly supported yet
+            fg = self.art.palette.darkest_index if fg == 0 else fg
+            bg = self.art.palette.darkest_index if bg == 0 else bg
             self.art.set_tile_at(self.art.active_frame, self.art.active_layer,
                                  self.x, self.y, char, fg, bg)
             #print('set block %s,%s to ch %s fg %s bg %s' % (self.x, self.y, char, fg, bg))

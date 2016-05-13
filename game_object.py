@@ -1,6 +1,6 @@
 import os, math
 
-from art import Art
+from art import Art, ArtInstance
 from renderable import TileRenderable
 from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
@@ -56,6 +56,8 @@ class GameObject:
     # if generate_art is True, blank art will be created with these
     # dimensions, charset, and palette
     generate_art = False
+    # if use_art_instance is True, always use an ArtInstance of source art
+    use_art_instance = False
     # if True, object's art will animate on init/reset
     animating = False
     art_width, art_height = 8, 8
@@ -221,6 +223,9 @@ class GameObject:
         self.last_state = None
         # most recent warp world update, to prevent thrashing
         self.last_warp_update = -1
+        # set up art instance only after all art/renderable init complete
+        if self.use_art_instance:
+            self.set_art(ArtInstance(self.art))
         if self.animating and self.art.frames > 0:
             self.start_animating()
         if self.log_spawn:

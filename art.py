@@ -611,10 +611,6 @@ class Art:
         new_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
         write_thumbnail(self.app, self.filename, new_thumb_filename)
     
-    def create_instance(self):
-        #instance = Art()
-        pass
-    
     def set_unsaved_changes(self, new_status):
         if new_status == self.unsaved_changes:
             return
@@ -871,6 +867,9 @@ class ArtInstance(Art):
         self.renderables = []
         self.restore_from_source()
         self.source.instances.append(self)
+    
+    def set_unsaved_changes(self, new_status):
+        pass
     
     def restore_from_source(self):
         # copy common references/values
