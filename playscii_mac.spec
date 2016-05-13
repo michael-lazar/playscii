@@ -26,8 +26,7 @@ include_bins = [
     ('/usr/local/Cellar/libogg/1.3.2/lib/libogg.0.dylib', '.'),
     ('/usr/local/Cellar/libvorbis/1.3.5/lib/libvorbis.0.dylib', '.'),
     ('/usr/local/Cellar/libvorbis/1.3.5/lib/libvorbisfile.3.dylib', '.'),
-    ('/usr/local/Cellar/smpeg2/2.0.0/lib/libsmpeg2-2.0.0.dylib', '.'),
-    ('/usr/local/Cellar/fluid-synth/1.1.6/lib/libfluidsynth.1.5.2.dylib', '.'),
+    ('/usr/local/Cellar/smpeg2/2.0.0/lib/libsmpeg2-2.0.0.dylib', '.')
 ]
 
 a = Analysis(['playscii.py'],
