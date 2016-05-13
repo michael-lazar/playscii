@@ -26,9 +26,6 @@ CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 # named tuples for collision structs that don't merit a class
 Contact = namedtuple('Contact', ['depth_x', 'depth_y', 'timestamp'])
 
-SharedEdge = namedtuple('SharedEdge', ['x1', 'y1', 'x2', 'y2', 'normal',
-                                       'other_shape'])
-
 
 class CircleCollisionShape:
     
@@ -54,9 +51,8 @@ class AABBCollisionShape:
         self.x, self.y = loc_x, loc_y
         self.halfwidth, self.halfheight = halfwidth, halfheight
         self.game_object = gobj
-        # for CST_TILE objects, lists of tile(s) we cover and shared edges
+        # for CST_TILE objects, lists of tile(s) we cover
         self.tiles = []
-        self.shared_edges = []
     
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this box overlaps given line segment"
@@ -93,7 +89,6 @@ class Collideable:
             self.create_box()
         elif self.game_object.collision_shape_type == CST_TILE:
             self.create_merged_tile_boxes()
-            self.find_shared_edges()
         # update renderables once if static
         if not self.game_object.is_dynamic():
             self.update_renderables()
@@ -123,56 +118,6 @@ class Collideable:
                                       self.game_object)
         self.shapes = [shape]
         self.renderables = [BoxCollisionRenderable(shape)]
-    
-    def find_shared_edges(self):
-        """
-        finds shared (interior) edges between boxes in CST_TILE objects and
-        writes shared edge info into each affected shape
-        """
-        gobj = self.game_object
-        for shape in self.shapes:
-            for (tile_x, tile_y) in shape.tiles:
-                for (adj_x, adj_y) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                    if not 0 < tile_x + adj_x < gobj.art.width or \
-                       not 0 < tile_y + adj_y < gobj.art.height:
-                        continue
-                    adjacent_shape = self.tile_shapes.get((tile_x + adj_x,
-                                                           tile_y + adj_y),None)
-                    if not adjacent_shape or adjacent_shape is shape:
-                        continue
-                    # calculate world space coordinates of edge ends
-                    # get_tile_loc returns top left if tile_center=False
-                    x1, y1 = self.game_object.get_tile_loc(tile_x, tile_y,
-                                                           tile_center=False)
-                    qw, qh = gobj.art.quad_width, gobj.art.quad_height
-                    # right edge
-                    if (adj_x, adj_y) == (1, 0):
-                        x1 += qw
-                        x2 = x1
-                        y2 = y1 - qh
-                    # left edge
-                    elif (adj_x, adj_y) == (-1, 0):
-                        x2 = x1
-                        y2 = y1 - qh
-                    # bottom edge
-                    elif (adj_x, adj_y) == (0, 1):
-                        y1 -= qh
-                        y2 = y1
-                        x2 = x1 + qw
-                    # top edge
-                    elif (adj_x, adj_y) == (0, -1):
-                        x2 = x1 + qw
-                        y2 = y1
-                    # DEBUG: highlight shared edges
-                    if False:
-                        # Z should be height of collision layer
-                        z = gobj.get_layer_z(gobj.col_layer_name)
-                        lines = [(x1, y1, z), (x2, y2, z)]
-                        gobj.world.app.debug_line_renderable.add_lines(lines)
-                    edge = SharedEdge(x1=x1, y1=y1, x2=x2, y2=y2,
-                                      normal=(adj_x, adj_y),
-                                      other_shape=adjacent_shape)
-                    shape.shared_edges.append(edge)
     
     def create_merged_tile_boxes(self):
         "create AABB shapes for a CST_TILE object"
@@ -238,19 +183,6 @@ class Collideable:
             if shape and not shape in shapes:
                 shapes.append(shape)
         return shapes
-    
-    def resolve_overlaps(self, axis):
-        # TODO alternative implementation
-        shape = self.shapes[0]
-        valid_dynamic_shapes = []
-        cl = self.game_object.world.cl
-        for other in cl.dynamic_shapes:
-            if other.game_object.should_collide() and other is not shape:
-                valid_dynamic_shapes.append(other)
-        for other in valid_dynamic_shapes:
-            collide_shapes_axis(shape, other, axis)
-        for other in cl.get_overlapping_static_shapes(shape):
-            collide_shapes_axis(shape, other, axis)
     
     def update(self):
         if self.game_object and self.game_object.is_dynamic():
@@ -568,38 +500,6 @@ def get_penetration(a, b):
     else:
         return None, None, None
 
-def resolve_collision_axis(obj_a, obj_b, axis, px, py, pdist):
-    total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
-    if obj_a.is_dynamic():
-        if not obj_b.is_dynamic() or obj_b.mass < 0:
-            a_push = pdist
-        else:
-            a_push = (obj_a.mass / total_mass) * pdist
-        # move parent object, not shape
-        if axis == 'X':
-            obj_a.x += a_push * px
-        elif axis == 'Y':
-            obj_a.y += a_push * py
-        # update all shapes based on object's new position
-        obj_a.collision.update_transform_from_object()
-    if obj_b.is_dynamic():
-        if not obj_a.is_dynamic() or obj_a.mass < 0:
-            b_push = pdist
-        else:
-            b_push = (obj_b.mass / total_mass) * pdist
-        if axis == 'X':
-            obj_b.x -= b_push * px
-        elif axis == 'Y':
-            obj_b.y -= b_push * py
-        obj_b.collision.update_transform_from_object()
-
-def collide_shapes_axis(a, b, axis):
-    # TODO alternative implementation
-    px, py, pdist = get_penetration(a, b)
-    if pdist >= 0:
-        return
-    resolve_collision_axis(a.game_object, b.game_object, axis, px, py, pdist)
-
 def collide_shapes(a, b):
     "detect and resolve collision between two collision shapes"
     px, py, pdist = get_penetration(a, b)
@@ -615,23 +515,6 @@ def collide_shapes(a, b):
     # if either object says it shouldn't collide with other, don't
     if not a_coll_b or not b_coll_a:
         return
-    # A should ignore any collision with B's shared (interior) edges
-    if obj_b.collision_shape_type == CST_TILE:
-        for edge in b.shared_edges:
-            if a.overlaps_line(edge.x1, edge.y1, edge.x2, edge.y2):
-                # DEBUG: light up colliding edge
-                if False:
-                    z = obj_b.get_layer_z(obj_b.col_layer_name)
-                    lines = [(edge.x1, edge.y1, z), (edge.x2, edge.y2, z)]
-                    obj_b.world.app.debug_line_renderable.add_lines(lines, (1, 1, 0, 1) * 2)
-                # cancel out edge's part of resolution vector
-                # TODO: this approach isn't working, decactivating
-                if abs(edge.normal[0]) > 0:
-                    pass
-                    #px = 0
-                elif abs(edge.normal[1]) > 0:
-                    #py = 0
-                    pass
     total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
     if obj_a.is_dynamic():
         if not obj_b.is_dynamic() or obj_b.mass < 0:

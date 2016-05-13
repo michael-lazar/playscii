@@ -437,7 +437,7 @@ class GameWorld:
                 if obj.is_in_current_room() or obj.update_if_outside_room:
                     obj.update()
             if self.collision_enabled:
-                pass#self.cl.resolve_overlaps()
+                self.cl.resolve_overlaps()
             for room in self.rooms.values():
                 room.update()
         # display debug text for selected object(s)

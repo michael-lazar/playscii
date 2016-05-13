@@ -737,50 +737,7 @@ class GameObject:
     def pre_update(self):
         pass
     
-    def apply_move_sep(self):
-        # alternative test: resolve X and Y separately
-        accel_x, accel_y, accel_z = self.get_acceleration(self.vel_x, self.vel_y, self.vel_z)
-        timestep = self.world.app.timestep / 1000
-        
-        hsvel_x = self.vel_x + 0.5 * timestep * accel_x
-        self.x += hsvel_x * timestep
-        
-        hsvel_y = self.vel_y + 0.5 * timestep * accel_y
-        self.y += hsvel_y * timestep
-        
-        if self.should_collide():
-            self.collision.resolve_overlaps('Y')
-            self.collision.update()
-        
-        if self.should_collide():
-            self.collision.resolve_overlaps('X')
-            self.collision.update()
-        
-        hsvel_z = self.vel_z + 0.5 * timestep * accel_z
-        self.z += hsvel_z * timestep
-        # recalc velocity
-        accel_x, accel_y, accel_z = self.get_acceleration(hsvel_x, hsvel_y, hsvel_z)
-        self.vel_x = hsvel_x + 0.5 * timestep * accel_x
-        self.vel_y = hsvel_y + 0.5 * timestep * accel_y
-        self.vel_z = hsvel_z + 0.5 * timestep * accel_z
-        self.vel_x, self.vel_y, self.vel_z = self.cut_xyz(self.vel_x, self.vel_y, self.vel_z, self.stop_velocity)
-        
-        if self.should_collide():
-            self.collision.resolve_overlaps('X')
-            self.collision.update()
-            self.collision.resolve_overlaps('Y')
-            self.collision.update()
-    
     def update(self):
-        if self.physics_move:
-            self.apply_move_sep()
-        self.update_state()
-        self.update_state_sounds()
-        if self.facing_changes_art:
-            self.update_facing()
-        self.collision.update()
-    
-    def updateX(self):
         if 0 < self.destroy_time <= self.app.get_elapsed_time():
             self.destroy()
         # don't apply physics to selected objects being dragged
