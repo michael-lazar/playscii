@@ -3,7 +3,8 @@ TODO
 for 0.8.0:
 
 collision issues to investigate:
-- player gets hung up on boundaries between AABBs in maze
+- player gets hung up on boundaries between AABBs in maze aka "the crack problem"
+-- calculate area of overlap for all shapes, resolve collisions in order of most overlap to least. requires calculating overlap separately from resolution, re-evaluating before each resolution?
 - spot in maze starting screen near barrier where player can tunnel through diagonally
 
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[

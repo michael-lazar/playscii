@@ -437,6 +437,10 @@ class GameObject:
         return tiles
     
     def overlapped(self, other, dx, dy):
+        """
+        called by CollisionLord when two objects overlap.
+        returns: bool "can overlap", bool "collision starting"
+        """
         started = other.name not in self.collision.contacts
         # create or update contact info: (depth_x, depth_y, timestamp)
         self.collision.contacts[other.name] = Contact(dx, dy,
@@ -447,10 +451,8 @@ class GameObject:
             if isinstance(other, ncc):
                 if started:
                     self.started_overlapping(other)
-                return False
-        if started:
-            self.started_colliding(other)
-        return True
+                return False, started
+        return True, started
     
     def get_tile_loc(self, tile_x, tile_y, tile_center=True):
         "returns top left / center of current art's tile in world coordinates"
