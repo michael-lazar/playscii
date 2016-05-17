@@ -32,8 +32,8 @@ class GameObjectRenderable(TileRenderable):
     
     def get_loc(self):
         x, y, z = self.x, self.y, self.z
-        if self.game_object:
-            off_x, off_y, off_z = self.game_object.get_render_offset()
+        if self.go:
+            off_x, off_y, off_z = self.go.get_render_offset()
             x += off_x
             y += off_y
             z += off_z

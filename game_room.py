@@ -142,15 +142,15 @@ class GameRoom:
                 d[prop_name] = getattr(self, prop_name)
         return d
     
-    def check_edge_warp(self, gobj):
+    def check_edge_warp(self, game_object):
         # bail if no bounds or edge warp destinations set
         if not self.edge_obj:
             return
         if not self.left_edge_warp_dest and not self.right_edge_warp_dest and not self.top_edge_warp_dest and not self.bottom_edge_warp_dest:
             return
-        if gobj.warped_recently():
+        if game_object.warped_recently():
             return
-        px, py = gobj.x, gobj.y
+        px, py = game_object.x, game_object.y
         if self.edge_obj.is_point_inside(px, py):
             return
         left, top, right, bottom = self.edge_obj.get_edges()
@@ -170,8 +170,8 @@ class GameRoom:
             self.world.change_room(warp_dest.name)
         elif issubclass(type(warp_dest), GameObject):
             # TODO: change room or not? use_marker_room flag a la WarpTrigger?
-            gobj.set_loc(warp_dest.x, warp_dest.y)
-        gobj.last_warp_update = self.world.app.updates
+            game_object.set_loc(warp_dest.x, warp_dest.y)
+        game_object.last_warp_update = self.world.app.updates
     
     def update(self):
         if self is self.world.current_room:
