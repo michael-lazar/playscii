@@ -30,7 +30,7 @@ class TileRenderable:
         self.art = art
         self.art.renderables.append(self)
         # we may be attached to a game object
-        self.game_object = game_object
+        self.go = game_object
         # set true momentarily by image export process
         self.exporting = False
         # flag for easy don't-render functionality
@@ -42,10 +42,10 @@ class TileRenderable:
         # world space position and scale
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
-        if game_object:
-            self.scale_x = game_object.scale_x
-            self.scale_y = game_object.scale_y
-            self.scale_z = game_object.scale_z
+        if self.go:
+            self.scale_x = self.go.scale_x
+            self.scale_y = self.go.scale_y
+            self.scale_z = self.go.scale_z
         # width and height in XY render space
         self.width, self.height = 1, 1
         self.reset_size()
@@ -242,8 +242,8 @@ class TileRenderable:
         #self.app.log('%s moved to %s,%s' % (self, self.x, self.y))
     
     def update(self):
-        if self.game_object:
-            self.update_transform_from_object(self.game_object)
+        if self.go:
+            self.update_transform_from_object(self.go)
         # TODO: rename "moving" to make it clearer it's art mode only
         elif self.moving:
             self.update_loc()

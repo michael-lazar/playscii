@@ -20,7 +20,7 @@ class LineRenderable():
     def __init__(self, app, quad_size_ref, game_object=None):
         self.app = app
         # we may be attached to a game object
-        self.game_object = game_object
+        self.go = game_object
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
@@ -86,8 +86,8 @@ class LineRenderable():
         pass
     
     def update(self):
-        if self.game_object:
-            self.update_transform_from_object(self.game_object)
+        if self.go:
+            self.update_transform_from_object(self.go)
     
     def reset_size(self):
         self.width, self.height = self.get_size()
@@ -306,7 +306,7 @@ class OriginIndicatorRenderable(WorldLineRenderable):
         return 1, 1
     
     def get_size(self):
-        return self.game_object.scale_x, self.game_object.scale_y
+        return self.go.scale_x, self.go.scale_y
     
     def update_transform_from_object(self, obj):
         self.x, self.y, self.z = obj.x, obj.y, obj.z
@@ -336,21 +336,21 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
         self.reset_size()
     
     def get_size(self):
-        art = self.game_object.art
-        w = (art.width * art.quad_width) * self.game_object.scale_x
-        h = (art.height * art.quad_height) * self.game_object.scale_y
+        art = self.go.art
+        w = (art.width * art.quad_width) * self.go.scale_x
+        h = (art.height * art.quad_height) * self.go.scale_y
         return w, h
     
     def get_color(self):
         # pulse if selected
-        if self.game_object in self.app.gw.selected_objects:
+        if self.go in self.app.gw.selected_objects:
             color = 0.75 + (math.sin(self.app.get_elapsed_time() / 100) / 2)
             return (color, color, color, 1)
         else:
             return (1, 1, 1, 1)
     
     def get_quad_size(self):
-        if not self.game_object:
+        if not self.go:
             return 1, 1
         return self.art.width * self.art.quad_width, self.art.height * self.art.quad_height
     
@@ -365,10 +365,9 @@ class CollisionRenderable(WorldLineRenderable):
     static_color = (0, 0, 1, 1)
     
     def __init__(self, shape):
-        self.color = self.dynamic_color if shape.game_object.is_dynamic() else self.static_color
+        self.color = self.dynamic_color if shape.go.is_dynamic() else self.static_color
         self.shape = shape
-        WorldLineRenderable.__init__(self, shape.game_object.app, None,
-                                     shape.game_object)
+        WorldLineRenderable.__init__(self, shape.go.app, None, shape.go)
     
     def update(self):
         self.update_transform_from_object(self.shape)
@@ -399,8 +398,8 @@ class CircleCollisionRenderable(CollisionRenderable):
     
     def get_size(self):
         w = h = self.shape.radius * 2
-        w *= self.game_object.scale_x
-        h *= self.game_object.scale_y
+        w *= self.go.scale_x
+        h *= self.go.scale_y
         return w, h
     
     def build_geo(self):
@@ -432,8 +431,8 @@ class BoxCollisionRenderable(CollisionRenderable):
     
     def get_size(self):
         w, h = self.shape.halfwidth * 2, self.shape.halfheight * 2
-        w *= self.game_object.scale_x
-        h *= self.game_object.scale_y
+        w *= self.go.scale_x
+        h *= self.go.scale_y
         return w, h
     
     def build_geo(self):
@@ -446,4 +445,4 @@ class TileBoxCollisionRenderable(BoxCollisionRenderable):
     line_width = 1
     def get_loc(self):
         # draw at Z level of collision layer
-        return self.x, self.y, self.game_object.get_layer_z(self.game_object.col_layer_name)
+        return self.x, self.y, self.go.get_layer_z(self.go.col_layer_name)

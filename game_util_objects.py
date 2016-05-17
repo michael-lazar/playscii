@@ -16,8 +16,8 @@ class GameObjectAttachment(GameObject):
     offset_x, offset_y, offset_z = 0., 0., 0.
     editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
     
-    def attach_to(self, gobj):
-        self.parent = gobj
+    def attach_to(self, game_object):
+        self.parent = game_object
     
     def update(self):
         if not self.art.updated_this_tick:

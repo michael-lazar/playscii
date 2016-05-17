@@ -7,7 +7,7 @@ class PlayingSound:
     def __init__(self, filename, channel, game_object, looping=False):
         self.filename = filename
         self.channel = channel
-        self.game_object = game_object
+        self.go = game_object
         self.looping = looping
 
 class AudioLord:
@@ -66,7 +66,7 @@ class AudioLord:
         # bail if same object isn't allowed to play same sound multiple times
         if not allow_multiple and sound_filename in self.playing_sounds:
             for playing_sound in self.playing_sounds[sound_filename]:
-                if playing_sound.game_object is game_object:
+                if playing_sound.go is game_object:
                     return
         sound = self.register_sound(sound_filename)
         channel = sdlmixer.Mix_PlayChannel(-1, sound, loops)
@@ -84,14 +84,14 @@ class AudioLord:
             return
         # stop all instances of this sound object might be playing
         for sound in self.playing_sounds[sound_filename]:
-            if game_object is sound.game_object:
+            if game_object is sound.go:
                 sdlmixer.Mix_HaltChannel(sound.channel)
     
     def object_stop_all_sounds(self, game_object):
         sounds_to_stop = []
         for sound_filename,sounds in self.playing_sounds.items():
             for sound in sounds:
-                if sound.game_object is game_object:
+                if sound.go is game_object:
                     sounds_to_stop.append(sound_filename)
         for sound_filename in sounds_to_stop:
             self.object_stop_sound(game_object, sound_filename)

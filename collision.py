@@ -29,10 +29,10 @@ Contact = namedtuple('Contact', ['depth_x', 'depth_y', 'timestamp'])
 
 class CircleCollisionShape:
     
-    def __init__(self, loc_x, loc_y, radius, gobj):
+    def __init__(self, loc_x, loc_y, radius, game_object):
         self.x, self.y = loc_x, loc_y
         self.radius = radius
-        self.game_object = gobj
+        self.go = game_object
     
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this circle overlaps given line segment"
@@ -47,10 +47,10 @@ class AABBCollisionShape:
     
     "Axis-Aligned Bounding Box"
     
-    def __init__(self, loc_x, loc_y, halfwidth, halfheight, gobj):
+    def __init__(self, loc_x, loc_y, halfwidth, halfheight, game_object):
         self.x, self.y = loc_x, loc_y
         self.halfwidth, self.halfheight = halfwidth, halfheight
-        self.game_object = gobj
+        self.go = game_object
         # for CST_TILE objects, lists of tile(s) we cover
         self.tiles = []
     
@@ -68,8 +68,8 @@ class Collideable:
     use_art_offset = False
     
     def __init__(self, obj):
-        self.game_object = obj
-        self.cl = self.game_object.world.cl
+        self.go = obj
+        self.cl = self.go.world.cl
         self.renderables, self.shapes = [], []
         # dict of shapes accessible by (x,y) tile coordinates
         self.tile_shapes = {}
@@ -81,16 +81,16 @@ class Collideable:
     
     def create_shapes(self):
         self.clear_shapes()
-        if self.game_object.collision_shape_type == CST_NONE:
+        if self.go.collision_shape_type == CST_NONE:
             return
-        elif self.game_object.collision_shape_type == CST_CIRCLE:
+        elif self.go.collision_shape_type == CST_CIRCLE:
             self.create_circle()
-        elif self.game_object.collision_shape_type == CST_AABB:
+        elif self.go.collision_shape_type == CST_AABB:
             self.create_box()
-        elif self.game_object.collision_shape_type == CST_TILE:
+        elif self.go.collision_shape_type == CST_TILE:
             self.create_merged_tile_boxes()
         # update renderables once if static
-        if not self.game_object.is_dynamic():
+        if not self.go.is_dynamic():
             self.update_renderables()
     
     def clear_shapes(self):
@@ -102,66 +102,65 @@ class Collideable:
         self.shapes = []
     
     def create_circle(self):
-        x = self.game_object.x + self.game_object.col_offset_x
-        y = self.game_object.y + self.game_object.col_offset_y
-        shape = self.cl.add_circle_shape(x, y, self.game_object.col_radius,
-                                         self.game_object)
+        x = self.go.x + self.go.col_offset_x
+        y = self.go.y + self.go.col_offset_y
+        shape = self.cl.add_circle_shape(x, y, self.go.col_radius, self.go)
         self.shapes = [shape]
         self.renderables = [CircleCollisionRenderable(shape)]
     
     def create_box(self):
-        x = self.game_object.x# + self.game_object.col_offset_x
-        y = self.game_object.y# + self.game_object.col_offset_y
+        x = self.go.x# + self.go.col_offset_x
+        y = self.go.y# + self.go.col_offset_y
         shape = self.cl.add_box_shape(x, y,
-                                      self.game_object.col_width / 2,
-                                      self.game_object.col_height / 2,
-                                      self.game_object)
+                                      self.go.col_width / 2,
+                                      self.go.col_height / 2,
+                                      self.go)
         self.shapes = [shape]
         self.renderables = [BoxCollisionRenderable(shape)]
     
     def create_merged_tile_boxes(self):
         "create AABB shapes for a CST_TILE object"
         # generate fewer, larger boxes!
-        obj = self.game_object
-        frame = obj.renderable.frame
-        if not obj.col_layer_name in obj.art.layer_names:
-            obj.app.dev_log("%s: Couldn't find collision layer with name '%s'" % (obj.name, obj.col_layer_name))
+        frame = self.go.renderable.frame
+        if not self.go.col_layer_name in self.go.art.layer_names:
+            self.go.app.dev_log("%s: Couldn't find collision layer with name '%s'" % (self.go.name, self.go.col_layer_name))
             return
-        layer = obj.art.layer_names.index(obj.col_layer_name)
+        layer = self.go.art.layer_names.index(self.go.col_layer_name)
         # tile is available if it's not empty and not already covered by a shape
         def tile_available(tile_x, tile_y):
-            return obj.art.get_char_index_at(frame, layer, tile_x, tile_y) != 0 and not (tile_x, tile_y) in self.tile_shapes
+            return self.go.art.get_char_index_at(frame, layer, tile_x, tile_y) != 0 and not (tile_x, tile_y) in self.tile_shapes
         def tile_range_available(start_x, end_x, start_y, end_y):
             for y in range(start_y, end_y + 1):
                 for x in range(start_x, end_x + 1):
                     if not tile_available(x, y):
                         return False
             return True
-        for y in range(obj.art.height):
-            for x in range(obj.art.width):
+        for y in range(self.go.art.height):
+            for x in range(self.go.art.width):
                 if not tile_available(x, y):
                     continue
                 # determine how big we can make this box
                 # first fill left to right
                 end_x = x
-                while end_x < obj.art.width - 1 and tile_available(end_x + 1, y):
+                while end_x < self.go.art.width - 1 and tile_available(end_x + 1, y):
                     end_x += 1
                 # then fill top to bottom
                 end_y = y
-                while end_y < obj.art.height - 1 and tile_range_available(x, end_x, y, end_y + 1):
+                while end_y < self.go.art.height - 1 and tile_range_available(x, end_x, y, end_y + 1):
                     end_y += 1
                 # compute origin and halfsizes of box covering tile range
-                wx1, wy1 = obj.get_tile_loc(x, y, tile_center=True)
-                wx2, wy2 = obj.get_tile_loc(end_x, end_y, tile_center=True)
+                wx1, wy1 = self.go.get_tile_loc(x, y, tile_center=True)
+                wx2, wy2 = self.go.get_tile_loc(end_x, end_y, tile_center=True)
                 wx = (wx1 + wx2) / 2
-                halfwidth = (end_x - x) * obj.art.quad_width
+                halfwidth = (end_x - x) * self.go.art.quad_width
                 halfwidth /= 2
-                halfwidth += obj.art.quad_width / 2
+                halfwidth += self.go.art.quad_width / 2
                 wy = (wy1 + wy2) / 2
-                halfheight = (end_y - y) * obj.art.quad_height
+                halfheight = (end_y - y) * self.go.art.quad_height
                 halfheight /= 2
-                halfheight += obj.art.quad_height / 2
-                shape = self.cl.add_box_shape(wx, wy, halfwidth, halfheight, obj)
+                halfheight += self.go.art.quad_height / 2
+                shape = self.cl.add_box_shape(wx, wy, halfwidth, halfheight,
+                                              self.go)
                 # fill in cell(s) in our tile collision dict,
                 # write list of tiles shape covers to shape.tiles
                 for tile_y in range(y, end_y + 1):
@@ -177,7 +176,7 @@ class Collideable:
     def get_shapes_overlapping_box(self, left, top, right, bottom):
         "returns a list of our shapes that overlap given box"
         shapes = []
-        tiles = self.game_object.get_tiles_overlapping_box(left, top, right, bottom)
+        tiles = self.go.get_tiles_overlapping_box(left, top, right, bottom)
         for (x, y) in tiles:
             shape = self.tile_shapes.get((x, y), None)
             if shape and not shape in shapes:
@@ -185,11 +184,11 @@ class Collideable:
         return shapes
     
     def update(self):
-        if self.game_object and self.game_object.is_dynamic():
+        if self.go and self.go.is_dynamic():
             self.update_transform_from_object()
     
     def update_transform_from_object(self, obj=None):
-        obj = obj or self.game_object
+        obj = obj or self.go
         # CST_TILE shouldn't run here, it's static-only
         if obj.collision_shape_type == CST_TILE:
             return
@@ -228,17 +227,17 @@ class CollisionLord:
     def reset(self):
         self.dynamic_shapes, self.static_shapes = [], []
     
-    def add_circle_shape(self, x, y, radius, gobj):
-        shape = CircleCollisionShape(x, y, radius, gobj)
-        if gobj.is_dynamic():
+    def add_circle_shape(self, x, y, radius, game_object):
+        shape = CircleCollisionShape(x, y, radius, game_object)
+        if game_object.is_dynamic():
             self.dynamic_shapes.append(shape)
         else:
             self.static_shapes.append(shape)
         return shape
     
-    def add_box_shape(self, x, y, halfwidth, halfheight, gobj):
-        shape = AABBCollisionShape(x, y, halfwidth, halfheight, gobj)
-        if gobj.is_dynamic():
+    def add_box_shape(self, x, y, halfwidth, halfheight, game_object):
+        shape = AABBCollisionShape(x, y, halfwidth, halfheight, game_object)
+        if game_object.is_dynamic():
             self.dynamic_shapes.append(shape)
         else:
             self.static_shapes.append(shape)
@@ -262,7 +261,7 @@ class CollisionLord:
             shape_right += padding
             shape_bottom += padding
         for obj in self.world.objects.values():
-            if obj is shape.game_object or not obj.should_collide() or obj.is_dynamic():
+            if obj is shape.go or not obj.should_collide() or obj.is_dynamic():
                 continue
             # always check non-tile-based static shapes
             if obj.collision_shape_type != CST_TILE:
@@ -276,12 +275,12 @@ class CollisionLord:
                 overlapping_shapes += obj.collision.get_shapes_overlapping_box(shape_left, shape_top, shape_right, shape_bottom)
         return overlapping_shapes
     
-    def resolve_overlaps(self):
+    def update(self):
         "resolve overlaps between all relevant world objects"
         # filter shape lists for anything out of room etc
         valid_dynamic_shapes = []
         for shape in self.dynamic_shapes:
-            if shape.game_object.should_collide():
+            if shape.go.should_collide():
                 valid_dynamic_shapes.append(shape)
         for i in range(ITERATIONS):
             # track test pairs so we don't do B->A if we've already done A->B
@@ -500,21 +499,7 @@ def get_penetration(a, b):
     else:
         return None, None, None
 
-def collide_shapes(a, b):
-    "detect and resolve collision between two collision shapes"
-    px, py, pdist = get_penetration(a, b)
-    obj_a, obj_b = a.game_object, b.game_object
-    if px is None:
-        obj_a.app.log('Unhandled collision: %s on %s' % (obj_a.name, obj_b.name))
-        return
-    if pdist >= 0:
-        return
-    # tell objects they're overlapping, pass penetration vector
-    a_coll_b, a_started_b = obj_a.overlapped(obj_b, px, py)
-    b_coll_a, b_started_a = obj_b.overlapped(obj_a, px, py)
-    # if either object says it shouldn't collide with other, don't
-    if not a_coll_b or not b_coll_a:
-        return
+def resolve_collision(obj_a, obj_b, px, py, pdist):
     total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
     if obj_a.is_dynamic():
         if not obj_b.is_dynamic() or obj_b.mass < 0:
@@ -534,8 +519,25 @@ def collide_shapes(a, b):
         obj_b.x -= b_push * px
         obj_b.y -= b_push * py
         obj_b.collision.update_transform_from_object()
+
+def collide_shapes(a, b):
+    "detect and resolve collision between two collision shapes"
+    px, py, pdist = get_penetration(a, b)
+    obj_a, obj_b = a.go, b.go
+    if px is None:
+        a.go.app.log('Unhandled collision: %s on %s' % (a.go.name, b.go.name))
+        return
+    if pdist >= 0:
+        return
+    # tell objects they're overlapping, pass penetration vector
+    a_coll_b, a_started_b = a.go.overlapped(b.go, px, py)
+    b_coll_a, b_started_a = b.go.overlapped(a.go, px, py)
+    # if either object says it shouldn't collide with other, don't
+    if not a_coll_b or not b_coll_a:
+        return
+    resolve_collision(a.go, b.go, px, py, pdist)
     # call objs' started_colliding once collisions have been resolved
     if a_started_b:
-        obj_a.started_colliding(obj_b)
+        a.go.started_colliding(b.go)
     if b_started_a:
-        obj_b.started_colliding(obj_a)
+        b.go.started_colliding(a.go)
