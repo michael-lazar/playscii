@@ -28,7 +28,7 @@ ShapeOverlap = namedtuple('ShapeOverlap', ['x', 'y', 'dist', 'area', 'other'])
 
 class CollisionShape:
     
-    def resolve_overlaps_with_shapes(self, shapes, tests):
+    def resolve_overlaps_with_shapes(self, shapes):
         "resolve this shape's overlap(s) with given list of shapes"
         overlaps = []
         for other in shapes:
@@ -38,14 +38,13 @@ class CollisionShape:
             if overlap.dist < 0:
                 overlaps.append(overlap)
         if len(overlaps) == 0:
-            return tests
+            return
         # resolve collisions in order of largest -> smallest overlap
         overlaps.sort(key=lambda item: item.area, reverse=True)
         for i,old_overlap in enumerate(overlaps):
             # resolve first overlap without recalculating
             overlap = self.get_overlap(old_overlap.other) if i > 0 else overlaps[0]
             self.resolve_overlap(overlap)
-        return tests
     
     def resolve_overlap(self, overlap):
         "resolves this shape's given overlap"
@@ -376,96 +375,23 @@ class CollisionLord:
     
     def update(self):
         "resolve overlaps between all relevant world objects"
-        self.world.app.debug_line_renderable.reset_lines()
         for i in range(self.iterations):
             # filter shape lists for anything out of room etc
             valid_dynamic_shapes = []
             for shape in self.dynamic_shapes:
                 if shape.go.should_collide():
                     valid_dynamic_shapes.append(shape)
-            # TODO: track test pairs; don't do B->A if A->B already done
-            tests = {}
             for shape in valid_dynamic_shapes:
-                tests = shape.resolve_overlaps_with_shapes(valid_dynamic_shapes, tests)
+                shape.resolve_overlaps_with_shapes(valid_dynamic_shapes)
             for shape in valid_dynamic_shapes:
                 static_shapes = shape.get_overlapping_static_shapes()
-                tests = shape.resolve_overlaps_with_shapes(static_shapes, tests)
+                shape.resolve_overlaps_with_shapes(static_shapes)
         # check which objects stopped colliding
         for obj in self.world.objects.values():
             obj.check_finished_contacts()
         self.ticks += 1
         self.collisions_this_frame = []
-    
-    def updateX(self):
-        "resolve overlaps between all relevant world objects"
-        # filter shape lists for anything out of room etc
-        valid_dynamic_shapes = []
-        for shape in self.dynamic_shapes:
-            if shape.go.should_collide():
-                valid_dynamic_shapes.append(shape)
-        for i in range(ITERATIONS):
-            # track test pairs so we don't do B->A if we've already done A->B
-            tests = {}
-            # push all dynamic circles out of each other
-            for a in valid_dynamic_shapes:
-                # create list for objects this object has tested against
-                if not a in tests:
-                    tests[a] = []
-                for b in valid_dynamic_shapes:
-                    if a is b:
-                        continue
-                    if not b in tests:
-                        tests[b] = []
-                    # have these two objects already tested this iteration?
-                    if a in tests[b] or b in tests[a]:
-                        continue
-                    # mark A->B as tested
-                    tests[a].append(b)
-                    # collide_shapes handles different shape type combinations
-                    collide_shapes(a, b)
-            # now push all dynamic circles out of all static circles
-            for a in valid_dynamic_shapes:
-                # check against list of static shapes pared down by broadphase
-                for b in self.get_overlapping_static_shapes(a):
-                    if not b in tests:
-                        tests[b] = []
-                    if a in tests[b] or b in tests[a]:
-                        continue
-                    tests[a].append(b)
-                    collide_shapes(a, b)
-        # check which objects stopped colliding
-        for obj in self.world.objects.values():
-            obj.check_finished_contacts()
-        self.ticks += 1
-        self.collisions_this_frame = []
-    
-    def resolve_momentum(self, obj_a, obj_b):
-        # don't resolve a pair twice
-        if obj_a in self.collisions_this_frame:
-            return
-        # determine new direction and velocity
-        total_vel = obj_a.vel_x + obj_a.vel_y + obj_b.vel_x + obj_b.vel_y
-        # negative mass = infinite
-        total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
-        if obj_b.name not in obj_a.collision.contacts or \
-           obj_a.name not in obj_b.collision.contacts:
-            return
-        # redistribute velocity based on mass we're colliding with
-        if obj_a.is_dynamic() and obj_a.mass >= 0:
-            ax = obj_a.collision.contacts[obj_b.name].x
-            ay = obj_a.collision.contacts[obj_b.name].y
-            a_vel = total_vel * (obj_a.mass / total_mass)
-            a_vel *= obj_a.bounciness
-            obj_a.vel_x, obj_a.vel_y = -ax * a_vel, -ay * a_vel
-        if obj_b.is_dynamic() and obj_b.mass >= 0:
-            bx = obj_b.collision.contacts[obj_a.name].x
-            by = obj_b.collision.contacts[obj_a.name].y
-            b_vel = total_vel * (obj_b.mass / total_mass)
-            b_vel *= obj_b.bounciness
-            obj_b.vel_x, obj_b.vel_y = -bx * b_vel, -by * b_vel
-        # mark objects as resolved
-        self.collisions_this_frame.append(obj_a)
-        self.collisions_this_frame.append(obj_b)
+
 
 # collision handling
 

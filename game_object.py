@@ -363,7 +363,7 @@ class GameObject:
         pass
     
     def started_colliding(self, other):
-        pass
+        self.resolve_collision_momentum(other)
     
     def stopped_colliding(self, other):
         if not other.name in self.collision.contacts:
@@ -372,6 +372,35 @@ class GameObject:
             return
         # called from check_finished_contacts
         self.collision.contacts.pop(other.name)
+    
+    def resolve_collision_momentum(self, other):
+        "resolves velocities between this object and given other object"
+        # don't resolve a pair twice
+        if self in self.world.cl.collisions_this_frame:
+            return
+        # determine new direction and velocity
+        total_vel = self.vel_x + self.vel_y + other.vel_x + other.vel_y
+        # negative mass = infinite
+        total_mass = max(0, self.mass) + max(0, other.mass)
+        if other.name not in self.collision.contacts or \
+           self.name not in other.collision.contacts:
+            return
+        # redistribute velocity based on mass we're colliding with
+        if self.is_dynamic() and self.mass >= 0:
+            ax = self.collision.contacts[other.name].overlap.x
+            ay = self.collision.contacts[other.name].overlap.y
+            a_vel = total_vel * (self.mass / total_mass)
+            a_vel *= self.bounciness
+            self.vel_x, self.vel_y = -ax * a_vel, -ay * a_vel
+        if other.is_dynamic() and other.mass >= 0:
+            bx = other.collision.contacts[self.name].overlap.x
+            by = other.collision.contacts[self.name].overlap.y
+            b_vel = total_vel * (other.mass / total_mass)
+            b_vel *= other.bounciness
+            other.vel_x, other.vel_y = -bx * b_vel, -by * b_vel
+        # mark objects as resolved
+        self.world.cl.collisions_this_frame.append(self)
+        self.world.cl.collisions_this_frame.append(other)
     
     def check_finished_contacts(self):
         """
