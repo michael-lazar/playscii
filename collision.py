@@ -4,9 +4,6 @@ from collections import namedtuple
 from renderable import TileRenderable
 from renderable_line import CircleCollisionRenderable, BoxCollisionRenderable, TileBoxCollisionRenderable
 
-# number of times to resolve collisions per update
-ITERATIONS = 6
-
 # collision shape types
 CST_NONE = 0
 CST_CIRCLE = 1
@@ -24,26 +21,125 @@ CTG_STATIC = [CT_GENERIC_STATIC]
 CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
 
 # named tuples for collision structs that don't merit a class
-Contact = namedtuple('Contact', ['depth_x', 'depth_y', 'timestamp'])
+Contact = namedtuple('Contact', ['overlap', 'timestamp'])
+
+ShapeOverlap = namedtuple('ShapeOverlap', ['x', 'y', 'dist', 'area', 'other'])
 
 
-class CircleCollisionShape:
+class CollisionShape:
+    
+    def resolve_overlaps_with_shapes(self, shapes, tests):
+        "resolve this shape's overlap(s) with given list of shapes"
+        overlaps = []
+        for other in shapes:
+            if other is self:
+                continue
+            overlap = self.get_overlap(other)
+            if overlap.dist < 0:
+                overlaps.append(overlap)
+        if len(overlaps) == 0:
+            return tests
+        # resolve collisions in order of largest -> smallest overlap
+        overlaps.sort(key=lambda item: item.area, reverse=True)
+        for i,old_overlap in enumerate(overlaps):
+            # resolve first overlap without recalculating
+            overlap = self.get_overlap(old_overlap.other) if i > 0 else overlaps[0]
+            self.resolve_overlap(overlap)
+        return tests
+    
+    def resolve_overlap(self, overlap):
+        "resolves this shape's given overlap"
+        other = overlap.other
+        # tell objects they're overlapping, pass penetration vector
+        a_coll_b, a_started_b = self.go.overlapped(other.go, overlap)
+        b_coll_a, b_started_a = other.go.overlapped(self.go, overlap)
+        # if either object says it shouldn't collide with other, don't
+        if not a_coll_b or not b_coll_a:
+            return
+        # push shapes apart according to mass
+        total_mass = max(0, self.go.mass) + max(0, other.go.mass)
+        if self.go.is_dynamic():
+            if not other.go.is_dynamic() or other.go.mass < 0:
+                a_push = overlap.dist
+            else:
+                a_push = (self.go.mass / total_mass) * overlap.dist
+            # move parent object, not shape
+            self.go.x += a_push * overlap.x
+            self.go.y += a_push * overlap.y
+            # update all shapes based on object's new position
+            self.go.collision.update_transform_from_object()
+        if other.go.is_dynamic():
+            if not self.go.is_dynamic() or self.go.mass < 0:
+                b_push = overlap.dist
+            else:
+                b_push = (other.go.mass / total_mass) * overlap.dist
+            other.go.x -= b_push * overlap.x
+            other.go.y -= b_push * overlap.y
+            other.go.collision.update_transform_from_object()
+        # call objs' started_colliding once collisions have been resolved
+        if a_started_b:
+            self.go.started_colliding(other.go)
+        if b_started_a:
+            other.go.started_colliding(self.go)
+    
+    def get_overlapping_static_shapes(self):
+        "returns a list of static shapes that overlap with given shape"
+        overlapping_shapes = []
+        shape_left, shape_top, shape_right, shape_bottom = self.get_box()
+        # add padding to overlapping tiles check
+        if False:
+            padding = 0.01
+            shape_left -= padding
+            shape_top -= padding
+            shape_right += padding
+            shape_bottom += padding
+        for obj in self.go.world.objects.values():
+            if obj is self.go or not obj.should_collide() or obj.is_dynamic():
+                continue
+            # always check non-tile-based static shapes
+            if obj.collision_shape_type != CST_TILE:
+                overlapping_shapes += obj.collision.shapes
+            else:
+                # skip if even bounds don't overlap
+                obj_left, obj_top, obj_right, obj_bottom = obj.get_edges()
+                if not boxes_overlap(shape_left, shape_top, shape_right, shape_bottom,
+                                     obj_left, obj_top, obj_right, obj_bottom):
+                    continue
+                overlapping_shapes += obj.collision.get_shapes_overlapping_box(shape_left, shape_top, shape_right, shape_bottom)
+        return overlapping_shapes
+
+
+class CircleCollisionShape(CollisionShape):
     
     def __init__(self, loc_x, loc_y, radius, game_object):
         self.x, self.y = loc_x, loc_y
         self.radius = radius
         self.go = game_object
     
+    def get_box(self):
+        "returns coords of our bounds (left, top, right, bottom)"
+        return self.x - self.radius, self.y - self.radius, self.x + self.radius, self.y + self.radius
+    
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this circle overlaps given line segment"
         return circle_overlaps_line(self.x, self.y, self.radius, x1, y1, x2, y2)
     
-    def get_box(self):
-        "returns coords of our bounds (left, top, right, bottom)"
-        return self.x - self.radius, self.y - self.radius, self.x + self.radius, self.y + self.radius
+    def get_overlap(self, other):
+        "returns ShapeOverlap data for this shape's overlap with another"
+        if type(other) is CircleCollisionShape:
+            px, py, pdist1, pdist2 = point_circle_penetration(self.x, self.y,
+                                                     other.x, other.y,
+                                                     self.radius + other.radius)
+        elif type(other) is AABBCollisionShape:
+            px, py, pdist1, pdist2 = circle_box_penetration(self.x, self.y,
+                                                   other.x, other.y,
+                                                   self.radius, other.halfwidth,
+                                                   other.halfheight)
+        area = abs(pdist1 * pdist2) if pdist1 < 0 else 0
+        return ShapeOverlap(x=px, y=py, dist=pdist1, area=area, other=other)
 
 
-class AABBCollisionShape:
+class AABBCollisionShape(CollisionShape):
     
     "Axis-Aligned Bounding Box"
     
@@ -54,12 +150,29 @@ class AABBCollisionShape:
         # for CST_TILE objects, lists of tile(s) we cover
         self.tiles = []
     
+    def get_box(self):
+        return self.x - self.halfwidth, self.y - self.halfheight, self.x + self.halfwidth, self.y + self.halfheight
+    
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this box overlaps given line segment"
         return box_overlaps_line(*self.get_box(), x1, y1, x2, y2)
     
-    def get_box(self):
-        return self.x - self.halfwidth, self.y - self.halfheight, self.x + self.halfwidth, self.y + self.halfheight
+    def get_overlap(self, other):
+        "returns ShapeOverlap data for this shape's overlap with another"
+        if type(other) is AABBCollisionShape:
+            px, py, pdist1, pdist2 = box_penetration(self.x, self.y,
+                                                     other.x, other.y,
+                                            self.halfwidth, self.halfheight,
+                                            other.halfwidth, other.halfheight)
+        elif type(other) is CircleCollisionShape:
+            px, py, pdist1, pdist2 = circle_box_penetration(other.x, other.y,
+                                                   self.x, self.y,
+                                                   other.radius, self.halfwidth,
+                                                   self.halfheight)
+            # reverse result if we're shape B
+            px, py = -px, -py
+        area = abs(pdist1 * pdist2) if pdist1 < 0 else 0
+        return ShapeOverlap(x=px, y=py, dist=pdist1, area=area, other=other)
 
 
 class Collideable:
@@ -109,8 +222,8 @@ class Collideable:
         self.renderables = [CircleCollisionRenderable(shape)]
     
     def create_box(self):
-        x = self.go.x# + self.go.col_offset_x
-        y = self.go.y# + self.go.col_offset_y
+        x = self.go.x # + self.go.col_offset_x
+        y = self.go.y # + self.go.col_offset_y
         shape = self.cl.add_box_shape(x, y,
                                       self.go.col_width / 2,
                                       self.go.col_height / 2,
@@ -167,10 +280,10 @@ class Collideable:
                     for tile_x in range(x, end_x + 1):
                         self.tile_shapes[(tile_x, tile_y)] = shape
                         shape.tiles.append((tile_x, tile_y))
-                self.shapes.append(shape)
                 r = TileBoxCollisionRenderable(shape)
                 # update renderable once to set location correctly
                 r.update()
+                self.shapes.append(shape)
                 self.renderables.append(r)
     
     def get_shapes_overlapping_box(self, left, top, right, bottom):
@@ -196,6 +309,15 @@ class Collideable:
             shape.x = obj.x + obj.col_offset_x
             shape.y = obj.y + obj.col_offset_y
     
+    def set_shape_color(self, shape, new_color):
+        try:
+            shape_index = self.shapes.index(shape)
+        except ValueError:
+            return
+        self.renderables[shape_index].color = new_color
+        self.renderables[shape_index].build_geo()
+        self.renderables[shape_index].rebind_buffers()
+    
     def update_renderables(self):
         for r in self.renderables:
             r.update()
@@ -213,6 +335,9 @@ class Collideable:
 
 
 class CollisionLord:
+    
+    # number of times to resolve collisions per update
+    iterations = 7
     
     def __init__(self, world):
         self.world = world
@@ -249,33 +374,29 @@ class CollisionLord:
         elif shape in self.static_shapes:
             self.static_shapes.remove(shape)
     
-    def get_overlapping_static_shapes(self, shape):
-        "returns a list of static shapes that overlap with given shape"
-        overlapping_shapes = []
-        shape_left, shape_top, shape_right, shape_bottom = shape.get_box()
-        # add padding to overlapping tiles check
-        if False:
-            padding = 0.01
-            shape_left -= padding
-            shape_top -= padding
-            shape_right += padding
-            shape_bottom += padding
-        for obj in self.world.objects.values():
-            if obj is shape.go or not obj.should_collide() or obj.is_dynamic():
-                continue
-            # always check non-tile-based static shapes
-            if obj.collision_shape_type != CST_TILE:
-                overlapping_shapes += obj.collision.shapes
-            else:
-                # skip if even bounds don't overlap
-                obj_left, obj_top, obj_right, obj_bottom = obj.get_edges()
-                if not boxes_overlap(shape_left, shape_top, shape_right, shape_bottom,
-                                     obj_left, obj_top, obj_right, obj_bottom):
-                    continue
-                overlapping_shapes += obj.collision.get_shapes_overlapping_box(shape_left, shape_top, shape_right, shape_bottom)
-        return overlapping_shapes
-    
     def update(self):
+        "resolve overlaps between all relevant world objects"
+        self.world.app.debug_line_renderable.reset_lines()
+        for i in range(self.iterations):
+            # filter shape lists for anything out of room etc
+            valid_dynamic_shapes = []
+            for shape in self.dynamic_shapes:
+                if shape.go.should_collide():
+                    valid_dynamic_shapes.append(shape)
+            # TODO: track test pairs; don't do B->A if A->B already done
+            tests = {}
+            for shape in valid_dynamic_shapes:
+                tests = shape.resolve_overlaps_with_shapes(valid_dynamic_shapes, tests)
+            for shape in valid_dynamic_shapes:
+                static_shapes = shape.get_overlapping_static_shapes()
+                tests = shape.resolve_overlaps_with_shapes(static_shapes, tests)
+        # check which objects stopped colliding
+        for obj in self.world.objects.values():
+            obj.check_finished_contacts()
+        self.ticks += 1
+        self.collisions_this_frame = []
+    
+    def updateX(self):
         "resolve overlaps between all relevant world objects"
         # filter shape lists for anything out of room etc
         valid_dynamic_shapes = []
@@ -431,8 +552,9 @@ def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     pdist = math.sqrt(dx ** 2 + dy ** 2)
     # point is center of circle, arbitrarily project out in +X
     if pdist == 0:
-        return 1, 0, -radius
-    return dx / pdist, dy / pdist, pdist - radius
+        return 1, 0, -radius, -radius
+    # TODO: calculate other axis of intersection for area?
+    return dx / pdist, dy / pdist, pdist - radius, pdist - radius
 
 def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
     "returns penetration vector and magnitude for two boxes"
@@ -446,17 +568,17 @@ def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
     py = top_b - bottom_a if ay >= by else top_a - bottom_b
     dx, dy = bx - ax, by - ay
     widths, heights = ahw + bhw, ahh + bhh
-    # return separating axis + penetration depth
+    # return separating axis + penetration depth (+ other axis for area calc)
     if widths + px - abs(dx) < heights + py - abs(dy):
         if dx >= 0:
-            return 1, 0, -px
+            return 1, 0, -px, -py
         elif dx < 0:
-            return -1, 0, -px
+            return -1, 0, -px, -py
     else:
         if dy >= 0:
-            return 0, 1, -py
+            return 0, 1, -py, -px
         elif dy < 0:
-            return 0, -1, -py
+            return 0, -1, -py, -px
 
 def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
                            box_hw, box_hh):
@@ -475,69 +597,7 @@ def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
     d = math.sqrt(closest_x ** 2 + closest_y ** 2)
     pdist = circle_radius - d
     if d == 0:
-        return 1, 0, pdist
-    return -closest_x / d, -closest_y / d, -pdist
-
-def get_penetration(a, b):
-    "returns penetration vector and distance between pair of given shapes"
-    # handle all combinations of shape types
-    if type(a) is CircleCollisionShape and type(b) is CircleCollisionShape:
-        return point_circle_penetration(a.x, a.y, b.x, b.y,
-                                        a.radius + b.radius)
-    elif type(a) is AABBCollisionShape and type(b) is AABBCollisionShape:
-        return box_penetration(a.x, a.y, b.x, b.y,
-                               a.halfwidth, a.halfheight,
-                               b.halfwidth, b.halfheight)
-    elif type(a) is CircleCollisionShape and type(b) is AABBCollisionShape:
-        return circle_box_penetration(a.x, a.y, b.x, b.y, a.radius,
-                                      b.halfwidth, b.halfheight)
-    elif type(a) is AABBCollisionShape and type(b) is CircleCollisionShape:
-        px, py, pdist = circle_box_penetration(b.x, b.y, a.x, a.y, b.radius,
-                                               a.halfwidth, a.halfheight)
-        # reverse penetration result
-        return -px, -py, pdist
-    else:
-        return None, None, None
-
-def resolve_collision(obj_a, obj_b, px, py, pdist):
-    total_mass = max(0, obj_a.mass) + max(0, obj_b.mass)
-    if obj_a.is_dynamic():
-        if not obj_b.is_dynamic() or obj_b.mass < 0:
-            a_push = pdist
-        else:
-            a_push = (obj_a.mass / total_mass) * pdist
-        # move parent object, not shape
-        obj_a.x += a_push * px
-        obj_a.y += a_push * py
-        # update all shapes based on object's new position
-        obj_a.collision.update_transform_from_object()
-    if obj_b.is_dynamic():
-        if not obj_a.is_dynamic() or obj_a.mass < 0:
-            b_push = pdist
-        else:
-            b_push = (obj_b.mass / total_mass) * pdist
-        obj_b.x -= b_push * px
-        obj_b.y -= b_push * py
-        obj_b.collision.update_transform_from_object()
-
-def collide_shapes(a, b):
-    "detect and resolve collision between two collision shapes"
-    px, py, pdist = get_penetration(a, b)
-    obj_a, obj_b = a.go, b.go
-    if px is None:
-        a.go.app.log('Unhandled collision: %s on %s' % (a.go.name, b.go.name))
         return
-    if pdist >= 0:
-        return
-    # tell objects they're overlapping, pass penetration vector
-    a_coll_b, a_started_b = a.go.overlapped(b.go, px, py)
-    b_coll_a, b_started_a = b.go.overlapped(a.go, px, py)
-    # if either object says it shouldn't collide with other, don't
-    if not a_coll_b or not b_coll_a:
-        return
-    resolve_collision(a.go, b.go, px, py, pdist)
-    # call objs' started_colliding once collisions have been resolved
-    if a_started_b:
-        a.go.started_colliding(b.go)
-    if b_started_a:
-        b.go.started_colliding(a.go)
+    1, 0, -pdist, -pdist
+    # TODO: calculate other axis of intersection for area?
+    return -closest_x / d, -closest_y / d, -pdist, -pdist
