@@ -441,14 +441,14 @@ class GameObject:
                 tiles.append((x, y))
         return tiles
     
-    def overlapped(self, other, dx, dy):
+    def overlapped(self, other, overlap):
         """
         called by CollisionLord when two objects overlap.
         returns: bool "can overlap", bool "collision starting"
         """
         started = other.name not in self.collision.contacts
-        # create or update contact info: (depth_x, depth_y, timestamp)
-        self.collision.contacts[other.name] = Contact(dx, dy,
+        # create or update contact info: (overlap, timestamp)
+        self.collision.contacts[other.name] = Contact(overlap,
                                                       self.world.cl.ticks)
         # return False if we shouldn't collide with this class
         for ncc_name in self.noncolliding_classes:

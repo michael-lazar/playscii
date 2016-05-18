@@ -271,6 +271,9 @@ class DebugLineRenderable(WorldLineRenderable):
         self.color_array[old_color_size:new_color_size] = new_colors or self.color * int(len(new_verts) / self.vert_items)
         self.rebind_buffers()
     
+    def reset_lines(self):
+        self.build_geo()
+    
     def build_geo(self):
         # start empty
         self.vert_array = np.array([], dtype=np.float32)

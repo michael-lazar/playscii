@@ -519,11 +519,10 @@ class GameWorld:
         for item in draw_order:
             item.obj.render(item.layer)
         #
-        # draw debug stuff: collision layers and origins/boxes
+        # draw debug stuff: collision tiles, origins/boxes, debug lines
         #
         for item in collision_items:
-            # draw all tile collision at z 0
-            item.obj.render(item.layer, 0)
+            item.obj.render(item.layer)
         for obj in self.objects.values():
             obj.render_debug()
         if self.hud and self.draw_hud:
