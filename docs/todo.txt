@@ -2,25 +2,20 @@ TODO
 
 for 0.8.0:
 
-collision issues to investigate:
-- player gets hung up on boundaries between AABBs in maze aka "the crack problem"
--- calculate area of overlap for all shapes (simple as abs of px * py?), resolve collisions in order of most overlap to least. requires calculating overlap separately from resolution, re-evaluating before each resolution? maybe good enough to only determine order once at start, though.
-- spot in maze starting screen near barrier where player can tunnel through diagonally
-
-- started_overlap() if we overlap but didn't collide, started_colliding() if we collided (after collision is resolved)
-
 fix object drag - probably inheriting bugs from Cursor.screen_to_world :[
 -- on mouse click, write dict of {obj_name:(xoff,yoff)} of offsets from mouse to each dragged object's origin
 -- on mouse move, update object's loc to mouse + its offset
 -- on mouse unclick, wipe object offset dict
 
-- when changing art via properties editor, art sometimes doesn't update until reload
+docs!
+- art howto page: basics of painting, affect masks, cut/copy/paste, tile xforms, charsets/palettes, image export, raster image conversion
+- games howto page: rundown of basic classes (GameWorld, GameObject, Renderable, Art), editor UI, deep dive on GameObject class, workflow, overview of example games
 
 ---
 
 new features / major improvements:
 
-grid for game mode? extends in all directions up to a reasonable limit
+- grid for game mode? extends in all directions up to a reasonable limit
 
 - when renaming rooms/objects, search for and correct references eg warps
 
@@ -32,9 +27,6 @@ game distribution system:
 - possibly helpful: http://pysdl2.readthedocs.org/en/latest/modules/sdl2ext_resources.html
 - if autoplay_this_game is set, create a separate CFG file and don't create playscii documents/ + cache directories
 - create new project: auto-create a class file with a stub GameObject subclass?
-
-more complete example games:
-- tetris - implementation of classic, all blocks drawn into a single Art, everything else implemented in a GameHUD (and maybe some background art)
 
 proper help screen:
 - one screen of high level stuff, other screens are a generated listing of binds - use a given bind's function's __doc__ string
@@ -75,6 +67,12 @@ bugs from Jim:
 - When I click to set the cursor for the text tool, moving the mouse after clicking moves the cursor, and not in a useful way.
 - I keep running into this bug, difficult to reproduce, where switching tasks back to Playscii -- maybe mid-click? -- starts a continuous paint that keeps going until I click again to stop it. This paint is not added to the undo list! Either that, or it is undone internally and it sticks around as a rendering glitch. I always revert to my save, just in case.
 - If you cancel a "save as," the document loses the "unsaved" asterisk and you have to change it to save
+
+collision issues to investigate:
+- fix jankiness when colliding with internal edges
+- still some tunneling in certain 1-tile-wide diagonal junctures
+
+- when changing art via properties editor, art sometimes doesn't update until reload
 
 - "used" sound for consumable pickups gets immediately cut off by destroy (allow non-looping sounds to finish even if their object gets destroyed
 

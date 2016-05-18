@@ -68,6 +68,8 @@ class GameObject:
     lifespan = 0.
     # if False, don't do move physics updates for this object
     physics_move = True
+    # if True, subdivide high-velocity moves into steps to avoid tunneling
+    fast_move_in_steps = False
     # acceleration per update from player movement
     move_accel_x = move_accel_y = 200.
     ground_friction = 10.0
@@ -428,6 +430,24 @@ class GameObject:
     def get_contacting_objects(self):
         return [self.world.objects[obj] for obj in self.collision.contacts]
     
+    def get_collisions(self):
+        "returns list of all overlapping shapes our shapes should collide with"
+        overlaps = []
+        for shape in self.collision.shapes:
+            for other in self.world.cl.dynamic_shapes:
+                if other.go is self:
+                    continue
+                if not other.go.should_collide():
+                    continue
+                if not self.can_collide_with(other.go):
+                    continue
+                if not other.go.can_collide_with(self):
+                    continue
+                overlaps.append(shape.get_overlap(other))
+            for other in shape.get_overlapping_static_shapes():
+                overlaps.append(other)
+        return overlaps
+    
     def is_overlapping(self, other):
         "return True if we overlap with other object's collision"
         return other.name in self.collision.contacts
@@ -435,8 +455,7 @@ class GameObject:
     def are_bounds_overlapping(self, other):
         "return True if we overlap with other object's art bounds"
         left, top, right, bottom = self.get_edges()
-        corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
-        for x,y in corners:
+        for x,y in [(left, top), (right, top), (right, bottom), (left, bottom)]:
             if other.is_point_inside(x, y):
                 return True
         return False
@@ -479,14 +498,10 @@ class GameObject:
         # create or update contact info: (overlap, timestamp)
         self.collision.contacts[other.name] = Contact(overlap,
                                                       self.world.cl.ticks)
-        # return False if we shouldn't collide with this class
-        for ncc_name in self.noncolliding_classes:
-            ncc = self.world.classes[ncc_name]
-            if isinstance(other, ncc):
-                if started:
-                    self.started_overlapping(other)
-                return False, started
-        return True, started
+        can_collide = self.can_collide_with(other)
+        if not can_collide and started:
+            self.started_overlapping(other)
+        return can_collide, started
     
     def get_tile_loc(self, tile_x, tile_y, tile_center=True):
         "returns top left / center of current art's tile in world coordinates"
@@ -614,6 +629,10 @@ class GameObject:
     def set_loc(self, x, y, z=None):
         self.x, self.y = x, y
         self.z = z or 0
+    
+    def reset_last_loc(self):
+        "resets last_* values used for updating state and fast_move"
+        self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
     
     def set_scale(self, x, y, z):
         self.scale_x, self.scale_y, self.scale_z = x, y, z
@@ -773,12 +792,49 @@ class GameObject:
     def pre_update(self):
         pass
     
+    def fast_move(self):
+        """
+        subdivides object's move this frame into steps to avoid tunneling.
+        only called for objects with fast_move_in_steps set True.
+        """
+        final_x, final_y = self.x, self.y
+        dx, dy = self.x - self.last_x, self.y - self.last_y
+        total_move_dist = math.sqrt(dx ** 2 + dy ** 2)
+        if total_move_dist == 0:
+            return
+        # get movement normal
+        inv_dist = 1 / total_move_dist
+        dir_x, dir_y = dx * inv_dist, dy * inv_dist
+        if self.collision_shape_type == CST_CIRCLE:
+            step_dist = self.col_radius * 2
+        elif self.collision_shape_type == CST_AABB:
+            # get size in axis object is moving in
+            step_x, step_y = self.col_width * dir_x, self.col_height * dir_y
+            step_dist = math.sqrt(step_x ** 2 + step_y ** 2)
+        # if object isn't moving fast enough, don't step
+        if total_move_dist <= step_dist:
+            return
+        steps = int(total_move_dist / step_dist)
+        # start stepping from beginning of this frame's move distance
+        self.x, self.y = self.last_x, self.last_y
+        for i in range(steps):
+            self.x += dir_x * step_dist
+            self.y += dir_y * step_dist
+            collisions = self.get_collisions()
+            # if overlapping just leave as-is, collision update will resolve
+            if len(collisions) > 0:
+                return
+        # ran through all steps without a hit, set back to final position
+        self.x, self.y = final_x, final_y
+    
     def update(self):
         if 0 < self.destroy_time <= self.app.get_elapsed_time():
             self.destroy()
         # don't apply physics to selected objects being dragged
         if self.physics_move and not (self.world.dragging_object and self in self.world.selected_objects):
             self.apply_move()
+        if self.fast_move_in_steps:
+            self.fast_move()
         self.update_state()
         self.update_state_sounds()
         if self.facing_changes_art:
@@ -803,6 +859,13 @@ class GameObject:
     
     def should_collide(self):
         return self.collision_type != CT_NONE and self.is_in_current_room()
+    
+    def can_collide_with(self, other):
+        "returns True if this object is allowed to collide with given object"
+        for ncc_name in self.noncolliding_classes:
+            if isinstance(other, self.world.classes[ncc_name]):
+                return False
+        return True
     
     def is_in_room(self, room):
         return len(self.rooms) == 0 or room.name in self.rooms
