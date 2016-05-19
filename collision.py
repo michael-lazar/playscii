@@ -154,7 +154,8 @@ class AABBCollisionShape(CollisionShape):
     
     def overlaps_line(self, x1, y1, x2, y2):
         "returns True if this box overlaps given line segment"
-        return box_overlaps_line(*self.get_box(), x1, y1, x2, y2)
+        left, top, right, bottom = self.get_box()
+        return box_overlaps_line(left, top, right, bottom, x1, y1, x2, y2)
     
     def get_overlap(self, other):
         "returns ShapeOverlap data for this shape's overlap with another"
