@@ -41,7 +41,8 @@ exe = EXE(pyz,
           debug=False,
           strip=None,
           upx=True,
-          console=True )
+          icon='ui\playscii.ico',
+          console=False )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
