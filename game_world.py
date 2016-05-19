@@ -83,8 +83,8 @@ class GameWorld:
         self.cl = collision.CollisionLord(self)
         self.hud = None
         self.art_loaded = []
-        # player is edit-dragging an object
-        self.dragging_object = False
+        # offsets for objects player is edit-dragging
+        self.drag_objects = {}
         self.last_state_loaded = DEFAULT_STATE_FILENAME
     
     def play_music(self, music_filename, fade_in_time=0):
@@ -99,9 +99,15 @@ class GameWorld:
         return self.app.al.is_music_playing()
     
     def pick_next_object_at(self, x, y):
+        "returns next unselected at point"
+        objects = self.get_objects_at(x, y)
+        # don't bother cycling if only one object found
+        if len(objects) == 1 and objects[0].selectable and \
+           not objects[0] in self.selected_objects:
+                return objects[0]
         # cycle through objects at point til an unselected one is found
         use_next = False
-        for obj in self.get_objects_at(x, y):
+        for obj in objects:
             if not obj.selectable:
                 continue
             if len(self.selected_objects) == 0:
@@ -123,13 +129,17 @@ class GameWorld:
         return objects
     
     def clicked(self, button):
+        x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                         self.app.mouse_y)
         if self.classname_to_spawn:
-            x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
-                                             self.app.mouse_y)
             new_obj = self.spawn_object_of_class(self.classname_to_spawn, x, y)
             if self.current_room:
                 self.current_room.add_object(new_obj)
             self.app.ui.message_line.post_line('Spawned %s' % new_obj.name)
+            return
+        # remember object offsets from cursor for dragging
+        for obj in self.selected_objects:
+            self.drag_objects[obj.name] = (obj.x - x, obj.y - y, obj.z - z)
     
     def unclicked(self, button):
         # clicks on UI are consumed and flag world to not accept unclicks
@@ -142,27 +152,32 @@ class GameWorld:
             return
         x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
                                          self.app.mouse_y)
-        was_dragging = self.dragging_object
-        self.dragging_object = False
+        # forget drag object offsets
+        self.drag_objects.clear()
+        for obj in self.selected_objects:
+            obj.enable_collision()
+            if obj.collision_shape_type == collision.CST_TILE:
+                obj.collision.create_shapes()
+            obj.collision.update()
+        # no mod keys: select only object under cursor, deselect all if none
         if not self.app.il.ctrl_pressed and not self.app.il.shift_pressed:
             objects = self.get_objects_at(x, y)
             if len(objects) == 0:
                 self.deselect_all()
                 return
+        # ctrl: remove object under cursor from selection
         if self.app.il.ctrl_pressed:
-            # unselect first object found under mouse
+            # unselect first selected object found under mouse
             objects = self.get_objects_at(x, y)
             if len(objects) > 0:
                 self.deselect_object(objects[0])
             return
-        if was_dragging:
-            # tell objects they're no longer being dragged
-            for obj in self.selected_objects:
-                obj.stop_dragging()
         next_obj = self.pick_next_object_at(x, y)
-        # don't select stuff if ending a drag
-        if not next_obj and was_dragging:
+        # clicked on nothing?
+        if not next_obj:
+            self.deselect_all()
             return
+        # shift: add to current selection
         if not self.app.il.shift_pressed:
             self.deselect_all()
         self.select_object(next_obj)
@@ -176,22 +191,29 @@ class GameWorld:
         # not dragging anything?
         if len(self.selected_objects) == 0:
             return
-        # get mouse delta in world space
-        mx1, my1, mz1 = vector.screen_to_world(self.app, self.app.mouse_x,
-                                               self.app.mouse_y)
-        mx2, my2, mz2 = vector.screen_to_world(self.app, self.app.mouse_x + dx,
-                                               self.app.mouse_y + dy)
-        world_dx, world_dy = mx2 - mx1, my2 - my1
-        if self.app.left_mouse and world_dx != 0 and world_dy != 0:
-            for obj in self.selected_objects:
-                if not self.dragging_object:
-                    obj.start_dragging()
-                # check "locked" flag
-                if not obj.locked:
-                    # note: grid snap is set in object.stopped_dragging()
-                    obj.x += world_dx
-                    obj.y += world_dy
-            self.dragging_object = True
+        # 0-length drags cause unwanted snapping
+        if dx == 0 and dy == 0:
+            return
+        # set dragged objects to mouse + offset from mouse when drag started
+        x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                         self.app.mouse_y)
+        for obj_name,offset in self.drag_objects.items():
+            obj = self.objects[obj_name]
+            if obj.locked:
+                continue
+            obj.disable_collision()
+            obj.x = x + offset[0]
+            obj.y = y + offset[1]
+            obj.z = z + offset[2]
+            if self.object_grid_snap:
+                obj.x = round(obj.x)
+                obj.y = round(obj.y)
+                # if odd width/height, origin will be between quads and
+                # edges will be off-grid; nudge so that edges are on-grid
+                if obj.art.width % 2 != 0:
+                    obj.x += obj.art.quad_width / 2
+                if obj.art.height % 2 != 0:
+                    obj.y += obj.art.quad_height / 2
     
     def select_object(self, obj, force=False):
         if not self.app.can_edit:
