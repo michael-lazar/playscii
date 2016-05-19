@@ -906,7 +906,7 @@ class InputLord:
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:
-            if obj.orig_collision_type:
+            if obj.orig_collision_type and obj.collision_type == CT_NONE:
                 obj.enable_collision()
                 self.ui.message_line.post_line('Collision enabled for %s' % obj.name)
             elif obj.collision_type != CT_NONE:

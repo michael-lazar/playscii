@@ -208,7 +208,7 @@ class GameObject:
             if not art in self.world.art_loaded:
                 self.world.art_loaded.append(art)
         # remember previous collision type for enable/disable
-        self.orig_collision_type = None
+        self.orig_collision_type = self.collision_type
         self.collision = Collideable(self)
         self.world.new_objects[self.name] = self
         self.attachments = []
@@ -312,23 +312,6 @@ class GameObject:
     
     def is_dynamic(self):
         return self.collision_type in CTG_DYNAMIC
-    
-    def start_dragging(self):
-        self.disable_collision()
-    
-    def stop_dragging(self):
-        if self.world.object_grid_snap:
-            self.x = round(self.x)
-            self.y = round(self.y)
-            # if odd width/height, origin will be between quads and
-            # edges will be off-grid; nudge so that edges are on-grid
-            if self.art.width % 2 != 0:
-                self.x += self.art.quad_width / 2
-            if self.art.height % 2 != 0:
-                self.y += self.art.quad_height / 2
-        self.enable_collision()
-        if self.collision_shape_type == CST_TILE:
-            self.collision.create_shapes()
     
     def is_entering_state(self, state):
         return self.state == state and self.last_state != state
@@ -831,7 +814,7 @@ class GameObject:
         if 0 < self.destroy_time <= self.app.get_elapsed_time():
             self.destroy()
         # don't apply physics to selected objects being dragged
-        if self.physics_move and not (self.world.dragging_object and self in self.world.selected_objects):
+        if self.physics_move and not self.name in self.world.drag_objects:
             self.apply_move()
         if self.fast_move_in_steps:
             self.fast_move()

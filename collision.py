@@ -200,6 +200,7 @@ class Collideable:
         elif self.go.collision_shape_type == CST_AABB:
             self.create_box()
         elif self.go.collision_shape_type == CST_TILE:
+            self.tile_shapes.clear()
             self.create_merged_tile_boxes()
         # update renderables once if static
         if not self.go.is_dynamic():
