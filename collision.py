@@ -187,8 +187,6 @@ class Collideable:
         self.tile_shapes = {}
         # contacts with other objects
         self.contacts = {}
-        # list of objects processed for collision this frame
-        self.collisions_this_frame = []
         self.create_shapes()
     
     def create_shapes(self):
@@ -342,6 +340,8 @@ class CollisionLord:
     def __init__(self, world):
         self.world = world
         self.ticks = 0
+        # list of objects processed for collision this frame
+        self.collisions_this_frame = []
         self.reset()
     
     def report(self):
