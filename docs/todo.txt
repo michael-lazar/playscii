@@ -6,6 +6,8 @@ docs!
 - art howto page: basics of painting, affect masks, cut/copy/paste, tile xforms, charsets/palettes, image export, raster image conversion
 - games howto page: rundown of basic classes (GameWorld, GameObject, Renderable, Art), editor UI, deep dive on GameObject class, workflow, overview of example games
 
+fix: clicking on picker with select tool up shouldn't start a selection
+
 ---
 
 new features / major improvements:

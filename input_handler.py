@@ -782,11 +782,11 @@ class InputLord:
     def BIND_open_readme(self):
         os.system('./' + README_FILENAME)
     
+    def BIND_open_help_docs(self):
+        webbrowser.open('%s/%s' % (os.getcwd(), WEBSITE_HELP_URL))
+    
     def BIND_open_website(self):
         webbrowser.open(WEBSITE_URL)
-    
-    def BIND_open_online_help(self):
-        webbrowser.open(WEBSITE_HELP_URL)
     
     def BIND_crop_to_selection(self):
         self.ui.crop_to_selection(self.ui.active_art)
