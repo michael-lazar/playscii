@@ -14,7 +14,8 @@ include_files = [
     ('shaders', 'shaders'),
     ('shaders', 'shaders'),
     ('games', 'games'),
-    ('ui/*.png', 'ui')
+    ('ui/*.png', 'ui'),
+    ('docs/html/*.*', 'docs/html')
 ]
 
 include_bins = [
