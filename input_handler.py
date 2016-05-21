@@ -783,7 +783,7 @@ class InputLord:
         os.system('./' + README_FILENAME)
     
     def BIND_open_help_docs(self):
-        webbrowser.open('%s/%s' % (os.getcwd(), WEBSITE_HELP_URL))
+        webbrowser.open('file://%s/%s' % (os.getcwd(), WEBSITE_HELP_URL))
     
     def BIND_open_website(self):
         webbrowser.open(WEBSITE_URL)
