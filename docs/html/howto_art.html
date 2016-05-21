@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+ <title>Playscii - Documentation (Main)</title>
+ <link rel="stylesheet" type="text/css" href="./darkgrey.css" title="dark grey"/>
+ <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css' />
+ <style>
+ .titlebar-playscii {
+  height: 78px;
+  padding: 0px 10% 0px 10%;
+  align: left;
+  background-repeat: repeat-x;
+  background-image: url('logo_bg_tile.png');
+ }
+ .colorbar {
+  height: 12px;
+ }
+ .item {
+  padding: 0px 5%;
+ }
+ </style>
+</head>
+<body>
+
+<div class="titlebar-playscii">
+ <img src="pslogo_w_text2.png" alt="Playscii logo"/>
+</div>
+<div class="colorbar"></div>
+
+<div class="main">
+
+  painting basics
+  a playscii document is a grid of tiles. each tile has a character, a foreground color, a background color, and a transform. click and hold the primary mouse button (or enter) anywhere on a document to paint the active character/color/transform.
+  
+  tile character/color/transform
+  Character and color are pretty self-explanatory; "transform" refers to whether a character is flipped (horizontally or vertically, aka the X and Y axes) or rotated (90, 180, or 270 degrees). The current active character, colors, and transform are always shown on the status bar along the bottom edge of the screen.
+  
+  the picker
+  press space to bring up the "picker" that lets you select characters, colors, and transforms (flipped or rotated versions of all characters).
+  [image of picker, with #s at each UI element]
+  1. Character swatch - click a character here to set it as the active character for painting
+  2. Color swatch - click the primary mouse button on a color here to set it as the active foreground color, secondary mouse click to set it as the active background color
+  3. Tool/picker tabs - click the left tab to bring up settings for each tool (see [Tools] and [Affects Masks] sections below), click the right tab to bring up the picker view.
+  4. Transform selector - click one of the items here to set a different active transform (see [transform] section above).
+  5. Current character set - click this to bring up the [character set selector].
+  6. Current palette - click this to bring up the [palette selector].
+  7. Character swatch size - click the + and - buttons to change the character swatch's display size - bump it up if characters are too hard to see or click on your display.
+  
+  tools
+  - paint: change the tiles within the cursor area to the current active character/colors/transform into the current document.
+  - erase: "erase" the tiles within the cursor area, removing characters and leaving only the current active background color.
+  - rotate: rotate the tiles within the cursor area 90 degrees, relative to each character's current rotation.
+  - grab: set the character/color/transform of the tile beneath the cursor as the current active character/color/transform. secondary mouse button does this no matter what tool you have selected, so you can very quickly sample what you need and continue painting.
+  - text: click anywhere in the document to start entering alphanumeric text at that location.
+  - select: click and drag the mouse (or use enter + arrow keys) to define a selected area. other tool operations will be restricted to the selection area, and you can also cut/copy the selected area and paint it with the paste tool (see below). Holding the shift key while dragging a box adds to the current selection area, and holding control while dragging a box subtracts it from the current selection area.
+  - paste: paint with the last cut/copied tiles.
+  
+  tool settings
+  - brush size: increase or decrease the size of the square area a tool affects. doesn't apply to the grab, text, select, and paste tools.
+  - "affects character / foreground color / background color / transform" masks: by default a tool will affect all of these things, but a tool's effect on each tile attribute can be disabled selectively. hovering the cursor over a swatch will preview the paint result, which might otherwise be a bit difficult to visualize.
+  [image showing different affects masks on the same tiles, side by side]
+  
+  panning and zooming the view
+  TODO (include tilt)
+  
+  working with multiple documents
+  TODO (open, import EDSCII, ctrl-tab)
+  
+  cropping and resizing
+  TODO
+  
+  layers
+  TODO
+  
+  frames/animation
+  TODO
+  
+  character set selector
+  By default Playscii lets you paint with the Commodore 64 "PETSCII" character set, but it supports many other sets out of the box, and you can [define your own]. The character set selector lets you pick from the the available sets.
+
+  palette selector
+  Similar to the [character set selector], this selector lets you choose a different color palette from the default Commodore 64 palette. You can also [define your own] with nothing more than an image.
+  
+  custom character sets
+  TODO
+  
+  custom palettes
+  TODO (including "palette from file")
+  
+  image export
+  TODO (mention CRT filter)
+  
+  raster image conversion
+  TODO
+  
+  <br/><br/>
+
+<b><a href="./howto_main.html"><< back to main documentation page</a></b>
+							 
+<br/><br/><br/>
+
+
+</div>
+</body>

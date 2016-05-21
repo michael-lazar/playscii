@@ -91,7 +91,7 @@ self.edit_bind_src = {
     'ctrl o'   : 'open_art',
     'ctrl n'   : 'new_art',
     'ctrl w'   : 'close_art',
-    'f1'       : 'open_online_help',
+    'f1'       : 'open_help_docs',
     'ctrl k'   : 'crop_to_selection',
     'ctrl r'   : 'resize_art',
     'ctrl f'   : 'add_frame',
