@@ -163,8 +163,12 @@ class Application:
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
         self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
-        gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
-        gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
+        try:
+            gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
+            gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
+        except:
+            gpu_vendor = '[Unknown Vendor]'
+            gpu_renderer = '[Unknown Renderer]'
         self.log('GPU: %s - %s' % (gpu_vendor, gpu_renderer))
         # try single-argument GL2.0 version first
         gl_ver = GL.glGetString(GL.GL_VERSION)

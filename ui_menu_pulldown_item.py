@@ -472,19 +472,14 @@ class PaletteFromFileItem(PulldownMenuItem):
 #
 # help menu
 #
-class HelpScreenItem(PulldownMenuItem):
-    label = 'Help…'
-    command = 'open_help_screen'
-    always_active = True
-
-class HelpReadmeItem(PulldownMenuItem):
-    label = 'Open README'
-    command = 'open_readme'
-    always_active = True
-
 class HelpWebsiteItem(PulldownMenuItem):
     label = 'Playscii website'
     command = 'open_website'
+    always_active = True
+
+class OnlineHelpItem(PulldownMenuItem):
+    label = 'Online help'
+    command = 'open_online_help'
     always_active = True
 
 #
@@ -629,5 +624,4 @@ class CharColorMenuData(PulldownMenuData):
              PaletteFromFileItem]
 
 class HelpMenuData(PulldownMenuData):
-    #items = [HelpScreenItem, HelpReadmeItem, HelpWebsiteItem]
-    items = [HelpReadmeItem, HelpWebsiteItem]
+    items = [HelpWebsiteItem, OnlineHelpItem]

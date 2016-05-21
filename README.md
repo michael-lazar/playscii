@@ -1,8 +1,7 @@
-# PLAYSCII - an ASCII art tool
+# PLAYSCII - an ASCII art and game creation tool
 
-Playscii (pronounced play-skee) is the successor to EDSCII.  It's still in
-development and may not be feature-complete yet.  The latest version will
-always be available here:
+Playscii (pronounced play-skee) is an art, animation, and game creation tool.  It's still in development and may not be feature-complete yet.  The latest
+version will always be available here:
 
 * [http://jp.itch.io/playscii](http://jp.itch.io/playscii)
 * [https://bitbucket.org/JPLeBreton/playscii](https://bitbucket.org/JPLeBreton/playscii)
@@ -12,8 +11,11 @@ always be available here:
 
 If you downloaded the ZIP file with "win32" in its name, you should have a
 Windows EXE build you can run without needing to install anything listed below.
-A Mac application bundle file isn't available yet but I'd love to make one
-available in the near future.
+
+If you downloaded the DMG file with "mac" in its name, this is the Mac
+application bundle which can be installed in the standard manner, by opening
+the disk image file and then dragging Playscii.app into your Applications
+folder.
 
 If you downloaded the ZIP file with "source" in its name or from the project's
 source code repository, you can run Playscii from source if you have Python and
@@ -164,15 +166,14 @@ like so:
 ## Building
 
 To produce Windows EXE builds, in addition to the above dependencies you'll
-also need py2exe: [http://www.py2exe.org](http://www.py2exe.org)
+also need PyInstaller: [http://www.pyinstaller.org/](http://www.pyinstaller.org/)
 
-Simply run "build.bat" and it will place a complete build in the `dist\`
+Simply run "build_windows.bat" and it will place a complete build in the `dist\`
 subdirectory.  You may need to edit your Python and SDL2.dll paths at the very
 top of build.bat if they're in a different location.
 
-To produce Mac Application bundles, you'll need py2app: [https://pypi.python.org/pypi/py2app](https://pypi.python.org/pypi/py2app)
-
-As with the Windows build process, run the "mac_build.py" script.
+The process for Mac Application bundles is quite similar: install PyInstaller,
+and run the "build_mac.sh" script.
 
 
 ## Configuration
