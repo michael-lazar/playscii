@@ -1,5 +1,7 @@
 # -*- mode: python -*-
 
+import winreg
+
 block_cipher = None
 
 include_files = [
@@ -12,13 +14,14 @@ include_files = [
     ('palettes', 'palettes'),
     ('scripts', 'scripts'),
     ('shaders', 'shaders'),
-    ('shaders', 'shaders'),
     ('games', 'games'),
-    ('ui/*.png', 'ui')
+    ('ui/*.png', 'ui'),
+    ('docs/html/*.*', 'docs/html')
 ]
 
 include_bins = [
-    ('./*.dll', '.')
+    ('./*.dll', '.'),
+    (winreg.ExpandEnvironmentStrings('%WINDIR%') + '\\system32\\version.dll', '.')
 ]
 
 a = Analysis(['playscii.py'],
