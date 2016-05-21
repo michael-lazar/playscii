@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+ <title>Playscii - Documentation (Main)</title>
+ <link rel="stylesheet" type="text/css" href="./darkgrey.css" title="dark grey"/>
+ <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css' />
+ <style>
+ .titlebar-playscii {
+  height: 78px;
+  padding: 0px 10% 0px 10%;
+  align: left;
+  background-repeat: repeat-x;
+  background-image: url('logo_bg_tile.png');
+ }
+ .colorbar {
+  height: 12px;
+ }
+ .item {
+  padding: 0px 5%;
+ }
+ </style>
+</head>
+<body>
+
+<div class="titlebar-playscii">
+ <img src="pslogo_w_text2.png" alt="Playscii logo"/>
+</div>
+<div class="colorbar"></div>
+
+<div class="main">
+
+<br/>
+
+<h2>Documentation</h2>
+
+<p>
+  Playscii (pronounced play-skee) is an art, animation, and game creation tool.
+</p>
+
+<p>
+  See the <a href="./howto_art.html">Art Mode</a> page for detailed info on how to create artwork and animations with Playscii.
+</p>
+
+<p>
+  See the <a href="./howto_game.html">Game Mode</a> page for detailed info on how to create games with Playscii.
+</p>
+
+<h3>Table of Contents</h3>
+
+<ul>
+  <li>
+	<a href="#run">Running</a>
+  </li>
+  <li>
+	<a href="#config">Configuration</a>
+  </li>
+  <li>
+	<a href="#runfromsource">Running from Source</a>
+  </li>
+  <li>
+	<a href="#build">Building</a>
+  </li>
+  <li>
+	<a href="#roadmap">Roadmap</a>
+  </li>
+</ul>
+
+<a id="run"><h4>Running</h4></a>
+<div class="block">
+<p>
+If you downloaded the ZIP file with "win32" in its name, you should have a Windows EXE build you can run without needing to install anything listed below.
+</p>
+<p>
+If you downloaded the DMG file, this is the Mac application bundle which can be installed in the standard manner, by opening the disk image file and then dragging Playscii.app into your Applications folder.
+</p>
+<p>
+If you downloaded the ZIP file with "source" in its name or from the project's source code repository, you can run Playscii from source if you have Python and a few libraries installed.  See the <a href="#runfromsource">Running from Source</a> and <a href="#build">Building</a> sections below.
+</p>
+</div>
+
+<a id="config"><h4>Configuration</h4></a>
+<div class="block">
+<p>
+  Most users won't need to edit them, but just in case - Playscii places its configuration files in OS-appropriate directories:
+  <ul>
+	<li>
+	  Windows 7+: <tt>C:\Users\[your username]\AppData\Local\Playscii</tt>
+	</li>
+	<li>
+	  Linux: <tt>~/.config/Playscii</tt>
+	</li>
+	<li>
+	Mac OSX: <tt>~/Library/Application Support/Playscii</tt>
+	</li>
+  </ul>
+</p>
+<p>
+  Documents (your art, color palettes, etc) are stored in eg <tt>~/Documents/Playscii</tt> in OSX and Linux, and the appropriate "My Documents" folder in Windows.
+</p>
+<p>
+  You can override many program defaults in the file <tt>playscii.cfg</tt>.  This file starts with a few possible "commented-out" overrides to get you started. You can enable one by deleting the # character at the start of the line. Every line in that file must be a valid Python expression, so edit carefully!
+</p>
+<p>
+  Likewise you can change Playscii's keyboard command binds in the <tt>binds.cfg</tt> file.
+</p>
+</div>
+
+<a id="runfromsource"><h4>Running from Source</h4></a>
+<div class="block">
+<p>
+  Running from source is only recommended if a binary build isn't available for your OS and/or you want to play with the latest still-in-development version.  If you're doing so, you'll need some version of Python 3 - sorry, Python 2 is not supported - and the following libraries:
+</p>
+<ul>
+  <li>
+	<a href="https://bitbucket.org/marcusva/py-sdl2/overview">PySDL2</a>
+  </li>
+  <li>
+	<a href="http://pyopengl.sourceforge.net">PyOpenGL</a>
+  </li>
+  <li>
+	<a href="http://www.numpy.org">Numpy</a>
+  </li>
+  <li>
+	<a href="https://github.com/python-pillow/Pillow">Pillow</a> or any compatible derivative of Python Image Library (PIL)
+  </li>
+  <li>
+	<a href="https://github.com/ActiveState/appdirs">appdirs</a>
+  </li>
+</ul>
+<p>
+These libraries are all pretty easy to install using PIP, the package manager that comes with Python 3.4 and later.  Find the pip executable and run it from the command line, like so:
+</p>
+<tt>pip install pysdl2 pyopengl numpy pillow appdirs</tt>
+<p>
+In Windows the pip executable is in the <tt>Scripts\</tt> subdirectory of your Python install folder, eg <tt>c:\Python34</tt>.  On some Unix-like systems (Linux and OSX) the pip binary to run may be called "pip3" to distinguish it from any Python 2 installations.  On Unix-like systems you may also need to run pip as super user to let it install system libraries, eg by pre-pending "sudo" to the command above.
+</p>
+<p>
+Once you have the dependencies installed, you can run Playscii from source like so:
+</p>
+<p>
+<tt>python playscii.py [optional name of art file to open]</tt>
+</p>
+</div>
+
+<a id="build"><h4>Building</h4></a>
+<div class="block">
+<p>
+  To produce Windows EXE builds, in addition to the above dependencies you'll also need <a href="http://www.pyinstaller.org/">PyInstaller</a>.
+</p>
+<p>
+  Simply run <tt>build_windows.bat</tt> and it will place a complete build in the <tt>dist\</tt> subdirectory.  You may need to provide needed DLLs, such as SDL2.dll, SDL2_mixer.dll and its dependencies.
+</p>
+<p>
+  The process for Mac Application bundles is quite similar: install PyInstaller, and run the <tt>build_mac.sh</tt> script.
+</p>
+</div>
+
+<a id="roadmap"><h4>Roadmap</h4></a>
+<div class="block">
+<p>
+  Many of Playscii's intended features have now been implemented, but you can see the <a href="https://bitbucket.org/JPLeBreton/playscii/src/default/docs/todo.txt">very latest version of JP's TODO file</a> for an idea of what's being worked on.
+</p>
+</div>
+
+<b><a href="./index.html"><< back to Playscii main page</a></b>
+							 
+<br/><br/><br/>
+
+</div>
+</body>
