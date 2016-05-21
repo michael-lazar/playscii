@@ -77,7 +77,7 @@ class ToggleDebugObjectsItem(PulldownMenuItem):
     command = 'toggle_debug_objects'
     always_active = True
     def should_mark(ui):
-        return ui.app.gw.properties.draw_debug_objects
+        return ui.app.gw.properties and ui.app.gw.properties.draw_debug_objects
 
 class ToggleOriginVizItem(PulldownMenuItem):
     label = '  Show all object origins'

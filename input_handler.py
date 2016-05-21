@@ -18,6 +18,7 @@ BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
 README_FILENAME = 'README.md'
 WEBSITE_URL = 'http://vectorpoem.com/playscii'
+WEBSITE_HELP_URL = 'docs/html/howto_main.html'
 
 class InputLord:
     
@@ -778,14 +779,14 @@ class InputLord:
             return
         self.app.close_art(self.ui.active_art)
     
-    def BIND_open_help_screen(self):
-        self.ui.open_dialog(HelpScreenDialog)
-    
     def BIND_open_readme(self):
         os.system('./' + README_FILENAME)
     
     def BIND_open_website(self):
         webbrowser.open(WEBSITE_URL)
+    
+    def BIND_open_online_help(self):
+        webbrowser.open(WEBSITE_HELP_URL)
     
     def BIND_crop_to_selection(self):
         self.ui.crop_to_selection(self.ui.active_art)
@@ -1023,5 +1024,7 @@ class InputLord:
         self.ui.open_dialog(RenameRoomDialog)
     
     def BIND_toggle_debug_objects(self):
+        if not self.app.gw.properties:
+            return
         self.app.gw.properties.set_object_property('draw_debug_objects', not self.app.gw.draw_debug_objects)
         self.ui.menu_bar.refresh_active_menu()

@@ -26,7 +26,7 @@ Camera.start_zoom = 15
 # CRT shader starts off
 #Framebuffer.start_crt_enabled = False
 
-# disable CRT shader entirely - use this if playscii starts up really slowly
+# disable CRT shader entirely - use this if playscii starts up really slowly on your video card
 #Framebuffer.disable_crt = True
 
 # press space to show/hide main popup rather than holding space
