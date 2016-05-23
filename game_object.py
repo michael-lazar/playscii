@@ -4,7 +4,7 @@ from art import Art, ArtInstance
 from renderable import TileRenderable
 from renderable_line import OriginIndicatorRenderable, BoundsIndicatorRenderable
 
-from collision import Contact, Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC, point_in_box
+from collision import Contact, Collideable, CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CTG_STATIC, CTG_DYNAMIC, point_in_box
 
 # facings
 GOF_LEFT = 0

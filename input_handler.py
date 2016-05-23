@@ -5,7 +5,7 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportEDSCIIDialog, SetCameraZoomDialog
+from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameDelayAllDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportEDSCIIDialog, SetCameraZoomDialog
 from ui_game_dialog import NewGameDirDialog, SetGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, AddRoomDialog, SetRoomCamDialog, SetRoomEdgeWarpsDialog, SetRoomBoundsObjDialog, RenameRoomDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
 from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog, ConvertImageChooserDialog, PaletteFromImageChooserDialog
@@ -806,6 +806,9 @@ class InputLord:
     
     def BIND_change_frame_delay(self):
         self.ui.open_dialog(FrameDelayDialog)
+    
+    def BIND_change_frame_delay_all(self):
+        self.ui.open_dialog(FrameDelayAllDialog)
     
     def BIND_delete_frame(self):
         self.ui.active_art.delete_frame_at(self.ui.active_art.active_frame)

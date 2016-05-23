@@ -118,6 +118,7 @@ self.edit_bind_src = {
     '_website'      : 'open_website',
     '_dup_frame'    : 'duplicate_frame',
     '_frame_delay'  : 'change_frame_delay',
+	'_frame_delay_all': 'change_frame_delay_all',
     '_frame_index'  : 'change_frame_index',
     '_delete_frame' : 'delete_frame',
     '_dup_layer'    : 'duplicate_layer',

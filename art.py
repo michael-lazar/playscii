@@ -379,11 +379,14 @@ class Art:
             self.bg_colors[frame] = expand_array(self.bg_colors[frame], bg, 4)
             self.uv_mods[frame] = expand_array(self.uv_mods[frame], UV_NORMAL, UV_STRIDE)
     
+    def mark_frame_changed(self, frame):
+        for l in [self.char_changed_frames, self.fg_changed_frames,
+                  self.bg_changed_frames, self.uv_changed_frames]:
+            l.append(frame)
+    
     def mark_all_frames_changed(self):
         for frame in range(self.frames):
-            for l in [self.char_changed_frames, self.fg_changed_frames,
-                      self.bg_changed_frames, self.uv_changed_frames]:
-                l.append(frame)
+            self.mark_frame_changed(frame)
     
     def resize(self, new_width, new_height, origin_x=0, origin_y=0):
         if new_width < self.width or new_height < self.height:
@@ -519,6 +522,19 @@ class Art:
             self.set_color_at(frame, layer, x, y, bg, False)
         if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
+    
+    def shift(self, frame, layer, amount_x, amount_y):
+        "shifts + wraps art on given frame + layer by given amount in X and Y"
+        for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods]:
+            a[frame][layer] = np.roll(a[frame][layer], amount_x, 1)
+            a[frame][layer] = np.roll(a[frame][layer], amount_y, 0)
+        self.mark_frame_changed(frame)
+    
+    def shift_all_frames(self, amount_x, amount_y):
+        "shifts + wraps art in X and Y"
+        for frame in range(self.frames):
+            for layer in range(self.layers):
+                self.shift(frame, layer, amount_x, amount_y)
     
     def update_saved_camera(self, camera):
         self.camera_x, self.camera_y, self.camera_z = camera.x, camera.y, camera.z

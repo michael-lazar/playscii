@@ -6,6 +6,10 @@ docs!
 - art howto page: basics of painting, affect masks, cut/copy/paste, tile xforms, charsets/palettes, image export, raster image conversion
 - games howto page: rundown of basic classes (GameWorld, GameObject, Renderable, Art), editor UI, deep dive on GameObject class, workflow, overview of example games
 
+example games:
+- top down shmup (lots of projectile collisions, basic enemy spawns)
+- side view platformer (MB style, character being pushed into floor by gravity, jumping)
+
 fix: clicking on picker with select tool up shouldn't start a selection
 
 ---
@@ -66,6 +70,8 @@ bugs from Jim:
 - When I click to set the cursor for the text tool, moving the mouse after clicking moves the cursor, and not in a useful way.
 - I keep running into this bug, difficult to reproduce, where switching tasks back to Playscii -- maybe mid-click? -- starts a continuous paint that keeps going until I click again to stop it. This paint is not added to the undo list! Either that, or it is undone internally and it sticks around as a rendering glitch. I always revert to my save, just in case.
 - If you cancel a "save as," the document loses the "unsaved" asterisk and you have to change it to save
+
+- low perf when editing a large art with instances in game mode; instances update every frame as mouse cursor moves
 
 collision issues to investigate:
 - fix jankiness when colliding with internal edges

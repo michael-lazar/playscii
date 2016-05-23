@@ -58,7 +58,31 @@ class Pickup(GameObject):
     y_sort = True
     attachment_classes = { 'shadow': 'BlobShadow' }
 
-class GameCharacter(GameObject):
+class Projectile(GameObject):
+    fast_move_in_steps = True
+    collision_type = CT_GENERIC_DYNAMIC
+    collision_shape_type = CST_CIRCLE
+    move_accel_x = move_accel_y = 400.
+    noncolliding_classes = ['Projectile', 'Player']
+    # projectiles should be transient, limited max life
+    lifespan = 10.
+    should_save = False
+    
+    def __init__(self, world, obj_data=None):
+        GameObject.__init__(self, world, obj_data)
+        self.fire_dir_x, self.fire_dir_y = 0, 0
+    
+    def fire(self, firer, dir_x=0, dir_y=1):
+        self.set_loc(firer.x, firer.y, firer.z)
+        self.reset_last_loc()
+        self.fire_dir_x, self.fire_dir_y = dir_x, dir_y
+    
+    def update(self):
+        if (self.fire_dir_x, self.fire_dir_y) != (0, 0):
+            self.move(self.fire_dir_x, self.fire_dir_y)
+        GameObject.update(self)
+
+class Character(GameObject):
     
     state_changes_art = True
     stand_if_not_moving = True
@@ -77,10 +101,10 @@ class GameCharacter(GameObject):
         if abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
             self.state = self.move_state
 
-class Player(GameCharacter):
+class Player(Character):
     log_move = False
     collision_type = CT_PLAYER
-    editable = GameCharacter.editable + ['move_accel_x', 'move_accel_y',
+    editable = Character.editable + ['move_accel_x', 'move_accel_y',
                                          'ground_friction', 'air_friction',
                                          'bounciness', 'stop_velocity']
     

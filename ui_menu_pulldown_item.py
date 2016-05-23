@@ -374,6 +374,10 @@ class FrameChangeDelayItem(PulldownMenuItem):
     label = "Change this frame's hold time…"
     command = 'change_frame_delay'
 
+class FrameChangeDelayAllItem(PulldownMenuItem):
+    label = "Change all frames' hold times…"
+    command = 'change_frame_delay_all'
+
 class FrameChangeIndexItem(PulldownMenuItem):
     label = "Change this frame's index…"
     command = 'change_frame_index'
@@ -568,8 +572,8 @@ class FrameMenuData(PulldownMenuData):
              FrameToggleOnionItem, FrameCycleOnionFramesItem,
              FrameCycleOnionDisplayItem, SeparatorItem,
              FrameAddFrameItem, FrameDuplicateFrameItem,
-             FrameChangeDelayItem, FrameChangeIndexItem,
-             FrameDeleteFrameItem]
+             FrameChangeDelayItem, FrameChangeDelayAllItem,
+             FrameChangeIndexItem, FrameDeleteFrameItem]
 
 
 class LayerMenuData(PulldownMenuData):
