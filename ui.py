@@ -36,7 +36,7 @@ class UI:
     tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool ]
     tool_selected_log = 'tool selected'
     art_selected_log = 'Now editing'
-    frame_selected_log = 'Now editing frame'
+    frame_selected_log = 'Now editing frame %s (hold time %ss)'
     layer_selected_log = 'Now editing layer: %s'
     swap_color_log = 'Swapped FG/BG colors'
     affects_char_on_log = 'will affect characters'
@@ -320,7 +320,9 @@ class UI:
             return
         self.reset_onion_frames()
         self.tool_settings_changed = True
-        self.message_line.post_line('%s %s' % (self.frame_selected_log, self.active_art.active_frame + 1))
+        frame = self.active_art.active_frame
+        delay = self.active_art.frame_delays[frame]
+        self.message_line.post_line(self.frame_selected_log % (frame + 1, delay))
     
     def set_active_layer(self, new_layer):
         self.active_art.set_active_layer(new_layer)

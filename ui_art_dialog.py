@@ -311,6 +311,17 @@ class FrameDelayDialog(AddFrameDialog):
         self.ui.active_art.frame_delays[self.ui.active_art.active_frame] = delay
         self.dismiss()
 
+class FrameDelayAllDialog(FrameDelayDialog):
+    field0_label = 'New hold time (in seconds) for all frames:'
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        delay = float(self.get_field_text(0))
+        for i in range(self.ui.active_art.frames):
+            self.ui.active_art.frame_delays[i] = delay
+        self.dismiss()
+
 class FrameIndexDialog(AddFrameDialog):
     fields = 1
     field0_type = int

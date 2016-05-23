@@ -10,7 +10,7 @@ class PagedInfoDialog(UIDialog):
     title = 'Info'
     # message = list of page strings, each can be triple-quoted / contain line breaks
     message = ['']
-    tile_width = 51
+    tile_width = 54
     fields = 0
     confirm_caption = '>>'
     other_caption = '<<'
@@ -69,11 +69,12 @@ class PagedInfoDialog(UIDialog):
 
 
 about_message = [
+# max line width 50 characters!
 """
-          by JP LeBreton (c) 2014-2016           |
+          by JP LeBreton (c) 2014-2016              |
 
-Playscii was made with the support of many
-nice people.
+Playscii was made with the support of many nice
+people.
 
                      Patrons:
 

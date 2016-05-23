@@ -163,12 +163,10 @@ class Application:
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
         self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
-        try:
-            gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
-            gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
-        except:
-            gpu_vendor = '[Unknown Vendor]'
-            gpu_renderer = '[Unknown Renderer]'
+        try: gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
+        except: gpu_vendor = "[couldn't detect vendor]"
+        try: gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
+        except: gpu_renderer = "[couldn't detect renderer]"
         self.log('GPU: %s - %s' % (gpu_vendor, gpu_renderer))
         # try single-argument GL2.0 version first
         gl_ver = GL.glGetString(GL.GL_VERSION)
@@ -513,6 +511,7 @@ class Application:
     
     def update_window_title(self):
         if self.game_mode and self.gw.game_dir:
+            #title = '%s - %s' % (self.gw.game_name, self.gw.last_state_loaded)
             title = self.gw.last_state_loaded
             self.set_window_title(title)
             return

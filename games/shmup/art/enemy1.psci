@@ -1,0 +1,81 @@
+{
+ "active_frame": 0,
+ "active_layer": 0,
+ "camera": [
+  1.6467229806608072,
+  -1.271009990327077,
+  4.685469196537706
+ ],
+ "charset": "jpetscii",
+ "frames": [
+  {
+   "delay": 0.1,
+   "layers": [
+    {
+     "name": "Layer 1",
+     "tiles": [
+      {
+       "bg": 0,
+       "char": 172,
+       "fg": 7,
+       "xform": 1
+      },
+      {
+       "bg": 0,
+       "char": 0,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 173,
+       "fg": 7,
+       "xform": 3
+      },
+      {
+       "bg": 7,
+       "char": 47,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 7,
+       "char": 172,
+       "fg": 8,
+       "xform": 1
+      },
+      {
+       "bg": 7,
+       "char": 47,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 0,
+       "fg": 2,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 214,
+       "fg": 7,
+       "xform": 0
+      },
+      {
+       "bg": 0,
+       "char": 0,
+       "fg": 2,
+       "xform": 0
+      }
+     ],
+     "visible": 1,
+     "z": 0
+    }
+   ]
+  }
+ ],
+ "height": 3,
+ "palette": "c64_original",
+ "width": 3
+}

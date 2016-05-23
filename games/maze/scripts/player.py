@@ -1,13 +1,10 @@
 
 from game_util_objects import Player
 
-from collision import CST_AABB
-
 class MazePlayer(Player):
     art_src = 'player'
     move_state = 'stand'
     col_radius = 0.5
-    #collision_shape_type = CST_AABB
     
     def __init__(self, world, obj_data=None):
         Player.__init__(self, world, obj_data)
