@@ -1,10 +1,10 @@
 {
  "active_frame": 0,
- "active_layer": 1,
+ "active_layer": 0,
  "camera": [
-  15.0,
-  -20.5,
-  24.080982060048463
+  17.75833754179403,
+  -30.617397029743437,
+  17.619696383734336
  ],
  "charset": "jpetscii",
  "frames": [
@@ -16,189 +16,189 @@
      "tiles": [
       {
        "bg": 1,
-       "char": 1,
+       "char": 108,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
-       "fg": 2,
+       "char": 0,
+       "fg": 0,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 19,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 8,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 13,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 21,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 16,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 80,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 0,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 110,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -257,55 +257,55 @@
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
@@ -370,15 +370,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -550,15 +550,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -730,15 +730,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -910,15 +910,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -1090,15 +1090,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -1270,15 +1270,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -1450,15 +1450,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -1630,15 +1630,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -1810,15 +1810,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -1990,15 +1990,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -2170,15 +2170,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -2350,15 +2350,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -2530,15 +2530,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -2710,15 +2710,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -2890,15 +2890,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -3070,15 +3070,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -3250,15 +3250,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -3430,15 +3430,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -3610,15 +3610,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -3790,15 +3790,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -3970,15 +3970,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -4150,15 +4150,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -4330,15 +4330,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -4510,15 +4510,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -4690,15 +4690,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -4870,15 +4870,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -5050,15 +5050,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -5230,15 +5230,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -5410,15 +5410,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -5590,15 +5590,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -5770,15 +5770,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -5950,15 +5950,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -6130,15 +6130,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -6310,15 +6310,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -6490,15 +6490,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -6670,15 +6670,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -6850,15 +6850,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -7030,15 +7030,15 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 0,
@@ -7079,19 +7079,19 @@
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
@@ -7102,56 +7102,56 @@
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 56,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 52,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 47,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
        "char": 0,
-       "fg": 0,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 38,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 41,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 50,
+       "fg": 2,
        "xform": 0
       },
       {
        "bg": 0,
-       "char": 0,
-       "fg": 0,
+       "char": 37,
+       "fg": 2,
        "xform": 0
       },
       {
@@ -7210,187 +7210,187 @@
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
-       "xform": 0
+       "xform": 1
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 140,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 74,
        "fg": 2,
        "xform": 0
       },
       {
        "bg": 1,
-       "char": 1,
+       "char": 142,
        "fg": 2,
        "xform": 0
       }

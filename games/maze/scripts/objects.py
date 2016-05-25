@@ -101,7 +101,7 @@ class MazePickup(GameObject):
         # if held, shadow holder
         self.x = self.holder.x
         # bob slightly above holder's head
-        bob_y = math.sin(self.world.app.get_elapsed_time()  / 100) / 10
+        bob_y = math.sin(self.world.get_elapsed_time()  / 100) / 10
         self.y = self.holder.y + self.hold_offset_y + bob_y
 
 
@@ -207,7 +207,7 @@ class MazePortal(GameObject):
     art_src = 'portal'
     def update(self):
         GameObject.update(self)
-        if self.world.app.updates % 2 != 0:
+        if self.app.updates % 2 != 0:
             return
         ramps = {11: 10, 10: 3, 3: 11}
         for frame, layer, x, y in TileIter(self.art):
