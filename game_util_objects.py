@@ -281,11 +281,15 @@ class ObjectSpawner(LocationMarker):
     "simple object that spawns an object when triggered"
     is_debug = True
     spawn_class_name = None
-    spawn_obj_name = None
+    spawn_obj_name = ''
+    # if True, spawn somewhere in this object's bounds, else spawn at location
+    spawn_random_in_bounds = False
     # dict of properties to set on newly spawned object
     spawn_obj_data = {}
     # number of times we can fire, -1 = infinite
     times_to_fire = -1
+    # set False for any subclass that triggers in some other way
+    trigger_on_room_enter = True
     # if True, spawned object will be destroyed when player leaves its room
     destroy_on_room_exit = True
     serialized = LocationMarker.serialized + ['spawn_class_name', 'spawn_obj_name',
@@ -298,20 +302,50 @@ class ObjectSpawner(LocationMarker):
         # list of objects we've spawned
         self.spawned_objects = []
     
+    def get_spawn_class_name(self):
+        return self.spawn_class_name
+    
+    def get_spawn_location(self):
+        if not self.spawn_random_in_bounds:
+            return self.x, self.y
+        left, top, right, bottom = self.get_edges()
+        x = left + random.random() * (right - left)
+        y = top + random.random() * (bottom - top)
+        return x, y
+    
+    def can_spawn(self):
+        return True
+    
     def do_spawn(self):
-        new_obj = self.world.spawn_object_of_class(self.spawn_class_name,
-                                                   self.x, self.y)
-        self.world.rename_object(new_obj, self.spawn_obj_name)
+        "spawns and returns object"
+        class_name = self.get_spawn_class_name()
+        if not class_name:
+            return None
+        x, y = self.get_spawn_location()
+        new_obj = self.world.spawn_object_of_class(class_name, x, y)
+        if self.spawn_obj_name:
+            self.world.rename_object(new_obj, self.spawn_obj_name)
         # new object should be in same rooms as us
         new_obj.rooms.update(self.rooms)
+        self.spawned_objects.append(new_obj)
+        # save a reference to us, the spawner
+        new_obj.spawner = self
         # TODO: put new object in our room(s), apply spawn_obj_data
+        return new_obj
     
-    def room_entered(self, room, old_room):
+    def trigger(self):
+        "poke this spawner to do its thing, returns an object if spawned"
         if self.times_to_fire != -1 and self.times_fired >= self.times_to_fire:
-            return
-        self.do_spawn()
+            return None
+        if not self.can_spawn():
+            return None
         if self.times_fired != -1:
             self.times_fired += 1
+        return self.do_spawn()
+    
+    def room_entered(self, room, old_room):
+        if self.trigger_on_room_enter:
+            self.trigger()
     
     def room_exited(self, room, new_room):
         if not self.destroy_on_room_exit:

@@ -2,7 +2,7 @@
 import math, random
 
 from game_object import GameObject
-from game_util_objects import Player, Character, Projectile, StaticTileBG
+from game_util_objects import Player, Character, Projectile, StaticTileBG, ObjectSpawner
 
 class ShmupPlayer(Player):
     state_changes_art = False
@@ -59,48 +59,34 @@ class PlayerBlocker(StaticTileBG):
     art_src = 'blockline_horiz'
     noncolliding_classes = ['Projectile', 'ShmupEnemy']
 
-class EnemySpawner(StaticTileBG):
+class EnemySpawner(ObjectSpawner):
     "sits at top of screen and spawns enemies"
-    
-    art_src = 'blockline_horiz'
+    art_src = 'spawn_area'
+    spawn_random_in_bounds = True
+    trigger_on_room_enter = False
     
     def __init__(self, world, obj_data=None):
-        StaticTileBG.__init__(self, world, obj_data)
-        self.enemies = []
+        ObjectSpawner.__init__(self, world, obj_data)
         self.next_spawn_time = 0
         self.target_enemy_count = 1
     
-    def get_x_in_range(self):
-        "returns a valid X location within our bounds"
-        left, top, right, bottom = self.get_edges()
-        width = right - left
-        return left + (width * 0.2) + random.random() * (width * 0.6)
-    
-    def should_spawn(self):
+    def can_spawn(self):
         player = self.world.get_first_object_of_type('ShmupPlayer')
-        # don't spawn until player fires
-        if not player or player.state == 'dead' or player.last_fire_time == 0:
-            return False
-        return len(self.enemies) < self.target_enemy_count and \
-           self.world.get_elapsed_time() >= self.next_spawn_time
+        # only spawn if player has fired, there's room, and it's time
+        return player and player.state != 'dead' and \
+                player.last_fire_time > 0 and \
+                len(self.spawned_objects) < self.target_enemy_count and \
+                self.world.get_elapsed_time() >= self.next_spawn_time
     
-    def spawn(self):
-        # pick next spawn time within random range
-        next_delay = random.random() * 3
-        self.next_spawn_time = self.world.get_elapsed_time() + next_delay * 1000
+    def get_spawn_class_name(self):
         roll = random.random()
         # pick random enemy type to spawn
         if roll > 0.8:
-            spawn_class = Enemy1
+            return 'Enemy1'
         elif roll > 0.6:
-            spawn_class = Enemy2
+            return 'Enemy2'
         else:
-            spawn_class = Asteroid
-        enemy = spawn_class(self.world)
-        enemy.y = self.y
-        enemy.x = self.get_x_in_range()
-        enemy.spawner = self
-        self.enemies.append(enemy)
+            return 'Asteroid'
     
     def update(self):
         StaticTileBG.update(self)
@@ -112,8 +98,11 @@ class EnemySpawner(StaticTileBG):
             self.target_enemy_count = 3
         elif time > 10:
             self.target_enemy_count = 2
-        if self.should_spawn():
-            self.spawn()
+        enemy = self.trigger()
+        # if we spawned, pick next spawn time within random range
+        if enemy:
+            next_delay = random.random() * 3
+            self.next_spawn_time = self.world.get_elapsed_time() + next_delay * 1000
 
 class EnemyDeleter(StaticTileBG):
     "deletes enemies once they hit a certain point on screen"
@@ -141,11 +130,6 @@ class ShmupEnemy(Character):
     def update(self):
         self.move(0, -1)
         Character.update(self)
-    
-    def destroy(self):
-        if self in self.spawner.enemies:
-            self.spawner.enemies.remove(self)
-        Character.destroy(self)
 
 class Enemy1(ShmupEnemy):
     art_src = 'enemy1'
@@ -167,7 +151,8 @@ class Enemy2(ShmupEnemy):
     
     def pre_first_update(self):
         ShmupEnemy.pre_first_update(self)
-        self.goal_x = self.spawner.get_x_in_range()
+        # pick random lateral movement goal
+        self.goal_x, y = self.spawner.get_spawn_location()
     
     def update(self):
         # move to random goal X

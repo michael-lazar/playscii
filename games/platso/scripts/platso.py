@@ -2,8 +2,11 @@
 import math
 
 from game_object import GameObject
-from game_util_objects import Player
+from game_util_objects import Player, StaticTileBG
 from collision import CST_AABB
+
+class PlatformWorld(StaticTileBG):
+    draw_col_layer = True
 
 class PlatformPlayer(Player):
     art_src = 'player'
@@ -37,16 +40,14 @@ class PlatformPlayer(Player):
     
     def moved_this_frame(self):
         delta = math.sqrt(abs(self.last_x - self.x) ** 2 + abs(self.last_y - self.y) ** 2 + abs(self.last_z - self.z) ** 2)
-        print('moved %s this frame' % delta)
         return delta > self.stop_velocity
     
     def is_on_ground(self):
-        # TODO: better check than "first static tile object"?
-        ground = self.world.get_first_object_of_type('StaticTileBG')
+        # works for now: just check for -Y contact with first world object
+        ground = self.world.get_first_object_of_type('PlatformWorld')
         contact = self.collision.contacts.get(ground.name, None)
         if not contact:
             return False
-        # is this assumption sound? ie anything we're penetrating into from above = ground?
         return contact.overlap.y < 0
     
     def update(self):
@@ -59,3 +60,6 @@ class PlatformPlayer(Player):
             if self.jump_time < self.max_jump_press_time:
                 self.move_y += 1
         Player.update(self)
+        # wobble as we walk a la ELC2
+        if self.state == 'walk':
+            self.y += math.sin(self.world.app.updates) / 5
