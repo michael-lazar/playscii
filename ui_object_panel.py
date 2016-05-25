@@ -78,7 +78,7 @@ class EditObjectPanel(GamePanel):
     
     "panel showing info for selected game object"
     tile_width = 36
-    tile_height = 28
+    tile_height = 36
     snap_right = True
     text_left = False
     base_button_classes = [ResetObjectButton]

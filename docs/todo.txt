@@ -10,7 +10,9 @@ example games:
 - top down shmup (lots of projectile collisions, basic enemy spawns)
 - side view platformer (MB style, character being pushed into floor by gravity, jumping)
 
-fix: clicking on picker with select tool up shouldn't start a selection
+- special color for non-default object property values in property edit panel
+- find out why collision starts off for new projects?
+- crash deleting layer?
 
 ---
 

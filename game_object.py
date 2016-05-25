@@ -172,6 +172,7 @@ class GameObject:
         # user-intended acceleration
         self.move_x, self.move_y = 0, 0
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
+        self.last_update_end = 0
         self.flip_x = False
         self.world = world
         self.app = self.world.app
@@ -648,6 +649,14 @@ class GameObject:
         "return True only if this object is allowed to move based on input"
         return True
     
+    def allow_move_x(self, dx):
+        "return True if given movement in X axis is allowed"
+        return True
+    
+    def allow_move_y(self, dy):
+        "return True if given movement in Y axis is allowed"
+        return True
+    
     def move(self, dir_x, dir_y):
         "handle player/sim-initiated velocity"
         # don't handle moves while game paused
@@ -657,8 +666,10 @@ class GameObject:
         # check allow_move first
         if not self.allow_move(dir_x, dir_y):
             return
-        self.move_x += dir_x
-        self.move_y += dir_y
+        if self.allow_move_x(dir_x):
+            self.move_x += dir_x
+        if self.allow_move_y(dir_y):
+            self.move_y += dir_y
     
     def is_on_ground(self):
         "subclasses can define logic for determining if obj is on ground vs not"
@@ -734,7 +745,8 @@ class GameObject:
     
     def update_state(self):
         "update state based on things like movement"
-        if self.stand_if_not_moving and not self.moved_this_frame():
+        if self.state_changes_art and self.stand_if_not_moving and \
+           not self.moved_this_frame():
             self.state = DEFAULT_STATE
     
     def update_facing(self):
@@ -810,8 +822,11 @@ class GameObject:
         # ran through all steps without a hit, set back to final position
         self.x, self.y = final_x, final_y
     
+    def get_time_since_last_update(self):
+        return self.world.get_elapsed_time() - self.last_update_end
+    
     def update(self):
-        if 0 < self.destroy_time <= self.app.get_elapsed_time():
+        if 0 < self.destroy_time <= self.world.get_elapsed_time():
             self.destroy()
         # don't apply physics to selected objects being dragged
         if self.physics_move and not self.name in self.world.drag_objects:
@@ -890,7 +905,7 @@ class GameObject:
     
     def set_destroy_timer(self, destroy_in_seconds):
         "set object to destroy itself given number of seconds from now"
-        self.destroy_time = self.app.get_elapsed_time() + destroy_in_seconds * 1000
+        self.destroy_time = self.world.get_elapsed_time() + destroy_in_seconds * 1000
     
     def destroy(self):
         self.stop_all_sounds()

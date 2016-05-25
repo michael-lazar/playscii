@@ -255,7 +255,8 @@ class InputLord:
                     elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
-                        if not self.ui.select_tool.selection_in_progress:
+                        if not self.ui.select_tool.selection_in_progress and \
+                           not self.ui.keyboard_focus_element:
                             self.ui.select_tool.start_select()
                     else:
                         app.cursor.start_paint()
@@ -321,6 +322,13 @@ class InputLord:
             if abs(self.gamepad_left_y) > 0.15 and app.gw.player:
                 app.gw.player.move(0, self.gamepad_left_y)
         sdl2.SDL_PumpEvents()
+    
+    def is_key_pressed(self, key):
+        "returns True if given key is pressed"
+        key = bytes(key, encoding='utf-8')
+        scancode = sdl2.keyboard.SDL_GetScancodeFromName(key)
+        return sdl2.SDL_GetKeyboardState(None)[scancode]
+    
     #
     # bind functions
     #

@@ -69,6 +69,7 @@ class GameWorld:
         self.camera = GameCamera(self.app)
         self.player = None
         self.paused = False
+        self.pause_time = 0
         self.modules = {'game_object': game_object,
                         'game_util_objects': game_util_objects,
                         'game_hud': game_hud, 'game_room': game_room}
@@ -394,6 +395,10 @@ class GameWorld:
         s = 'Game %spaused.' % ['un', ''][self.paused]
         self.app.ui.message_line.post_line(s)
     
+    def get_elapsed_time(self):
+        "get total time world has been running (ie not paused)"
+        return self.app.get_elapsed_time() - self.pause_time
+    
     def enable_player_camera_lock(self):
         if self.player:
             self.camera.focus_object = self.player
@@ -417,6 +422,7 @@ class GameWorld:
         if event.type != sdl2.SDL_KEYDOWN:
             return
         key = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode()
+        key = key.lower()
         for obj in self.objects.values():
             if obj.handle_input_events:
                 obj.handle_key(key, shift_pressed, alt_pressed, ctrl_pressed)
@@ -458,6 +464,9 @@ class GameWorld:
             for obj in self.objects.values():
                 if obj.is_in_current_room() or obj.update_if_outside_room:
                     obj.update()
+                    # subclass update may not call GameObject.update,
+                    # set last update time here once we're sure it's done
+                    obj.last_update_end = self.get_elapsed_time()
             if self.collision_enabled:
                 self.cl.update()
             for room in self.rooms.values():
@@ -478,6 +487,8 @@ class GameWorld:
             self.app.ui.edit_list_panel.items_changed()
         if self.hud:
             self.hud.update()
+        if self.paused:
+            self.pause_time += self.app.get_elapsed_time() - self.app.last_time
     
     def render(self):
         visible_objects = []
