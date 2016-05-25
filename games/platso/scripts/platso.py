@@ -11,8 +11,10 @@ class PlatformWorld(StaticTileBG):
 class PlatformPlayer(Player):
     art_src = 'player'
     #collision_shape_type = CST_AABB
+    col_width = 2
+    col_height = 3
     handle_input_events = True
-    fast_move_in_steps = True
+    fast_move_steps = 1
     col_radius = 1.75
     move_accel_x = 400
     move_accel_y = 2500
@@ -20,6 +22,8 @@ class PlatformPlayer(Player):
     air_friction = 15
     max_jump_press_time = 0.15
     editable = Player.editable + ['max_jump_press_time']
+    # set False while in air
+    jump_released = True
     
     def __init__(self, world, obj_data=None):
         Player.__init__(self, world, obj_data)
@@ -61,5 +65,5 @@ class PlatformPlayer(Player):
                 self.move_y += 1
         Player.update(self)
         # wobble as we walk a la ELC2
-        if self.state == 'walk':
+        if self.state == 'walk' and on_ground:
             self.y += math.sin(self.world.app.updates) / 5

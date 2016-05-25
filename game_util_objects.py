@@ -59,7 +59,7 @@ class Pickup(GameObject):
     attachment_classes = { 'shadow': 'BlobShadow' }
 
 class Projectile(GameObject):
-    fast_move_in_steps = True
+    fast_move_steps = 1
     collision_type = CT_GENERIC_DYNAMIC
     collision_shape_type = CST_CIRCLE
     move_accel_x = move_accel_y = 400.

@@ -934,6 +934,7 @@ class InputLord:
     def accept_normal_game_input(self):
         return self.app.game_mode and self.app.gw.player and not self.ui.active_dialog and not self.ui.pulldown.visible
     
+    # TODO: generalize these two somehow
     def BIND_game_frob(self):
         if self.accept_normal_game_input():
             self.app.gw.player.button_pressed(1)

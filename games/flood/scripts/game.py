@@ -69,7 +69,7 @@ class Board(GameObject):
             self.game_state = GS_LOST
             # TODO: reset after delay / feedback?
     
-    def handle_key(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+    def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         if self.game_state != GS_PLAYING:
             self.reset()
             return

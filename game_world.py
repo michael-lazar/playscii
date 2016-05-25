@@ -419,13 +419,20 @@ class GameWorld:
     
     def handle_input(self, event, shift_pressed, alt_pressed, ctrl_pressed):
         # pass event's key to any objects that want to handle it
-        if event.type != sdl2.SDL_KEYDOWN:
+        if not event.type in [sdl2.SDL_KEYDOWN or sdl2.SDL_KEYUP]:
             return
         key = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode()
         key = key.lower()
+        mods = (shift_pressed, alt_pressed, ctrl_pressed)
         for obj in self.objects.values():
             if obj.handle_input_events:
-                obj.handle_key(key, shift_pressed, alt_pressed, ctrl_pressed)
+                if event.type == sdl2.SDL_KEYDOWN:
+                    #obj.handle_key_down(key, shift_pressed, alt_pressed,
+                    #                    ctrl_pressed)
+                    obj.handle_key_down(key, *mods)
+                elif event.type == sdl2.SDL_KEYUP:
+                    obj.handle_key_up(key, shift_pressed, alt_pressed,
+                                      ctrl_pressed)
                 # TODO: handle_ functions for other types of input
     
     def frame_begin(self):
