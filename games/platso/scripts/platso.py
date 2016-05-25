@@ -3,9 +3,11 @@ import math
 
 from game_object import GameObject
 from game_util_objects import Player
+from collision import CST_AABB
 
 class PlatformPlayer(Player):
     art_src = 'player'
+    #collision_shape_type = CST_AABB
     handle_input_events = True
     fast_move_in_steps = True
     col_radius = 1.75
