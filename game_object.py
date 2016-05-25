@@ -66,6 +66,8 @@ class GameObject:
     y_sort = False
     # if >0, object will self-destroy after this many seconds
     lifespan = 0.
+    # if something spawned us, store reference to it here
+    spawner = None
     # if False, don't do move physics updates for this object
     physics_move = True
     # if True, subdivide high-velocity moves into steps to avoid tunneling
@@ -95,6 +97,8 @@ class GameObject:
     collision_type = CT_NONE
     # collision layer name for CST_TILE objects
     col_layer_name = 'collision'
+    # if True, collision layer will draw normally
+    draw_col_layer = False
     # collision circle/box offset from origin
     col_offset_x, col_offset_y = 0., 0.
     # circle / AABB dimensions
@@ -916,6 +920,10 @@ class GameObject:
         self.rooms = {}
         if self in self.world.selected_objects:
             self.world.selected_objects.remove(self)
+        if self.spawner:
+            if hasattr(self.spawner, 'spawned_objects') and \
+               self in self.spawner.spawned_objects:
+                self.spawner.spawned_objects.remove(self)
         self.origin_renderable.destroy()
         self.bounds_renderable.destroy()
         self.collision.destroy()

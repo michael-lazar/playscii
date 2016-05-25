@@ -518,11 +518,13 @@ class GameWorld:
                 # ignore invisible layers
                 if not obj.art.layers_visibility[i]:
                     continue
-                # only draw collision layer if show collision is set
+                # only draw collision layer if show collision is set, OR if
+                # "draw collision layer" is set
                 if obj.collision_shape_type == collision.CST_TILE and \
-                   obj.col_layer_name == obj.art.layer_names[i]:
+                   obj.col_layer_name == obj.art.layer_names[i] and \
+                   not obj.draw_col_layer:
                     if obj.show_collision:
-                        item = RenderItem(obj, i, 0)
+                        item = RenderItem(obj, i, z + obj.z)
                         collision_items.append(item)
                     continue
                 item = RenderItem(obj, i, z + obj.z)

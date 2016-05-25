@@ -7,9 +7,10 @@ docs!
 - games howto page: rundown of basic classes (GameWorld, GameObject, Renderable, Art), editor UI, deep dive on GameObject class, workflow, overview of example games
 
 example games:
-- top down shmup (lots of projectile collisions, basic enemy spawns)
+- shmup: find out why some bullets boom right after being fired
 - side view platformer (MB style, character being pushed into floor by gravity, jumping)
 
+- replace GO.fast_move_steps with an int, 0 means don't subdiv, 1 means subdiv in size, 2 means subdiv 1/2 size, 3 = 1/3, etc
 - special color for non-default object property values in property edit panel
 - find out why collision starts off for new projects?
 - crash deleting layer?
