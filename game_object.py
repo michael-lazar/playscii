@@ -70,8 +70,12 @@ class GameObject:
     spawner = None
     # if False, don't do move physics updates for this object
     physics_move = True
-    # if True, subdivide high-velocity moves into steps to avoid tunneling
-    fast_move_in_steps = False
+    # if >0, subdivide high-velocity moves into fractions-of-this-object-sized
+    # steps to avoid tunneling. turn this up if you notice an object tunneling.
+    # 1 = each step is object's full size
+    # 2 = each step is half object's size
+    # N = each step is 1/N object's size
+    fast_move_steps = 0
     # acceleration per update from player movement
     move_accel_x = move_accel_y = 200.
     ground_friction = 10.0
@@ -740,11 +744,15 @@ class GameObject:
     def warped_recently(self):
         return self.world.app.updates - self.last_warp_update <= 0
     
-    def handle_key(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+    def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         """
         handle event w/ keyboard mods.
         subclasses can do stuff here if handle_input_events=True
         """
+        pass
+    
+    def handle_key_up(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+        "same as handle_key_down but for keyup events"
         pass
     
     def update_state(self):
@@ -794,7 +802,7 @@ class GameObject:
     def fast_move(self):
         """
         subdivides object's move this frame into steps to avoid tunneling.
-        only called for objects with fast_move_in_steps set True.
+        only called for objects with fast_move_steps >0.
         """
         final_x, final_y = self.x, self.y
         dx, dy = self.x - self.last_x, self.y - self.last_y
@@ -810,6 +818,7 @@ class GameObject:
             # get size in axis object is moving in
             step_x, step_y = self.col_width * dir_x, self.col_height * dir_y
             step_dist = math.sqrt(step_x ** 2 + step_y ** 2)
+        step_dist /= self.fast_move_steps
         # if object isn't moving fast enough, don't step
         if total_move_dist <= step_dist:
             return
@@ -835,7 +844,7 @@ class GameObject:
         # don't apply physics to selected objects being dragged
         if self.physics_move and not self.name in self.world.drag_objects:
             self.apply_move()
-        if self.fast_move_in_steps:
+        if self.fast_move_steps > 0:
             self.fast_move()
         self.update_state()
         self.update_state_sounds()

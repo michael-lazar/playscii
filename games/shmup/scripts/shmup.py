@@ -21,7 +21,7 @@ class ShmupPlayer(Player):
         self.last_fire_time = 0
         self.start_x, self.start_y = self.x, self.y
     
-    def handle_key(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+    def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         if key == 'x' and self.state == 'dead':
             # respawn after short delay
             time = self.world.get_elapsed_time() / 1000

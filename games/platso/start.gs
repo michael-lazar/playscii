@@ -59,7 +59,7 @@
    "state": "stand",
    "visible": true,
    "x": -1.300976584027115,
-   "y": -16.25,
+   "y": -16.5,
    "y_sort": false,
    "z": 0.0
   }
