@@ -63,7 +63,7 @@ class Projectile(GameObject):
     collision_type = CT_GENERIC_DYNAMIC
     collision_shape_type = CST_CIRCLE
     move_accel_x = move_accel_y = 400.
-    noncolliding_classes = ['Projectile', 'Player']
+    noncolliding_classes = ['Projectile']
     # projectiles should be transient, limited max life
     lifespan = 10.
     should_save = False
@@ -98,7 +98,7 @@ class Character(GameObject):
     
     def update_state(self):
         GameObject.update_state(self)
-        if abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
+        if self.state_changes_art and abs(self.vel_x) > 0.1 or abs(self.vel_y) > 0.1:
             self.state = self.move_state
 
 class Player(Character):
