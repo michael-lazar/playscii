@@ -21,6 +21,7 @@ if platform.system() == 'Darwin' and hasattr(sys, 'frozen'):
 
 # app imports
 import ctypes, time, hashlib
+import webbrowser
 import sdl2
 import sdl2.ext
 import appdirs
@@ -61,6 +62,12 @@ LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_DIR = 'screenshots/'
 AUTOPLAY_GAME_FILENAME = 'autoplay_this_game'
+
+WEBSITE_URL = 'http://vectorpoem.com/playscii'
+WEBSITE_HELP_URL = 'docs/html/howto_main.html'
+AUTOGEN_DOCS_PATH = 'docs/html/generated/'
+AUTOGEN_DOC_MODULES = ['game_object', 'art', 'game_world', 'collision']
+AUTOGEN_DOC_TOC_PAGE = 'pdoc_toc.html'
 
 MAX_ONION_FRAMES = 3
 
@@ -159,7 +166,7 @@ class Application:
         # report OS, version, CPU
         self.log('OS: %s' % platform.platform())
         cpu = platform.processor()
-        self.log('CPU: %s' % (cpu if cpu != '' else "Couldn't detect :["))
+        self.log('CPU: %s' % (cpu if cpu != '' else "[couldn't detect CPU]"))
         self.log('Python: %s' % ' '.join(sys.version.split('\n')))
         self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
@@ -728,6 +735,33 @@ class Application:
         sdl2.SDL_DestroyWindow(self.window)
         sdl2.SDL_Quit()
         self.log_file.close()
+    
+    def open_local_url(self, url):
+        "opens given local (this file system) URL in a cross-platform way"
+        webbrowser.open('file://%s/%s' % (os.getcwd(), url))
+    
+    def open_help_docs(self):
+        self.open_local_url(WEBSITE_HELP_URL)
+    
+    def open_website(self):
+        webbrowser.open(WEBSITE_URL)
+    
+    def generate_docs(self):
+        try:
+            import pdoc
+        except:
+            self.log("pdoc module needed for doc generation not found.")
+            return
+        for module_name in AUTOGEN_DOC_MODULES:
+            pdoc.import_module(module_name)
+            html = pdoc.html(module_name)
+            docfile = open(AUTOGEN_DOCS_PATH + module_name + '.html', 'w')
+            docfile.write(html)
+            docfile.close()
+        self.log('Documentation generated successfully.')
+        # open ToC page
+        self.open_local_url(AUTOGEN_DOCS_PATH + AUTOGEN_DOC_TOC_PAGE)
+
 
 def get_win_documents_path():
     # from http://stackoverflow.com/a/30924555/1191587

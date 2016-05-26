@@ -482,6 +482,12 @@ class HelpDocsItem(PulldownMenuItem):
     always_active = True
     close_on_select = True
 
+class HelpGenerateDocsItem(PulldownMenuItem):
+    label = 'Generate documentation'
+    command = 'generate_docs'
+    always_active = True
+    close_on_select = True
+
 class HelpWebsiteItem(PulldownMenuItem):
     label = 'Playscii website'
     command = 'open_website'
@@ -630,4 +636,4 @@ class CharColorMenuData(PulldownMenuData):
              PaletteFromFileItem]
 
 class HelpMenuData(PulldownMenuData):
-    items = [HelpDocsItem, HelpWebsiteItem]
+    items = [HelpDocsItem, HelpGenerateDocsItem, HelpWebsiteItem]
