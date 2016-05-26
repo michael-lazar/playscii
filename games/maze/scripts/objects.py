@@ -11,6 +11,7 @@ class MazeBG(StaticTileBG):
 
 class MazeNPC(GameObject):
     art_src = 'npc'
+    use_art_instance = True
     col_radius = 0.5
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_STATIC
@@ -23,7 +24,8 @@ class MazeNPC(GameObject):
     
     def pre_first_update(self):
         self.z = 0.1
-        # TODO: each critter should have its own ArtInstance
+        # TODO: investigate why this random color set doesn't seem to work
+        random.seed(self.name)
         random_color = random.randint(3, len(self.art.palette.colors))
         for art in self.arts.values():
             art.set_all_non_transparent_colors(random_color)

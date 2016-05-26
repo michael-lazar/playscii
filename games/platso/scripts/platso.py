@@ -1,14 +1,18 @@
 
-import math
+import math, random
 
 from game_object import GameObject
-from game_util_objects import Player, StaticTileBG
+from game_util_objects import StaticTileBG, Player, Character
 from collision import CST_AABB
 
 class PlatformWorld(StaticTileBG):
     draw_col_layer = True
 
 class PlatformPlayer(Player):
+    
+    # from http://www.piratehearts.com/blog/2010/08/30/40/:
+    # JumpSpeed = sqrt(2.0f * Gravity * JumpHeight);
+    
     art_src = 'player'
     #collision_shape_type = CST_AABB
     col_width = 2
@@ -23,6 +27,7 @@ class PlatformPlayer(Player):
     max_jump_press_time = 0.15
     editable = Player.editable + ['max_jump_press_time']
     # set False while in air
+    # TODO: don't jump again after hitting ground until release + press again
     jump_released = True
     
     def __init__(self, world, obj_data=None):
@@ -31,6 +36,11 @@ class PlatformPlayer(Player):
     
     def started_colliding(self, other):
         Player.started_colliding(self, other)
+        if isinstance(other, PlatformMonster):
+            # landing atop monster?
+            dx, dy = other.x - self.x, other.y - self.y
+            if abs(dy) > abs(dx) and dy < -1:
+                other.destroy()
     
     def is_affected_by_gravity(self):
         return True
@@ -67,3 +77,37 @@ class PlatformPlayer(Player):
         # wobble as we walk a la ELC2
         if self.state == 'walk' and on_ground:
             self.y += math.sin(self.world.app.updates) / 5
+
+class PlatformMonster(Character):
+    art_src = 'monster'
+    move_state = 'stand'
+    fast_move_steps = 2
+    move_accel_x = 100
+    col_radius = 1
+    
+    def pre_first_update(self):
+        # pick random starting direction
+        self.move_dir_x = random.choice([-1, 1])
+    
+    def started_colliding(self, other):
+        Character.started_colliding(self, other)
+        if isinstance(other, PlatformWorld):
+            # TODO: detect "hit wall", change direction
+            print(self.collision.contacts)
+            contact = self.collision.contacts.get(other.name, None)
+            if not contact:
+                return False
+            print('hit wall %s' % contact.overlap.other.go.name)
+            #print('%s, %s' % (contact.overlap.width, contact.overlap.height))
+            if abs(contact.overlap.x) > 0:
+                self.move_dir_x = -self.move_dir_x
+    
+    def is_affected_by_gravity(self):
+        return True
+    
+    def allow_move_y(self, dy):
+        return False
+    
+    def update(self):
+        self.move(self.move_dir_x, 0)
+        Character.update(self)

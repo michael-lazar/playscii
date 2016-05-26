@@ -1,6 +1,15 @@
 {
  "objects": [
   {
+   "class_name": "LocationMarker",
+   "locked": false,
+   "name": "cameramark",
+   "visible": true,
+   "x": -0.9597252146192882,
+   "y": -1.107799301680745,
+   "z": 18.680436366706225
+  },
+  {
    "alpha": 1.0,
    "animating": false,
    "art_off_pct_x": 0.5,
@@ -9,7 +18,7 @@
    "class_name": "PlatformWorld",
    "facing": 2,
    "locked": true,
-   "name": "StaticTileBG_7f0fe491c668",
+   "name": "bg",
    "scale_x": 1.0,
    "scale_y": 1.0,
    "state": "stand",
@@ -26,7 +35,7 @@
    "bg_color_r": 0,
    "camera_x": -0.9597252146192882,
    "camera_y": -1.107799301680745,
-   "camera_z": 17.880134104004092,
+   "camera_z": 18.680436366706225,
    "class_name": "WorldPropertiesObject",
    "collision_enabled": true,
    "draw_debug_objects": true,
@@ -58,8 +67,8 @@
    "scale_y": 1.0,
    "state": "stand",
    "visible": true,
-   "x": -1.300976584027115,
-   "y": -16.5,
+   "x": 12.003497768332835,
+   "y": 7.75,
    "y_sort": false,
    "z": 0.0
   }
