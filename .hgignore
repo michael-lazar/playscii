@@ -7,3 +7,4 @@ profile.png
 autoplay_this_game
 .DS_Store
 ./*.dll
+docs/html/generated/*.*

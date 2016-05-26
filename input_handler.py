@@ -1,6 +1,6 @@
 import ctypes, os
 import sdl2
-import webbrowser
+
 from sys import exit
 
 from ui import SCALE_INCREMENT
@@ -16,9 +16,6 @@ from art import ART_DIR, ART_FILE_EXTENSION
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
-README_FILENAME = 'README.md'
-WEBSITE_URL = 'http://vectorpoem.com/playscii'
-WEBSITE_HELP_URL = 'docs/html/howto_main.html'
 
 class InputLord:
     
@@ -787,14 +784,14 @@ class InputLord:
             return
         self.app.close_art(self.ui.active_art)
     
-    def BIND_open_readme(self):
-        os.system('./' + README_FILENAME)
-    
     def BIND_open_help_docs(self):
-        webbrowser.open('file://%s/%s' % (os.getcwd(), WEBSITE_HELP_URL))
+        self.app.open_help_docs()
+    
+    def BIND_generate_docs(self):
+        self.app.generate_docs()
     
     def BIND_open_website(self):
-        webbrowser.open(WEBSITE_URL)
+        self.app.open_website()
     
     def BIND_crop_to_selection(self):
         self.ui.crop_to_selection(self.ui.active_art)

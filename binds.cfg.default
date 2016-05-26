@@ -110,12 +110,12 @@ self.edit_bind_src = {
     # bind strings preceded by a _ will not be displayed
     '_saveas'       : 'save_art_as',
     '_grab'         : 'select_grab_tool',
-    '_readme'       : 'open_readme',
     '_switch_art'   : 'art_switch_to',
     '_switch_layer' : 'layer_switch_to',
 	'_layer_viz'    : 'toggle_layer_visibility',
 	'_hidden_layers': 'toggle_hidden_layers_visible',
     '_website'      : 'open_website',
+	'_docs'         : 'generate_docs',
     '_dup_frame'    : 'duplicate_frame',
     '_frame_delay'  : 'change_frame_delay',
 	'_frame_delay_all': 'change_frame_delay_all',
