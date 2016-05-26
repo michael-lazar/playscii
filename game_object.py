@@ -66,6 +66,9 @@ class GameObject:
     y_sort = False
     # if >0, object will self-destroy after this many seconds
     lifespan = 0.
+    # if object gets further than this distance from origin,
+    # (non-overridden) update will self-destroy
+    kill_distance_from_origin = 1000
     # if something spawned us, store reference to it here
     spawner = None
     # if False, don't do move physics updates for this object
@@ -852,6 +855,10 @@ class GameObject:
             self.update_facing()
         # update collision shape before CollisionLord resolves any collisions
         self.collision.update()
+        if abs(self.x) > self.kill_distance_from_origin or \
+           abs(self.y) > self.kill_distance_from_origin:
+            self.app.log('%s reached %s from origin, destroying.' % (self.name, self.kill_distance_from_origin))
+            self.destroy()
     
     def update_renderables(self):
         # even if debug viz are off, update once on init to set correct state
