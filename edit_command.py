@@ -158,6 +158,9 @@ class EditCommandTile:
         return self.a_char == self.b_char and self.a_fg == self.b_fg and self.a_bg == self.b_bg and self.a_xform == self.b_xform
     
     def undo(self):
+        # tile's frame or layer may have been deleted
+        if self.layer > self.art.layers - 1 or self.frame > self.art.frames - 1:
+            return
         if self.x >= self.art.width or self.y >= self.art.height:
             return
         self.art.set_tile_at(self.frame, self.layer, self.x, self.y,
