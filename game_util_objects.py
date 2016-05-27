@@ -5,15 +5,13 @@ from game_object import GameObject, FACING_DIRS
 from collision import CST_NONE, CST_CIRCLE, CST_AABB, CST_TILE, CT_NONE, CT_GENERIC_STATIC, CT_GENERIC_DYNAMIC, CT_PLAYER, CTG_STATIC, CTG_DYNAMIC
 
 class GameObjectAttachment(GameObject):
-    
     "GameObject that doesn't think about anything, just renders"
-    
     collision_type = CT_NONE
     should_save = False
     selectable = False
     physics_move = False
-    # offset from parent object's origin
     offset_x, offset_y, offset_z = 0., 0., 0.
+    "offset from parent object's origin"
     editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
     
     def attach_to(self, game_object):
@@ -28,10 +26,12 @@ class GameObjectAttachment(GameObject):
 
 
 class BlobShadow(GameObjectAttachment):
+    "Generic blob shadow attachment class"
     art_src = 'blob_shadow'
     alpha = 0.5
 
 class StaticTileBG(GameObject):
+    "Generic static world object with tile-based collision"
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
     physics_move = False
@@ -43,6 +43,7 @@ class StaticTileObject(GameObject):
     y_sort = True
 
 class StaticBoxObject(GameObject):
+    "Generic static world object with AABB-based (rectangle) collision"
     collision_shape_type = CST_AABB
     collision_type = CT_GENERIC_STATIC
     physics_move = False
@@ -59,13 +60,14 @@ class Pickup(GameObject):
     attachment_classes = { 'shadow': 'BlobShadow' }
 
 class Projectile(GameObject):
+    "Generic projectile class"
     fast_move_steps = 1
     collision_type = CT_GENERIC_DYNAMIC
     collision_shape_type = CST_CIRCLE
     move_accel_x = move_accel_y = 400.
     noncolliding_classes = ['Projectile']
-    # projectiles should be transient, limited max life
     lifespan = 10.
+    "Projectiles should be transient, limited max life"
     should_save = False
     
     def __init__(self, world, obj_data=None):
@@ -83,11 +85,11 @@ class Projectile(GameObject):
         GameObject.update(self)
 
 class Character(GameObject):
-    
+    "Generic character class"
     state_changes_art = True
     stand_if_not_moving = True
-    # move state name - added to valid_states in init so subclasses recognized
     move_state = 'walk'
+    "Move state name - added to valid_states in init so subclasses recognized"
     collision_shape_type = CST_CIRCLE
     collision_type = CT_GENERIC_DYNAMIC
     
@@ -102,6 +104,7 @@ class Character(GameObject):
             self.state = self.move_state
 
 class Player(Character):
+    "Generic player class"
     log_move = False
     collision_type = CT_PLAYER
     editable = Character.editable + ['move_accel_x', 'move_accel_y',
@@ -134,16 +137,12 @@ class TopDownPlayer(Player):
 
 
 class WorldPropertiesObject(GameObject):
-    
-    "special magic singleton object that stores and sets GameWorld properties"
-    
+    "Special magic singleton object that stores and sets GameWorld properties"
     art_src = 'world_properties_object'
     visible = deleteable = selectable = False
     locked = True
     physics_move = False
     do_not_list = True
-    # properties we serialize on behalf of GameWorld
-    # TODO: figure out how to make these defaults sync with those in GW?
     world_props = ['gravity_x', 'gravity_y', 'gravity_z',
                    'hud_class_name', 'globals_object_class_name',
                    'camera_x', 'camera_y', 'camera_z',
@@ -153,10 +152,13 @@ class WorldPropertiesObject(GameObject):
                    'show_origin_all', 'show_all_rooms',
                    'room_camera_changes_enabled', 'draw_debug_objects'
     ]
+    """
+    Properties we serialize on behalf of GameWorld
+    TODO: figure out how to make these defaults sync with those in GW?
+    """
     serialized = world_props
-    # all visible properties are serialized, not editable
     editable = []
-    
+    "All visible properties are serialized, not editable"
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
         for v in self.serialized:
@@ -203,8 +205,8 @@ class WorldPropertiesObject(GameObject):
 
 class WorldGlobalsObject(GameObject):
     """
-    invisible object holding global state, variables etc in GameWorld.globals
-    subclass can be specified in WorldPropertiesObject
+    Invisible object holding global state, variables etc in GameWorld.globals.
+    Subclass can be specified in WorldPropertiesObject.
     NOTE: this object is spawned from scratch every load, it's never serialized!
     """
     should_save = False
@@ -217,7 +219,7 @@ class WorldGlobalsObject(GameObject):
 
 
 class LocationMarker(GameObject):
-    "very simple GameObject that marks an XYZ location for eg camera points"
+    "Very simple GameObject that marks an XYZ location for eg camera points"
     art_src = 'loc_marker'
     serialized = ['name', 'x', 'y', 'z', 'visible', 'locked']
     editable = []
@@ -227,7 +229,10 @@ class LocationMarker(GameObject):
 
 
 class StaticTileTrigger(GameObject):
-    
+    """
+    Generic static trigger with tile-based collision.
+    Overlaps but doesn't collide.
+    """
     is_debug = True
     collision_shape_type = CST_TILE
     collision_type = CT_GENERIC_STATIC
@@ -240,16 +245,16 @@ class StaticTileTrigger(GameObject):
         pass
 
 class WarpTrigger(StaticTileTrigger):
-    "warps player to a room/marker when they touch it"
+    "Trigger that warps player to a room/marker when they touch it"
     is_debug = True
     art_src = 'trigger_default'
     alpha = 0.5
-    # if set, warp to this location marker
     destination_marker_name = None
-    # if set, make this room the world's current
+    "If set, warp to this location marker"
     destination_room = None
-    # if True, change to destination marker's room
+    "If set, make this room the world's current"
     use_marker_room = True
+    "If True, change to destination marker's room"
     serialized = StaticTileTrigger.serialized + ['destination_room',
                                                  'destination_marker_name',
                                                  'use_marker_room']
@@ -278,20 +283,20 @@ class WarpTrigger(StaticTileTrigger):
 
 
 class ObjectSpawner(LocationMarker):
-    "simple object that spawns an object when triggered"
+    "Simple object that spawns an object when triggered"
     is_debug = True
     spawn_class_name = None
     spawn_obj_name = ''
-    # if True, spawn somewhere in this object's bounds, else spawn at location
     spawn_random_in_bounds = False
-    # dict of properties to set on newly spawned object
+    "If True, spawn somewhere in this object's bounds, else spawn at location"
     spawn_obj_data = {}
-    # number of times we can fire, -1 = infinite
+    "Dict of properties to set on newly spawned object"
     times_to_fire = -1
-    # set False for any subclass that triggers in some other way
+    "Number of times we can fire, -1 = infinite"
     trigger_on_room_enter = True
-    # if True, spawned object will be destroyed when player leaves its room
+    "Set False for any subclass that triggers in some other way"
     destroy_on_room_exit = True
+    "if True, spawned object will be destroyed when player leaves its room"
     serialized = LocationMarker.serialized + ['spawn_class_name', 'spawn_obj_name',
                                               'times_to_fire', 'destroy_on_room_exit'
     ]
@@ -303,9 +308,11 @@ class ObjectSpawner(LocationMarker):
         self.spawned_objects = []
     
     def get_spawn_class_name(self):
+        "Return class name of object to spawn."
         return self.spawn_class_name
     
     def get_spawn_location(self):
+        "Return x,y location we should spawn a new object at."
         if not self.spawn_random_in_bounds:
             return self.x, self.y
         left, top, right, bottom = self.get_edges()
@@ -314,10 +321,11 @@ class ObjectSpawner(LocationMarker):
         return x, y
     
     def can_spawn(self):
+        "Return True if spawner is allowed to spawn."
         return True
     
     def do_spawn(self):
-        "spawns and returns object"
+        "Spawn and returns object."
         class_name = self.get_spawn_class_name()
         if not class_name:
             return None
@@ -334,7 +342,7 @@ class ObjectSpawner(LocationMarker):
         return new_obj
     
     def trigger(self):
-        "poke this spawner to do its thing, returns an object if spawned"
+        "Poke this spawner to do its thing, returns an object if spawned"
         if self.times_to_fire != -1 and self.times_fired >= self.times_to_fire:
             return None
         if not self.can_spawn():
@@ -355,15 +363,15 @@ class ObjectSpawner(LocationMarker):
 
 
 class SoundBlaster(LocationMarker):
-    "simple object that plays sound when triggered"
+    "Simple object that plays sound when triggered"
     is_debug = True
-    # sound to play, minus any extension
     sound_name = ''
-    # if False, won't play sound when triggered
+    "String name of sound to play, minus any extension"
     can_play = True
+    "If False, won't play sound when triggered"
     play_on_room_enter = True
-    # number of times to loop, if -1 loop indefinitely
     loops = -1
+    "Number of times to loop, if -1 loop indefinitely"
     serialized = LocationMarker.serialized + ['sound_name', 'can_play',
                                               'play_on_room_enter']
     

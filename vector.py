@@ -3,6 +3,8 @@ import numpy as np
 
 class Vec3:
     
+    "Basic 3D vector class. Not used very much currently."
+    
     def __init__(self, x=0, y=0, z=0):
         self.x, self.y, self.z = x, y, z
     
@@ -10,13 +12,15 @@ class Vec3:
         return 'Vec3 %.4f, %.4f, %.4f' % (self.x, self.y, self.z)
     
     def __sub__(self, b):
+        "Return a new vector subtracted from given other vector."
         return Vec3(self.x - b.x, self.y - b.y, self.z - b.z)
     
     def length(self):
+        "Return this vector's scalar length."
         return math.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
     
     def normalize(self):
-        "returns a unit length version of this vector"
+        "Return a unit length version of this vector."
         n = Vec3()
         l = self.length()
         if l != 0:
@@ -27,23 +31,36 @@ class Vec3:
         return n
     
     def cross(self, b):
+        "Return a new vector of cross product with given other vector."
         x = self.y * b.z - self.z * b.y
         y = self.z * b.x - self.x * b.z
         z = self.x * b.y - self.y * b.x
         return Vec3(x, y, z)
     
     def dot(self, b):
+        "Return scalar dot product with given other vector."
         return self.x * b.x + self.y * b.y + self.z * b.z
     
     def inverse(self):
+        "Return a new vector that is inverse of this vector."
         return Vec3(-self.x, -self.y, -self.z)
     
     def copy(self):
+        "Return a copy of this vector."
         return Vec3(self.x, self.y, self.z)
 
+def cut_xyz(x, y, z, threshold):
+    """
+    Return input x,y,z with each axis clamped to 0 if it's close enough to
+    given threshold
+    """
+    x = x if abs(x) > threshold else 0
+    y = y if abs(y) > threshold else 0
+    z = z if abs(z) > threshold else 0
+    return x, y, z
 
 def transform_vec4(x, y, z, w, m):
-    "transforms given 4d vector by given matrix"
+    "Transform given 4D vector by given matrix."
     m = m.T
     #m = m.getA()
     out_x = x * m[0][0] + y * m[1][0] + z * m[2][0] + w * m[3][0]
@@ -55,8 +72,8 @@ def transform_vec4(x, y, z, w, m):
 def unproject(screen_x, screen_y, screen_z, screen_width, screen_height,
               screen_projection_matrix, screen_view_matrix):
     """
-    returns 4d vector unprojected using given screen dimensions and
-    projection + view matrices
+    Return 4D vector unprojected using given screen dimensions and
+    projection + view matrices.
     """
     x = 2 * screen_x / screen_width - 1
     y = -(2 * screen_y / screen_height + 1)
@@ -74,7 +91,7 @@ def unproject(screen_x, screen_y, screen_z, screen_width, screen_height,
 
 def screen_to_ray(x, y, width, height, projection_matrix, view_matrix,
                   near, far):
-    "returns a 3d ray (start + normal) for given point in 2d screen space"
+    "Return a 3D ray (start + normal) for given point in 2D screen space."
     unproject_args = [x, y, near, width, height, projection_matrix, view_matrix]
     near_x, near_y, near_z, near_w = unproject(*unproject_args)
     unproject_args[2] = far
@@ -93,8 +110,8 @@ def screen_to_ray(x, y, width, height, projection_matrix, view_matrix,
 def line_plane_intersection(plane_x, plane_y, plane_z, plane_d,
                             start_x, start_y, start_z, end_x, end_y, end_z):
     """
-    returns point of intersection for given plane (3d normal + distance from
-    origin) and given line (start and end 3d vector)
+    Return 3D point of intersection for given plane (3D normal + distance from
+    origin) and given line (start and end 3D vector).
     """
     # http://paulbourke.net/geometry/pointlineplane/
     u = (plane_x * start_x) + (plane_y * start_y) + (plane_z * start_z) + plane_d
@@ -106,12 +123,7 @@ def line_plane_intersection(plane_x, plane_y, plane_z, plane_d,
     z = u * start_z + (1 - u) * end_z
     return x, y, z
 
-def screen_to_world_NEW(app, screen_x, screen_y):
-    """
-    returns 3D (float) world space coordinates for given 2D (int)
-    screen space coordinates.
-    (alternative implementation)
-    """
+def _screen_to_world_NEW(app, screen_x, screen_y):
     #near, far = app.camera.near_z, app.camera.far_z
     near, far = 0, 1#app.camera.z
     args = (screen_x, screen_y, app.window_width, app.window_height,
@@ -139,8 +151,8 @@ def screen_to_world_NEW(app, screen_x, screen_y):
                                         colors)
     return x, y, z
 
-def screen_to_world_NEW2(app, screen_x, screen_y):
-    "2nd alternative implementation"
+def _screen_to_world_NEW2(app, screen_x, screen_y):
+    "2nd alternative implementation of screen_to_world"
     #worldPoint = inverse(projectionMatrix) * vec4(x * 2.0 / screenWidth - 1.0, (screenHeight - y) * 2.0 / screenHeight - 1.0, 0.0, 1.0)
     x = screen_x * 2 / app.window_width - 1
     y = (app.window_height - screen_y) * 2 / app.window_height - 1
@@ -154,12 +166,8 @@ def screen_to_world_NEW2(app, screen_x, screen_y):
     return hi[0][0] + app.camera.x, hi[0][1] + app.camera.y, hi[0][2]
     #return x, y, z
 
-def screen_to_world_OLD(app, screen_x, screen_y):
-    """
-    returns 3D (float) world space coordinates for given 2D (int)
-    screen space coordinates.
-    (existing Playscii 0.7.3 implementation)
-    """
+def _screen_to_world_OLD(app, screen_x, screen_y):
+    "(existing Playscii 0.7.3 implementation)"
     # "normalized device coordinates"
     ndc_x = (2 * screen_x) / app.window_width - 1
     ndc_y = (-2 * screen_y) / app.window_height + 1
@@ -190,4 +198,8 @@ def screen_to_world_OLD(app, screen_x, screen_y):
     return x, y, z
 
 def screen_to_world(app, screen_x, screen_y):
+    """
+    Return 3D (float) world space coordinates for given 2D (int) screen space
+    coordinates.
+    """
     return screen_to_world_OLD(app, screen_x, screen_y)

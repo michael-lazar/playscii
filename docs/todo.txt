@@ -3,12 +3,13 @@ TODO
 for 0.8.0:
 
 docs!
-- art howto page: basics of painting, affect masks, cut/copy/paste, tile xforms, charsets/palettes, image export, raster image conversion
-- games howto page: rundown of basic classes (GameWorld, GameObject, Renderable, Art), editor UI, deep dive on GameObject class, workflow, overview of example games
+- art howto page: flesh out outline, take screenshots as needed
+- games howto page: flesh out outline
 
 example games:
-- shmup: find out why some bullets boom right after being fired
-- side view platformer: better feel, enemy turns around when hitting a wall
+- shmup: find out why some bullets boom right after being fired, generate starfield
+- side view platformer: better feel, enemy turns around when hitting a wall (get colliding objects directly to left and right of collision? add trace function?)
+- flood: auto-capture tiles adjacent to first tile before first turn
 
 - find out why collision starts off for new projects?
 - crash deleting layer?

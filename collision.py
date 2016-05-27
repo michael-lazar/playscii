@@ -6,9 +6,17 @@ from renderable_line import CircleCollisionRenderable, BoxCollisionRenderable, T
 
 # collision shape types
 CST_NONE = 0
+"Don't use a CollisionShape"
 CST_CIRCLE = 1
+"Use a CircleCollisionShap"
 CST_AABB = 2
+"Use an AABBCollisionShape"
 CST_TILE = 3
+"""
+Tile-based collision: generate multiple AABBCollisionShapes to approximate all
+non-blank (character index 0) tiles of our GameObject's default Art's
+"collision layer", whose string name is defined in GO.col_layer_name.
+"""
 
 # collision types
 CT_NONE = 0
@@ -18,18 +26,26 @@ CT_GENERIC_DYNAMIC = 3
 
 # collision type groups, eg static and dynamic
 CTG_STATIC = [CT_GENERIC_STATIC]
+'"Collision type group", collections of CT_* values for more convenient checks.'
 CTG_DYNAMIC = [CT_GENERIC_DYNAMIC, CT_PLAYER]
+'"Collision type group", collections of CT_* values for more convenient checks.'
 
+__pdoc__ = {}
 # named tuples for collision structs that don't merit a class
 Contact = namedtuple('Contact', ['overlap', 'timestamp'])
+__pdoc__['Contact'] = "Represents a contact between two objects."
 
 ShapeOverlap = namedtuple('ShapeOverlap', ['x', 'y', 'dist', 'area', 'other'])
+__pdoc__['ShapeOverlap'] = "Represents a CollisionShape's overlap with another."
 
 
 class CollisionShape:
-    
+    """
+    Abstract class for a shape that can overlap and collide with other shapes.
+    Shapes are part of a Collideable which in turn is part of a GameObject.
+    """
     def resolve_overlaps_with_shapes(self, shapes):
-        "resolve this shape's overlap(s) with given list of shapes"
+        "Resolve this shape's overlap(s) with given list of shapes."
         overlaps = []
         for other in shapes:
             if other is self:
@@ -47,7 +63,7 @@ class CollisionShape:
             self.resolve_overlap(overlap)
     
     def resolve_overlap(self, overlap):
-        "resolves this shape's given overlap"
+        "Resolve this shape's given overlap."
         other = overlap.other
         # tell objects they're overlapping, pass penetration vector
         a_coll_b, a_started_b = self.go.overlapped(other.go, overlap)
@@ -82,7 +98,7 @@ class CollisionShape:
             other.go.started_colliding(self.go)
     
     def get_overlapping_static_shapes(self):
-        "returns a list of static shapes that overlap with given shape"
+        "Return a list of static shapes that overlap with this shape."
         overlapping_shapes = []
         shape_left, shape_top, shape_right, shape_bottom = self.get_box()
         # add padding to overlapping tiles check
@@ -109,22 +125,22 @@ class CollisionShape:
 
 
 class CircleCollisionShape(CollisionShape):
-    
+    "CollisionShape using a circle area."
     def __init__(self, loc_x, loc_y, radius, game_object):
         self.x, self.y = loc_x, loc_y
         self.radius = radius
         self.go = game_object
     
     def get_box(self):
-        "returns coords of our bounds (left, top, right, bottom)"
+        "Return world coordinates of our bounds (left, top, right, bottom)"
         return self.x - self.radius, self.y - self.radius, self.x + self.radius, self.y + self.radius
     
     def overlaps_line(self, x1, y1, x2, y2):
-        "returns True if this circle overlaps given line segment"
+        "Return True if this circle overlaps given line segment."
         return circle_overlaps_line(self.x, self.y, self.radius, x1, y1, x2, y2)
     
     def get_overlap(self, other):
-        "returns ShapeOverlap data for this shape's overlap with another"
+        "Return ShapeOverlap data for this shape's overlap with given other."
         if type(other) is CircleCollisionShape:
             px, py, pdist1, pdist2 = point_circle_penetration(self.x, self.y,
                                                      other.x, other.y,
@@ -139,9 +155,7 @@ class CircleCollisionShape(CollisionShape):
 
 
 class AABBCollisionShape(CollisionShape):
-    
-    "Axis-Aligned Bounding Box"
-    
+    "CollisionShape using an axis-aligned bounding box area."
     def __init__(self, loc_x, loc_y, halfwidth, halfheight, game_object):
         self.x, self.y = loc_x, loc_y
         self.halfwidth, self.halfheight = halfwidth, halfheight
@@ -153,12 +167,12 @@ class AABBCollisionShape(CollisionShape):
         return self.x - self.halfwidth, self.y - self.halfheight, self.x + self.halfwidth, self.y + self.halfheight
     
     def overlaps_line(self, x1, y1, x2, y2):
-        "returns True if this box overlaps given line segment"
+        "Return True if this box overlaps given line segment."
         left, top, right, bottom = self.get_box()
         return box_overlaps_line(left, top, right, bottom, x1, y1, x2, y2)
     
     def get_overlap(self, other):
-        "returns ShapeOverlap data for this shape's overlap with another"
+        "Return ShapeOverlap data for this shape's overlap with given other."
         if type(other) is AABBCollisionShape:
             px, py, pdist1, pdist2 = box_penetration(self.x, self.y,
                                                      other.x, other.y,
@@ -176,62 +190,67 @@ class AABBCollisionShape(CollisionShape):
 
 
 class Collideable:
-    
-    # use game object's art_off_pct values
+    "Collision component for GameObjects. Contains a list of shapes."
     use_art_offset = False
-    
+    "use game object's art_off_pct values"
     def __init__(self, obj):
+        "Create new Collideable for given GameObject."
         self.go = obj
         self.cl = self.go.world.cl
         self.renderables, self.shapes = [], []
-        # dict of shapes accessible by (x,y) tile coordinates
         self.tile_shapes = {}
-        # contacts with other objects
+        "Dict of shapes accessible by (x,y) tile coordinates"
         self.contacts = {}
+        "Dict of contacts with other objects, by object name"
         self.create_shapes()
     
     def create_shapes(self):
-        self.clear_shapes()
+        """
+        Create collision shape(s) appropriate to our game object's
+        collision_shape_type value.
+        """
+        self._clear_shapes()
         if self.go.collision_shape_type == CST_NONE:
             return
         elif self.go.collision_shape_type == CST_CIRCLE:
-            self.create_circle()
+            self._create_circle()
         elif self.go.collision_shape_type == CST_AABB:
-            self.create_box()
+            self._create_box()
         elif self.go.collision_shape_type == CST_TILE:
             self.tile_shapes.clear()
-            self.create_merged_tile_boxes()
+            self._create_merged_tile_boxes()
         # update renderables once if static
         if not self.go.is_dynamic():
             self.update_renderables()
     
-    def clear_shapes(self):
+    def _clear_shapes(self):
         for r in self.renderables:
             r.destroy()
         self.renderables = []
         for shape in self.shapes:
-            self.cl.remove_shape(shape)
+            self.cl._remove_shape(shape)
         self.shapes = []
+        "List of CollisionShapes"
     
-    def create_circle(self):
+    def _create_circle(self):
         x = self.go.x + self.go.col_offset_x
         y = self.go.y + self.go.col_offset_y
-        shape = self.cl.add_circle_shape(x, y, self.go.col_radius, self.go)
+        shape = self.cl._add_circle_shape(x, y, self.go.col_radius, self.go)
         self.shapes = [shape]
         self.renderables = [CircleCollisionRenderable(shape)]
     
-    def create_box(self):
+    def _create_box(self):
         x = self.go.x # + self.go.col_offset_x
         y = self.go.y # + self.go.col_offset_y
-        shape = self.cl.add_box_shape(x, y,
+        shape = self.cl._add_box_shape(x, y,
                                       self.go.col_width / 2,
                                       self.go.col_height / 2,
                                       self.go)
         self.shapes = [shape]
         self.renderables = [BoxCollisionRenderable(shape)]
     
-    def create_merged_tile_boxes(self):
-        "create AABB shapes for a CST_TILE object"
+    def _create_merged_tile_boxes(self):
+        "Create AABB shapes for a CST_TILE object"
         # generate fewer, larger boxes!
         frame = self.go.renderable.frame
         if not self.go.col_layer_name in self.go.art.layer_names:
@@ -271,8 +290,8 @@ class Collideable:
                 halfheight = (end_y - y) * self.go.art.quad_height
                 halfheight /= 2
                 halfheight += self.go.art.quad_height / 2
-                shape = self.cl.add_box_shape(wx, wy, halfwidth, halfheight,
-                                              self.go)
+                shape = self.cl._add_box_shape(wx, wy, halfwidth, halfheight,
+                                               self.go)
                 # fill in cell(s) in our tile collision dict,
                 # write list of tiles shape covers to shape.tiles
                 for tile_y in range(y, end_y + 1):
@@ -286,7 +305,7 @@ class Collideable:
                 self.renderables.append(r)
     
     def get_shapes_overlapping_box(self, left, top, right, bottom):
-        "returns a list of our shapes that overlap given box"
+        "Return a list of our shapes that overlap given box."
         shapes = []
         tiles = self.go.get_tiles_overlapping_box(left, top, right, bottom)
         for (x, y) in tiles:
@@ -300,6 +319,7 @@ class Collideable:
             self.update_transform_from_object()
     
     def update_transform_from_object(self, obj=None):
+        "Snap our shapes to location of given object (if unspecified, our GO)."
         obj = obj or self.go
         # CST_TILE shouldn't run here, it's static-only
         if obj.collision_shape_type == CST_TILE:
@@ -309,6 +329,7 @@ class Collideable:
             shape.y = obj.y + obj.col_offset_y
     
     def set_shape_color(self, shape, new_color):
+        "Set the color of a given shape's debug LineRenderable."
         try:
             shape_index = self.shapes.index(shape)
         except ValueError:
@@ -330,14 +351,19 @@ class Collideable:
             r.destroy()
         # remove our shapes from CollisionLord's shape list
         for shape in self.shapes:
-            self.cl.remove_shape(shape)
+            self.cl._remove_shape(shape)
 
 
 class CollisionLord:
-    
-    # number of times to resolve collisions per update
+    """
+    Collision manager object, tracks Collideables, detects overlaps and
+    resolves collisions.
+    """
     iterations = 7
-    
+    """
+    Number of times to resolve collisions per update. Lower at own risk;
+    multi-object collisions require multiple iterations to settle correctly.
+    """
     def __init__(self, world):
         self.world = world
         self.ticks = 0
@@ -353,7 +379,7 @@ class CollisionLord:
     def reset(self):
         self.dynamic_shapes, self.static_shapes = [], []
     
-    def add_circle_shape(self, x, y, radius, game_object):
+    def _add_circle_shape(self, x, y, radius, game_object):
         shape = CircleCollisionShape(x, y, radius, game_object)
         if game_object.is_dynamic():
             self.dynamic_shapes.append(shape)
@@ -361,7 +387,7 @@ class CollisionLord:
             self.static_shapes.append(shape)
         return shape
     
-    def add_box_shape(self, x, y, halfwidth, halfheight, game_object):
+    def _add_box_shape(self, x, y, halfwidth, halfheight, game_object):
         shape = AABBCollisionShape(x, y, halfwidth, halfheight, game_object)
         if game_object.is_dynamic():
             self.dynamic_shapes.append(shape)
@@ -369,14 +395,14 @@ class CollisionLord:
             self.static_shapes.append(shape)
         return shape
     
-    def remove_shape(self, shape):
+    def _remove_shape(self, shape):
         if shape in self.dynamic_shapes:
             self.dynamic_shapes.remove(shape)
         elif shape in self.static_shapes:
             self.static_shapes.remove(shape)
     
     def update(self):
-        "resolve overlaps between all relevant world objects"
+        "Resolve overlaps between all relevant world objects."
         for i in range(self.iterations):
             # filter shape lists for anything out of room etc
             valid_dynamic_shapes = []
@@ -398,16 +424,20 @@ class CollisionLord:
 # collision handling
 
 def point_in_box(x, y, box_left, box_top, box_right, box_bottom):
+    "Return True if given point lies within box with given corners."
     return box_left <= x <= box_right and box_bottom <= y <= box_top
 
-def boxes_overlap(left_a, top_a, right_a, bottom_a, left_b, top_b, right_b, bottom_b):
-    for (x, y) in ((left_a, top_a), (right_a, top_a), (right_a, bottom_a), (left_a, bottom_a)):
+def boxes_overlap(left_a, top_a, right_a, bottom_a,
+                  left_b, top_b, right_b, bottom_b):
+    "Return True if given boxes A and B overlap."
+    for (x, y) in ((left_a, top_a), (right_a, top_a),
+                   (right_a, bottom_a), (left_a, bottom_a)):
         if left_b <= x <= right_b and bottom_b <= y <= top_b:
             return True
     return False
 
 def lines_intersect(x1, y1, x2, y2, x3, y3, x4, y4):
-    "returns True if given lines intersect"
+    "Return True if given lines intersect."
     denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
     numer = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
     numer2 = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
@@ -422,7 +452,7 @@ def lines_intersect(x1, y1, x2, y2, x3, y3, x4, y4):
     return ua >= 0 and ua <= 1 and ub >= 0 and ub <= 1
 
 def line_point_closest_to_point(point_x, point_y, x1, y1, x2, y2):
-    "returns point on given line that's closest to given point"
+    "Return point on given line that's closest to given point."
     wx, wy = point_x - x1, point_y - y1
     dir_x, dir_y = x2 - x1, y2 - y1
     proj = wx * dir_x + wy * dir_y
@@ -438,7 +468,7 @@ def line_point_closest_to_point(point_x, point_y, x1, y1, x2, y2):
         return x1 + (proj / vsq) * dir_x, y1 + (proj / vsq) * dir_y
 
 def circle_overlaps_line(circle_x, circle_y, radius, x1, y1, x2, y2):
-    "returns True if given circle overlaps given line"
+    "Return True if given circle overlaps given line."
     # get closest point on line to circle center
     closest_x, closest_y = line_point_closest_to_point(circle_x, circle_y,
                                                        x1, y1, x2, y2)
@@ -446,7 +476,7 @@ def circle_overlaps_line(circle_x, circle_y, radius, x1, y1, x2, y2):
     return dist_x ** 2 + dist_y ** 2 <= radius ** 2
 
 def box_overlaps_line(left, top, right, bottom, x1, y1, x2, y2):
-    "returns True if given box overlaps given line"
+    "Return True if given box overlaps given line."
     # TODO: determine if this is less efficient than slab method below
     if point_in_box(x1, y1, left, top, right, bottom) and \
        point_in_box(x2, y2, left, top, right, bottom):
@@ -458,6 +488,7 @@ def box_overlaps_line(left, top, right, bottom, x1, y1, x2, y2):
         lines_intersect(left, bottom, right, bottom, x1, y1, x2, y2)
 
 def box_overlaps_ray(left, top, right, bottom, x1, y1, x2, y2):
+    "Return True if given box overlaps given ray."
     # TODO: determine if this can be adapted for line segments
     # (just a matter of setting tmin/tmax properly?)
     tmin, tmax = -math.inf, math.inf
@@ -475,7 +506,7 @@ def box_overlaps_ray(left, top, right, bottom, x1, y1, x2, y2):
     return tmax >= tmin
 
 def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
-    "returns normalized penetration x, y, and distance"
+    "Return normalized penetration x, y, and distance for given circles."
     dx, dy = circle_x - point_x, circle_y - point_y
     pdist = math.sqrt(dx ** 2 + dy ** 2)
     # point is center of circle, arbitrarily project out in +X
@@ -485,7 +516,7 @@ def point_circle_penetration(point_x, point_y, circle_x, circle_y, radius):
     return dx / pdist, dy / pdist, pdist - radius, pdist - radius
 
 def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
-    "returns penetration vector and magnitude for two boxes"
+    "Return penetration vector and magnitude for given boxes."
     left_a, right_a = ax - ahw, ax + ahw
     top_a, bottom_a = ay + ahh, ay - ahh
     left_b, right_b = bx - bhw, bx + bhw
@@ -510,6 +541,7 @@ def box_penetration(ax, ay, bx, by, ahw, ahh, bhw, bhh):
 
 def circle_box_penetration(circle_x, circle_y, box_x, box_y, circle_radius,
                            box_hw, box_hh):
+    "Return penetration vector and magnitude for given circle and box."
     box_left, box_right = box_x - box_hw, box_x + box_hw
     box_top, box_bottom = box_y + box_hh, box_y - box_hh
     # if circle center inside box, use box-on-box penetration vector + distance

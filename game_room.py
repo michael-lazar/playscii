@@ -2,23 +2,26 @@
 from game_object import GameObject
 
 class GameRoom:
-    
-    # if set, camera will move to marker with this name when room entered
+    """
+    A collection of GameObjects within a GameWorld. Can be used to limit scope
+    of object updates, collisions, etc.
+    """
     camera_marker_name = ''
-    # if True, camera will follow player while in this room
+    "If set, camera will move to marker with this name when room entered"
     camera_follow_player = False
-    # if set, warp to room OR marker with this name when edge crossed
+    "If True, camera will follow player while in this room"
     left_edge_warp_dest_name, right_edge_warp_dest_name = '', ''
+    "If set, warp to room OR marker with this name when edge crossed"
     top_edge_warp_dest_name, bottom_edge_warp_dest_name = '', ''
-    # object whose art's bounds should be used as our "edges" for above
     warp_edge_bounds_obj_name = ''
+    "Object whose art's bounds should be used as our \"edges\" for above"
     serialized = ['name', 'camera_marker_name', 'left_edge_warp_dest_name',
                   'right_edge_warp_dest_name', 'top_edge_warp_dest_name',
                   'bottom_edge_warp_dest_name', 'warp_edge_bounds_obj_name',
                   'camera_follow_player']
-    # log changes to and from this room
+    "List of string names of members to serialize for this Room class."
     log_changes = False
-    
+    "Log changes to and from this room"
     def __init__(self, world, name, room_data=None):
         self.world = world
         self.name = name
@@ -84,6 +87,7 @@ class GameRoom:
         self.world.camera.set_loc_from_obj(cam_mark)
     
     def entered(self, old_room):
+        "Run when the player enters this room."
         if self.log_changes:
             self.world.app.log('Room "%s" entered' % self.name)
         # set camera if marker is set
@@ -98,6 +102,7 @@ class GameRoom:
             obj.room_entered(self, old_room)
     
     def exited(self, new_room):
+        "Run when the player exits this room."
         if self.log_changes:
             self.world.app.log('Room "%s" exited' % self.name)
         # tell objects in this room player has exited
@@ -105,6 +110,7 @@ class GameRoom:
             obj.room_exited(self, new_room)
     
     def add_object_by_name(self, obj_name):
+        "Add object with given name to this room."
         obj = self.world.objects.get(obj_name, None)
         if not obj:
             self.world.app.log("Couldn't find object named %s" % obj_name)
@@ -112,10 +118,12 @@ class GameRoom:
         self.add_object(obj)
     
     def add_object(self, obj):
+        "Add object (by reference) to this room."
         self.objects[obj.name] = obj
         obj.rooms[self.name] = self
     
     def remove_object_by_name(self, obj_name):
+        "Remove object with given name from this room."
         obj = self.world.objects.get(obj_name, None)
         if not obj:
             self.world.app.log("Couldn't find object named %s" % obj_name)
@@ -123,6 +131,7 @@ class GameRoom:
         self.remove_object(obj)
     
     def remove_object(self, obj):
+        "Remove object (by reference) from this room."
         if obj.name in self.objects:
             self.objects.pop(obj.name)
         else:
@@ -133,7 +142,7 @@ class GameRoom:
             self.world.app.log("GameObject %s not found in GameRoom %s" % (obj.name, self.name))
     
     def get_dict(self):
-        "return a dict that GameWorld.save_to_file can dump to JSON"
+        "Return a dict that GameWorld.save_to_file can dump to JSON"
         object_names = list(self.objects.keys())
         d = {'class_name': type(self).__name__, 'objects': object_names}
         # serialize whatever other vars are declared in self.serialized
@@ -142,7 +151,7 @@ class GameRoom:
                 d[prop_name] = getattr(self, prop_name)
         return d
     
-    def check_edge_warp(self, game_object):
+    def _check_edge_warp(self, game_object):
         # bail if no bounds or edge warp destinations set
         if not self.edge_obj:
             return
@@ -175,7 +184,7 @@ class GameRoom:
     
     def update(self):
         if self is self.world.current_room:
-            self.check_edge_warp(self.world.player)
+            self._check_edge_warp(self.world.player)
     
     def destroy(self):
         if self.name in self.world.rooms:
