@@ -1,4 +1,5 @@
 import os, sys, time, importlib, json
+from collections import namedtuple
 
 import sdl2
 
@@ -15,43 +16,45 @@ STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
 SOUNDS_DIR = 'sounds/'
 
-
-class RenderItem:
-    "quickie class to debug render order"
-    def __init__(self, obj, layer, sort_value):
-        self.obj, self.layer, self.sort_value = obj, layer, sort_value
-    def __str__(self):
-        return '%s layer %s sort %s' % (self.obj.art.filename, self.layer, self.sort_value)
+# Quickie class to debug render order
+RenderItem = namedtuple('RenderItem', ['obj', 'layer', 'sort_value'])
 
 class GameCamera(Camera):
     pan_friction = 0.2
 
 class GameWorld:
-    
-    "holds global state for game mode"
-    # properties serialized via WorldPropertiesObject (make sure type is right)
+    """
+    Holds global state for Game Mode. Spawns, manages, and renders GameObjects.
+    Properties serialized via WorldPropertiesObject - make sure type is right.
+    """
     gravity_x, gravity_y, gravity_z = 0., 0., 0.
+    "Gravity applied to all objects who are affected by gravity."
     bg_color = [0., 0., 0., 1.]
+    "OpenGL wiewport color to render behind everything else, ie the void."
     hud_class_name = 'GameHUD'
+    "String name of HUD class to use"
     properties_object_class_name = 'WorldPropertiesObject'
     globals_object_class_name = 'WorldGlobalsObject'
+    "String name of WorldGlobalsObject class to use."
     player_camera_lock = True
+    "If True, camera will be locked to player's location."
     object_grid_snap = True
     # editable properties
     draw_hud = True
     collision_enabled = True
+    "If False, CollisionLord won't bother thinking about collision at all."
     # toggles for "show all" debug viz modes
     show_collision_all = False
     show_bounds_all = False
     show_origin_all = False
-    # if True, show all rooms not just current one
     show_all_rooms = False
-    # if False, objects with is_debug=True won't be drawn
+    "If True, show all rooms not just current one."
     draw_debug_objects = True
-    # if True, snap camera to new room's associated camera marker
+    "If False, objects with is_debug=True won't be drawn."
     room_camera_changes_enabled = True
-    # if True, list UI will only show objects in current room
+    "If True, snap camera to new room's associated camera marker."
     list_only_current_room_objects = False
+    "If True, list UI will only show objects in current room."
     builtin_module_names = ['game_object', 'game_util_objects', 'game_hud',
                             'game_room']
     builtin_base_classes = (game_object.GameObject, game_hud.GameHUD,
@@ -74,33 +77,36 @@ class GameWorld:
                         'game_util_objects': game_util_objects,
                         'game_hud': game_hud, 'game_room': game_room}
         self.classname_to_spawn = None
-        # dict of objects by name:object
         self.objects = {}
-        # dict of just-spawned objects, added to above on update() after spawn
+        "Dict of objects by name:object"
         self.new_objects = {}
-        # dict of rooms by name:room
+        "Dict of just-spawned objects, added to above on update() after spawn"
         self.rooms = {}
+        "Dict of rooms by name:room"
         self.current_room = None
         self.cl = collision.CollisionLord(self)
         self.hud = None
         self.art_loaded = []
-        # offsets for objects player is edit-dragging
         self.drag_objects = {}
+        "Offsets for objects player is edit-dragging"
         self.last_state_loaded = DEFAULT_STATE_FILENAME
     
     def play_music(self, music_filename, fade_in_time=0):
+        "Play given music file in any SDL2_mixer-supported format."
         music_filename = self.game_dir + SOUNDS_DIR + music_filename
         self.app.al.set_music(music_filename)
         self.app.al.start_music(music_filename)
     
     def stop_music(self):
+        "Stop any currently playing music."
         self.app.al.stop_all_music()
     
     def is_music_playing(self):
+        "Return True if there is music playing."
         return self.app.al.is_music_playing()
     
     def pick_next_object_at(self, x, y):
-        "returns next unselected at point"
+        "Return next unselected object at given point."
         objects = self.get_objects_at(x, y)
         # don't bother cycling if only one object found
         if len(objects) == 1 and objects[0].selectable and \
@@ -120,7 +126,7 @@ class GameWorld:
         return None
     
     def get_objects_at(self, x, y):
-        "returns list of all objects whose bounds fall within given point"
+        "Return list of all objects whose bounds fall within given point."
         objects = []
         for obj in self.objects.values():
             # only allow selecting of visible objects
@@ -217,6 +223,7 @@ class GameWorld:
                     obj.y += obj.art.quad_height / 2
     
     def select_object(self, obj, force=False):
+        "Add given object to our list of selected objects."
         if not self.app.can_edit:
             return
         if obj and (obj.selectable or force) and not obj in self.selected_objects:
@@ -224,16 +231,18 @@ class GameWorld:
         self.app.ui.object_selection_changed()
     
     def deselect_object(self, obj):
+        "Remove given object from our list of selected objects."
         if obj in self.selected_objects:
             self.selected_objects.remove(obj)
         self.app.ui.object_selection_changed()
     
     def deselect_all(self):
+        "Deselect all objects."
         self.selected_objects = []
         self.app.ui.object_selection_changed()
     
     def create_new_game(self, game_name):
-        "creates appropriate dirs and files for a new game, returns success"
+        "Create appropriate dirs and files for a new game, return success."
         new_dir = self.app.documents_dir + TOP_GAME_DIR + game_name + '/'
         if os.path.exists(new_dir):
             self.app.log('Game dir %s already exists!' % game_name)
@@ -249,6 +258,7 @@ class GameWorld:
         return True
     
     def unload_game(self):
+        "Unload currently loaded game."
         for obj in self.objects.values():
             obj.destroy()
         self.cl.reset()
@@ -265,20 +275,31 @@ class GameWorld:
         self.selected_objects = []
         self.app.al.stop_all_music()
     
-    def get_first_object_of_type(self, class_name):
+    def get_first_object_of_type(self, class_name, allow_subclasses=True):
+        "Return first object found with given class name."
+        c = self.get_class_by_name(class_name)
         for obj in self.objects.values():
-            if type(obj).__name__ == class_name:
+            # use isinstance so we catch subclasses
+            if c and allow_subclasses:
+                if isinstance(obj, c):
+                    return obj
+            elif type(obj).__name__ == class_name:
                 return obj
     
-    def get_all_objects_of_type(self, class_name):
-        # TODO: "allow subclasses" optional flag
+    def get_all_objects_of_type(self, class_name, allow_subclasses=True):
+        "Return list of all objects found with given class name."
+        c = self.get_class_by_name(class_name)
         objects = []
         for obj in self.objects.values():
-            if type(obj).__name__ == class_name:
+            if c and allow_subclasses:
+                if isinstance(obj, c):
+                    objects.append(obj)
+            elif type(obj).__name__ == class_name:
                 objects.append(obj)
         return objects
     
     def set_for_all_objects(self, name, value):
+        "Set given variable name to given value for all objects."
         for obj in self.objects.values():
             setattr(obj, name, value)
     
@@ -291,17 +312,19 @@ class GameWorld:
                 self.app.load_art_for_edit(art_filename)
     
     def move_selected(self, move_x, move_y, move_z):
+        "Shift position of selected objects by given x,y,z amount."
         for obj in self.selected_objects:
-            #obj.move(move_x, move_y)
             obj.x += move_x
             obj.y += move_y
             obj.z += move_z
     
     def reset_game(self):
+        "Reset currently loaded game to last loaded state."
         if self.game_dir:
             self.load_game_state(self.last_state_loaded)
     
     def set_game_dir(self, dir_name, reset=False):
+        "Load game from given game directory."
         if self.game_dir and dir_name == self.game_dir:
             self.load_game_state(DEFAULT_STATE_FILENAME)
             return
@@ -325,16 +348,16 @@ class GameWorld:
                 self.load_game_state(DEFAULT_STATE_FILENAME)
             else:
                 # if no reset load submodules into namespace from the get-go
-                self.import_all()
-                self.classes = self.get_all_loaded_classes()
+                self._import_all()
+                self.classes = self._get_all_loaded_classes()
             break
         if not self.game_dir:
             self.app.log("Couldn't find game directory %s" % dir_name)
     
-    def remove_non_current_game_modules(self):
+    def _remove_non_current_game_modules(self):
         """
-        removes modules from previously-loaded games from both sys and
-        GameWorld's dicts
+        Remove modules from previously-loaded games from both sys and
+        GameWorld's dicts.
         """
         modules_to_remove = []
         games_dir_prefix = TOP_GAME_DIR.replace('/', '')
@@ -351,8 +374,8 @@ class GameWorld:
             if module_name in self.modules:
                 self.modules.pop(module_name)
     
-    def get_game_modules_list(self):
-        "gets list of current game's modules from its scripts/ dir"
+    def _get_game_modules_list(self):
+        "Return list of current game's modules from its scripts/ dir"
         # build list of module files
         modules_list = self.builtin_module_names[:]
         # create appropriately-formatted python import path
@@ -369,21 +392,21 @@ class GameWorld:
             modules_list.append(new_module_name)
         return modules_list
     
-    def import_all(self):
+    def _import_all(self):
         """
-        populates GameWorld.modules with the modules GW.get_all_loaded_classes
-        refers to when finding classes to spawn
+        Populate GameWorld.modules with the modules GW._get_all_loaded_classes
+        refers to when finding classes to spawn.
         """
         # on first load, documents dir may not be in import path
         if not self.app.documents_dir in sys.path:
             sys.path += [self.app.documents_dir]
         # clean modules dict before (re)loading anything
-        self.remove_non_current_game_modules()
+        self._remove_non_current_game_modules()
         # make copy of old modules table for import vs reload check
         old_modules = self.modules.copy()
         self.modules = {}
         # load/reload new modules
-        for module_name in self.get_game_modules_list():
+        for module_name in self._get_game_modules_list():
             # always reload built in modules
             if module_name in self.builtin_module_names or module_name in old_modules:
                 self.modules[module_name] = importlib.reload(old_modules[module_name])
@@ -391,12 +414,16 @@ class GameWorld:
                 self.modules[module_name] = importlib.import_module(module_name)
     
     def toggle_pause(self):
+        "Toggles game pause state."
         self.paused = not self.paused
         s = 'Game %spaused.' % ['un', ''][self.paused]
         self.app.ui.message_line.post_line(s)
     
     def get_elapsed_time(self):
-        "get total time world has been running (ie not paused)"
+        """
+        Return total time world has been running (ie not paused) in
+        milliseconds.
+        """
         return self.app.get_elapsed_time() - self.pause_time
     
     def enable_player_camera_lock(self):
@@ -409,6 +436,7 @@ class GameWorld:
             self.camera.focus_object = None
     
     def toggle_player_camera_lock(self):
+        "Toggle whether camera is locked to player's location."
         if self.player and self.camera.focus_object is self.player:
             self.disable_player_camera_lock()
         else:
@@ -436,7 +464,7 @@ class GameWorld:
                 # TODO: handle_ functions for other types of input
     
     def frame_begin(self):
-        "runs at start of game loop iteration, before input/update/render"
+        "Run at start of game loop iteration, before input/update/render."
         for obj in self.objects.values():
             obj.art.updated_this_tick = False
             obj.frame_begin()
@@ -446,6 +474,7 @@ class GameWorld:
             obj.frame_update()
     
     def pre_update(self):
+        "Run before GameWorld.update"
         # add newly spawned objects to table
         self.objects.update(self.new_objects)
         self.new_objects = {}
@@ -498,6 +527,7 @@ class GameWorld:
             self.pause_time += self.app.get_elapsed_time() - self.app.last_time
     
     def render(self):
+        "Sort and draw all objects in Game Mode world."
         visible_objects = []
         for obj in self.objects.values():
             if obj.should_destroy:
@@ -571,7 +601,7 @@ class GameWorld:
             self.hud.render()
     
     def save_last_state(self):
-        "save over last loaded state"
+        "Save over last loaded state."
         # strip down to base filename w/o extension :/
         last_state = self.last_state_loaded
         last_state = os.path.basename(last_state)
@@ -579,6 +609,7 @@ class GameWorld:
         self.save_to_file(last_state)
     
     def save_to_file(self, filename=None):
+        "Save current world state to a file."
         objects = []
         for obj in self.objects.values():
             if obj.should_save:
@@ -604,9 +635,9 @@ class GameWorld:
                   sort_keys=True, indent=1)
         self.app.log('Saved game state %s to disk.' % filename)
     
-    def get_all_loaded_classes(self):
+    def _get_all_loaded_classes(self):
         """
-        returns classname,class dict of all GameObject classes in loaded modules
+        Return classname,class dict of all GameObject classes in loaded modules.
         """
         classes = {}
         for module in self.modules.values():
@@ -622,9 +653,14 @@ class GameWorld:
         return classes
     
     def get_class_by_name(self, class_name):
+        "Return Class object for given class name."
         return self.classes.get(class_name, None)
     
     def reset_object_in_place(self, obj):
+        """
+        "Reset" given object to its class defaults.
+        Actually destroys object in place and creates a new one.
+        """
         x, y = obj.x, obj.y
         obj_class = obj.__class__.__name__
         spawned = self.spawn_object_of_class(obj_class, x, y)
@@ -635,6 +671,7 @@ class GameWorld:
             obj.destroy()
     
     def duplicate_selected_objects(self):
+        "Duplicate all selected objects. Calls GW.duplicate_object"
         new_objects = []
         for obj in self.selected_objects:
             new_objects.append(self.duplicate_object(obj))
@@ -645,6 +682,7 @@ class GameWorld:
             self.app.log('%s new objects created' % len(new_objects))
     
     def duplicate_object(self, obj):
+        "Create a duplicate of given object."
         d = obj.get_dict()
         # offset new object's location
         x, y = d['x'], d['y']
@@ -665,7 +703,7 @@ class GameWorld:
         return new_obj
     
     def rename_object(self, obj, new_name):
-        "gives specified object a new name. doesn't accept already-in-use names"
+        "Give specified object a new name. Doesn't accept already-in-use names."
         self.objects.update(self.new_objects)
         for other_obj in self.objects.values():
             if not other_obj is self and other_obj.name == new_name:
@@ -681,6 +719,7 @@ class GameWorld:
                 room.objects[obj.name] = self
     
     def spawn_object_of_class(self, class_name, x=None, y=None):
+        "Spawn a new object of given class name at given location."
         if not class_name in self.classes:
             self.app.log("Couldn't find class %s" % class_name)
             return
@@ -692,6 +731,7 @@ class GameWorld:
         return new_obj
     
     def spawn_object_from_data(self, object_data):
+        "Spawn a new object with properties populated from given data dict."
         # load module and class
         class_name = object_data.get('class_name', None)
         if not class_name or not class_name in self.classes:
@@ -703,6 +743,7 @@ class GameWorld:
         return new_object
     
     def add_room(self, new_room_name, new_room_classname='GameRoom'):
+        "Add a new Room with given name of (optional) given class."
         if new_room_name in self.rooms:
             self.log('Room called %s already exists!' % new_room_name)
             return
@@ -711,6 +752,7 @@ class GameWorld:
         self.rooms[new_room.name] = new_room
     
     def remove_room(self, room_name):
+        "Delete Room with given name."
         if not room_name in self.rooms:
             return
         room = self.rooms.pop(room_name)
@@ -719,6 +761,7 @@ class GameWorld:
         room.destroy()
     
     def change_room(self, new_room_name):
+        "Set world's current active room to Room with given name."
         if not new_room_name in self.rooms:
             self.app.log("Couldn't change to missing room %s" % new_room_name)
             return
@@ -730,6 +773,7 @@ class GameWorld:
         self.current_room.entered(old_room)
     
     def rename_room(self, room, new_room_name):
+        "Rename given Room to new given name."
         old_name = room.name
         room.name = new_room_name
         self.rooms.pop(old_name)
@@ -741,6 +785,7 @@ class GameWorld:
                 obj.rooms[new_room_name] = room
     
     def load_game_state(self, filename=DEFAULT_STATE_FILENAME):
+        "Load game state with given filename."
         if not os.path.exists(filename):
             filename = self.game_dir + filename
         if not filename.endswith(STATE_FILE_EXTENSION):
@@ -750,8 +795,8 @@ class GameWorld:
         # tell list panel to reset, its contents might get jostled
         self.app.ui.edit_list_panel.game_reset()
         # import all submodules and catalog classes
-        self.import_all()
-        self.classes = self.get_all_loaded_classes()
+        self._import_all()
+        self.classes = self._get_all_loaded_classes()
         try:
             d = json.load(open(filename))
             #self.app.log('Loading game state %s...' % filename)
@@ -797,6 +842,7 @@ class GameWorld:
         #self.report()
     
     def report(self):
+        "Print (not log) information about current world state."
         print('--------------\n%s report:' % self)
         obj_arts, obj_rends, obj_dbg_rends, obj_cols, obj_col_rends = 0, 0, 0, 0, 0
         attachments = 0
@@ -831,14 +877,17 @@ class GameWorld:
         print('%s arts loaded for edit' % len(self.app.art_loaded_for_edit))
     
     def toggle_all_origin_viz(self):
+        "Toggle visibility of XYZ markers for all object origins."
         self.show_origin_all = not self.show_origin_all
         self.set_for_all_objects('show_origin', self.show_origin_all)
     
     def toggle_all_bounds_viz(self):
+        "Toggle visibility of boxes for all object bounds."
         self.show_bounds_all = not self.show_bounds_all
         self.set_for_all_objects('show_bounds', self.show_bounds_all)
     
     def toggle_all_collision_viz(self):
+        "Toggle visibility of debug lines for all object Collideables."
         self.show_collision_all = not self.show_collision_all
         self.set_for_all_objects('show_collision', self.show_collision_all)
     

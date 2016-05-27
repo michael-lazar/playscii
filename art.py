@@ -65,7 +65,6 @@ uv_types_reverse = {
 
 
 class Art:
-    
     """
     Art asset:
     Contains the data that is modified by user edits and gets saved to disk.
@@ -74,20 +73,19 @@ class Art:
     assumptions:
     - an Art contains 1 or more frames
     - each frame contains 1 or more layers
-    - each layer is a rectangular grid of Width x Height tiles
+    - each layer is a rectangular grid of Width * Height tiles
     - each tile has: character, foreground color, background color, & transform
     - char/color tile values are expressed as indices into charset / palette
     - all layers in an Art are the same dimensions
     """
-    
-    # size of each tile in world space
     quad_width,quad_height = 1, 1
+    "size of each tile in world space"
     log_size_changes = False
     recalc_quad_height = True
     log_creation = False
     
-    def __init__(self, filename, app, charset, palette, width, height, auto_update=True):
-        "creates a new, blank document"
+    def __init__(self, filename, app, charset, palette, width, height):
+        "Creates a new, blank document with given parameters."
         self.valid = False
         if filename and not filename.endswith('.%s' % ART_FILE_EXTENSION):
             filename += '.%s' % ART_FILE_EXTENSION
@@ -106,10 +104,10 @@ class Art:
         # lists of changed frames, processed each update()
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
-        # list of TileRenderables using us - each new Renderable adds itself
         self.renderables = []
-        # list of ArtInstances using us as their source
+        "List of TileRenderables using us - each new Renderable adds itself"
         self.instances = []
+        "List of ArtInstances using us as their source"
         # init frames and layers - ArtFromDisk has its own logic for this
         self.init_layers()
         self.init_frames()
@@ -162,7 +160,7 @@ class Art:
         self.update()
     
     def insert_frame_before_index(self, index, delay=DEFAULT_FRAME_DELAY, log=True):
-        "adds a blank frame at the specified index (len+1 to add to end)"
+        "Add a blank frame at the specified index (len+1 to add to end)."
         self.frames += 1
         self.frame_delays.insert(index, delay)
         tiles = self.layers * self.width * self.height
@@ -190,10 +188,11 @@ class Art:
             self.app.log('Created new frame at index %s' % str(index))
     
     def add_frame_to_end(self, delay=DEFAULT_FRAME_DELAY, log=True):
+        "Add a blank frame at the end of the current animation."
         self.insert_frame_before_index(self.frames, delay, log)
     
     def duplicate_frame(self, src_frame_index, dest_frame_index=None, delay=None):
-        "creates a duplicate of given frame at given index"
+        "Create a duplicate of given frame at given index."
         # stick new frame at end if no destination index given
         dest_frame_index = dest_frame_index or self.frames
         # copy source frame's delay if none given
@@ -212,6 +211,7 @@ class Art:
         self.app.log('Duplicated frame %s at frame %s' % (src_frame_index+1, dest_frame_index))
     
     def delete_frame_at(self, index):
+        "Delete frame at given index."
         self.chars.pop(index)
         self.fg_colors.pop(index)
         self.bg_colors.pop(index)
@@ -222,6 +222,7 @@ class Art:
             self.app.ui.set_active_frame(index)
     
     def move_frame_to_index(self, src_index, dest_index):
+        "Move frame at given index to new given index."
         char_data = self.chars.pop(src_index)
         fg_data = self.fg_colors.pop(src_index)
         bg_data = self.bg_colors.pop(src_index)
@@ -233,6 +234,7 @@ class Art:
         self.mark_all_frames_changed()
     
     def add_layer(self, z=None, name=None):
+        "Add a new layer with given Z with given name."
         # offset Z from last layer's Z if none given
         z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
         # index isn't user-facing, z is what matters
@@ -246,6 +248,7 @@ class Art:
             self.app.ui.set_active_layer(index+1)
     
     def duplicate_layer(self, src_index, z=None, new_name=None):
+        "Duplicate layer with given index. Duplicate uses given Z and name."
         def duplicate_layer_array(array):
             src_data = np.array([array[src_index]])
             return np.append(array, src_data, 0)
@@ -269,7 +272,7 @@ class Art:
         self.set_unsaved_changes(True)
     
     def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):
-        "clears given layer of given frame to transparent BG + no characters"
+        "Clear given layer of given frame to transparent BG + no characters."
         # "clear" UVs to UV_NORMAL
         for y in range(self.height):
             for x in range(self.width):
@@ -286,7 +289,7 @@ class Art:
             self.bg_changed_frames.append(frame)
     
     def delete_layer(self, index):
-        "deletes layer at given index"
+        "Delete layer at given index."
         for frame in range(self.frames):
             self.chars[frame] = np.delete(self.chars[frame], index, 0)
             self.fg_colors[frame] = np.delete(self.fg_colors[frame], index, 0)
@@ -303,6 +306,7 @@ class Art:
         self.set_unsaved_changes(True)
     
     def set_charset(self, new_charset):
+        "Set Art to use given character set (referenced by object, not name)."
         if new_charset is self.charset:
             return
         self.charset = new_charset
@@ -313,12 +317,14 @@ class Art:
         self.geo_changed = True
     
     def set_palette(self, new_palette):
+        "Set Art to use given color palette (referenced by object, not name)."
         if new_palette is self.palette:
             return
         self.palette = new_palette
         self.set_unsaved_changes(True)
     
     def set_active_frame(self, new_frame):
+        "Set frame at given index for active editing in Art Mode."
         new_frame %= self.frames
         # bail if frame is still the same, eg we only have 1 frame
         if new_frame == self.active_frame:
@@ -331,6 +337,7 @@ class Art:
         return True
     
     def set_active_layer(self, new_layer):
+        "Set layer at given index for active editing in Art Mode."
         self.active_layer = min(max(0, new_layer), self.layers-1)
     
     def crop(self, new_width, new_height, origin_x=0, origin_y=0):
@@ -380,15 +387,22 @@ class Art:
             self.uv_mods[frame] = expand_array(self.uv_mods[frame], UV_NORMAL, UV_STRIDE)
     
     def mark_frame_changed(self, frame):
+        "Given frame at given index as changed for next render."
         for l in [self.char_changed_frames, self.fg_changed_frames,
                   self.bg_changed_frames, self.uv_changed_frames]:
             l.append(frame)
     
     def mark_all_frames_changed(self):
+        "Mark all frames as changed for next render."
         for frame in range(self.frames):
             self.mark_frame_changed(frame)
     
     def resize(self, new_width, new_height, origin_x=0, origin_y=0):
+        """
+        Crop and/or expand Art to new given dimensions, with optional new
+        top left tile if cropping. Calls crop() and expand(), so no need to
+        call those directly.
+        """
         if new_width < self.width or new_height < self.height:
             self.crop(new_width, new_height, origin_x, origin_y)
         if new_width > self.width or new_height > self.height:
@@ -399,7 +413,10 @@ class Art:
         self.mark_all_frames_changed()
     
     def build_geo(self):
-        "builds the vertex and element arrays used by all layers"
+        """
+        (Re)build the vertex and element arrays used by all layers.
+        Run if the Art has untracked changes to size or layer count.
+        """
         shape = (self.layers, self.height, self.width, VERT_STRIDE)
         self.vert_array = np.empty(shape, dtype=np.float32)
         all_elems_size = self.layers * self.width * self.height * ELEM_STRIDE
@@ -436,7 +453,7 @@ class Art:
                     vert_index += 4
     
     def new_uv_layers(self, layers):
-        "returns given # of layer's worth of vanilla UV array data"
+        "Return given # of layer's worth of vanilla UV array data."
         shape = (layers, self.height, self.width, UV_STRIDE)
         array = np.zeros(shape, dtype=np.float32)
         # default new layer of UVs to "normal" transform
@@ -448,25 +465,33 @@ class Art:
         return array
     
     def is_tile_inside(self, x, y):
-        "returns True if given X,Y tile coord is within our bounds"
+        "Return True if given x,y tile coord is within our bounds."
         return 0 <= x < self.width and 0 <= y < self.height
     
     # get methods
     def get_char_index_at(self, frame, layer, x, y):
+        "Return character index for given frame/layer/x,y tile."
         return int(self.chars[frame][layer][y][x][0])
     
     def get_fg_color_index_at(self, frame, layer, x, y):
+        "Return foreground color index for given frame/layer/x,y tile."
         return int(self.fg_colors[frame][layer][y][x][0])
     
     def get_bg_color_index_at(self, frame, layer, x, y):
+        "Return background color index for given frame/layer/x,y tile."
         return int(self.bg_colors[frame][layer][y][x][0])
     
     def get_char_transform_at(self, frame, layer, x, y):
+        "Return character transform enum for given frame/layer/x,y tile."
         uvs = self.uv_mods[frame][layer][y][x]
         # use reverse dict of tuples b/c they're hashable
         return uv_types_reverse.get(tuple(uvs), UV_NORMAL)
     
     def get_tile_at(self, frame, layer, x, y):
+        """
+        Return (char index, fg color index, bg color index, transform) tuple
+        for given frame/layer/x,y tile.
+        """
         char = self.get_char_index_at(frame, layer, x, y)
         fg = self.get_fg_color_index_at(frame, layer, x, y)
         bg = self.get_bg_color_index_at(frame, layer, x, y)
@@ -475,12 +500,17 @@ class Art:
     
     # set methods
     def set_char_index_at(self, frame, layer, x, y, char_index):
+        "Set character index for given frame/layer/x,y tile."
         self.chars[frame][layer][y][x] = char_index
         # next update, tell renderables on the changed frame to update buffers
         if not frame in self.char_changed_frames:
             self.char_changed_frames.append(frame)
     
     def set_color_at(self, frame, layer, x, y, color_index, fg=True):
+        """
+        Set (fg or bg) color index for given frame/layer/x,y tile.
+        Foreground or background specified with "fg" boolean.
+        """
         # modulo to resolve any negative indices
         color_index %= len(self.palette.colors)
         # no functional differences between fg and bg color update,
@@ -493,6 +523,10 @@ class Art:
             self.bg_changed_frames.append(frame)
     
     def set_all_non_transparent_colors(self, new_color_index):
+        """
+        Set color index for all non-transparent (index 0) colors on all tiles
+        on all frames and layers.
+        """
         for frame, layer, x, y in TileIter(self):
             # non-transparent color could be FG or BG
             char, fg, bg, xform = self.get_tile_at(frame, layer, x, y)
@@ -500,6 +534,7 @@ class Art:
             self.set_color_at(frame, layer, x, y, new_color_index, change_fg)
     
     def set_all_bg_colors(self, new_color_index, exclude_layers=[]):
+        "Set background color index for all tiles on all frames and layers."
         for frame, layer, x, y in TileIter(self):
             # exclude all layers named in list
             if self.layer_names[layer] in exclude_layers:
@@ -507,13 +542,20 @@ class Art:
             self.set_color_at(frame, layer, x, y, new_color_index, fg=False)
     
     def set_char_transform_at(self, frame, layer, x, y, transform):
+        """
+        Set character transform (X/Y flip, 0/90/180/270 rotate) for given
+        frame/layer/x,y tile.
+        """
         self.uv_mods[frame][layer][y][x] = uv_types[transform]
         if not frame in self.uv_changed_frames:
             self.uv_changed_frames.append(frame)
     
     def set_tile_at(self, frame, layer, x, y, char_index=None, fg=None, bg=None,
                     transform=None):
-        "convenience function for setting (up to) all 3 tile indices at once"
+        """
+        Convenience function for setting all tile attributes (character index,
+        foreground and background color, and transofmr) at once.
+        """
         if char_index is not None:
             self.set_char_index_at(frame, layer, x, y, char_index)
         if fg is not None:
@@ -524,14 +566,14 @@ class Art:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
     def shift(self, frame, layer, amount_x, amount_y):
-        "shifts + wraps art on given frame + layer by given amount in X and Y"
+        "Shift + wrap art on given frame and layer by given amount in X and Y."
         for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods]:
             a[frame][layer] = np.roll(a[frame][layer], amount_x, 1)
             a[frame][layer] = np.roll(a[frame][layer], amount_y, 0)
         self.mark_frame_changed(frame)
     
     def shift_all_frames(self, amount_x, amount_y):
-        "shifts + wraps art in X and Y"
+        "Shift + wrap art in X and Y on all frames and layers."
         for frame in range(self.frames):
             for layer in range(self.layers):
                 self.shift(frame, layer, amount_x, amount_y)
@@ -574,7 +616,10 @@ class Art:
         self.updated_this_tick = True
     
     def save_to_file(self):
-        "build a dict representing all this art's data and write it to disk"
+        """
+        Write this Art to disk.
+        Build a dict serializing all this art's data and write it to a file.
+        """
         start_time = time.time()
         # cursor might be hovering, undo any preview changes
         for edit in self.app.cursor.preview_edits:
@@ -628,12 +673,14 @@ class Art:
         write_thumbnail(self.app, self.filename, new_thumb_filename)
     
     def set_unsaved_changes(self, new_status):
+        "Mark this Art as having unsaved changes in Art Mode."
         if new_status == self.unsaved_changes:
             return
         self.unsaved_changes = new_status
         self.app.update_window_title()
     
     def set_filename(self, new_filename):
+        "Change Art's filename to new given string."
         # append extension if missing
         if not new_filename.endswith('.' + ART_FILE_EXTENSION):
             new_filename += '.' + ART_FILE_EXTENSION
@@ -651,7 +698,8 @@ class Art:
     
     def run_script(self, script_filename):
         """
-        Runs a script on this Art. Scripts contain arbitrary python expressions.
+        Run a script on this Art. Scripts contain arbitrary python expressions,
+        executed within Art's scope. Don't run art scripts you don't trust!
         """
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
@@ -662,6 +710,7 @@ class Art:
         self.app.log('Executed %s' % script_filename)
     
     def is_script_running(self, script_filename):
+        "Return True if script with given filename is currently running."
         script_filename = self.get_valid_script_filename(script_filename)
         return script_filename and script_filename in self.scripts
     
@@ -671,7 +720,7 @@ class Art:
                                            SCRIPT_FILE_EXTENSION)
     
     def run_script_every(self, script_filename, rate=0.1):
-        "starts a script running on this Art at a regular rate."
+        "Start a script running on this Art at a regular rate."
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
             return
@@ -686,6 +735,7 @@ class Art:
         self.scripts_next_exec_time.append(next_run)
     
     def stop_script(self, script_filename):
+        "Halt this Art's execution of script with given filename."
         # remove from running scripts, rate list, next_exec list
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
@@ -699,6 +749,7 @@ class Art:
         self.scripts_next_exec_time.pop(script_index)
     
     def stop_all_scripts(self):
+        "Halt all art scripts executing on this Art."
         for script_filename in self.scripts:
             self.stop_script(script_filename)
     
@@ -716,6 +767,7 @@ class Art:
     
     def clear_line(self, frame, layer, line_y, fg_color_index=None,
                    bg_color_index=None):
+        "Clear characters on given horizontal line, to optional given colors."
         # TODO: use numpy slicing to do this much more quickly!
         for x in range(self.width):
             self.set_char_index_at(frame, layer, x, line_y, 0)
@@ -726,7 +778,11 @@ class Art:
     
     def write_string(self, frame, layer, x, y, text, fg_color_index=None,
                      bg_color_index=None, right_justify=False):
-        "writes out each char of a string to specified tiles"
+        """
+        Write given string starting at given frame/layer/x,y tile, with
+        optional given colors, left-justified by default.
+        Any characters not in character set's mapping data are ignored.
+        """
         if y >= self.height:
             return
         x %= self.width
@@ -746,7 +802,7 @@ class Art:
             x_offset += 1
     
     def get_filtered_tiles(self, frame, layer, char_value, invert_filter=False):
-        "returns list of (x,y) tile coords that match (or don't) a char value"
+        "Return list of (x,y) tile coords that match (or don't) a char value."
         tiles = []
         for y in range(self.height):
             for x in range(self.width):
@@ -757,18 +813,16 @@ class Art:
         return tiles
     
     def get_blank_tiles(self, frame, layer):
-        "returns a list of (x,y) tile coords whose character is blank (0)"
+        "Return a list of (x,y) tile coords whose character is blank (0)."
         return self.get_filtered_tiles(frame, layer, 0)
     
     def get_nonblank_tiles(self, frame, layer):
-        "returns a list of (x,y) tile coords whose character is NOT blank (0)"
+        "Return a list of (x,y) tile coords whose character is NOT blank (0)."
         return self.get_filtered_tiles(frame, layer, 0, invert_filter=True)
 
 
 class ArtFromDisk(Art):
-    
-    "subclass of Art that loads from a file"
-    
+    "Subclass of Art that loads from a file. Main difference is initialization."
     def __init__(self, filename, app):
         self.valid = False
         try:
@@ -861,13 +915,12 @@ class ArtFromDisk(Art):
 
 
 class ArtInstance(Art):
-    
     """
-    deep copy / clone of a source Art that can hold unique changes and be
-    restored to source
+    Deep copy / clone of a source Art that can hold unique changes and be
+    restored to its source.
     """
     update_when_source_changes = True
-    
+    "Set False if you want to manually update this Art."
     def __init__(self, source):
         self.source = source
         # unique(?) filename
@@ -888,6 +941,7 @@ class ArtInstance(Art):
         pass
     
     def restore_from_source(self):
+        "Restore ArtInstance to its source Art's new values."
         # copy common references/values
         for prop in ['app', 'width', 'height', 'charset', 'palette',
                      'quad_width', 'quad_height', 'layers', 'frames']:
@@ -914,8 +968,8 @@ class ArtInstance(Art):
 
 class ArtFromEDSCII(Art):
     """
-    file loader for legacy EDSCII format.
-    assumes single frames, single layer, default charset and palette.
+    File loader for legacy EDSCII format.
+    Assumes single frames, single layer, default charset and palette.
     """
     # TODO: make this init more like ArtFromDisk, ie use mostly Art.init
     def __init__(self, filename, app, width_override=None):
@@ -1003,9 +1057,7 @@ class ArtFromEDSCII(Art):
 
 
 class TileIter:
-    
-    "Iterates over all tiles in all layers and frames in an Art"
-    
+    "Iterator for iterating over all tiles in all layers and frames in an Art."
     def __init__(self, art):
         self.width, self.height = art.width, art.height
         self.frames, self.layers = art.frames, art.layers

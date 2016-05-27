@@ -66,7 +66,8 @@ AUTOPLAY_GAME_FILENAME = 'autoplay_this_game'
 WEBSITE_URL = 'http://vectorpoem.com/playscii'
 WEBSITE_HELP_URL = 'docs/html/howto_main.html'
 AUTOGEN_DOCS_PATH = 'docs/html/generated/'
-AUTOGEN_DOC_MODULES = ['game_object', 'art', 'game_world', 'collision']
+AUTOGEN_DOC_MODULES = ['game_object', 'game_world', 'game_room', 'collision',
+                       'game_util_objects', 'art', 'renderable', 'vector']
 AUTOGEN_DOC_TOC_PAGE = 'pdoc_toc.html'
 
 MAX_ONION_FRAMES = 3
@@ -747,14 +748,22 @@ class Application:
         webbrowser.open(WEBSITE_URL)
     
     def generate_docs(self):
+        # fail gracefully if pdoc not found
         try:
             import pdoc
         except:
-            self.log("pdoc module needed for doc generation not found.")
+            self.log("pdoc module needed for documentation generation not found.")
             return
+        # until better solution is found for "bloat from unchanged parent class
+        # members", exclude certain classes from doc export
+        blacklist = ['GameObjectRenderable', 'OnionTileRenderable']
+        def docfilter(obj):
+            if obj.name in blacklist:
+                return False
+            return True
         for module_name in AUTOGEN_DOC_MODULES:
             pdoc.import_module(module_name)
-            html = pdoc.html(module_name)
+            html = pdoc.html(module_name, docfilter=docfilter)
             docfile = open(AUTOGEN_DOCS_PATH + module_name + '.html', 'w')
             docfile.write(html)
             docfile.close()

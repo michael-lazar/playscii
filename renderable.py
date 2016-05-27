@@ -9,34 +9,44 @@ LAYER_VIS_FULL = 1
 LAYER_VIS_DIM = 0.25
 LAYER_VIS_NONE = 0
 
+
 class TileRenderable:
-    
-    # vertex shader: includes view projection matrix, XYZ camera uniforms
+    """
+    3D visual representation of an Art. Each layer is rendered as grids of
+    rectangular OpenGL triangle-pairs. Animation frames are uploaded into our
+    buffers from source Art's numpy arrays.
+    """
     vert_shader_source = 'renderable_v.glsl'
-    # pixel shader: handles FG/BG colors
+    "vertex shader: includes view projection matrix, XYZ camera uniforms."
     frag_shader_source = 'renderable_f.glsl'
+    "Pixel shader: handles FG/BG colors."
     log_create_destroy = False
     log_animation = False
     log_buffer_updates = False
-    grain_strength = 0
-    alpha = 1
-    bg_alpha = 1
-    move_rate = 1
-    # use game object's art_off_pct values
+    grain_strength = 0.
+    alpha = 1.
+    "Alpha (0 to 1) for entire Renderable."
+    bg_alpha = 1.
+    "Alpha (0 to 1) *only* for tile background colors."
+    move_rate = 1.
     use_art_offset = True
+    "Use game object's art_off_pct values."
     
     def __init__(self, app, art, game_object=None):
+        "Create Renderable with given Art, optionally bound to given GameObject"
         self.app = app
+        "Application that renders us."
         self.art = art
+        "Art we get data from."
         self.art.renderables.append(self)
-        # we may be attached to a game object
         self.go = game_object
-        # set true momentarily by image export process
+        "GameObject we're attached to."
         self.exporting = False
-        # flag for easy don't-render functionality
+        "Set True momentarily by image export process; users shouldn't touch."
         self.visible = True
-        # frame of our art's animation we're on
+        "Boolean for easy render / don't-render functionality."
         self.frame = self.art.active_frame or 0
+        "Frame of our art's animation we're currently on"
         self.animating = False
         self.anim_timer, self.last_frame_time = 0, 0
         # world space position and scale
@@ -117,6 +127,7 @@ class TileRenderable:
         self.vert_count = int(len(self.art.elem_array))
     
     def update_tile_buffers(self, update_chars, update_uvs, update_fg, update_bg):
+        "Update GL data arrays for tile characters, fg/bg colors, transforms."
         updates = {}
         if update_chars:
             updates[self.char_buffer] = self.art.chars
@@ -146,12 +157,15 @@ class TileRenderable:
         GL.glBindBuffer(target, 0)
     
     def advance_frame(self):
+        "Advance to our Art's next animation frame."
         self.set_frame(self.frame + 1)
     
     def rewind_frame(self):
+        "Rewind to our Art's previous animation frame."
         self.set_frame(self.frame - 1)
     
     def set_frame(self, new_frame_index):
+        "Set us to display our Art's given animation frame."
         if new_frame_index == self.frame:
             return
         old_frame = self.frame
@@ -161,16 +175,19 @@ class TileRenderable:
             self.app.log('%s animating from frames %s to %s' % (self, old_frame, self.frame))
     
     def start_animating(self):
+        "Start animation playback."
         self.animating = True
         self.anim_timer = 0
     
     def stop_animating(self):
+        "Pause animation playback on current frame (in game mode)."
         self.animating = False
         # restore to active frame if stopping
         if not self.app.game_mode:
             self.set_frame(self.art.active_frame)
     
     def set_art(self, new_art):
+        "Display and bind to given Art."
         if self.art:
             self.art.renderables.remove(self)
         self.art = new_art
@@ -187,6 +204,11 @@ class TileRenderable:
         self.height = self.art.height * self.art.quad_height * self.scale_y
     
     def move_to(self, x, y, z, travel_time=None):
+        """
+        Start simple linear interpolation to given destination over given time.
+        Not very useful in Game Mode, mainly used for document switch UI effect
+        in Art Mode.
+        """
         # for fixed travel time, set move rate accordingly
         if travel_time:
             frames = (travel_time * 1000) / max(self.app.framerate, 30)
@@ -201,7 +223,7 @@ class TileRenderable:
             self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
     
     def update_transform_from_object(self, obj):
-        "updates our position & scale based on that of given game object"
+        "Update our position & scale based on that of given game object."
         self.z = obj.z
         if self.scale_x != obj.scale_x or self.scale_y != obj.scale_y:
             self.reset_size()
@@ -284,10 +306,12 @@ class TileRenderable:
         return np.eye(4, 4) if self.exporting else self.camera.view_matrix
     
     def get_loc(self):
+        "Returns world space location as (x, y, z) tuple."
         export_loc = (-1, 1, 0)
         return export_loc if self.exporting else (self.x, self.y, self.z)
     
     def get_scale(self):
+        "Returns world space scale as (x, y, z) tuple."
         if not self.exporting:
             return (self.scale_x, self.scale_y, self.scale_z)
         x = 2 / (self.art.width * self.art.quad_width)
@@ -306,6 +330,12 @@ class TileRenderable:
         self.exporting = False
     
     def render(self, layers=None, z_override=None):
+        """
+        Render given list of layers at given Z depth.
+        If layers is None, render all layers.
+        If layers is an int, just render that layer.
+        If z_override is None, render each layer at Z defined in our Art.
+        """
         if not self.visible:
             return
         GL.glUseProgram(self.shader.program)
@@ -378,9 +408,31 @@ class TileRenderable:
 
 class OnionTileRenderable(TileRenderable):
     
+    "TileRenderable subclass used for onion skin display in Art Mode animation."
+    
     # never animate
     def start_animating(self):
         pass
     
     def stop_animating(self):
         pass
+
+
+class GameObjectRenderable(TileRenderable):
+    
+    """
+    TileRenderable subclass used by GameObjects. Almost no custom logic for now.
+    """
+    
+    def get_loc(self):
+        """
+        Returns world space location as (x, y, z) tuple, offset by our
+        GameObject's location.
+        """
+        x, y, z = self.x, self.y, self.z
+        if self.go:
+            off_x, off_y, off_z = self.go.get_render_offset()
+            x += off_x
+            y += off_y
+            z += off_z
+        return x, y, z
