@@ -25,7 +25,8 @@ class GameCamera(Camera):
 class GameWorld:
     """
     Holds global state for Game Mode. Spawns, manages, and renders GameObjects.
-    Properties serialized via WorldPropertiesObject - make sure type is right.
+    Properties serialized via WorldPropertiesObject.
+    Global state can be controlled via a WorldGlobalsObject.
     """
     gravity_x, gravity_y, gravity_z = 0., 0., 0.
     "Gravity applied to all objects who are affected by gravity."
@@ -62,17 +63,21 @@ class GameWorld:
     
     def __init__(self, app):
         self.app = app
+        "Application that created this world."
         self.game_dir = None
+        "Currently loaded game directory."
         self.sounds_dir = None
         self.game_name = None
         self.selected_objects = []
         self.last_click_on_ui = False
         self.properties = None
+        "Our WorldPropertiesObject"
         self.globals = None
+        "Our WorldGlobalsObject - not required"
         self.camera = GameCamera(self.app)
         self.player = None
         self.paused = False
-        self.pause_time = 0
+        self._pause_time = 0
         self.modules = {'game_object': game_object,
                         'game_util_objects': game_util_objects,
                         'game_hud': game_hud, 'game_room': game_room}
@@ -243,6 +248,7 @@ class GameWorld:
     
     def create_new_game(self, game_name):
         "Create appropriate dirs and files for a new game, return success."
+        self.unload_game()
         new_dir = self.app.documents_dir + TOP_GAME_DIR + game_name + '/'
         if os.path.exists(new_dir):
             self.app.log('Game dir %s already exists!' % game_name)
@@ -254,6 +260,11 @@ class GameWorld:
         os.mkdir(new_dir + CHARSET_DIR)
         os.mkdir(new_dir + PALETTE_DIR)
         self.set_game_dir(game_name)
+        # HACK: set collision enabled by default, no idea why it's not :[
+        self.properties = self.spawn_object_of_class('WorldPropertiesObject')
+        self.objects.update(self.new_objects)
+        self.new_objects = {}
+        self.collision_enabled = self.properties.collision_enabled = True
         self.save_to_file(DEFAULT_STATE_FILENAME)
         return True
     
@@ -424,7 +435,7 @@ class GameWorld:
         Return total time world has been running (ie not paused) in
         milliseconds.
         """
-        return self.app.get_elapsed_time() - self.pause_time
+        return self.app.get_elapsed_time() - self._pause_time
     
     def enable_player_camera_lock(self):
         if self.player:
@@ -524,7 +535,7 @@ class GameWorld:
         if self.hud:
             self.hud.update()
         if self.paused:
-            self.pause_time += self.app.get_elapsed_time() - self.app.last_time
+            self._pause_time += self.app.get_elapsed_time() - self.app.last_time
     
     def render(self):
         "Sort and draw all objects in Game Mode world."

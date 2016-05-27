@@ -161,20 +161,22 @@ class WorldPropertiesObject(GameObject):
     "All visible properties are serialized, not editable"
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
+        world_class = type(world)
         for v in self.serialized:
-            if v in obj_data:
-                # if world has property from loaded data, use it
+            if obj_data and v in obj_data:
+                # if world instance has property from loaded data, use it
                 if hasattr(self.world, v):
                     setattr(self.world, v, obj_data[v])
                 setattr(self, v, obj_data[v])
-            # if world has property but loaded data doesn't, use world's
-            elif hasattr(self.world, v):
-                setattr(self, v, getattr(self.world, v))
+            # use world class (default) property if loaded data lacks it
+            elif hasattr(world_class, v):
+                setattr(self, v, getattr(world_class, v))
             else:
                 setattr(self, v, 0)
         # special handling of bg color (a list)
         self.world.bg_color = [self.bg_color_r, self.bg_color_g, self.bg_color_b, self.bg_color_a]
         self.world.camera.set_loc(self.camera_x, self.camera_y, self.camera_z)
+        # TODO: figure out why collision_enabled seems to default False!
     
     def set_object_property(self, prop_name, new_value):
         setattr(self, prop_name, new_value)

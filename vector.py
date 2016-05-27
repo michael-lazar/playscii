@@ -202,4 +202,4 @@ def screen_to_world(app, screen_x, screen_y):
     Return 3D (float) world space coordinates for given 2D (int) screen space
     coordinates.
     """
-    return screen_to_world_OLD(app, screen_x, screen_y)
+    return _screen_to_world_OLD(app, screen_x, screen_y)
