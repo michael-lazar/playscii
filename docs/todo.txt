@@ -7,9 +7,7 @@ docs!
 - games howto page: flesh out outline
 
 example games:
-- shmup: find out why some bullets boom right after being fired, generate starfield
-- side view platformer: better feel, enemy turns around when hitting a wall (get colliding objects directly to left and right of collision? add trace function?)
-- flood: auto-capture tiles adjacent to first tile before first turn
+- side view platformer: better feel, enemy turns around when hitting a wall (get colliding objects directly to left and right of collision? add trace function?), enemies should hit warp trigger
 
 ---
 

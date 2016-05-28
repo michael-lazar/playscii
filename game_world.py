@@ -458,7 +458,7 @@ class GameWorld:
     
     def handle_input(self, event, shift_pressed, alt_pressed, ctrl_pressed):
         # pass event's key to any objects that want to handle it
-        if not event.type in [sdl2.SDL_KEYDOWN or sdl2.SDL_KEYUP]:
+        if not event.type in [sdl2.SDL_KEYDOWN, sdl2.SDL_KEYUP]:
             return
         key = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode()
         key = key.lower()
@@ -466,13 +466,83 @@ class GameWorld:
         for obj in self.objects.values():
             if obj.handle_input_events:
                 if event.type == sdl2.SDL_KEYDOWN:
-                    #obj.handle_key_down(key, shift_pressed, alt_pressed,
-                    #                    ctrl_pressed)
                     obj.handle_key_down(key, *mods)
                 elif event.type == sdl2.SDL_KEYUP:
-                    obj.handle_key_up(key, shift_pressed, alt_pressed,
-                                      ctrl_pressed)
+                    obj.handle_key_up(key, *mods)
                 # TODO: handle_ functions for other types of input
+    
+    def get_colliders_at_point(self, point_x, point_y,
+                               include_object_names=[],
+                               include_class_names=[],
+                               exclude_object_names=[],
+                               exclude_class_names=[]):
+        """
+        Return lists of colliding objects and shapes at given point that pass
+        given filters.
+        Includes are processed before excludes.
+        """
+        whitelist_objects = len(include_object_names) > 0
+        whitelist_classes = len(include_class_names) > 0
+        blacklist_objects = len(exclude_object_names) > 0
+        blacklist_classes = len(exclude_class_names) > 0
+        # build list of objects to check
+        # always ignore non-colliders
+        colliders = []
+        for obj in self.objects.values():
+            if obj.should_collide():
+                colliders.append(obj)
+        check_objects = []
+        if whitelist_objects or whitelist_classes:
+            # list of class names -> list of classes
+            include_classes = [self.get_class_by_name(class_name) for class_name in include_class_names]
+            # only given objects of given classes
+            if whitelist_objects and whitelist_classes:
+                for obj_name in include_object_names:
+                    obj = self.objects[obj_name]
+                    for c in include_classes:
+                        if isinstance(obj, c) and not obj in check_objects:
+                            check_objects.append(obj)
+            # only given objects of any class
+            elif whitelist_objects and not whitelist_classes:
+                check_objects += [self.objects[obj_name] for obj_name in include_object_names]
+            # all colliders of given classes
+            elif whitelist_classes:
+                for obj in colliders:
+                    for c in include_classes:
+                        if isinstance(obj, c) and not obj in check_objects:
+                            check_objects.append(obj)
+        else:
+            check_objects = colliders[:]
+        check_objects_unfiltered = check_objects[:]
+        if blacklist_objects or blacklist_classes:
+            exclude_classes = [self.get_class_by_name(class_name) for class_name in exclude_class_names]
+            for obj in check_objects_unfiltered:
+                if obj.name in exclude_object_names:
+                    check_objects.remove(obj)
+                    continue
+                for c in exclude_classes:
+                    if isinstance(obj, c):
+                        check_objects.remove(obj)
+        # check all objects that passed the filter(s) and build hit list
+        hit_objects = []
+        hit_shapes = []
+        for obj in check_objects:
+            # check bounds
+            if not obj.is_point_inside(point_x, point_y):
+                continue
+            # point overlaps with tile collision?
+            if obj.collision_shape_type == collision.CST_TILE:
+                tile_x, tile_y = obj.get_tile_at_point(point_x, point_y)
+                if (tile_x, tile_y) in obj.collision.tile_shapes:
+                    hit_objects.append(obj)
+                    hit_shapes.append(obj.collision.tile_shapes[(tile_x, tile_y)])
+            else:
+                # point overlaps with primitive shape(s)?
+                for shape in obj.collision.shapes:
+                    if shape.is_point_inside(point_y, point_y):
+                        hit_objects.append(obj)
+                        hit_shapes.append(shape)
+        return hit_objects, hit_shapes
     
     def frame_begin(self):
         "Run at start of game loop iteration, before input/update/render."

@@ -144,6 +144,8 @@ class InputLord:
             self.ctrl_pressed = True
         if app.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             self.ctrl_pressed = True
+        # pack mods into a tuple to save listing em all out repeatedly
+        mods = self.shift_pressed, self.alt_pressed, self.ctrl_pressed
         # get controller state
         if self.gamepad:
             self.gamepad_left_x = sdl2.SDL_JoystickGetAxis(self.gamepad, sdl2.SDL_CONTROLLER_AXIS_LEFTX) / 32768
@@ -166,34 +168,33 @@ class InputLord:
             elif event.type == sdl2.SDL_KEYDOWN:
                 # if console is up, pass input to it
                 if self.ui.console.visible:
-                    self.ui.console.handle_input(event.key.keysym.sym,
-                        self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    self.ui.console.handle_input(event.key.keysym.sym, *mods)
                 # same with dialog box
                 elif self.ui.active_dialog and self.ui.active_dialog is self.ui.keyboard_focus_element:
-                    self.ui.active_dialog.handle_input(event.key.keysym.sym,
-                        self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    self.ui.active_dialog.handle_input(event.key.keysym.sym, *mods)
                     # bail, process no further input
                     #sdl2.SDL_PumpEvents()
                     #return
                 # handle text input if text tool is active
                 elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
-                    self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym,
-                        self.shift_pressed, self.ctrl_pressed, self.alt_pressed)
+                    self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym, *mods)
                 # see if there's a function for this bind and run it
                 else:
-                    flist = self.get_bind_functions(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                    flist = self.get_bind_functions(event, *mods)
                     if flist:
                         for f in flist:
                             f()
                     # if game mode active, pass to world as well as any binds
                     if self.app.game_mode:
-                        self.app.gw.handle_input(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                        self.app.gw.handle_input(event, *mods)
             # for key up events, use the same binds but handle them special case
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
             elif event.type == sdl2.SDL_KEYUP:
+                if self.app.game_mode:
+                    self.app.gw.handle_input(event, *mods)
                 # dismiss selector popup
-                flist = self.get_bind_functions(event, self.shift_pressed, self.alt_pressed, self.ctrl_pressed)
+                flist = self.get_bind_functions(event, *mods)
                 if not flist:
                     pass
                 elif self.ui.active_dialog:

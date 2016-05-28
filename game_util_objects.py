@@ -247,39 +247,61 @@ class StaticTileTrigger(GameObject):
         pass
 
 class WarpTrigger(StaticTileTrigger):
-    "Trigger that warps player to a room/marker when they touch it"
+    "Trigger that warps object to a room/marker when they touch it."
     is_debug = True
     art_src = 'trigger_default'
     alpha = 0.5
     destination_marker_name = None
     "If set, warp to this location marker"
-    destination_room = None
+    destination_room_name = None
     "If set, make this room the world's current"
     use_marker_room = True
     "If True, change to destination marker's room"
-    serialized = StaticTileTrigger.serialized + ['destination_room',
+    warp_class_names = ['Player']
+    "List of class names to warp on contact with us."
+    serialized = StaticTileTrigger.serialized + ['destination_room_name',
                                                  'destination_marker_name',
                                                  'use_marker_room']
+    
+    def __init__(self, world, obj_data=None):
+        StaticTileTrigger.__init__(self, world, obj_data)
+        self.warp_classes = [self.world.get_class_by_name(class_name) for class_name in self.warp_class_names]
+    
     def started_overlapping(self, other):
-        # if player overlaps, change room to destination_room
-        if not isinstance(other, Player):
-            return
         if other.warped_recently():
             return
-        if self.destination_room:
-            self.world.change_room(self.destination_room)
+        # bail if object's class isn't allowed
+        valid_class = False
+        for c in self.warp_classes:
+            if isinstance(other, c):
+                valid_class = True
+                break
+        if not valid_class:
+            return
+        if self.destination_room_name:
+            if other is self.world.player:
+                # if overlapping object is player, change current room
+                # to destination room
+                self.world.change_room(self.destination_room_name)
+            else:
+                # if object is only in one room, move them to destination room
+                if len(other.rooms) == 1:
+                    old_room = other.rooms.values()[0]
+                    old_room.remove_object(other)
+                self.destination_room.add_object(other)
         elif self.destination_marker_name:
             marker = self.world.objects.get(self.destination_marker_name, None)
             if not marker:
                 self.app.log('Warp destination object %s not found' % self.destination_marker_name)
                 return
             other.set_loc(marker.x, marker.y, marker.z)
-            # warp to marker's room if specified, but only if it's only in one
+            # warp to marker's room if specified, pick a random one if multiple
             if self.use_marker_room and len(marker.rooms) == 1:
                 room = random.choice(list(marker.rooms.values()))
                 # warn if both room and marker are set but they conflict
-                if self.destination_room and room.name != self.destination_room:
-                    self.app.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room))
+                if self.destination_room_name and \
+                   room.name != self.destination_room_name:
+                    self.app.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room_name))
                 self.world.change_room(room.name)
         other.last_warp_update = self.world.app.updates
 
