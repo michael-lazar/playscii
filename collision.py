@@ -135,6 +135,10 @@ class CircleCollisionShape(CollisionShape):
         "Return world coordinates of our bounds (left, top, right, bottom)"
         return self.x - self.radius, self.y - self.radius, self.x + self.radius, self.y + self.radius
     
+    def is_point_inside(self, x, y):
+        "Return True if given point is inside this shape."
+        return (self.x - x) ** 2 + (self.y - y) ** 2 <= self.radius ** 2
+    
     def overlaps_line(self, x1, y1, x2, y2):
         "Return True if this circle overlaps given line segment."
         return circle_overlaps_line(self.x, self.y, self.radius, x1, y1, x2, y2)
@@ -165,6 +169,10 @@ class AABBCollisionShape(CollisionShape):
     
     def get_box(self):
         return self.x - self.halfwidth, self.y - self.halfheight, self.x + self.halfwidth, self.y + self.halfheight
+    
+    def is_point_inside(self, x, y):
+        "Return True if given point is inside this shape."
+        return point_in_box(x, y, *self.get_box())
     
     def overlaps_line(self, x1, y1, x2, y2):
         "Return True if this box overlaps given line segment."
@@ -303,6 +311,11 @@ class Collideable:
                 r.update()
                 self.shapes.append(shape)
                 self.renderables.append(r)
+    
+    def get_shape_overlapping_point(self, x, y):
+        "Return shape if it's overlapping given point, None if no overlap."
+        tile_x, tile_y = self.go.get_tile_at_point(x, y)
+        return self.tile_shapes.get((tile_x, tile_y), None)
     
     def get_shapes_overlapping_box(self, left, top, right, bottom):
         "Return a list of our shapes that overlap given box."

@@ -31,6 +31,9 @@ class Board(GameObject):
             color = choice(TILE_COLORS)
             self.art.set_color_at(frame, layer, x, y, color, False)
         self.captured_tiles = [(0, 0)]
+        # before play, flood with color of starting (top left) tile
+        start_color = self.art.get_bg_color_index_at(0, 0, 0, 0)
+        self.flood_with_color(start_color)
         self.turns = STARTING_TURNS
         self.game_state = GS_PLAYING
     

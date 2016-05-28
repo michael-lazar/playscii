@@ -209,10 +209,30 @@ class Boom(GameObject):
         return 0, 0, -100
 
 class Starfield(GameObject):
-    art_src = 'stars'
-    use_art_instance = True
+    
+    "scrolling background with stars generated on-the-fly - no PSCI file!"
+    
+    generate_art = True
+    art_width, art_height = 30, 41
+    art_charset = 'jpetscii'
     alpha = 0.25
+    # indices of star characters
+    star_chars = [201]
+    
+    def pre_first_update(self):
+        self.art.clear_frame_layer(0, 0)
+    
+    def create_star(self):
+        "create a star at a random point along the top edge"
+        x = int(random.random() * self.art_width)
+        char = random.choice(self.star_chars)
+        color = self.art.palette.get_random_color_index()
+        self.art.set_tile_at(0, 0, x, 0, char, color)
     
     def update(self):
+        # maybe create a star at the top, clear bottom line, then shift-wrap
+        if random.random() < 0.25:
+            self.create_star()
+        self.art.clear_line(0, 0, self.art_height - 1)
         self.art.shift_all_frames(0, 1)
         GameObject.update(self)

@@ -339,7 +339,7 @@ class EditListPanel(GamePanel):
     def list_classes(self):
         items = []
         # get list of available classes from GameWorld
-        for classname,classdef in self.world.get_all_loaded_classes().items():
+        for classname,classdef in self.world._get_all_loaded_classes().items():
             item = self.ListItem(classname, classdef)
             items.append(item)
         # sort classes alphabetically
