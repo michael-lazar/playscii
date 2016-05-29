@@ -437,7 +437,7 @@ class LayerSetInactiveVizItem(PulldownMenuItem):
         elif app.inactive_layer_visibility == LAYER_VIS_NONE:
             return l + 'Invisible'
 
-class LayerToggleVizItem(PulldownMenuItem):
+class LayerShowHiddenItem(PulldownMenuItem):
     label = 'blah'
     command = 'toggle_hidden_layers_visible'
     def get_label(app):
@@ -585,9 +585,10 @@ class FrameMenuData(PulldownMenuData):
 class LayerMenuData(PulldownMenuData):
     
     items = [LayerAddItem, LayerDuplicateItem, LayerSetNameItem, LayerSetZItem,
-             LayerToggleVisibleItem, LayerDeleteItem, SeparatorItem,
-             LayerToggleVizItem, LayerSetInactiveVizItem, LayerPreviousItem,
-             LayerNextItem, SeparatorItem]
+             LayerDeleteItem, SeparatorItem,
+             LayerSetInactiveVizItem, LayerPreviousItem,LayerNextItem,
+             SeparatorItem, LayerToggleVisibleItem, LayerShowHiddenItem,
+             SeparatorItem]
     
     def should_mark_item(item, ui):
         "show checkmark for active art"

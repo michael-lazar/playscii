@@ -29,48 +29,74 @@
 
 <div class="main">
 
-  painting basics
-  a playscii document is a grid of tiles. each tile has a character, a foreground color, a background color, and a transform. click and hold the primary mouse button (or enter) anywhere on a document to paint the active character/color/transform.
+  Painting Basics
+  A Playscii document is a grid of tiles called an Art. Each tile in an Art has a character, a foreground color, a background color, and a transform. Click and hold the primary mouse button, or the Enter/Return key, anywhere on a document to paint with the active character/color/transform.
   
-  tile character/color/transform
-  Character and color are pretty self-explanatory; "transform" refers to whether a character is flipped (horizontally or vertically, aka the X and Y axes) or rotated (90, 180, or 270 degrees). The current active character, colors, and transform are always shown on the status bar along the bottom edge of the screen.
+  Tile Character/Color/Transform
+  Character and foreground/background color are pretty self-explanatory. "Transform" refers to whether a character is flipped (horizontally or vertically, aka the X and Y axes) or rotated (90, 180, or 270 degrees). The current active character, colors, and transform are always shown on the status bar along the bottom edge of the screen.
+  [image of status bar]
+  In this image, the 'A' character is selected, green is the foreground color, blue is the background color, and the transform is "normal", ie not flipped or rotated.
   
-  the picker
-  press space to bring up the "picker" that lets you select characters, colors, and transforms (flipped or rotated versions of all characters).
+  Transparency
+  In addition to the regular colors, the foreground and/or background color for a tile can also be transparent. Anything transparent shows through to whatever (if anything) is behind it. In Playscii's user interface, this special color is visually represented with a red X.
+  [image of status bar]
+  In this image, the '7' character is selected, green is the foreground color, the background is transparent, and the transform is "Flip X" ie flipped horizontally.
+  
+  The Picker
+  Press space to bring up the "picker" that lets you select characters, colors, and transforms.
   [image of picker, with #s at each UI element]
-  1. Character swatch - click a character here to set it as the active character for painting
-  2. Color swatch - click the primary mouse button on a color here to set it as the active foreground color, secondary mouse click to set it as the active background color
+  1. Character swatch - click a character here to set it as the active character for painting.
+  2. Color swatch - click the primary mouse button on a color here to set it as the active foreground color, secondary mouse click to set it as the active background color.
   3. Tool/picker tabs - click the left tab to bring up settings for each tool (see [Tools] and [Affects Masks] sections below), click the right tab to bring up the picker view.
   4. Transform selector - click one of the items here to set a different active transform (see [transform] section above).
   5. Current character set - click this to bring up the [character set selector].
   6. Current palette - click this to bring up the [palette selector].
   7. Character swatch size - click the + and - buttons to change the character swatch's display size - bump it up if characters are too hard to see or click on your display.
   
-  tools
-  - paint: change the tiles within the cursor area to the current active character/colors/transform into the current document.
-  - erase: "erase" the tiles within the cursor area, removing characters and leaving only the current active background color.
-  - rotate: rotate the tiles within the cursor area 90 degrees, relative to each character's current rotation.
-  - grab: set the character/color/transform of the tile beneath the cursor as the current active character/color/transform. secondary mouse button does this no matter what tool you have selected, so you can very quickly sample what you need and continue painting.
-  - text: click anywhere in the document to start entering alphanumeric text at that location.
-  - select: click and drag the mouse (or use enter + arrow keys) to define a selected area. other tool operations will be restricted to the selection area, and you can also cut/copy the selected area and paint it with the paste tool (see below). Holding the shift key while dragging a box adds to the current selection area, and holding control while dragging a box subtracts it from the current selection area.
-  - paste: paint with the last cut/copied tiles.
+  Menu Bar
+  The menu bar along the top edge of the screen provides access to much of Playscii's functionality. Click a menu name to open it and select from the available commands. Many commands have an associated keyboard shortcut, displayed to the right of the menu entry.
   
-  tool settings
-  - brush size: increase or decrease the size of the square area a tool affects. doesn't apply to the grab, text, select, and paste tools.
-  - "affects character / foreground color / background color / transform" masks: by default a tool will affect all of these things, but a tool's effect on each tile attribute can be disabled selectively. hovering the cursor over a swatch will preview the paint result, which might otherwise be a bit difficult to visualize.
+  Tools
+  You can select your current tool from the Tool menu bar.
+  - Paint: change the tiles within the cursor area to the current active character/colors/transform.
+  - Erase: "erase" the tiles within the cursor area, removing characters and leaving only the <i>current active</i> background color.
+  - Rotate: rotate the tiles within the cursor area 90 degrees, relative to each character's current rotation.
+  - Grab: set the character/color/transform of the tile beneath the cursor as the current active character/color/transform. Secondary mouse button does this no matter what tool you have selected, so that you can very quickly sample what you need and continue painting.
+  - Text: click anywhere in the document to start entering alphanumeric text at that location. Press the Escape key to stop entering text.
+  - Select: click and drag the mouse (or use enter + arrow keys) to define a selected area. Other tool operations will be restricted to the selection area, and you can also cut/copy the selected area and paint it with the Paste tool (see below). Holding the shift key while dragging a box adds to the current selection area, and holding control while dragging a box subtracts it from the current selection area. Holding neither mod key replaces any previous selection.
+  - Paste: paint with the last cut/copied tiles.
+  
+  Tool Settings
+  The Picker lets you change the settings for some tools:
+  - Brush Size: increase or decrease the size of the square area a tool affects. Doesn't apply to the grab, text, select, and paste tools.
+  - "Affects character / foreground color / background color / transform" masks: by default a tool will affect all of these things, but a tool's effect on each tile attribute can be disabled selectively. Hovering the cursor over a swatch will always preview the paint result, which might otherwise be a bit difficult to visualize.
   [image showing different affects masks on the same tiles, side by side]
   
-  panning and zooming the view
-  TODO (include tilt)
+  Panning and Zooming
+  To zoom the view closer or further from the document you're editing, press shift-X or shift-Z respectively or scroll the mouse wheel up or down.
+  To pan the view, use shift and the arrow keys or W/A/S/D (up/left/down/right), or click and drag the middle mouse button.
+  You can also set the zoom level manually with "Set camera zoom..." in the View menu.
+  You can also tilt the camera with "Camera tilt" in the View menu, but this isn't useful for much and is a bit broken at the moment.
   
-  working with multiple documents
-  TODO (open, import EDSCII, ctrl-tab)
+  Grid
+  By default Playscii display a light grid over your art showing the boundaries of each tile, but you can turn this off with "Grid" in the View menu.
   
-  cropping and resizing
-  TODO
+  CRT Filter
+  By default, Playscii displays your work with a screen effect that emulates the look of old TVs or Monitors, ie cathode ray tubes. You can disable this with "CRT filter" in the View menu, or pressing shift-R. If Playscii runs slowly on your computer, try disabling the CRT filter.
+  
+  Working with Documents
+  You can save the current document, create a new document, and open a previously saved document from the File menu. You can have multiple documents open at the same time and switch between them by pressing ctrl-Tab, while shift-ctrl-Tab cycles backwards through open documents.
+  You can also see a list of all open documents at the bottom of the Art menu.
+  
+  Cropping and Resizing
+  You can crop a document by selecting an area with the [Select] tool and selecting "Crop to selection" from the Art menu.
+  You can resize a document with "Resize" from the Art menu. This opens a dialog where you can enter the new desired size. If the desired size is smaller than the current size, you can specify a tile to be the new top left corner in the "Crop Start X/Y" fields.
   
   layers
-  TODO
+  Playscii documents can have multiple layers, similar to raster image editing programs like Photoshop. You can position these layers in 3D space for a parallax effect.
+  In the Layer menu, you can create a new blank layer with "Add layer" or duplicate an existing layer with "Duplicate this layer". The dialog will ask you to enter a name for the layer (purely for ease of identification) and a "Z-depth", ie how far from the default base depth, you want the layer to appear at. The following two Layer menu items let you change these two respective values.
+  If you're working with a document that has more than one layer, only one layer at a time is "active"
+  When working on a particular layer, sometimes you want to see the other layers and sometimes you don't. "Inactive layers: Visible/Dim/Invisible" cycles through three settings: all layers are 100% visible, non-active layers are dim but still partially visible, and non-active layers are completely hidden.
   
   frames/animation
   TODO
@@ -92,6 +118,8 @@
   
   raster image conversion
   TODO
+
+  importing from EDSCII
   
   <br/><br/>
 

@@ -203,13 +203,15 @@ class TextTool(UITool):
         self.input_active = True
         self.reset_cursor_start(self.cursor.x, -self.cursor.y)
         self.cursor.start_paint()
-        self.ui.message_line.post_line('Started text entry at %s, %s' % (self.start_x + 1, self.start_y + 1))
+        #self.ui.message_line.post_line('Started text entry at %s, %s' % (self.start_x + 1, self.start_y + 1))
+        self.ui.message_line.post_line('Started text entry, press Escape to stop entering text.', 5)
     
     def finish_entry(self):
         self.input_active = False
         self.ui.tool_settings_changed = True
         x, y = int(self.cursor.x) + 1, int(-self.cursor.y) + 1
-        self.ui.message_line.post_line('Finished text entry at %s, %s' % (x, y))
+        #self.ui.message_line.post_line('Finished text entry at %s, %s' % (x, y))
+        self.ui.message_line.post_line('Finished text entry.')
         self.cursor.finish_paint()
     
     def reset_cursor_start(self, new_x, new_y):
@@ -225,7 +227,7 @@ class TextTool(UITool):
         keystr = sdl2.SDL_GetKeyName(key).decode()
         art = self.ui.active_art
         frame, layer = art.active_frame, art.active_layer
-        x, y = self.cursor.x, -self.cursor.y
+        x, y = int(self.cursor.x), int(-self.cursor.y)
         char_w, char_h = art.quad_width, art.quad_height
         # TODO: if cursor isn't inside selection, bail early
         if keystr == 'Return':
