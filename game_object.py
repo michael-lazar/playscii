@@ -1,4 +1,6 @@
-import os, math
+import os, math, random
+
+from collections import namedtuple
 
 import vector
 
@@ -35,6 +37,11 @@ FACING_DIRS = {
 "Dict mapping GOF_* facing enum values to (x,y) orientations"
 
 DEFAULT_STATE = 'stand'
+
+# timer slots
+TIMER_PRE_UPDATE = 0
+TIMER_UPDATE = 1
+TIMER_POST_UPDATE = 2
 
 
 class GameObject:
@@ -221,6 +228,12 @@ class GameObject:
         # lifespan property = easy auto-set for fixed lifetime objects
         if self.lifespan > 0:
             self.set_destroy_timer(self.lifespan)
+        self.timer_functions_pre_update = {}
+        "Dict of running GameObjectTimerFuctions that run during pre_update"
+        self.timer_functions_update = {}
+        "Dict of running GameObjectTimerFuctions that run during update"
+        self.timer_functions_post_update = {}
+        "Dict of running GameObjectTimerFuctions that run during post_update"
         # load/create assets
         self.arts = {}
         # if art_src not specified, create a new art according to dimensions
@@ -809,9 +822,8 @@ class GameObject:
         return delta > self.stop_velocity
     
     def warped_recently(self):
-        "Return True if object warped "
-        # TODO: update count should be from world, ie affected by pause
-        return self.world.app.updates - self.last_warp_update <= 0
+        "Return True if object warped during last update."
+        return self.world.updates - self.last_warp_update <= 0
     
     def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         """
@@ -826,6 +838,34 @@ class GameObject:
         GO subclasses can do stuff here if their handle_input_events=True
         """
         pass
+    
+    def set_timer_function(self, timer_name, timer_function, delay_min,
+                           delay_max=0, repeats=-1, slot=TIMER_PRE_UPDATE):
+        """
+        Run given function in X seconds or every X seconds Y times.
+        If max is given, next execution will be between min and max time.
+        if repeat is -1, run indefinitely.
+        "Slot" determines whether function will run in pre_update, update, or
+        post_update.
+        """
+        timer = GameObjectTimerFunction(self, timer_name, timer_function,
+                                        delay_min, delay_max, repeats, slot)
+        # add to slot-appropriate dict
+        d = [self.timer_functions_pre_update, self.timer_functions_update,
+             self.timer_functions_post_update][slot]
+        d[timer_name] = timer
+    
+    def stop_timer_function(self, timer_name):
+        "Stop currently running timer function with given name."
+        timer = self.timer_functions_pre_update.get(timer_name, None) or \
+                self.timer_functions_update.get(timer_name, None) or \
+                self.timer_functions_post_update.get(timer_name, None)
+        if not timer:
+            self.app.log('Timer named %s not found on object %s' % (timer_name,
+                                                                    self.name))
+        d = [self.timer_functions_pre_update, self.timer_functions_update,
+             self.timer_functions_post_update][timer.slot]
+        d.pop(timer_name)
     
     def update_state(self):
         "Update object state based on current context, eg movement."
@@ -873,6 +913,10 @@ class GameObject:
     
     def pre_update(self):
         "Run before any objects have updated this simulation tick."
+        pass
+    
+    def post_update(self):
+        "Run after all objects have updated this simulation tick."
         pass
     
     def fast_move(self):
@@ -1040,3 +1084,55 @@ class GameObject:
             attachment.destroy()
         self.renderable.destroy()
         self.should_destroy = True
+
+
+class GameObjectTimerFunction:
+    """
+    Object that manages a function's execution schedule for a GameObject.
+    Use GameObject.set_timer_function to create these.
+    """
+    def __init__(self, go, name, function, delay_min, delay_max, repeats, slot):
+        self.go = go
+        "GameObject using this timer"
+        self.name = name
+        "This timer's name"
+        self.function = function
+        "GO function to run"
+        self.delay_min = delay_min
+        "Delay before next execution"
+        self.delay_max = delay_max
+        "If specified, next execution will be between min and max"
+        self.repeats = repeats
+        "# of times to repeat. -1 = infinite"
+        self.slot = slot
+        "Execute before, during, or after object's update"
+        self.next_update = self.go.world.get_elapsed_time()
+        self.runs = 0
+        self._set_next_time()
+    
+    def _set_next_time(self):
+        "Compute and set this timer's next update time"
+        # if no max delay, just use min, else rand(min, max)
+        if not self.delay_max or self.delay_max == 0:
+            delay = self.delay_min
+        else:
+            delay = random.random() * (self.delay_max - self.delay_min)
+            delay += self.delay_min
+        self.next_update += int(delay * 1000)
+    
+    def update(self):
+        "Check timer, running function as needed"
+        if self.go.world.get_elapsed_time() < self.next_update:
+            return
+        # TODO: if function needs to run multiple times, do that and update appropriately
+        self._execute()
+        # remove timer if it's executed enough already
+        if self.repeats != -1 and self.runs > self.repeats:
+            self.go.stop_timer_function(self.name)
+        else:
+            self._set_next_time()
+    
+    def _execute(self):
+        # pass our object into our function
+        self.function()
+        self.runs += 1

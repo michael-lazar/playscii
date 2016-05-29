@@ -6,8 +6,19 @@ docs!
 - art howto page: flesh out outline, take screenshots as needed
 - games howto page: flesh out outline
 
-example games:
-- side view platformer: better feel, enemy turns around when hitting a wall (get colliding objects directly to left and right of collision? add trace function?), enemies should hit warp trigger
+add timers to GameObject:
+- set_timed_function(timer_name, timer_function, timer_delay_min, timer_delay_max=0, repeat=0): run given function in X seconds or every X seconds Y times
+- stop_timed_function(timer_name): stop running timed function
+- GO.timers = {'name': Timer(name, delay, repeat, function)}
+- update timers before update starts
+
+run PlatformMonster collision checks off this
+
+---
+start_timer(timer_name): starts a stopwatch-style timer with given name going
+get_timer(timer_name): gets elapsed time value of timer with given name
+stop_timer(timer_name): stop and unregister timer
+reset_timer(timer_name): reset given timer's value back to 0
 
 ---
 

@@ -303,7 +303,7 @@ class WarpTrigger(StaticTileTrigger):
                    room.name != self.destination_room_name:
                     self.app.log("Marker %s's room differs from destination room %s" % (marker.name, self.destination_room_name))
                 self.world.change_room(room.name)
-        other.last_warp_update = self.world.app.updates
+        other.last_warp_update = self.world.updates
 
 
 class ObjectSpawner(LocationMarker):

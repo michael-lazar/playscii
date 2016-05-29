@@ -105,6 +105,7 @@ class PlatformMonster(Character):
     def pre_first_update(self):
         # pick random starting direction
         self.move_dir_x = random.choice([-1, 1])
+        self.set_timer_function('hit_wall', self.check_wall_hits, 0.2)
     
     def is_affected_by_gravity(self):
         return True
@@ -112,8 +113,8 @@ class PlatformMonster(Character):
     def allow_move_y(self, dy):
         return False
     
-    def is_hitting_wall(self):
-        "Return True if a wall is immediately ahead of direction we're moving."
+    def check_wall_hits(self):
+        "Turn around if a wall is immediately ahead of direction we're moving."
         # check collision in direction we're moving
         margin = 0.1
         if self.move_dir_x > 0:
@@ -129,14 +130,10 @@ class PlatformMonster(Character):
                                     include_class_names=['PlatformWorld',
                                                          'PlatformMonster'],
                                      exclude_object_names=[self.name])
-        return len(hits) > 0
+        if len(hits) > 0:
+            self.move_dir_x = -self.move_dir_x
     
     def update(self):
-        # TODO: move this check to a Timer, no need to do it every update
-        if self.is_hitting_wall():
-            self.move_dir_x = -self.move_dir_x
-        # run move and update AFTER we've detected wall hit;
-        # gravity might be pushing us into the ground
         self.move(self.move_dir_x, 0)
         Character.update(self)
 

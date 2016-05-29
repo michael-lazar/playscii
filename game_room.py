@@ -180,7 +180,7 @@ class GameRoom:
         elif issubclass(type(warp_dest), GameObject):
             # TODO: change room or not? use_marker_room flag a la WarpTrigger?
             game_object.set_loc(warp_dest.x, warp_dest.y)
-        game_object.last_warp_update = self.world.app.updates
+        game_object.last_warp_update = self.world.updates
     
     def update(self):
         if self is self.world.current_room:

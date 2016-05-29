@@ -78,6 +78,8 @@ class GameWorld:
         self.player = None
         self.paused = False
         self._pause_time = 0
+        self.updates = 0
+        "Number of updates this we have performed."
         self.modules = {'game_object': game_object,
                         'game_util_objects': game_util_objects,
                         'game_hud': game_hud, 'game_room': game_room}
@@ -555,18 +557,22 @@ class GameWorld:
             obj.frame_update()
     
     def pre_update(self):
-        "Run before GameWorld.update"
+        "Run GO and Room pre_updates before GameWorld.update"
         # add newly spawned objects to table
         self.objects.update(self.new_objects)
         self.new_objects = {}
-        # run object pre-updates
-        for obj in self.objects.values():
-            obj.pre_update()
-        # run "first update" on all appropriate objects
+        # run pre_first_update / pre_update on all appropriate objects
         for obj in self.objects.values():
             if not obj.pre_first_update_run:
                 obj.pre_first_update()
                 obj.pre_first_update_run = True
+            # only run pre_update if not paused
+            elif not self.paused and (obj.is_in_current_room() or obj.update_if_outside_room):
+                # update timers
+                # (copy timers list in case a timer removes itself from object)
+                for timer in list(obj.timer_functions_pre_update.values())[:]:
+                    timer.update()
+                obj.pre_update()
         for room in self.rooms.values():
             if not room.pre_first_update_run:
                 room.pre_first_update()
@@ -580,6 +586,9 @@ class GameWorld:
             # update objects based on movement, then resolve collisions
             for obj in self.objects.values():
                 if obj.is_in_current_room() or obj.update_if_outside_room:
+                    # update timers
+                    for timer in list(obj.timer_functions_update.values())[:]:
+                        timer.update()
                     obj.update()
                     # subclass update may not call GameObject.update,
                     # set last update time here once we're sure it's done
@@ -606,6 +615,19 @@ class GameWorld:
             self.hud.update()
         if self.paused:
             self._pause_time += self.app.get_elapsed_time() - self.app.last_time
+        else:
+            self.updates += 1
+    
+    def post_update(self):
+        "Run after GameWorld.update."
+        if self.paused:
+            return
+        for obj in self.objects.values():
+            if obj.is_in_current_room() or obj.update_if_outside_room:
+                # update timers
+                for timer in list(obj.timer_functions_post_update.values())[:]:
+                    timer.update()
+                obj.post_update()
     
     def render(self):
         "Sort and draw all objects in Game Mode world."

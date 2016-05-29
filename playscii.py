@@ -637,6 +637,7 @@ class Application:
             if self.game_mode:
                 self.gw.pre_update()
                 self.gw.update()
+                self.gw.post_update()
             self.last_time += self.timestep
             self.updates += 1
         self.frame_update()
