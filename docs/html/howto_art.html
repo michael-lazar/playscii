@@ -71,7 +71,7 @@
 <p>
   Character and foreground/background color are pretty self-explanatory. "Transform" refers to whether a character is flipped (horizontally or vertically, aka the X and Y axes) or rotated (90, 180, or 270 degrees). The current active character, colors, and transform are always shown on the status bar along the bottom edge of the screen.
 </p>
-<img src="" alt="image of status bar"/>[TODO: image of status bar]
+<center><img src="./art_statusbar1.jpg" alt="image of status bar"/></center>
 <p>
   In this image, the 'A' character is selected, green is the foreground color, blue is the background color, and the transform is "normal", ie not flipped or rotated.
 </p>
@@ -82,7 +82,7 @@
 <p>
   In addition to the regular colors, the foreground and/or background color for a tile can also be transparent. Anything transparent shows through to whatever (if anything) is behind it. In Playscii's user interface, this special color is visually represented with a red X.
 </p>
-<img src="" alt="image of status bar"/>[TODO: image of status bar]
+<center><img src="./art_statusbar2.jpg" alt="image of status bar"/></center>
 <p>
   In this image, the '7' character is selected, green is the foreground color, the background is transparent, and the transform is "Flip X" ie flipped horizontally.
 </p>
@@ -91,18 +91,21 @@
 <a id="picker"> <h4>the Picker</h4> </a>
 <div class="block">
 <p>
-  Press space to bring up the "picker" that lets you select characters, colors, and transforms.
+  Press and hold <code>space bar</code> to bring up the "picker" that lets you quickly select characters, colors, and transforms. Here's a diagram showing all the features of the picker:
 </p>
-<img src="" alt="image of picker, with #s at each UI element"/> [TODO: image of picker, with #s at each UI element]
+<center><img src="./art_picker.jpg" alt="image of picker with elements labeled by number"/></center>
 <ol>
   <li> <b>Character swatch</b> - click a character here to set it as the active character for painting. </li>
   <li> <b>Color swatch</b> - click the primary mouse button on a color here to set it as the active foreground color, secondary mouse click to set it as the active background color. </li>
-  <li> <b>Tool/picker tabs</b> - click the left tab to bring up settings for each tool (see <a href="#tools">Tools</a> and <a href="#toolsettings">Affects Masks</a> sections below), click the right tab to bring up the picker view. </li>
   <li> <b>Transform selector</b> - click one of the items here to set a different active transform (see <a href="#tiles">transform</a> section above). </li>
+  <li> <b>Tool/picker tabs</b> - click the left tab to bring up settings for each tool (see <a href="#tools">Tools</a> and <a href="#toolsettings">Affects Masks</a> sections below), click the right tab to bring up the picker view. </li>
   <li> <b>Current character set</b> - click this to bring up the <a href="#charsets">character set selector</a>. </li>
   <li> <b>Current palette</b> - click this to bring up the <a href="#palettes">palette selector</a>. </li>
   <li> <b>Character swatch size</b> - click the + and - buttons to change the character swatch's display size - bump it up if characters are too hard to see or click on your display. </li>
 </ol>
+<p>
+  If it's more comfortable for you to tap <code>space bar</code> rather than hold it, you can change that behavior with "Picker toggle key: press/hold" in the Tool menu.
+</p>
 </div>
 
 <a id="menubar"> <h4>Menu Bar</h4> </a>
@@ -110,7 +113,7 @@
 <p>
   The menu bar along the top edge of the screen provides access to much of Playscii's functionality. Click a menu name to open it and select from the available commands. Many commands have an associated keyboard shortcut, displayed to the right of the menu entry.
 </p>
-<img src="" alt="the Art Mode menu bar"/>[TODO: art mode menu bar]
+<center><img src="./art_menubar.jpg" alt="the Art Mode menu bar"/></center>
 </div>
 
 <a id="tools"> <h4>Tools</h4> </a>
@@ -137,7 +140,27 @@
 <ul>
 <li> <b>Brush Size</b> - increase or decrease the size of the square area a tool affects. Doesn't apply to the grab, text, select, and paste tools. </li>
 <li> <b>"Affects character / foreground color / background color / transform" masks</b> - by default a tool will affect all of these things, but a tool's effect on each tile attribute can be disabled selectively. Hovering the cursor over a swatch will always preview the paint result, which might otherwise be a bit difficult to visualize.
-<p> <img src="" alt="image showing different affects masks on the same tiles, side by side"/>  [TODO: image showing different affects masks on the same tiles, side by side] </p>
+  <p>
+  <center>
+  <table>
+	<tr>
+	  <td width="300px"> <img src="./art_mask1.png" alt="affects: all" width="300px"/> </td>
+	  <td width="300px"> <img src="./art_mask2.png" alt="affects: fg/bg color and xform, no char" width="300px"/> </td>
+	  <td width="300px"> <img src="./art_mask3.png" alt="affects: bg color and xform, no char and fg color" width="300px"/> </td>
+	</tr><tr>
+	  <td> <center> Affects: all </center> </td>
+	  <td> <center> Affects: colors and transform, but not character </center>  </td>
+	  <td> <center> Affects: BG color and transform, but not character and FG color </center> </td>
+	</tr><tr>
+	  <td> <img src="./art_mask4.png" alt="affects: bg color" width="300px"/> </td>
+	  <td> <img src="./art_mask5.png" alt="affects: char and bg color, no fg color and xform" width="300px"/> </td>
+	</tr><tr>
+	  <td> <center> Affects: only background color </center> </td>
+	  <td> <center> Affects: character and BG color, but not FG color and transform </center>  </td>
+	</tr>
+  </table>
+  </center>
+  </p>
   </li>
 </ul>
 </div>
@@ -170,6 +193,17 @@
 <p>
   By default, Playscii displays your work with a screen effect that emulates the look of old TVs or Monitors, ie cathode ray tubes. You can disable this with "CRT filter" in the View menu, or pressing shift-R. If Playscii runs slowly on your computer, try disabling the CRT filter.
 </p>
+<center>
+  <table>
+	<tr>
+	  <td> <img src="./art_crt_on.jpg" alt="CRT filter on"/> </td>
+	  <td> <img src="./art_crt_off.png" alt="CRT filter off"/> </td>
+	</tr><tr>
+	  <td> <center>CRT filter on</center> </td>
+	  <td> <center>CRT filter off</center> </td>
+	</tr>
+  </table>
+</center>
 </div>
 
 <a id="documents"> <h4>Working with Documents</h4> </a>
@@ -206,7 +240,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
 <p>
   You can also select which layer is active in the layer list at the bottom of the Layer menu. The number of the current active layer is always shown in the status bar and corresponds to the order of this list.
 </p>
-<img src="" alt="image of layer menu + status bar"/> [TODO: image of layer menu + status bar]
+<center><img src="./art_layermenu.jpg" alt="image of layer menu and status bar"/></center>
 <p>
   When working on a particular layer, sometimes you want to see the other layers and sometimes you don't. "Inactive layers: Visible/Dim/Invisible" in the Layer menu cycles through three settings: all layers are 100% visible, non-active layers are dim but still partially visible, and non-active layers are completely hidden.
 </p>
@@ -218,7 +252,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
   Playscii documents can be animated, with multiple frames that each display for a "hold time" before advancing to the next. For documents with more than one frame, animation playback can be started and paused in Art Mode with "Start/Stop animation playback" in the Frame menu, or <code>P</code>.
 </p>
 <p>
-  The "current active frame" is the one shown in the main editing view, that your tools affect. You can advance the currently active frame with "Next frame" and "Previous frame" in the Frame menu, or the <code>&lt;</code> and <code>&gt;</code> keys.
+  The "current active frame" is the one shown in the main editing view, that your tools affect. You can advance the currently active frame with "Next frame" and "Previous frame" in the Frame menu, or <code>&lt;</code> and <code>&gt;</code>.
 </p>
 <p>
   In the Frame menu, you can create a new blank frame with "Add frame" or duplicate an existing one with "Duplicate this frame". The dialog will ask you to enter a hold time for the new frame, and an index - the number the new frame should be inserted at in the 1-to-N sequence. You can change a frame's hold time and sequence index with the subsequent Frame menu items. You can also set all frame hold times to be the same with "Change all frames' hold times".
@@ -258,7 +292,21 @@ You can also see a list of all open documents at the bottom of the Art menu.
 <a id="imageconversion"> <h4>Bitmap Image Conversion</h4> </a>
 <div class="block">
 <p>
-  Converting a Playscii document to a conventional bitmap image is very straightforward and preserves the image 100%, but doing the reverse is trickier and can have a very aesthetically unique result. With "Convert image" in the File menu, you can select a bitmap image in JPEG or PNG format to convert into Playscii using the current document size, character set, and color palette.
+  Converting a Playscii document to a conventional bitmap image is very straightforward and preserves the image 100%, but doing the reverse is trickier and can have a very aesthetically unique result.
+</p>
+<center>
+  <table>
+	<tr>
+	  <td> <img src="./exidy_sorcerer_orig.jpg" alt="sample bitmap image"/> </td>
+	  <td> <img src="./exidy_sorcerer_converted.png" alt="sample image, converted to PETSCII"/> </td>
+	</tr><tr>
+	  <td> <center>Before</center> </td>
+	  <td> <center>After</center> </td>
+	</tr>
+  </table>
+</center>
+<p>
+  With "Convert image" in the File menu, you can select a bitmap image in JPEG or PNG format to convert into Playscii using the current document size, character set, and color palette.
 </p>
 <p>
   In brief, here's how the conversion process works: the source image is first resized to the current document size and its colors converted to the current palette. Each tile-sized block in the source image is then compared against all possible combinations of character and foreground/background color. When a best fit is found, that tile is painted at the source block's location and the next block is converted. This process is quite computationally intensive and may take a long time, even on fast computers. You can press <code>Escape</code> at any time to abort it.
@@ -281,7 +329,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
   Playscii includes several classic character sets from old computer systems, which you can preview and select in the <a href="#charsets">Character Set Selector</a>. You can also define custom character sets.
 </p>
 <p>
-  Character set data for Playscii consists of two files, placed together in the <tt>charsets/</tt> subdirectory in your Playscii documents directory: a PNG image file with the bitmap data of each character, and a text-based file with a <tt>.char</tt> extension that determines the mapping of characters to blocks in the image file.
+  Character set data for Playscii consists of two files, placed together in the <tt>charsets/</tt> subdirectory in your Playscii documents directory: a PNG image file with the bitmap data of each character, and a text-based file with a <tt>.char</tt> extension that determines the mapping of characters to blocks in the image file. In this file, all lines that start with //, the double slash, are ignored so you can add comments as you like.
 </p>
 <p>
   The first line of this file names the image file with the bitmap character data - if it's left blank, Playscii will look for the same filename but with a <tt>.png</tt> extension.
@@ -293,8 +341,32 @@ You can also see a list of all open documents at the bottom of the Art menu.
   All subsequent lines are "mapping" data, a 1:1 correspondance between the characters on each line and the blocks in the bitmap. If a block doesn't have a representative character you can type on a keyboard, just leave it a blank space, but keep track of the number of blank spaces.
 </p>
 <p>
-  If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the <tt>charsets/</tt> subdirectory of the directory you're running Playscii from.
+  If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the <tt>charsets/</tt> subdirectory of the directory you're running Playscii from. Here's the ZX Spectrum character set data as an example:
 </p>
+<center>
+<table>
+  <tr>
+	<td> <img src="../../charsets/speccy.png" alt="ZX Spectrum character set" width="256px"/> </td>
+	<td width="100px"> </td>
+	<td bgcolor="#484848">
+	  <tt>
+// ignore this  <br/>
+speccy.png      <br/>
+16,4            <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"&nbsp;$:?<br/>
+()><=+-*/;,.0123<br/>
+456789ABCDEFGHIJ<br/>
+KLMNOPQRSTUVWXYZ<br/>
+// end
+</tt>
+	</td>
+  </tr><tr>
+	<td> <center>speccy.png</center> </td>
+	<td> </td>
+	<td> <center>speccy.char</center> </td>
+  </tr>
+</table>
+</center>
 </div>
 
 <a id="custompalettes"> <h4>Custom Color Palettes</h4> </a>
