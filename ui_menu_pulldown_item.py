@@ -468,8 +468,8 @@ class ChoosePaletteItem(PulldownMenuItem):
     label = 'Choose palette…'
     command = 'choose_palette'
 
-class PaletteFromFileItem(PulldownMenuItem):
-    label = 'Palette from file…'
+class PaletteFromImageItem(PulldownMenuItem):
+    label = 'Palette from image…'
     command = 'palette_from_file'
     always_active = True
 
@@ -573,13 +573,13 @@ class ArtMenuData(PulldownMenuData):
 
 
 class FrameMenuData(PulldownMenuData):
-    items = [FramePreviousItem, FrameNextItem, FrameTogglePlaybackItem,
+    items = [FrameAddFrameItem, FrameDuplicateFrameItem,
+             FrameChangeDelayItem, FrameChangeDelayAllItem,
+             FrameChangeIndexItem, FrameDeleteFrameItem, SeparatorItem,
+             FrameTogglePlaybackItem, FramePreviousItem, FrameNextItem,
              SeparatorItem,
              FrameToggleOnionItem, FrameCycleOnionFramesItem,
-             FrameCycleOnionDisplayItem, SeparatorItem,
-             FrameAddFrameItem, FrameDuplicateFrameItem,
-             FrameChangeDelayItem, FrameChangeDelayAllItem,
-             FrameChangeIndexItem, FrameDeleteFrameItem]
+             FrameCycleOnionDisplayItem]
 
 
 class LayerMenuData(PulldownMenuData):
@@ -634,7 +634,7 @@ class LayerMenuData(PulldownMenuData):
 
 class CharColorMenuData(PulldownMenuData):
     items = [ChooseCharSetItem, ChoosePaletteItem, SeparatorItem,
-             PaletteFromFileItem]
+             PaletteFromImageItem]
 
 class HelpMenuData(PulldownMenuData):
     items = [HelpDocsItem, HelpGenerateDocsItem, HelpWebsiteItem]
