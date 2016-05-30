@@ -2,6 +2,8 @@
 
 block_cipher = None
 
+from site import getsitepackages
+
 include_files = [
     ('./README.md', '.'),
     ('license.txt', '.'),
@@ -15,7 +17,10 @@ include_files = [
     ('shaders', 'shaders'),
     ('games', 'games'),
     ('ui/*.png', 'ui'),
-    ('docs/html/*.*', 'docs/html')
+    ('docs/html/*.*', 'docs/html'),
+    ('docs/html/generated/*.*', 'docs/html/generated'),
+    # pyinstaller doesn't include pdoc templates
+    (getsitepackages()[0] + '/pdoc/templates/*.mako', 'pdoc/templates')
 ]
 
 include_bins = [
