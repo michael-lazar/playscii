@@ -28,6 +28,13 @@ import appdirs
 from sdl2 import video
 from OpenGL import GL
 from PIL import Image
+# import pdoc here so pyinstaller recognizes it's a dependency,
+# but fail non-catastrophically
+# TODO: this shouldn't be necessary; remove this ASAP
+try:
+    import pdoc, markdown
+except:
+    pass
 
 # submodules - set here so cfg file can modify them all easily
 from audio import AudioLord

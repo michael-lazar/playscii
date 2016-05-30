@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 
-import winreg
+from winreg import ExpandEnvironmentStrings
+from site import getsitepackages
 
 block_cipher = None
 
@@ -16,12 +17,16 @@ include_files = [
     ('shaders', 'shaders'),
     ('games', 'games'),
     ('ui/*.png', 'ui'),
-    ('docs/html/*.*', 'docs/html')
+    ('docs/html/*.*', 'docs/html'),
+    ('docs/html/generated/*.*', 'docs/html/generated'),
+    # pyinstaller doesn't include pdoc templates
+    (getsitepackages()[1] + '/pdoc/templates/*.mako', 'pdoc/templates')
 ]
 
 include_bins = [
     ('./*.dll', '.'),
-    (winreg.ExpandEnvironmentStrings('%WINDIR%') + '\\system32\\version.dll', '.')
+    # https://github.com/pyinstaller/pyinstaller/issues/1998
+    (ExpandEnvironmentStrings('%WINDIR%') + '\\system32\\version.dll', '.')
 ]
 
 a = Analysis(['playscii.py'],
