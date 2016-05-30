@@ -92,34 +92,51 @@
   You can crop a document by selecting an area with the [Select] tool and selecting "Crop to selection" from the Art menu.
   You can resize a document with "Resize" from the Art menu. This opens a dialog where you can enter the new desired size. If the desired size is smaller than the current size, you can specify a tile to be the new top left corner in the "Crop Start X/Y" fields.
   
-  layers
-  Playscii documents can have multiple layers, similar to raster image editing programs like Photoshop. You can position these layers in 3D space for a parallax effect.
-  In the Layer menu, you can create a new blank layer with "Add layer" or duplicate an existing layer with "Duplicate this layer". The dialog will ask you to enter a name for the layer (purely for ease of identification) and a "Z-depth", ie how far from the default base depth, you want the layer to appear at. The following two Layer menu items let you change these two respective values.
-  If you're working with a document that has more than one layer, only one layer at a time is "active"
-  When working on a particular layer, sometimes you want to see the other layers and sometimes you don't. "Inactive layers: Visible/Dim/Invisible" cycles through three settings: all layers are 100% visible, non-active layers are dim but still partially visible, and non-active layers are completely hidden.
+  Layers
+  Playscii documents can have multiple layers, similar to Photoshop or GIMP. You can position these layers in 3D space for a parallax effect.
+  In the Layer menu, you can create a new blank layer with "Add layer" or duplicate an existing one with "Duplicate this layer". The dialog will ask you to enter a name for the layer (purely for ease of identification) and a "Z-depth", ie how far from the default base depth, you want the layer to appear at. The following two Layer menu items let you change these two respective values.
+  The "current active layer" is the one that your tools affect. You can cycle which layer is active with "Next layer" and "Previous layer", or with the [ and ] keys.
+  You can also select which layer is active in the layer list at the bottom of the Layer menu. The number of the current active layer is always shown in the status bar and corresponds to the order of this list.
+  [image]
+  When working on a particular layer, sometimes you want to see the other layers and sometimes you don't. "Inactive layers: Visible/Dim/Invisible" in the Layer menu cycles through three settings: all layers are 100% visible, non-active layers are dim but still partially visible, and non-active layers are completely hidden.
   
-  frames/animation
-  TODO
+  Animation and Frames
+  Playscii documents can be animated, with multiple frames that each display for a "hold time" before advancing to the next. For documents with more than one frame, animation playback can be started and paused in Art Mode with "Start/Stop animation playback" in the Frame menu, or the P key.
+  The "current active frame" is the one shown in the main editing view, that your tools affect. You can advance the currently active frame with "Next frame" and "Previous frame" in the Frame menu, or the < and > keys.
+	In the Frame menu, you can create a new blank frame with "Add frame" or duplicate an existing one with "Duplicate this frame". The dialog will ask you to enter a hold time for the new frame, and an index - the number the new frame should be inserted at in the 1-to-N sequence. You can change a frame's hold time and sequence index with the subsequent Frame menu items. You can also set all frame hold times to be the same with "Change all frames' hold times".
+	Seeing the next and/or previous frames in the sequence, an "onion skin" view as it's called in traditional animation, can be a big help when animating. "Show onion skin frames", or the O key, toggles this off and on. In that same section of the Frame menu you can specify how many frames to show, as well as whether only previous frames, only next frames, or both are shown.
   
-  character set selector
-  By default Playscii lets you paint with the Commodore 64 "PETSCII" character set, but it supports many other sets out of the box, and you can [define your own]. The character set selector lets you pick from the the available sets.
+  Character Set Selector
+  By default Playscii lets you paint with the Commodore 64 "PETSCII" character set, but it supports many other sets out of the box, and you can [define your own]. The character set selector lets you pick from the the available sets. Clicking the "Set" button in this selector changes the current document's character set. This change doesn't affect the character index numbers of your actual document, so it's safe to experiment with different sets.
 
-  palette selector
+  Color Palette Selector
   Similar to the [character set selector], this selector lets you choose a different color palette from the default Commodore 64 palette. You can also [define your own] with nothing more than an image.
-  
-  custom character sets
-  TODO
-  
-  custom palettes
-  TODO (including "palette from file")
-  
-  image export
-  TODO (mention CRT filter)
-  
-  raster image conversion
-  TODO
 
-  importing from EDSCII
+	Image and Animation Export
+	Playscii documents use a custom file format with a .PSCI extension which saves things like tile and layer data, but you may want to export your art as a conventional bitmap image. You can export the current active frame of the current document to a PNG format image with "Export PNG" in the File menu.
+	It's worth noting that the exported image will or won't be affected by the status of the [CRT filter] in the View menu. If you want an exported image that's 1:1 pixel accurate with the source image for the character set you're using, turn off the CRT filter before you export.
+	You can also export animated documents in animated GIF format with "Export animated GIF" in the File menu. GIF image animation uses the same "frame hold time" concept that Playscii uses, so the resulting GIF should look the same as it does in Playscii.
+  
+  Raster Image Conversion
+	Converting a Playscii document to a conventional bitmap image is very straightforward and preserves the image 100%, but doing the reverse is trickier and can have a very aesthetically unique result. With "Convert image" in the File menu, you can select a bitmap image in JPEG or PNG format to convert into Playscii using the current document size, character set, and color palette.
+	In brief, here's how the conversion process works: the source image is first resized to the current document size and its colors converted to the current palette. Each tile-sized block in the source image is then compared against all possible combinations of character and foreground/background color. When a best fit is found, that tile is painted at the source block's location and the next block is converted. This process is quite computationally intensive and may take a long time, even on fast computers. You can press the Escape key at any time to abort it.
+	The document size and color palette at the time of conversion have a big impact on the look of the final result, so you may want to experiment with different settings. If you'd like a fairly accurate color reproduction, see [Palette from File] in the Custom Palettes section below.
+
+  Importing from EDSCII
+  On the off chance you have a document made in the file format used by [EDSCII], Playscii's predecessor from 2012, you can import it into Playscii with "Import from EDSCII" in the File menu. The resulting document will have a single frame and a single layer, and will use whatever character set and color palette you had active at the time of import.
+
+  Custom Character Sets
+	Playscii includes several classic character sets from old computer systems, which you can preview and select in the [Character Set Selector]. You can also define custom character sets.
+	Character set data for Playscii consists of two files, placed together in the [charsets/] subdirectory in your Playscii documents directory: a PNG image file with the bitmap data of each character, and a text-based file with a [.char] extension that determines the mapping of characters to blocks in the image file.
+	The first line of this file names the image file with the bitmap character data - if it's left blank, Playscii will look for the same filename but with a [.png] extension.
+	The second line of the file is the width and height of the character grid in the bitmap file, as integer numbers separated by a comma. Playscii needs this data to know how many pixels are in a tile for this character set.
+	All subsequent lines are "mapping" data, a 1:1 correspondance between the characters on each line and the blocks in the bitmap. If a block doesn't have a representative character you can type on a keyboard, just leave it a blank space, but keep track of the number of blank spaces.
+	If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the [charsets/] subdirectory of the directory you're running Playscii from.
+  
+	Custom Palettes
+	Playscii includes several classic color palettes from old computers and game systems, which you can preview and select in the [Palette Selector]. You can also define custom color palettes in two different ways:
+	- You can simply drop an image into the [palettes/] subdirectory of your Playscii documents directory. The image is scanned from top left to bottom right, and each unique color found is added to the palette. You can create color swatch images in traditional paint programs for this purpose quite easily.
+	- If you have an image with a larger number of unique colors, you can easily turn it into a custom palette with "Palette from image" in the Char/Color menu. After selecting a source image, the dialog lets you specify a name for the new palette file, and a target number of unique colors the source image will be reduced to.
   
   <br/><br/>
 
