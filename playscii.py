@@ -59,6 +59,7 @@ from ui_element import UIRenderable, FPSCounterUI, DebugTextUI
 from image_convert import ImageConverter
 from game_world import GameWorld, TOP_GAME_DIR
 from game_object import GameObject
+from shader import Shader
 
 APP_NAME = 'Playscii'
 VERSION_FILENAME = 'version'

@@ -8,7 +8,7 @@ from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, L
 class NewGameDirDialog(UIDialog):
     title = 'New game'
     fields = 1
-    field0_label = 'Name of new game directory:'
+    field0_label = 'Name of new game folder:'
     confirm_caption = 'Create'
     game_mode_visible = True
     
@@ -23,7 +23,7 @@ class SetGameDirDialog(UIDialog):
     
     title = 'Open game'
     fields = 1
-    field0_label = 'Directory to load game data from:'
+    field0_label = 'Folder to load game data from:'
     confirm_caption = 'Open'
     game_mode_visible = True
     
@@ -66,14 +66,21 @@ class AddRoomDialog(UIDialog):
     field1_label = 'Class of new room:'
     confirm_caption = 'Add'
     game_mode_visible = True
+    invalid_room_name_error = 'Invalid room name.'
     
     def get_initial_field_text(self, field_number):
+        # provide a reasonable non-blank name
         if field_number == 0:
-            return ''
+            return 'Room ' + str(len(self.ui.app.gw.rooms) + 1)
         elif field_number == 1:
             return 'GameRoom'
     
+    def is_input_valid(self):
+        return self.field0_text != '', self.invalid_room_name_error
+    
     def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
         self.ui.app.gw.add_room(self.field0_text, self.field1_text)
         self.dismiss()
 
@@ -146,12 +153,18 @@ class RenameRoomDialog(UIDialog):
     field0_label = 'New name for current room:'
     confirm_caption = 'Rename'
     game_mode_visible = True
+    invalid_room_name_error = 'Invalid room name.'
     
     def get_initial_field_text(self, field_number):
         if field_number == 0:
             return self.ui.app.gw.current_room.name
     
+    def is_input_valid(self):
+        return self.field0_text != '', self.invalid_room_name_error
+    
     def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
         world = self.ui.app.gw
         world.rename_room(world.current_room, self.field0_text)
         self.dismiss()

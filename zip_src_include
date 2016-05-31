@@ -6,6 +6,11 @@ games/*.*
 scripts/*.arsc
 shaders/*.glsl
 ui/*.png
+docs/html/howto_*.html
+docs/html/*.png
+docs/html/*.jpg
+docs/html/darkgrey.css
+docs/html/generated/pdoc_toc.html
 profile
 *.bat
 *.spec

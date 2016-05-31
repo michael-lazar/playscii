@@ -29,9 +29,13 @@
 
 <div class="main">
 
+<br/>
+
 <p>
   Using Playscii's Art Mode, you can create art and animation. If you see "Art Mode" in the top right corner of the Playscii application window, you're in Art Mode. This page covers all the things you can do in this mode.
 </p>
+
+<br/>
 
 <h3>Table of Contents</h3>
 
@@ -58,6 +62,8 @@
   <li> <a href="#customcharsets">Custom Character Sets</a> </li>
   <li> <a href="#custompalettes">Custom Color Palettes</a> </li>
 </ul>
+
+<br/>
 
 <a id="basics"> <h4>Painting Basics</h4> </a>
 <div class="block">
@@ -329,7 +335,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
   Playscii includes several classic character sets from old computer systems, which you can preview and select in the <a href="#charsets">Character Set Selector</a>. You can also define custom character sets.
 </p>
 <p>
-  Character set data for Playscii consists of two files, placed together in the <tt>charsets/</tt> subdirectory in your Playscii documents directory: a PNG image file with the bitmap data of each character, and a text-based file with a <tt>.char</tt> extension that determines the mapping of characters to blocks in the image file. In this file, all lines that start with //, the double slash, are ignored so you can add comments as you like.
+  Character set data for Playscii consists of two files, placed together in the <tt>charsets/</tt> subfolder in your Playscii documents folder: a PNG image file with the bitmap data of each character, and a text-based file with a <tt>.char</tt> extension that determines the mapping of characters to blocks in the image file. In this file, all lines that start with //, the double slash, are ignored so you can add comments as you like.
 </p>
 <p>
   The first line of this file names the image file with the bitmap character data - if it's left blank, Playscii will look for the same filename but with a <tt>.png</tt> extension.
@@ -341,7 +347,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
   All subsequent lines are "mapping" data, a 1:1 correspondance between the characters on each line and the blocks in the bitmap. If a block doesn't have a representative character you can type on a keyboard, just leave it a blank space, but keep track of the number of blank spaces.
 </p>
 <p>
-  If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the <tt>charsets/</tt> subdirectory of the directory you're running Playscii from. Here's the ZX Spectrum character set data as an example:
+  If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the <tt>charsets/</tt> subfolder of the folder you're running Playscii from. Here's the ZX Spectrum character set data as an example:
 </p>
 <center>
 <table>
@@ -375,12 +381,12 @@ KLMNOPQRSTUVWXYZ<br/>
   Playscii includes several classic color palettes from old computers and game systems, which you can preview and select in the <a href="#palettes">Palette Selector</a>. You can also define custom color palettes in two different ways:
 </p>
 <ul>
-  <li> You can simply drop an image into the <tt>palettes/</tt> subdirectory of your Playscii documents directory. The image is scanned from top left to bottom right, and each unique color found is added to the palette. You can create color swatch images in traditional paint programs for this purpose quite easily. </li>
+  <li> You can simply drop an image into the <tt>palettes/</tt> subfolder of your Playscii documents folder. The image is scanned from top left to bottom right, and each unique color found is added to the palette. You can create color swatch images in traditional paint programs for this purpose quite easily. </li>
   <li> If you have an image with a larger number of unique colors, you can easily turn it into a custom palette with "Palette from image" in the Char/Color menu. After selecting a source image, the dialog lets you specify a name for the new palette file, and a target number of unique colors the source image will be reduced to. </li>
 </ul>
 </div>
   
-<br/>
+<br/><br/>
 
 <b><a href="./howto_main.html"><< back to main documentation page</a></b>
 							 

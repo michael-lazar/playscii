@@ -28,33 +28,107 @@
 <div class="colorbar"></div>
 
 <div class="main">
-  
-  intro:
-  - python code-based - visual programming is a far-off someday thing. if you have ideas for how it could work, i'm interested in hearing them.
-  
-  auto-generated documentation is your best pal here!
-  
+
+<br/>
+
+<a id="intro"> <h4>Introduction</h4> </a>
+<div class="block">
+<p>
+  While I've worked hard to make game creation in Playscii as easy and inviting as possible, it's still Python code-based - any kind of non-code-based game creation, eg visual programming, is a far-off someday thing. If you have ideas for how it could work, I'm <a href="http://vectorpoem.com/contact.html">interested in hearing them</a>.
+</p>
+<p>
+  That said, you can make cool things happen in Game Mode with small amounts of fairly readable code. This page will explain how.
+</p>
+<p>
+  There are some topics best covered in this format, but for other things Playscii's code itself is the best documentation. Playscii can auto-generate nicely formatted HTML documentation of its code you can view in any web browser, without an internet connection. All you have to do is select "Generate documentation" from the Help menu. It may take a moment, but within a few seconds a table of contents page should open in your web browser. (If you're running from source instead of one of the pre-compiled builds, make sure you have the <tt>pdoc</tt> Python module installed.)
+</p>
+<p>
+  If you've already generated the docs, the following link should take you to there:
+  <h3> <a href="./generated/pdoc_toc.html">Playscii Auto-Generated Documentation</a> </h3>
+</p>
+</div>
+
+<br/>
+
+<h3>Table of Contents</h3>
+
+<ul>
+  <li> <a href="#intro">Introduction</a> </li>
+  <li> <a href="#gamemode">Entering Game Mode</a> </li>
+  <li> <a href="#loadgame">Loading Games</a> </li>
+  <li> <a href="#newgame">Folder Structure of a New Game</a> </li>
+  #gamestatefiles
+</ul>
+
+<br/>
+
+<a id="gamemode"> <h4>Entering Game Mode</h4> </a>
+<div class="block">
+  <p>
+	By default Playscii launches into Art Mode. To switch between Art Mode and Game Mode, click the top right corner of the screen, or press <code>G</code>.
+  </p>
+</div>
+
+<a id="loadgame"> <h4>Loading Games</h4> </a>
+<div class="block">
+<p>
+  Games in Playscii are folders that contain code and assets (art, sounds) in specific subfolders. Playscii includes some games in its application folder, but your operating system's <tt>"Documents/Playscii/</tt> folder has a <tt>games/</tt> subfolder for you to put your own games in.
+</p>
+<p>
+  You can launch a game in Playscii in one of three ways:
+  <ul>
+	<li> "Open game" from the Game menu will bring up a list of available games. Load one by clicking on it. </li>
+	<li> Launch Playscii from the command line with <tt>-game mygame</tt> after it, where <tt>mygame</tt> is the game (ie the folder) you want to launch. </li>
+	<li> Include a file called <tt>autoplay_this_game</tt> in the same folder as the Playscii executable, whose first line is the name of the game you want to load. This is a simple hack for distributing games to people who don't have Playscii - you can just zip up the folder and distribute that. </li>
+  </ul>
+</p>
+</div>
+
+<a id="newgame"> <h4>Folder Structure of a New Game</h4> </a>
+<div class="block">
+<p>
+  You can start a new project with "New game" from the Game menu, and Playscii will create the appropriate folders for you:
+  <ul>
+	<li> <tt>art/</tt> - PSCI art files used by your GameObjects go here. </li>
+	<li> <tt>charsets/</tt> - If your game uses any <a href="./howto_art.html#customcharsets">custom character sets</a>, put them here. </li>
+	<li> <tt>palettes/</tt> - If your game uses any <a href="./howto_art.html#custompalettes">custom color palettes</a>, put them here. </li>
+	<li> <tt>scripts/</tt> - All Python scripts (<tt>.py</tt> extension) for your game go here. </li>
+	<li> <tt>sounds/</tt> - Sound effects and music for your game, in any format supported by <a href="http://www.libsdl.org/projects/SDL_mixer/">SDL2_mixer</a>, go here. </li>
+	<li> <tt>start.gs</tt> - This is the default <a href="#gamestatefiles">game state save file</a> that will be loaded when you open your game. </li>
+  </ul>
+</p>
+</div>
+
   relationship of basic classes (GameWorld, GameObject, Art, Renderable, Collideable, GameRoom)
+  
+  Game States
+  
+  Game World
+  
+  Camera
+  
+  Rooms
+  
+  GameObjects
+  
+  the Developer Console
   
   editor UI (go through each menu)
   
-  deep dive on GameObject class
-  
   workflow (quick reload, states)
   
-  overview of example games:
+  tour of example games:
   cronotest: art test, character with states and facings, basic collision
-  maze: rooms, large tile-based collision, spawners
+  maze: rooms, large tile-based collision, warptriggers, spawners, camera markers
   flood: operations on an object's Art, simple object input handling
   shmup: projectiles, more spawners, generated starfield
-  platso: platformer, physics
+  platso: platformer, physics, AI uses a simple timer for wall checks
   
-  <br/><br/>
+<br/><br/>
 
 <b><a href="./howto_main.html"><< back to main documentation page</a></b>
 							 
 <br/><br/><br/>
-
 
 </div>
 </body>

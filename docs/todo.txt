@@ -3,14 +3,12 @@ TODO
 for 0.8.0:
 
 docs!
-- art howto page: flesh out outline, take screenshots as needed
 - games howto page: flesh out outline
 
----
-start_timer(timer_name): starts a stopwatch-style timer with given name going
-get_timer(timer_name): gets elapsed time value of timer with given name
-stop_timer(timer_name): stop and unregister timer
-reset_timer(timer_name): reset given timer's value back to 0
+unclear to users that ESC dismisses open game UI, auto-dismiss once a game is loaded?
+crash in flood pressing Z?
+
+add "game name" to world properties object, show it in title bar when edit UI is hidden
 
 ---
 

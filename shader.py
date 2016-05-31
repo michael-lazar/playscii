@@ -42,16 +42,30 @@ class ShaderLord:
 
 class Shader:
     
+    log_compile = False
+    "If True, log shader compilation"
+    
     def __init__(self, shader_lord, vert_source_file, frag_source_file):
         self.sl = shader_lord
+        # vertex shader
         self.vert_source_file = vert_source_file
-        self.frag_source_file = frag_source_file
         self.last_vert_change = time.time()
-        self.last_frag_change = time.time()
         vert_source = self.get_shader_source(self.vert_source_file)
+        if self.log_compile:
+            self.sl.app.log('Compiling vertex shader %s...' % self.vert_source_file)
         self.vert_shader = shaders.compileShader(vert_source, GL.GL_VERTEX_SHADER)
+        if self.log_compile:
+            self.sl.app.log('Compiled vertex shader %s in %.6f seconds' % (self.vert_source_file, time.time() - self.last_vert_change))
+        # fragment shader
+        self.frag_source_file = frag_source_file
+        self.last_frag_change = time.time()
         frag_source = self.get_shader_source(self.frag_source_file)
+        if self.log_compile:
+            self.sl.app.log('Compiling fragment shader %s...' % self.frag_source_file)
         self.frag_shader = shaders.compileShader(frag_source, GL.GL_FRAGMENT_SHADER)
+        if self.log_compile:
+            self.sl.app.log('Compiled fragment shader %s in %.6f seconds' % (self.frag_source_file, time.time() - self.last_frag_change))
+        # shader program
         self.program = shaders.compileProgram(self.vert_shader, self.frag_shader)
     
     def get_shader_source(self, source_file):
