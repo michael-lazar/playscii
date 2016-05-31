@@ -16,8 +16,33 @@ STATE_FILE_EXTENSION = 'gs'
 GAME_SCRIPTS_DIR = 'scripts/'
 SOUNDS_DIR = 'sounds/'
 
+# generic starter script with a GO and Player subclass
+STARTER_SCRIPT = """
+from game_object import GameObject
+from game_util_objects import Player
+
+
+class MyGamePlayer(Player):
+    "Generic starter player class for newly created games."
+    art_src = 'default_player'
+    # no "move" state art, so just use stand state for now
+    move_state = 'stand'
+
+
+class MyGameObject(GameObject):
+    "Generic starter object class for newly created games."
+    def update(self):
+        # write "hello" in a color that shifts over time
+        color = self.art.palette.get_random_color_index()
+        self.art.write_string(0, 0, 3, 2, 'hello!', color)
+        # run parent class update
+        GameObject.update(self)
+"""
+
+
 # Quickie class to debug render order
 RenderItem = namedtuple('RenderItem', ['obj', 'layer', 'sort_value'])
+
 
 class GameCamera(Camera):
     pan_friction = 0.2
@@ -261,6 +286,11 @@ class GameWorld:
         os.mkdir(new_dir + SOUNDS_DIR)
         os.mkdir(new_dir + CHARSET_DIR)
         os.mkdir(new_dir + PALETTE_DIR)
+        # create a generic starter script with a GO and Player subclass
+        f = open(new_dir + GAME_SCRIPTS_DIR + game_name + '.py', 'w')
+        f.write(STARTER_SCRIPT)
+        f.close()
+        # load game
         self.set_game_dir(game_name)
         # HACK: set collision enabled by default, no idea why it's not :[
         self.properties = self.spawn_object_of_class('WorldPropertiesObject')
@@ -353,7 +383,7 @@ class GameWorld:
             self.game_name = dir_name
             if not d.endswith('/'):
                 self.game_dir += '/'
-            self.app.log('Game data directory is now %s' % self.game_dir)
+            self.app.log('Game data folder is now %s' % self.game_dir)
             # set sounds dir before loading state; some obj inits depend on it
             self.sounds_dir = self.game_dir + SOUNDS_DIR
             if reset:

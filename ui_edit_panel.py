@@ -105,6 +105,8 @@ class EditListPanel(GamePanel):
     # transient state
     titlebar = 'List titlebar'
     items = []
+    # text helping user know how to bail
+    cancel_tip = 'ESC cancels'
     list_operation_labels = {
         LO_NONE: 'Stuff:',
         LO_SELECT_OBJECTS: 'Select objects:',
@@ -241,7 +243,7 @@ class EditListPanel(GamePanel):
         self.list_scroll_index = min(self.list_scroll_index, len(self.items))
     
     def get_label(self):
-        label = self.list_operation_labels[self.list_operation]
+        label = '%s (%s)' % (self.list_operation_labels[self.list_operation], self.cancel_tip)
         # some labels contain variables
         if '%s' in label:
             if self.list_operation == LO_SET_ROOM_OBJECTS:

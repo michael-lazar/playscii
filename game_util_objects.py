@@ -11,18 +11,25 @@ class GameObjectAttachment(GameObject):
     selectable = False
     physics_move = False
     offset_x, offset_y, offset_z = 0., 0., 0.
-    "offset from parent object's origin"
+    "Offset from parent object's origin"
+    fixed_z = False
+    "If True, Z will not be locked to GO we're attached to"
     editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
     
     def attach_to(self, game_object):
         self.parent = game_object
     
     def update(self):
+        # very minimal update!
         if not self.art.updated_this_tick:
             self.art.update()
+    
+    def post_update(self):
+        # after parent has moved, snap to its location
         self.x = self.parent.x + self.offset_x
         self.y = self.parent.y + self.offset_y
-        self.z = self.parent.z + self.offset_z
+        if not self.fixed_z:
+            self.z = self.parent.z + self.offset_z
 
 
 class BlobShadow(GameObjectAttachment):

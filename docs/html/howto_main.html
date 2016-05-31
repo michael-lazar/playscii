@@ -45,6 +45,12 @@
   See the <a href="./howto_game.html">Game Mode</a> page for detailed info on how to create games with Playscii.
 </p>
 
+<p>
+  General README-type information on running and building Playscii follows.
+</p>
+
+<br/>
+
 <h3>Table of Contents</h3>
 
 <ul>
@@ -55,13 +61,15 @@
   <li> <a href="#roadmap">Roadmap</a> </li>
 </ul>
 
+<br/>
+
 <a id="run"><h4>Running</h4></a>
 <div class="block">
 <p>
-If you downloaded the ZIP file with "win32" in its name, you should have a Windows EXE build you can run without needing to install anything listed below.
+If you downloaded the ZIP file with "win32" in its name, you should have a Windows build you can run by double-clicking <tt>playscii.exe</tt>, without needing to install anything listed below.
 </p>
 <p>
-If you downloaded the DMG file, this is the Mac application bundle which can be installed in the standard manner, by opening the disk image file and then dragging Playscii.app into your Applications folder.
+If you downloaded the DMG file, this is the Mac application bundle which can be installed in the standard manner, by opening the disk image file and then dragging <tt>Playscii.app</tt> into your <tt>Applications</tt> folder. You don't need to install anything else.
 </p>
 <p>
 If you downloaded the ZIP file with "source" in its name or from the project's source code repository, you can run Playscii from source if you have Python and a few libraries installed.  See the <a href="#runfromsource">Running from Source</a> and <a href="#build">Building</a> sections below.
@@ -71,7 +79,7 @@ If you downloaded the ZIP file with "source" in its name or from the project's s
 <a id="config"><h4>Configuration</h4></a>
 <div class="block">
 <p>
-  Most users won't need to edit them, but just in case - Playscii places its configuration files in OS-appropriate directories:
+  Most users won't need to edit them, but just in case - Playscii places its configuration files in OS-appropriate folders:
   <ul>
 	<li>
 	  Windows 7+: <tt>C:\Users\[your username]\AppData\Local\Playscii</tt>
@@ -123,9 +131,9 @@ If you downloaded the ZIP file with "source" in its name or from the project's s
 <p>
 These libraries are all pretty easy to install using PIP, the package manager that comes with Python 3.4 and later.  Find the pip executable and run it from the command line, like so:
 </p>
-<tt>pip install pysdl2 pyopengl numpy pillow appdirs</tt>
+<tt>pip install pysdl2 pyopengl numpy pillow appdirs pdoc</tt>
 <p>
-In Windows the pip executable is in the <tt>Scripts\</tt> subdirectory of your Python install folder, eg <tt>c:\Python34</tt>.  On some Unix-like systems (Linux and OSX) the pip binary to run may be called "pip3" to distinguish it from any Python 2 installations.  On Unix-like systems you may also need to run pip as super user to let it install system libraries, eg by pre-pending "sudo" to the command above.
+In Windows the pip executable is in the <tt>Scripts\</tt> subfolder of your Python install folder, eg <tt>c:\Python34</tt>.  On some Unix-like systems (Linux and OSX) the pip binary to run may be called <tt>pip3</tt> to distinguish it from any Python 2 installations.  On Unix-like systems you may also need to run pip as super user to let it install system libraries, eg by pre-pending <tt>sudo</tt> to the command above.
 </p>
 <p>
 Once you have the dependencies installed, you can run Playscii from source like so:
@@ -141,7 +149,7 @@ Once you have the dependencies installed, you can run Playscii from source like 
   To produce Windows EXE builds, in addition to the above dependencies you'll also need <a href="http://www.pyinstaller.org/">PyInstaller</a>.
 </p>
 <p>
-  Simply run <tt>build_windows.bat</tt> and it will place a complete build in the <tt>dist\</tt> subdirectory.  You may need to provide needed DLLs, such as SDL2.dll, SDL2_mixer.dll and its dependencies.
+  Simply run <tt>build_windows.bat</tt> and it will place a complete build in the <tt>dist\</tt> subfolder.  You may need to provide needed DLLs, such as SDL2.dll, SDL2_mixer.dll and its dependencies.
 </p>
 <p>
   The process for Mac Application bundles is quite similar: install PyInstaller, and run the <tt>build_mac.sh</tt> script.
@@ -154,6 +162,8 @@ Once you have the dependencies installed, you can run Playscii from source like 
   Many of Playscii's intended features have now been implemented, but you can see the <a href="https://bitbucket.org/JPLeBreton/playscii/src/default/docs/todo.txt">very latest version of JP's TODO file</a> for an idea of what's being worked on.
 </p>
 </div>
+
+<br/><br/>
 
 <b><a href="./index.html"><< back to Playscii main page</a></b>
 							 

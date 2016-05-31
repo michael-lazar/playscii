@@ -83,7 +83,7 @@ class BaseFileChooserItem(ChooserItem):
     def get_description_lines(self):
         if os.path.isdir(self.name):
             if self.name == '..':
-                return ['[parent directory]']
+                return ['[parent folder]']
             # TODO: # of items in dir?
             return []
         return None

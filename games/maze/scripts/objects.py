@@ -105,6 +105,7 @@ class MazePickup(GameObject):
         # bob slightly above holder's head
         bob_y = math.sin(self.world.get_elapsed_time()  / 100) / 10
         self.y = self.holder.y + self.hold_offset_y + bob_y
+        self.z = self.holder.z
 
 
 class MazeKey(MazePickup):

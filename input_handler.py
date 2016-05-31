@@ -160,10 +160,10 @@ class InputLord:
                     if app.updates > 0:
                         app.resize_window(event.window.data1, event.window.data2)
             elif event.type == sdl2.SDL_JOYBUTTONDOWN:
-                if not app.gw.paused:
+                if not app.gw.paused and app.gw.player:
                     app.gw.player.button_pressed(event.jbutton.button)
             elif event.type == sdl2.SDL_JOYBUTTONUP:
-                if not app.gw.paused:
+                if not app.gw.paused and app.gw.player:
                     self.app.gw.player.button_unpressed(event.jbutton.button)
             elif event.type == sdl2.SDL_KEYDOWN:
                 # if console is up, pass input to it
@@ -201,7 +201,7 @@ class InputLord:
                     # keyup shouldn't have any special meaning in a dialog
                     pass
                 elif self.BIND_game_grab in flist:
-                    if self.app.game_mode and not self.ui.active_dialog:
+                    if self.app.game_mode and not self.ui.active_dialog and self.app.gw.player:
                         self.app.gw.player.button_unpressed(0)
                         return
                 elif self.BIND_toggle_picker in flist:

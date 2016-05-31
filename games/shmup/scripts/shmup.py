@@ -17,8 +17,10 @@ class ShmupPlayer(Player):
     
     def __init__(self, world, obj_data=None):
         Player.__init__(self, world, obj_data)
+        # track last death and last fire time for respawn and refire delays
         self.last_death_time = 0
         self.last_fire_time = 0
+        # save our start position
         self.start_x, self.start_y = self.x, self.y
     
     def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
