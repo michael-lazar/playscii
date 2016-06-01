@@ -34,10 +34,10 @@
 <a id="intro"> <h4>Introduction</h4> </a>
 <div class="block">
 <p>
-  While I've worked hard to make game creation in Playscii as easy and inviting as possible, it's still Python code-based - any kind of non-code-based game creation, eg visual programming, is a far-off someday thing. If you have ideas for how it could work, I'm <a href="http://vectorpoem.com/contact.html">interested in hearing them</a>.
+  While I've worked hard to make game creation in Playscii as easy and inviting as possible, it's still code-based, and much of this page will assume you know the basics of Python programming. Any kind of non-code-based game creation, such as visual programming, is a far-off someday thing. If you have ideas for how it could work, I'm <a href="http://vectorpoem.com/contact.html">interested in hearing them</a>.
 </p>
 <p>
-  That said, you can make cool things happen in Game Mode with small amounts of fairly readable code. This page will explain how.
+  That said, you can make cool things happen in Game Mode with small amounts of easy to understand code. This page will explain how.
 </p>
 <p>
   There are some topics best covered in this format, but for other things Playscii's code itself is the best documentation. Playscii can auto-generate nicely formatted HTML documentation of its code you can view in any web browser, without an internet connection. All you have to do is select "Generate documentation" from the Help menu. It may take a moment, but within a few seconds a table of contents page should open in your web browser. (If you're running from source instead of one of the pre-compiled builds, make sure you have the <tt>pdoc</tt> Python module installed.)
@@ -55,9 +55,13 @@
 <ul>
   <li> <a href="#intro">Introduction</a> </li>
   <li> <a href="#gamemode">Entering Game Mode</a> </li>
+  <li> <a href="#menubar">Menu Bar</a> </li>
   <li> <a href="#loadgame">Loading Games</a> </li>
-  <li> <a href="#newgame">Folder Structure of a New Game</a> </li>
-  #gamestatefiles
+  <li> <a href="#newgame">Creating a New Project / Folder Structure of a Game</a> </li>
+  <li> <a href="#gameworld">Game World Overview</a> </li>
+  <li> <a href="#gameobject">Game Object Overview</a> </li>
+  <li> <a href="#gamestate">Game States</a> </li>
+  <li> <a href="#worldprops">World Properties and Globals</a> </li>
 </ul>
 
 <br/>
@@ -67,6 +71,14 @@
   <p>
 	By default Playscii launches into Art Mode. To switch between Art Mode and Game Mode, click the top right corner of the screen, or press <code>G</code>.
   </p>
+</div>
+
+<a id="menubar"> <h4>Menu Bar</h4> </a>
+<div class="block">
+<p>
+  The menu bar along the top edge of the screen provides access to much of Playscii's functionality. Click a menu name to open it and select from the available commands. Many commands have an associated keyboard shortcut, displayed to the right of the menu entry.
+</p>
+<center><img src="./game_menubar.jpg" alt="the Game Mode menu bar"/></center>
 </div>
 
 <a id="loadgame"> <h4>Loading Games</h4> </a>
@@ -84,7 +96,7 @@
 </p>
 </div>
 
-<a id="newgame"> <h4>Folder Structure of a New Game</h4> </a>
+<a id="newgame"> <h4>Creating a New Project / Folder Structure of a Game</h4> </a>
 <div class="block">
 <p>
   You can start a new project with "New game" from the Game menu, and Playscii will create the appropriate folders for you:
@@ -92,28 +104,101 @@
 	<li> <tt>art/</tt> - PSCI art files used by your GameObjects go here. </li>
 	<li> <tt>charsets/</tt> - If your game uses any <a href="./howto_art.html#customcharsets">custom character sets</a>, put them here. </li>
 	<li> <tt>palettes/</tt> - If your game uses any <a href="./howto_art.html#custompalettes">custom color palettes</a>, put them here. </li>
-	<li> <tt>scripts/</tt> - All Python scripts (<tt>.py</tt> extension) for your game go here. </li>
+	<li> <tt>scripts/</tt> - All Python scripts (<tt>.py</tt> extension) for your game go here. Playscii will create a generic "starter script" here, which may be helpful if you're new to writing Python scripts for game objects. </li>
 	<li> <tt>sounds/</tt> - Sound effects and music for your game, in any format supported by <a href="http://www.libsdl.org/projects/SDL_mixer/">SDL2_mixer</a>, go here. </li>
 	<li> <tt>start.gs</tt> - This is the default <a href="#gamestatefiles">game state save file</a> that will be loaded when you open your game. </li>
   </ul>
 </p>
+<p>
+  When you create a new project, Playscii automatically creates a generic "starter script" in the <tt>scripts/</tt> folder, with a few things to help newcomers - if you already know what you're doing, you can delete or ignore it. This starter script defines two new "classes", or flavors, of game objects: a generic <a href="#gameobject">GameObject</a> subclass and a subclass of Player, which is simply a GameObject that moves around when you press the arrow keys. Before getting too deeply into these, though, a higher level overview of how all the classes fit together is in order.
+</p>
 </div>
 
-  relationship of basic classes (GameWorld, GameObject, Art, Renderable, Collideable, GameRoom)
+<a id="gameworld"> <h4>Game World Overview</h4> </a>
+<div class="block">
+<p>
+  In Game Mode, Playscii delegates game functionality to something called a GameWorld: loading game states, content, and scripts; managing the spawning and lifetimes of GameObjects; running much of the input->update->render loop that makes the simulation go; and handling Edit UI tasks such as selecting and dragging objects.
+</p>
+<p>
+  GameObjects are, in turn, most of what a GameWorld thinks about. A GameObject can represent the player, a non-player character, an entire screen of level geometry, a powerup, a trigger that does something when entered, an invisible marker where another object appears, and so on.
+</p>
+<p>
+  GameWorlds can also organize their objects into <a href="#gameroom">GameRooms</a>, so that only some of their objects are visible and simulated at once, and can use a <a href="#gamehud">GameHUD</a> to render UI-appropriate information above everything else.
+</p>
+<p>
+  The GameWorld class also has some functions that are most appropriate to its scope, such as managing <a href="./generated/game_world.html#game_world.GameWorld.play_music">music playback</a>, <a href="./generated/game_world.html#game_world.GameWorld.get_all_objects_of_type">getting collections of objects by type</a>, and <a href="./generated/game_world.html#game_world.GameWorld.get_colliders_at_point">global collision tests</a>. Have a look at the <a href="./generated/game_world.html">GameWorld generated documentation</a> for an idea of what it handles relative to the other moving parts.
+</p>
+</div>
+
+<a id="gameobject"> <h4>Game Object Overview</h4> </a>
+<div class="block">
+<p>
+The <a href="./generated/game_object.html">GameObject class</a> defined in the built-in <tt>game_object.py</tt> module provides the base capabilities of all objects, and you can extend this functionality by creating variants of that base class in the scripts you place in the game's <tt>scripts/</tt> subfolder. The <tt>game_util_objects.py</tt> module includes a few generic subclasses ready-made for things like the player, projectiles, NPCs, triggers, and spawners.
+</p>
+<p>
+Every GameObject has two components that help it render (draw to the screen) and collide, respectively: a <a href="#rendering">Renderable</a> and a <a href="#collision">Collideable</a>. Renderables in turn can draw data from one or more <a href="">Art</a>s, pieces of art you can create in <a href="./howto_art.html">Art Mode</a> or generate on-the-fly with code.
+</p>
+<p>
+GameObjects have many properties you can change, functions you can call and/or override, and concepts such as "state" and "facing" to help you define custom behaviors. Rather than try to detail all of them here, please have a look at the <a href="./generated/game_object.html">GameObject generated documentation</a> and <a href="./generated/game_util_objects.html">Game Object Utility Library generated documentation</a>, as well as the code for the <a href="#examplegames">example games</a>, for an idea of how these can be used.
+</p>
+</div>
+
+<a id="gamestate"> <h4>Game States</h4> </a>
+<div class="block">
+<p>
+Playscii can save the state of all objects in a GameWorld into a "save state file" not unlike a conventional savegame or <a href="https://en.wikipedia.org/wiki/Saved_game#Save_states">save state</a> in a game console emulator. The <tt>start.gs</tt> created with a new project defines the game's starting state, which you can modify how you like by adding and manipulating the objects therein. You can create additional save state files for testing purposes, or even to load in new segments of gameplay if there is no state carried over from previous segments.
+</p>
+<p>
+Save a game's current state into a new state file with "Save new state..." from the State menu. "Save state" or <code>Control-S</code> saves over the last saved state - take care not to accidentally overwrite your <tt>start.gs</tt> with this - and "Load state" opens a list of save state files to choose from. <code>F2</code> quickly reloads the last loaded state file, which is handy for <a href="#workflow">rapid iteration</a>.
+</p>
+<p>
+Much as <a href="./howto_art.html">Art</a> (<tt>.PSCI</tt> files) are just tiles, layers, and frames serialized into <a href="https://en.wikipedia.org/wiki/JSON">JSON</a>, save state files are all the GameObjects and GameRooms serialized into JSON, so it's possible to view and even manually edit them, though there's no non-bug reason you'd need to do this.
+</p>
+<p>
+  It's worth noting that all GameObjects with the <tt>should_save</tt> property set <tt>False</tt> do not get saved into state save files. This is appropriate for certain kinds of objects, such as projectiles or spawned enemies whose lifetimes are managed in some other way, and/or for whom saving and loading would introduce unwanted complexity into how they work.
+</p>
+</div>
+
+editor UI
+click and drag objects
+spawn/duplicate new objects
+delete objects
+"select objects" pane
+edit selected object properties
+show/hide with shift-E
+disable entirely in cfg
+
+Game World
+World Properties and Globals
+The <tt>game_util_objects.py</tt> module
+WorldPropertiesObject
+WorldGlobalsObject
+
+Camera
+separate from art mode camera
+camera saved in state file
+can have a "focus object" that it follows - property
+set zoom manually with "Set camera zoom" in the View menu, and set position with the <a href="#console">dev console</a>.
+
+Rooms
+world has "current room"
+each object has a list of rooms it's in
+objects in no room are in all rooms (by default, this is everything, making the rooms concept fully optional, most of the [example games] don't use it at all while the [maze game] uses it heavily
+objects that /are/ in a given room don't render or simulate unless their room is the game world's current active room.
+UI: moving objects between rooms
+room camera marker - camera automatically snaps here when room is entered
+room edge warps
+
+debug views
+origins
+bounds
+collision
   
-  Game States
-  
-  Game World
-  
-  Camera
-  
-  Rooms
-  
-  GameObjects
-  
-  the Developer Console
-  
-  editor UI (go through each menu)
+the Developer Console
+help - list of commands
+built-in aliases: app, world, camera, sel, player
+set object properties directly
+any python expression - be careful!
   
   workflow (quick reload, states)
   

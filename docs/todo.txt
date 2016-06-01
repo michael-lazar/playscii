@@ -3,12 +3,11 @@ TODO
 for 0.8.0:
 
 docs!
-- games howto page: flesh out outline
-
-unclear to users that ESC dismisses open game UI, auto-dismiss once a game is loaded?
-crash in flood pressing Z?
+- games howto page: finish fleshing out outline
 
 add "game name" to world properties object, show it in title bar when edit UI is hidden
+
+if a bind has >1 commands, see if that command only applies to art or game mode and ignore it if it's not in the right mode; currently one has to detect game mode in the il.BIND function which is silly
 
 ---
 
