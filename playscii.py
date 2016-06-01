@@ -248,6 +248,8 @@ class Application:
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
         self.cursor, self.grid = None, None
+        # forward-declare inputlord in case UI looks for it
+        self.il = None
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded_for_edit[0])
         # init onion skin
