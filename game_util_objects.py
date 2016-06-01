@@ -17,6 +17,7 @@ class GameObjectAttachment(GameObject):
     editable = GameObject.editable + ['offset_x', 'offset_y', 'offset_z']
     
     def attach_to(self, game_object):
+        "Attach this object to given object."
         self.parent = game_object
     
     def update(self):

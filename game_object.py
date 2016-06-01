@@ -43,6 +43,9 @@ TIMER_PRE_UPDATE = 0
 TIMER_UPDATE = 1
 TIMER_POST_UPDATE = 2
 
+__pdoc__ = {}
+__pdoc__['GameObject.x'] = "Object's location in 3D space."
+
 
 class GameObject:
     """
@@ -186,12 +189,13 @@ class GameObject:
         Create new GameObject in world, from serialized data if provided.
         """
         self.x, self.y, self.z = 0., 0., 0.
-        "Location in 3D space"
+        "Object's location in 3D space."
         self.scale_x, self.scale_y, self.scale_z = 1., 1., 1.
+        "Object's scale in 3D space."
         self.rooms = {}
         "Dict of rooms we're in - if empty, object appears in all rooms"
         self.state = DEFAULT_STATE
-        "Every object gets a state, even if it never changes"
+        "String representing object state. Every object has one, even if it never changes."
         self.facing = GOF_FRONT
         "Every object gets a facing, even if it never changes"
         self.name = self.get_unique_name()
@@ -214,11 +218,13 @@ class GameObject:
                 else:
                     setattr(self, v, obj_data[v])
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
+        "Object's velocity in units per second. Derived from acceleration."
         self.move_x, self.move_y = 0, 0
         "User-intended acceleration"
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         self.last_update_end = 0
         self.flip_x = False
+        "Set by state, True if object's renderable should be flipped in X axis."
         self.world = world
         "GameWorld this object is managed by"
         self.app = self.world.app
@@ -236,6 +242,7 @@ class GameObject:
         "Dict of running GameObjectTimerFuctions that run during post_update"
         # load/create assets
         self.arts = {}
+        "Dict of all Arts this object can reference, eg for states"
         # if art_src not specified, create a new art according to dimensions
         if self.generate_art:
             self.art_src = '%s_art' % self.name
@@ -256,6 +263,7 @@ class GameObject:
         self.renderable = GameObjectRenderable(self.app, self.art, self)
         self.renderable.alpha = self.alpha
         self.origin_renderable = OriginIndicatorRenderable(self.app, self)
+        "Renderable for debug drawing of object origin."
         self.bounds_renderable = BoundsIndicatorRenderable(self.app, self)
         "1px LineRenderable showing object's bounding box"
         for art in self.arts.values():
@@ -274,8 +282,9 @@ class GameObject:
                 attachment.attach_to(self)
                 setattr(self, atch_name, attachment)
         self.should_destroy = False
+        "If True, object will be destroyed on next world update."
         self.pre_first_update_run = False
-        "Flag that tells us we should run post_init next update"
+        "Flag that tells us we should run post_init next update."
         self.last_state = None
         self.last_warp_update = -1
         "Most recent warp world update, to prevent thrashing"
