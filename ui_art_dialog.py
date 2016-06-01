@@ -2,7 +2,7 @@ import os.path
 
 from ui_dialog import UIDialog
 
-from ui_console import OpenCommand, SaveCommand, ConvertImageCommand
+from ui_console import OpenCommand, SaveCommand
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from palette import PaletteFromFile
 
@@ -101,18 +101,6 @@ class ImportEDSCIIDialog(UIDialog):
         width = int(self.get_field_text(1))
         width = width if width > 0 else None
         self.ui.app.import_edscii(filename, width)
-        self.dismiss()
-
-
-class ConvertImageDialog(UIDialog):
-    
-    title = 'Convert raster image'
-    field0_label = 'Filename of image to convert:'
-    fields = 1
-    confirm_caption = 'Convert'
-    
-    def confirm_pressed(self):
-        ConvertImageCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()
 
 
