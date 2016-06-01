@@ -225,6 +225,8 @@ class Application:
         self.edit_camera = Camera(self)
         self.camera = self.edit_camera
         self.art_loaded_for_edit, self.edit_renderables = [], []
+        # raster images (debug)
+        self.img_renderables = []
         self.converter = None
         self.game_mode = False
         self.gw = GameWorld(self)
@@ -718,6 +720,8 @@ class Application:
             if self.ui.active_art and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
                 self.cursor.render()
         self.debug_line_renderable.render()
+        for r in self.img_renderables:
+            r.render()
         # draw framebuffer to screen
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
         self.fb.render()

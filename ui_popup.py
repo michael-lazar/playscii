@@ -460,6 +460,8 @@ class ToolPopup(UIElement):
             self.toggle_affect_xform_button.visible = False
     
     def reset_art(self):
+        if not self.ui.active_art:
+            return
         self.charset_swatch.reset_art()
         self.palette_swatch.reset_art()
         # set panel size based on charset size
@@ -508,6 +510,8 @@ class ToolPopup(UIElement):
             self.show()
     
     def reset_loc(self):
+        if not self.ui.active_art:
+            pass#return
         x, y = self.ui.get_screen_coords(self.ui.app.mouse_x, self.ui.app.mouse_y)
         # center on mouse
         w, h = self.tile_width * self.art.quad_width, self.tile_height * self.art.quad_height

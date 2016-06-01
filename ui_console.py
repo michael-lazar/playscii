@@ -11,6 +11,10 @@ from palette import PaletteFromFile
 
 from image_export import export_still_image, export_animation
 
+from renderable_sprite import ImagePreviewRenderable
+from PIL import Image
+
+
 CONSOLE_HISTORY_FILENAME = 'console_history'
 
 class ConsoleCommand:
@@ -86,6 +90,17 @@ class ConvertImageCommand(ConsoleCommand):
             return 'Usage: conv [image filename]'
         image_filename = ' '.join(args)
         ImageConverter(console.ui.app, image_filename, console.ui.active_art)
+
+class ShowImageCommand(ConsoleCommand):
+    def execute(console, args):
+        if len(args) == 0:
+            return 'Usage: img [image filename]'
+        image_filename = ' '.join(args)
+        img = Image.open(image_filename).convert('RGB')
+        w, h = img.size
+        r = ImagePreviewRenderable(console.ui.app, None, img)
+        console.ui.app.img_renderables.append(r)
+        r.scale_x, r.scale_y = w / 8, h / 8
 
 
 class PaletteFromImageCommand(ConsoleCommand):
@@ -179,7 +194,8 @@ commands = {
     'scr': RunArtScriptCommand,
     'screv': RunEveryArtScriptCommand,
     'scrstop': StopArtScriptsCommand,
-    'revert': RevertArtCommand
+    'revert': RevertArtCommand,
+    'img': ShowImageCommand
 }
 
 
