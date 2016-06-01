@@ -823,7 +823,8 @@ class InputLord:
         self.ui.open_dialog(FrameIndexDialog)
     
     def BIND_add_layer(self):
-        self.ui.open_dialog(AddLayerDialog)
+        if not self.app.game_mode:
+            self.ui.open_dialog(AddLayerDialog)
     
     def BIND_duplicate_layer(self):
         self.ui.open_dialog(DuplicateLayerDialog)
@@ -857,7 +858,8 @@ class InputLord:
         self.ui.open_dialog(CharSetChooserDialog)
     
     def BIND_choose_palette(self):
-        self.ui.open_dialog(PaletteChooserDialog)
+        if not self.app.game_mode:
+            self.ui.open_dialog(PaletteChooserDialog)
     
     def BIND_palette_from_file(self):
         self.ui.open_dialog(PaletteFromImageChooserDialog)
@@ -945,13 +947,15 @@ class InputLord:
         self.app.cursor.center_in_art()
     
     def BIND_choose_spawn_object_class(self):
-        self.ui.edit_list_panel.set_list_operation(LO_SET_SPAWN_CLASS)
+        if self.app.game_mode:
+            self.ui.edit_list_panel.set_list_operation(LO_SET_SPAWN_CLASS)
     
     def BIND_duplicate_selected_objects(self):
         self.app.gw.duplicate_selected_objects()
     
     def BIND_select_objects(self):
-        self.ui.edit_list_panel.set_list_operation(LO_SELECT_OBJECTS)
+        if self.app.game_mode:
+            self.ui.edit_list_panel.set_list_operation(LO_SELECT_OBJECTS)
     
     def BIND_edit_art_for_selected_objects(self):
         self.app.gw.edit_art_for_selected()
