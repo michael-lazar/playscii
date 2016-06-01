@@ -604,7 +604,7 @@ class UI:
         self.game_menu_bar.visible = visible
         self.edit_list_panel.visible = visible
         self.edit_object_panel.visible = visible
-        if not visible and show_message:
+        if not visible and show_message and self.app.il:
             bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
             bind = bind.title()
             self.message_line.post_line(self.show_edit_ui_log % bind, 10)
