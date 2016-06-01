@@ -511,7 +511,7 @@ class ToolPopup(UIElement):
     
     def reset_loc(self):
         if not self.ui.active_art:
-            pass#return
+            return
         x, y = self.ui.get_screen_coords(self.ui.app.mouse_x, self.ui.app.mouse_y)
         # center on mouse
         w, h = self.tile_width * self.art.quad_width, self.tile_height * self.art.quad_height
