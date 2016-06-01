@@ -171,8 +171,8 @@ disable entirely in cfg
 Game World
 World Properties and Globals
 The <tt>game_util_objects.py</tt> module
-WorldPropertiesObject
-WorldGlobalsObject
+WorldPropertiesObject - serialized, saves GW properties so they can be loaded. don't put any logic in here.
+WorldGlobalsObject - not serialized, a place to put logic that needs to talk to everything
 
 Camera
 separate from art mode camera
@@ -187,27 +187,40 @@ objects in no room are in all rooms (by default, this is everything, making the 
 objects that /are/ in a given room don't render or simulate unless their room is the game world's current active room.
 UI: moving objects between rooms
 room camera marker - camera automatically snaps here when room is entered
-room edge warps
+room edge warps - technically does same thing as warp triggers, but eliminates need for another object. see [maze] for cases where this is and isn't appropriate.
+
+collision
+three types: circle, box (AABB), and tile.
+tune an object's collision size with col_radius/width/height, see it with [debug views]
+tiles: turn an art's "collision layer" into boxes
+static or dynamic - tile must be static, circles and boxes can be static or dynamic
+fast_move_steps - use it if an object is tunneling
 
 debug views
-origins
-bounds
-collision
-  
+origins - object locations
+bounds - outer edges of objects' arts
+collision - object collision shapes
+
+handling input
+objects can handle input if you set [flag]. override handle_key_up/down to do stuff when that key is pressed.
+
 the Developer Console
-help - list of commands
-built-in aliases: app, world, camera, sel, player
-set object properties directly
-any python expression - be careful!
-  
-  workflow (quick reload, states)
-  
-  tour of example games:
-  cronotest: art test, character with states and facings, basic collision
-  maze: rooms, large tile-based collision, warptriggers, spawners, camera markers
-  flood: operations on an object's Art, simple object input handling
-  shmup: projectiles, more spawners, generated starfield
-  platso: platformer, physics, AI uses a simple timer for wall checks
+dev console has some specific commands, type "help" to see a list of them
+dev console also takes any python expression, and has access to the global application namespace. so you can do stuff like [examples]: get and set object properties directly, built-in aliases: app, world, camera, sel, player
+be careful though, it's definitely possible to crash the application with that kind of power!
+
+workflow (quick reload, states)
+game mode designed so you can "live edit" and see your changes instantly as much as possible without having to restart playscii every time you make a small change.
+most property changes should be reflected instantly, and game scripts reload with the game state file, so a quick F2 press is usually all that's needed.
+if you need the game in a specific state to test something, that's exactly what save states are for; create as many states as you need.
+changes from art mode also take effect instantly, so you can tune a piece of art or animation, press G and see it in-game.
+
+tour of example games:
+cronotest: art test, character with states and facings, basic collision
+maze: rooms, large tile-based collision, warptriggers, spawners, camera markers
+flood: operations on an object's Art, simple object input handling
+shmup: projectiles, more spawners, generated starfield
+platso: platformer, physics, AI uses a simple timer for wall checks
   
 <br/><br/>
 
