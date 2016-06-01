@@ -233,6 +233,13 @@ class SetObjectRoomsItem(PulldownMenuItem):
     def should_dim(app):
         return len(app.gw.selected_objects) != 1
 
+class DeleteSelectedObjectsItem(PulldownMenuItem):
+    label = 'Delete selected object(s)'
+    command = 'erase_selection_or_art'
+    close_on_select = True
+    def should_dim(app):
+        return len(app.gw.selected_objects) == 0
+
 class GameMenuData(PulldownMenuData):
     items = [HideEditUIItem, SeparatorItem, NewGameDirItem, SetGameDirItem,
              PauseGameItem, SeparatorItem, FileQuitItem]
@@ -305,4 +312,5 @@ class GameRoomMenuData(PulldownMenuData):
 
 class GameObjectMenuData(PulldownMenuData):
     items = [SpawnObjectItem, DuplicateObjectsItem, SeparatorItem,
-             SelectObjectsItem, EditArtForObjectsItem, SetObjectRoomsItem]
+             SelectObjectsItem, EditArtForObjectsItem, SetObjectRoomsItem,
+             DeleteSelectedObjectsItem]
