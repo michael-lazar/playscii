@@ -19,16 +19,19 @@ CONSOLE_HISTORY_FILENAME = 'console_history'
 
 class ConsoleCommand:
     "parent class for console commands"
+    description = '[Enter a description for this command!]'
     def execute(console, args):
         return 'Test command executed.'
 
 
 class QuitCommand(ConsoleCommand):
+    description = 'Quit Playscii.'
     def execute(console, args):
         console.ui.app.should_quit = True
 
 
 class SaveCommand(ConsoleCommand):
+    description = 'Save active art, under new filename if given.'
     def execute(console, args):
         # save currently active file
         art = console.ui.active_art
@@ -45,6 +48,7 @@ class SaveCommand(ConsoleCommand):
 
 
 class OpenCommand(ConsoleCommand):
+    description = 'Open art with given filename.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: open [art filename]'
@@ -52,10 +56,12 @@ class OpenCommand(ConsoleCommand):
         console.ui.app.load_art_for_edit(filename)
 
 class RevertArtCommand(ConsoleCommand):
+    description = 'Revert active art to last saved version.'
     def execute(console, args):
         console.ui.app.revert_active_art()
 
 class LoadPaletteCommand(ConsoleCommand):
+    description = 'Set the given color palette as active.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: pal [palette filename]'
@@ -65,8 +71,8 @@ class LoadPaletteCommand(ConsoleCommand):
         console.ui.active_art.set_palette(palette)
         console.ui.popup.set_active_palette(palette)
 
-
 class LoadCharSetCommand(ConsoleCommand):
+    description = 'Set the given character set as active.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: char [character set filename]'
@@ -75,16 +81,18 @@ class LoadCharSetCommand(ConsoleCommand):
         console.ui.active_art.set_charset(charset)
         console.ui.popup.set_active_charset(charset)
 
-
 class ImageExportCommand(ConsoleCommand):
+    description = 'Export active art as PNG image.'
     def execute(console, args):
         export_still_image(console.ui.app, console.ui.active_art)
 
 class AnimExportCommand(ConsoleCommand):
+    description = 'Export active art as animated GIF image.'
     def execute(console, args):
         export_animation(console.ui.app, console.ui.active_art)
 
 class ConvertImageCommand(ConsoleCommand):
+    description = 'Convert given bitmap image to current character set + color palette.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: conv [image filename]'
@@ -92,6 +100,7 @@ class ConvertImageCommand(ConsoleCommand):
         ImageConverter(console.ui.app, image_filename, console.ui.active_art)
 
 class ShowImageCommand(ConsoleCommand):
+    description = 'Show given bitmap image on screen. (DEBUG ONLY)'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: img [image filename]'
@@ -102,8 +111,8 @@ class ShowImageCommand(ConsoleCommand):
         console.ui.app.img_renderables.append(r)
         r.scale_x, r.scale_y = w / 8, h / 8
 
-
 class PaletteFromImageCommand(ConsoleCommand):
+    description = 'Convert given image into a palette file.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: getpal [image filename]'
@@ -117,6 +126,7 @@ class PaletteFromImageCommand(ConsoleCommand):
         console.ui.popup.set_active_palette(new_pal)
 
 class SetGameDirCommand(ConsoleCommand):
+    description = 'Load game from the given folder.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: setgame [game dir name]'
@@ -124,6 +134,7 @@ class SetGameDirCommand(ConsoleCommand):
         console.ui.app.gw.set_game_dir(game_dir_name, True)
 
 class LoadGameStateCommand(ConsoleCommand):
+    description = 'Load the given game state save file.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: game [game state filename]'
@@ -131,12 +142,14 @@ class LoadGameStateCommand(ConsoleCommand):
         console.ui.app.gw.load_game_state(gs_name)
 
 class SaveGameStateCommand(ConsoleCommand):
+    description = 'Save the current game state as the given filename.'
     def execute(console, args):
         "Usage: savegame [game state filename]"
         gs_name = ' '.join(args)
         console.ui.app.gw.save_to_file(gs_name)
 
 class SpawnObjectCommand(ConsoleCommand):
+    description = 'Spawn an object of the given class name.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: spawn [class name]'
@@ -144,6 +157,7 @@ class SpawnObjectCommand(ConsoleCommand):
         console.ui.app.gw.spawn_object_of_class(class_name)
 
 class CommandListCommand(ConsoleCommand):
+    description = 'Show the list of console commands.'
     def execute(console, args):
         # TODO: print a command with usage if available
         console.ui.app.log('Commands:')
@@ -151,9 +165,11 @@ class CommandListCommand(ConsoleCommand):
         command_list = list(commands.keys())
         command_list.sort()
         for command in command_list:
-            console.ui.app.log(' %s' % command)
+            desc = commands[command].description
+            console.ui.app.log(' %s - %s' % (command, desc))
 
 class RunArtScriptCommand(ConsoleCommand):
+    description = 'Run art script with given filename on active art.'
     def execute(console, args):
         if len(args) == 0:
             return 'Usage: src [art script filename]'
@@ -161,6 +177,7 @@ class RunArtScriptCommand(ConsoleCommand):
         console.ui.active_art.run_script(filename)
 
 class RunEveryArtScriptCommand(ConsoleCommand):
+    description = 'Run art script with given filename on active art at given rate.'
     def execute(console, args):
         if len(args) < 2:
             return 'Usage: srcev [rate] [art script filename]'
@@ -171,6 +188,7 @@ class RunEveryArtScriptCommand(ConsoleCommand):
         console.hide()
 
 class StopArtScriptsCommand(ConsoleCommand):
+    description = 'Stop all actively running art scripts.'
     def execute(console, args):
         console.ui.active_art.stop_all_scripts()
 
