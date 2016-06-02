@@ -70,9 +70,18 @@
   <li> <a href="#hud">HUD</a> </li>
   <li> <a href="#debugview">Debug Views</a> </li>
   <li> <a href="#collision">Collision Detection and Resolution</a> </li>
+  <li> <a href="#sound">Sound and Music Playback</a> </li>
   <li> <a href="#inputhandling">Handling Input</a> </li>
   <li> <a href="#console">the Developer Console</a> </li>
   <li> <a href="#workflow">Workflow</a> </li>
+  <li> <a href="#examples">Tour of Example Games</a> </li>
+  <ul>
+	<li> <a href="#example_cronotest">Cronotest</a> </li>
+	<li> <a href="#example_maze">Maze</a> </li>
+	<li> <a href="#example_flood">Flood</a> </li>
+	<li> <a href="#example_shmup">Shmup</a> </li>
+	<li> <a href="#example_platso">Platso</a> </li>
+  </ul>
 </ul>
 
 <br/>
@@ -95,7 +104,7 @@
 <a id="loadgame"> <h4>Loading Games</h4> </a>
 <div class="block">
 <p>
-  Games in Playscii are folders that contain code and assets (art, sounds) in specific subfolders. Playscii includes some games in its application folder, but your operating system's <tt>"Documents/Playscii/</tt> folder has a <tt>games/</tt> subfolder for you to put your own games in.
+  Games in Playscii are folders that contain code and assets (art, sounds) in specific subfolders. Playscii includes some games in its application folder, but your operating system's <tt>Documents/Playscii/</tt> folder has a <tt>games/</tt> subfolder for you to put your own games in.
 </p>
 <p>
   You can launch a game in Playscii in one of three ways:
@@ -265,6 +274,7 @@ Rooms are strictly an opt-in concept: every object keeps track of which rooms it
 <p>
 The game world has a notion of what the "current room" is, and by default it's None. Once you've created a room, with "Add room" in the Room menu, you can set it as current either with "Change current room" from the Room menu, or clicking on a room's name in the list at the bottom of that same menu - a checkmark will appear next to the current room.
 </p>
+<h4>Managing Room Contents</h4>
 <p>
 Once you have a room set as current, you can set which objects are in it with "Add selected objects to this room" and "Remove selected objects from this room". "Add/remove objects from this room" will bring up a list in the left pane, in which objects in the room are highlighted and clicking adds or removes them. On the code side, if you have a handle to the room itself you can do this with <tt>GameRoom.add_object_by_name</tt> (passing the object's string name), <tt>GameRoom.add_object</tt> (passing the object by reference), <tt>GameRoom.remove_object_by_name</tt>, and so on.
 </p>
@@ -277,6 +287,7 @@ Objects that are not in the current room (and aren't "everywhere" as described a
 <p>
 If you get confused and what's where, you can toggle a global view of all objects in all rooms with "Show all rooms" in the Room menu.
 </p>
+<h4>Room Camera Markers and Edge Warps</h4>
 <p>
 Managing room transitions and camera changes as the player moves around are very common uses of rooms - again, the Maze game's explorable world does this a lot. If a room's <tt>camera_marker_name</tt> is set, the camera will warp there when the room is entered. You can easily set this with "Set this room's camera marker" in the Room menu.
 </p>
@@ -297,7 +308,7 @@ A few more intricacies of Rooms are covered in the <a href="#example_maze">Maze 
 The GameHUD (HUD is short for Heads-Up Display) is a simple singleton member of GameWorld that draws in 2D screen space and manages its Renderables directly, useful for UI/HUD like purposes. The whole point of a GameHUD is that it has game-specific logic, so you'll want to create a subclass in your scripts and set your <tt>GameWorld.hud_class_name</tt> to its name via the <a href="#worldprops">WorldPropertiesObject</a>, much as you set <tt>globals_object_class_name</tt>.
 </p>
 <p>
-  When you're setting Renderable sizes and locations in a GameHUD, remember that it uses OpenGL screen space coordinates, where (0,0) is the center of the screen and (1,1) is the top right corner.
+When you're setting Renderable sizes and locations in a GameHUD, remember that it uses OpenGL screen space coordinates, where (0,0) is the center of the screen and (1,1) is the top right corner.
 </p>
 </div>
 
@@ -316,36 +327,142 @@ If you want to use debug lines for a more specific purpose, check out the <tt>re
 </p>
 </div>
 
-Collision Detection and Resolution
-three types: circle, box (AABB), and tile.
-tune an object's collision size with col_radius/width/height, see it with [debug views]
-tiles: turn an art's "collision layer" into boxes
-static or dynamic - tile must be static, circles and boxes can be static or dynamic
-fast_move_steps - use it if an object is tunneling
+<a id="collision"> <h4>Collision Detection and Resolution</h4> </a>
+<div class="block">
+<p>
+Each GameObject has a <a href="./generated/collision.html#collision.Collideable">Collideable</a> component that allows it to participate in collisions with other objects. A Collideable in turn can have zero or more <a href="./generated/collision.html#collision.CollisionShape">CollisionShapes</a>, of which there are two types: Circle and Box (or "AABB" for <a href="https://en.wikipedia.org/wiki/Minimum_bounding_box#Axis-aligned_minimum_bounding_box">Axis-Aligned Bounding Box</a>, meaning an unrotated rectangle). Mostly commonly an object's Collideable will either have a single shape, as in the case of dynamic objects like the Player and Pickup classes, or multiple shapes arranged to approximate the shapes of tiles in an object's Art's "collision layer" - see more on this below.
+</p>
+<center>
+  <img src="./game_collision.jpg" alt="cronotest example game showing circle, box, and tile-based collision" width="50%"/>
+  <p>
+	Cronotest example game showing circle, box, and tile-based collision.
+  </p>
+</center>
+<p>
+These basic collision types are represented in the <tt>CST_*</tt> enumerated values in the <a href="./generated/collision.html">collision module</a>: <tt>CST_NONE</tt>, <tt>CST_CIRCLE</tt>, <tt>CST_AABB</tt>, and <tt>CST_TILE</tt>. Set a GameObject's <tt>collision_shape_type</tt> property to one of these to get each behavior.
+</p>
+<p>
+CST_NONE means a Collideable will not bother generating any shapes and effectively do nothing, CST_CIRCLE and CST_AABB refer to the circle and box shapes described above, and CST_TILE refers to the generation of multiple box shapes alluded to above. An object's Circle collision size can be tuned with the <tt>col_radius</tt> property, and an object's AABB collision size can be tuned with the <tt>col_width</tt> and <tt>col_height</tt> properties. If you enable the <a href="#debugview">collision debug view</a>, you can see these changes reflected in real time.
+</p>
+<h4>Tile-Based Collision</h4>
+<p>
+CST_TILE collision leverages Playscii's tile-based nature by letting you define a layer in an object's Art to be its "collision layer" - a layer whose name is defined in the <tt>GameObject.col_layer_name</tt> property - so that you can easily author collision for complex environment objects. By default any layer in an Art named "collision" will be used for this purpose, and any non-blank (<a href="./howto_art.html#indices">character index</a> 0) tile on that layer will be treated as a solid block. In the image above, you can see the red shapes with the blue outlines that define the background object's collision layer. Static background objects are the most common use case for tile-based collision
+</p>
+<h4>Static vs Dynamic Collision</h4>
+<p>
+A GameObject's collision can be static or dynamic. If it's static, it can never move. Objects with CST_TILE collision are always static, as Playscii does not currently have a computationally efficient way to handle complex tile-based collisions for moving objects. The <tt>CT_*</tt> enum values defined in the collision module define arbitrary categories, and <tt>CTG_STATIC</tt> and <tt>CTG_DYNAMIC</tt> are lists of these values. You probably won't have to check or define these values much, just understand the static vs dynamic distinction and set it appropriately for each class.
+</p>
+<h4>Tunneling</h4>
+<p>
+Tunneling refers to bugs where moving objects can punch through other objects without the expected collision behavior. If you notice this happening for a given object class, you can set its <tt>fast_move_steps</tt> property to something greater than 0 to make its collision checks more granular - basically, each move is subdivided into <tt>fast_move_steps</tt> steps, the object stops moving if a collision is found, and the collision resolution phase that happens later will push the colliding object out of what it hit. This is enabled by default for the game_util_objects.Projectile class. Playscii's collision code is still maturing so if you see collision problems you can't easily fix, please <a href="https://bitbucket.org/JPLeBreton/playscii/issues?status=new&status=open">file a bug</a>.
+</p>
+</div>
 
+<a id="sound"> <h4>Sound and Music Playback</h4> </a>
+<div class="block">
+<p>
+	yep
+</p>
+</div>
 
-Handling Input
-objects can handle input if you set [flag]. override handle_key_up/down to do stuff when that key is pressed.
+<a id="inputhandling"> <h4>Handling Input</h4> </a>
+<div class="block">
+<p>
+  Playscii's InputLord class handles application input and takes care of basic things like player movement, but you may want to have objects (the player, most commonly) handle input directly. In these cases, set the class's <tt>handle_input_events</tt> property to True, and override GameObject's <tt>handle_key_down</tt> and/or <tt>handle_key_up</tt> functions. InputLord passes in the key as a string and modifier key statues as booleans, so you don't need to worry about decoding from SDL2 keycodes or anything.
+</p>
+</div>
 
-the Developer Console
-dev console has some specific commands, type "help" to see a list of them
-dev console also takes any python expression, and has access to the global application namespace. so you can do stuff like [examples]: get and set object properties directly, built-in aliases: app, world, camera, sel, player
-be careful though, it's definitely possible to crash the application with that kind of power!
+<a id="console"> <h4>the Developer Console</h4> </a>
+<div class="block">
+<p>
+Playscii has a powerful developer console that can be opened by pressing <code>~</code> aka the tilde key, whose placement may vary on non-US layouts. If it's something unreasonable on your keyboard, you can rebind it to something better in your <tt>binds.cfg</tt>.
+</p>
+<p>
+Type <tt>help</tt> at the dev console to see a list of available commands, with a brief summary of what each does. Some of these are more germane to <a href="./howto_art.html">Art Mode</a> and/or redundant with functionality available from menus. Some commands require arguments after them; if so a usage hint will display if you type the command sans arguments.
+</p>
+<p>
+  The dev console can also run arbitrary python expressions within the application's namespace! This is very powerful and potentially dangerous, so save your work before experimenting. The console's execution mechanism sets a few values so you can easily access them:
+<ul>
+  <li> <tt>app</tt> - the application instance itself </li>
+  <li> <tt>ui</tt> - the application's top-level UI instance </li>
+  <li> <tt>camera</tt> - the current camera (Art Mode and Game Mode each have their own camera) </li>
+  <li> <tt>art</tt> - the current active Art in Art Mode </li>
+  <li> <tt>world</tt> - the GameWorld instance </li>
+  <li> <tt>player</tt> - the player instance in Game Mode </li>
+  <li> <tt>sel</tt> - the selected object in Game Mode, if only a single object is selected </li>
+  <li> <tt>hud</tt> - the GameWorld's GameHUD instance </li>
+</ul>
+</p>
+<p>
+An example of how one might use this: select an object in Game Mode, open the console and type <tt>sel.art.set_tile_at(0, 0, 0, 0, 1 + 3, 4, 5)</tt>. This will set the top left tile of the selected object's current Art to a specific character and color. That particular function is a bit wordy to call, but it demonstrates that you can call actual functions, use expressions, and set values directly from the console. The better you know Playscii's internals, the more powerful this tool can be for debugging and quick hacks.
+</p>
+</div>
 
-Workflow
-(quick reload, states)
-game mode designed so you can "live edit" and see your changes instantly as much as possible without having to restart playscii every time you make a small change.
-most property changes should be reflected instantly, and game scripts reload with the game state file, so a quick F2 press is usually all that's needed.
-if you need the game in a specific state to test something, that's exactly what save states are for; create as many states as you need.
-changes from art mode also take effect instantly, so you can tune a piece of art or animation, press G and see it in-game.
+<a id="workflow"> <h4>Workflow</h4> </a>
+<div class="block">
+<p>
+If you've been reading this document sequentially most of this will have been covered already, but I hope it's clear by now that Playscii's design places a high value on making it so you can "live edit" and see changes reflected immediately as much as possible, avoiding the productivity and morale drags of having to restart the application or game every time a small change is made.
+</p>
+<p>
+A proficient Playscii workflow includes using <a href="#gamestate">state save files</a> to rapidly reset after code changes, exposing important class tuning values for <a href="#propertieseditor">live property editing</a>, and using the <a href="#console">dev console</a> when other UI doesn't easily expose things. Also worth mentioning is that any changes made to Arts that objects reference in Art Mode will be reflected instantly back in Game Mode, so you can iterate rapidly on art and animation assets.
+</p>
+<p>
+I'm always looking to make this workflow better, so please <a href="http://vectorpoem.com/contact.html">send me</a> any suggestions you have.
+</p>
+</div>
 
-Tour of Example Games
-cronotest: art test, character with states and facings, basic collision
-maze: rooms, large tile-based collision, warptriggers, spawners, camera markers
-flood: operations on an object's Art, simple object input handling
-shmup: projectiles, more spawners, generated starfield
-platso: platformer, physics, AI uses a simple timer for wall checks
-  
+<a id="examples"> <h4>Tour of Example Games</h4> </a>
+<div class="block">
+<p>
+Playscii includes some example games to demonstrate many of the features available in Game Mode, so here's a summary of the learning value of each. In addition the first released Playscii game, <a href="https://jp.itch.io/endless-ladder-climbing-2">Endless Ladder Climbing 2</a>, was created with an older version of Playscii but also does some reasonably ambitious things, so you can download that and examine the <tt>scripts/</tt> folder in its game folder if you're eager to learn more.
+</p>
+
+<a id="example_cronotest"> <h4>Cronotest</h4> </a>
+<div class="block">
+<center> <img src="./game_cronotest.png" alt="Cronotest game" width="25%"/> </center>
+<p>
+No real "game" to it, this was the first test space for Game Mode made in April-May of 2015, and shows off what was new at the time: <a href="./howto_art.html#imageconversion">bitmap image conversion</a> from a certain beloved 1990s JRPG, a Player class that uses "facing" to drive front/side/back view stand and walk state animations, and basic examples of circle (player and the urn), box (the chest), and tile (room walls, bed, stair railing) collision types.
+</p>
+</div>
+
+<a id="example_maze"> <h4>Maze</h4> </a>
+<div class="block">
+  <center> <img src="./game_maze.png" alt="Maze game" width="50%"/> </center>
+<p>
+This game was built to put the <a href="#rooms">Rooms</a> features through their paces. Its world consists of several large tile-based background objects, a few pickups, and some very basic NPCs spawned by ObjectSpawners - all collected into different rooms and connected by a combination of "edge warps" and conventional WarpTriggers. It was made with Playscii 0.7.1 in October 2015 and I made a <a href="https://www.youtube.com/watch?v=I1tys2PCsSQ">video detailing its features</a>.
+</p>
+</div>
+
+<a id="example_flood"> <h4>Flood</h4> </a>
+<div class="block">
+  <center> <img src="./game_flood.png" alt="Flood game" width="25%"/> </center>
+<p>
+The goal of this game is to "flood" all the tiles with the same color, starting with the top left tile, before you run out of turns. Press number keys 1-5 to choose the next color to flood squares adjacent to the ones you've already flooded.
+</p>
+<p>
+This game is a simple example of direct input handling - there's no actual Player object spawned, the Board class itself handles input. The Board also directly manipulates the tiles of its own, dynamically-generated Art - notice there are no pre-authored .PSCI files in the game's folder. Setting <tt>GameObject.generate_art</tt> to True tells the object not to worry about having an <tt>art_src</tt> set.
+</p>
+</div>
+
+<a id="example_shmup"> <h4>Shmup</h4> </a>
+<div class="block">
+  <center> <img src="./game_shmup.png" alt="Shmup game" width="25%"/> </center>
+<p>
+A simple 2D shoot-em-up to show off Projectiles, ObjectSpawners, and a generated starfield. Note how the EnemySpawner class overrides <tt>get_spawn_class_name</tt> to produce a weighted random enemy population. Various objects use the <tt>lifespan</tt> property to auto-destroy themselves after a fixed time. The starfield uses <tt>Art.shift_all_frames(0, 1)</tt> to efficiently scroll downward - under the hood, this uses numpy's <tt>ndarray.roll</tt> to shift the data without rewriting every tile every update.
+</p>
+</div>
+
+<a id="example_platso"> <h4>Platso</h4> </a>
+<div class="block">
+  <center> <img src="./game_platso.png" alt="Platso game" width="50%"/> </center>
+<p>
+A very basic single-screen platformer featuring a world with gravity and jumping, input handling to ensure each jump requires a keypress, and monsters with some basic behavior logic. Note PlatformMonster's use of <tt>set_timer_function</tt> to run its <tt>check_wall_hits</tt> method, a potentially expensive custom collision check, every 1/5 of a second instead of every frame.
+</p>
+<p>
+Platformers live and die by their control feel and the solidity of their collision resolution and for this game those are definitely not where I'd like them to be, so if you have any suggestions on how to improve it, please let me know!
+</p>
+</div>
+
 <br/><br/>
 
 <b><a href="./howto_main.html"><< back to main documentation page</a></b>

@@ -4,6 +4,11 @@ for 0.8.0:
 
 docs!
 - games howto page: finish fleshing out outline
+- art howto: add a note on scripts
+
+---
+
+for 0.8.1:
 
 add "game name" to world properties object, show it in title bar when edit UI is hidden
 

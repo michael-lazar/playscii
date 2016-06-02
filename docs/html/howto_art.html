@@ -61,6 +61,7 @@
   <li> <a href="#edscii">Importing from EDSCII</a> </li>
   <li> <a href="#customcharsets">Custom Character Sets</a> </li>
   <li> <a href="#custompalettes">Custom Color Palettes</a> </li>
+  <li> <a href="#indices">Technical Note: Indices</a> </li>
 </ul>
 
 <br/>
@@ -271,7 +272,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
 <a id="charsets"> <h4>Character Set Selector</h4> </a>
 <div class="block">
 <p>
-  By default Playscii lets you paint with the Commodore 64 <a href="https://en.wikipedia.org/wiki/PETSCII">PETSCII character set</a>, but it supports many other sets out of the box, and you can <a href="#customcharsets">define your own</a>. The character set selector lets you pick from the the available sets. Clicking the "Set" button in this selector changes the current document's character set. This change doesn't affect the character index numbers of your actual document, so it's safe to experiment with different sets.
+  By default Playscii lets you paint with the Commodore 64 <a href="https://en.wikipedia.org/wiki/PETSCII">PETSCII character set</a>, but it supports many other sets out of the box, and you can <a href="#customcharsets">define your own</a>. The character set selector lets you pick from the the available sets. Clicking the "Set" button in this selector changes the current document's character set. This change doesn't affect the <a href="#indices">character index numbers</a> of your actual document, so it's safe to experiment with different sets.
 </p>
 </div>
 
@@ -384,6 +385,16 @@ KLMNOPQRSTUVWXYZ<br/>
   <li> You can simply drop an image into the <tt>palettes/</tt> subfolder of your Playscii documents folder. The image is scanned from top left to bottom right, and each unique color found is added to the palette. You can create color swatch images in traditional paint programs for this purpose quite easily. </li>
   <li> If you have an image with a larger number of unique colors, you can easily turn it into a custom palette with "Palette from image" in the Char/Color menu. After selecting a source image, the dialog lets you specify a name for the new palette file, and a target number of unique colors the source image will be reduced to. </li>
 </ul>
+</div>
+
+<a id="indices"> <h4>Technical Note: Indices</h4> </a>
+<div class="block">
+<p>
+While this is more likely to be of use to <a href="./howto_game.html">Game Mode</a> authors it bears mentioning here: a tile's character, foreground and background color, and transform are all stored internally as an index, ie a positive integer number. A tile's character index corresponds with its character's position in the Art's <a href="#charsets">character set</a>, a tile's color indices correspond with its fg/bg colors' positions in the Art's <a href="#palettes">color palette</a>, and a tile's <a href="#tiles">transform</a> index corresponds to the <tt>UV_*</tt> enum values defined in the <a href="./generated/art.html">Art module</a>: UV_NORMAL, UV_ROTATE90, UV_FLIPX, and so on.
+</p>
+<p>
+You can see these indices stored in the JSON of a .PSCI file, and if you're handy with Playscii's <a href="./howto_game.html#console">developer console</a> you can get and set the currently selected values with <tt>ui.selected_char</tt>, <tt>ui.selected_fg_color</tt>, <tt>ui.selected_bg_color</tt>, and <tt>ui.selected_xform</tt>.
+</p>
 </div>
   
 <br/><br/>
