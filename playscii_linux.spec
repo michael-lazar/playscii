@@ -10,11 +10,12 @@ include_files = [
     ('art', 'art'),
     ('charsets', 'charsets'),
     ('palettes', 'palettes'),
-    ('scripts', 'scripts'),
+    ('artscripts', 'artscripts'),
     ('shaders', 'shaders'),
     ('games', 'games'),
     ('ui/*.png', 'ui'),
-    ('docs/html/*.*', 'docs/html')
+    ('docs/html/*.*', 'docs/html'),
+    ('docs/html/generated/pdoc_toc.html', 'docs/html/generated'),
 ]
 
 a = Analysis(['playscii.py'],

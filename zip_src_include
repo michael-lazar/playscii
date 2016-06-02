@@ -3,7 +3,7 @@ art/*
 charsets/*
 palettes/*
 games/*.*
-scripts/*.arsc
+artscripts/*.arsc
 shaders/*.glsl
 ui/*.png
 docs/html/howto_*.html
