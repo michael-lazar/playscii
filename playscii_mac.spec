@@ -12,13 +12,12 @@ include_files = [
     ('art', 'art'),
     ('charsets', 'charsets'),
     ('palettes', 'palettes'),
-    ('scripts', 'scripts'),
-    ('shaders', 'shaders'),
+    ('artscripts', 'artscripts'),
     ('shaders', 'shaders'),
     ('games', 'games'),
     ('ui/*.png', 'ui'),
     ('docs/html/*.*', 'docs/html'),
-    ('docs/html/generated/*.*', 'docs/html/generated'),
+    ('docs/html/generated/pdoc_toc.html', 'docs/html/generated'),
     # pyinstaller doesn't include pdoc templates
     (getsitepackages()[0] + '/pdoc/templates/*.mako', 'pdoc/templates')
 ]
