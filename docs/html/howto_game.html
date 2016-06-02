@@ -37,7 +37,7 @@
   While I've worked hard to make game creation in Playscii as easy and inviting as possible, it's still code-based, and much of this page will assume you know the basics of Python programming. Any kind of non-code-based game creation, such as visual programming, is a far-off someday thing. If you have ideas for how it could work, I'm <a href="http://vectorpoem.com/contact.html">interested in hearing them</a>.
 </p>
 <p>
-  That said, you can make cool things happen in Game Mode with small amounts of easy to understand code. This page will explain how.
+  That said, you can make cool things happen in Game Mode with small amounts of easy to understand code, and you can "live tune" many things without having to restart Playscii to see your changes. This page will explain how.
 </p>
 <p>
   There are some topics best covered in this format, but for other things Playscii's code itself is the best documentation. Playscii can auto-generate nicely formatted HTML documentation of its code you can view in any web browser, without an internet connection. All you have to do is select "Generate documentation" from the Help menu. It may take a moment, but within a few seconds a table of contents page should open in your web browser. (If you're running from source instead of one of the pre-compiled builds, make sure you have the <tt>pdoc</tt> Python module installed.)
@@ -61,7 +61,12 @@
   <li> <a href="#gameworld">Game World Overview</a> </li>
   <li> <a href="#gameobject">Game Object Overview</a> </li>
   <li> <a href="#gamestate">Game States</a> </li>
+  <li> <a href="#editing">the Editor Interface</a> </li>
+  <li> <a href="#propertieseditor">the Properties Editor</a> </li>
+  <li> <a href="#spawning">Spawning New Object Instances</a> </li>
   <li> <a href="#worldprops">World Properties and Globals</a> </li>
+  <li> <a href="#camera">Camera</a> </li>
+  <li> <a href="#rooms">Rooms</a> </li>
 </ul>
 
 <br/>
@@ -123,7 +128,7 @@
   GameObjects are, in turn, most of what a GameWorld thinks about. A GameObject can represent the player, a non-player character, an entire screen of level geometry, a powerup, a trigger that does something when entered, an invisible marker where another object appears, and so on.
 </p>
 <p>
-  GameWorlds can also organize their objects into <a href="#gameroom">GameRooms</a>, so that only some of their objects are visible and simulated at once, and can use a <a href="#gamehud">GameHUD</a> to render UI-appropriate information above everything else.
+  GameWorlds can also organize their objects into <a href="#gameroom">GameRooms</a>, so that only certain objects are visible and simulated at once, and can use a <a href="#gamehud">GameHUD</a> to render UI-appropriate information above everything else.
 </p>
 <p>
   The GameWorld class also has some functions that are most appropriate to its scope, such as managing <a href="./generated/game_world.html#game_world.GameWorld.play_music">music playback</a>, <a href="./generated/game_world.html#game_world.GameWorld.get_all_objects_of_type">getting collections of objects by type</a>, and <a href="./generated/game_world.html#game_world.GameWorld.get_colliders_at_point">global collision tests</a>. Have a look at the <a href="./generated/game_world.html">GameWorld generated documentation</a> for an idea of what it handles relative to the other moving parts.
@@ -139,7 +144,7 @@ The <a href="./generated/game_object.html">GameObject class</a> defined in the b
 Every GameObject has two components that help it render (draw to the screen) and collide, respectively: a <a href="#rendering">Renderable</a> and a <a href="#collision">Collideable</a>. Renderables in turn can draw data from one or more <a href="">Art</a>s, pieces of art you can create in <a href="./howto_art.html">Art Mode</a> or generate on-the-fly with code.
 </p>
 <p>
-GameObjects have many properties you can change, functions you can call and/or override, and concepts such as "state" and "facing" to help you define custom behaviors. Rather than try to detail all of them here, please have a look at the <a href="./generated/game_object.html">GameObject generated documentation</a> and <a href="./generated/game_util_objects.html">Game Object Utility Library generated documentation</a>, as well as the code for the <a href="#examplegames">example games</a>, for an idea of how these can be used.
+GameObjects have many properties you can change, functions you can call and/or override, and concepts such as "state" and "facing" to let you define custom behaviors. Rather than try to detail all of them here, please have a look at the <a href="./generated/game_object.html">GameObject generated documentation</a> and <a href="./generated/game_util_objects.html">Game Object Utility Library generated documentation</a>, as well as the code for the <a href="#examplegames">example games</a>, for an idea of how these can be used.
 </p>
 </div>
 
@@ -159,26 +164,88 @@ Much as <a href="./howto_art.html">Art</a> (<tt>.PSCI</tt> files) are just tiles
 </p>
 </div>
 
-editor UI
-click and drag objects
-spawn/duplicate new objects
-delete objects
-"select objects" pane
-edit selected object properties
-show/hide with shift-E
-disable entirely in cfg
+<a id="editing"> <h4>the Editor Interface</h4> </a>
+<div class="block">
+<p>
+In Game Mode, the boundary between editing a game and playing it is intentionally fairly thin. The editor interface lets you create, manage, and modify GameObjects, and when this interface is disabled you're left with just the game itself, ie what players experience.
+</p>
+<p>
+You can hide this UI at any time with "Hide edit UI" in the Game menu or <code>Shift-E</code>. When distributing games, you can add the line <tt>Application.can_edit = False</tt> to <a href="./howto_main.html#config"><tt>playscii.cfg</tt></a> which will prevent players from using the interface, switching into Art Mode, or doing anything besides just what you as a the game's designer intend.
+</p>
+<p>
+The most basic actions one can do in this edit UI are <code>primary mouse button</code> on an object to select it and drag to move it. Similar to Art Mode's <a href="./howto_art.html#tools">Select tool</a>, you can select multiple objcets at once: <code>Shift + primary mouse button</code> adds an object to the current selection set, while <code> Control + primary mouse button</code> removes an object from the selection set.
+</p>
+<p>
+You can also select from a list of all objects in the world with "Select objects" in the Object menu, or <code>Control-L</code>. The aforementioned modifier keys have the same effect here as when you click in the world.
+</p>
+<p>
+Selected objects will drag-move together as expected. You can also delete all selected objects with "Delete selected objects" in the Object menu.
+</p>
+</div>
 
-Game World
-World Properties and Globals
-The <tt>game_util_objects.py</tt> module
-WorldPropertiesObject - serialized, saves GW properties so they can be loaded. don't put any logic in here.
-WorldGlobalsObject - not serialized, a place to put logic that needs to talk to everything
 
-Camera
-separate from art mode camera
-camera saved in state file
-can have a "focus object" that it follows - property
-set zoom manually with "Set camera zoom" in the View menu, and set position with the <a href="#console">dev console</a>.
+<a id="propertieseditor"> <h4>the Properties Editor</h4> </a>
+<div class="block">
+<p>
+The pane that appears on the right side of the screen when you have object(s) selected is the Properties Editor. It shows the properties on the selected object(s) that you're allowed to edit on a per-instance basis. Clicking on a property will bring up a window where you can enter its new value. If multiple selected objects have different values, this will be displayed in the property field instead of any single value.
+</p>
+<center> <img src="./game_propseditor.jpg" alt="properties editor" width="50%"/> </center>
+<p>
+The properties you edit in this UI are the very same properties that are declared in the object's class definition. If you want to change a value for all instances of this class, edit the code; if you want to change the value for a single instance, use the Properties Editor.
+</p>
+<p>
+Each class defines which of its properties can be edited, and which will be saved to <a href="#gamestate">state files</a>. The <tt>serialized</tt> property is a list of string names of properties that will be saved <i>and</i> can be edited, while the <tt>editable</tt> property is a list of string names of properties that should be editable but <i>not</i> serialized - mainly useful for live tuning.
+</p>
+</div>
+
+<a id="spawning"> <h4>Spawning New Object Instances</h4> </a>
+<div class="block">
+<p>
+You can create new instances of the classes you've defined in scripts with "Spawn object" in the Object menu, or <code>Control-P</code>. This will bring up a list of available classes. Click one to select it, and then click in the main view to spawn an object at that location.
+</p>
+<p>
+  You can also create new objects from existing ones with "Duplicate selected objects" in the Object menu.
+</p>
+</div>
+
+
+<a id="worldprops"> <h4>World Properties and Globals</h4> </a>
+<div class="block">
+<p>
+GameWorld is a core Playscii class, and it is a <a href="https://en.wikipedia.org/wiki/Singleton_pattern">singleton</a> not a GameObject: it doesn't serialize itself, nor is it an appropriate place for game-specific logic. In addition to classes like Player and Projectile, the <tt>game_util_objects.py</tt> module has two special classes that enable you to manage the world's state as objects: <a href="./generated/game_util_objects.html#game_util_objects.WorldPropertiesObject">WorldPropertiesObject</a> and <a href="./generated/game_util_objects.html#game_util_objects.WorldGlobalsObject">WorldGlobalsObject</a>.
+</p>
+<p>
+Every GameWorld has a WorldPropertiesObject, but it's given a few status flags that ensure you can't select it, delete it, or spawn a second instance. Its purpose is to mirror the properties of the world itself, and then propagate those back to the world when loading a state, so that you can edit the world's properties much as you would any other object, with "Edit world properties" in the World menu. Here you can change things like the gravity applied to physical objects, whether or not the camera auto-locks on to the player, and various debug settings.
+</p>
+<p>
+Every GameWorld also has a WorldGlobalsObject, which is typically a custom class defined for each game, where you can put logic that manages global state. When a save state file loads, it's spawned immediately after any saved objects, so whatever it's looking for is guaranteed to be there. Other game objects can always refer to it via <tt>self.world.globals</tt>.
+</p>
+<p>
+By default this object isn't serialized, to keep a clear separation between world data and world logic, but this isn't carved in stone. The first released Playscii game, <a href="https://jp.itch.io/endless-ladder-climbing-2">Endless Ladder Climbing 2</a>, makes fairly heavy use of a WorldGlobalsObject to manage world state.
+</p>
+<p>
+As WorldGlobalsObject is bound to be a custom class, you can let the world know which class to use by entering the class name in <tt>WorldPropertiesObject.globals_object_class_name</tt>.
+</p>
+</div>
+
+<a id="camera"> <h4>Camera</h4> </a>
+<div class="block">
+<p>
+A game's camera is not represented by a GameObject, rather its few properties are manipulated via the <a href="#worldprops">WorldPropertiesObject</a> (so its position at any given point is serialized in a save state file) or script code.
+</p>
+<p>
+In addition to static positioning, a camera can have a "focus object" whose movement it tracks, set via <tt>Camera.focus_object</tt>. As a convenience, when <tt>GameWorld.player_camera_lock</tt> is True, the camera will try to stay locked on to the player.
+</p>
+<p>
+As in Art Mode, you can manually set the camera's zoom level with "Set camera zoom" in the View menu, and you can set its position directly with the <a href="#console">dev console</a>.
+</p>
+<p>
+It's sometimes useful to use a LocationMarker object to remember a camera position. "Move selected object(s) to camera" and "Move camera to selected object" in the View menu make it easier to do this: you can position the camera how you want it and then snap an object to it, and then later snap the camera to that object to restore the position.
+</p>
+<p>
+<a href="#rooms">Rooms</a> can also set the camera position. This is explained in detail in the next section.
+</p>
+</div>
 
 Rooms
 world has "current room"
@@ -188,6 +255,10 @@ objects that /are/ in a given room don't render or simulate unless their room is
 UI: moving objects between rooms
 room camera marker - camera automatically snaps here when room is entered
 room edge warps - technically does same thing as warp triggers, but eliminates need for another object. see [maze] for cases where this is and isn't appropriate.
+
+HUD
+draws in screen space
+create renderables directly
 
 collision
 three types: circle, box (AABB), and tile.

@@ -36,6 +36,7 @@ brushes:
 -- sample based on # of tiles painted since click
 -- sample based on pressure (possible with SDL2?)
 - how is this data stored?  values are charset-specific
+- see aseprite's "shading" mode for insp: http://www.aseprite.org/docs/shading/
 
 line definitions:
 - user-defined(?) rules for which tile to use based on tiles painted since start of paint (click)
