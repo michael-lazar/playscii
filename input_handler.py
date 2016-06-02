@@ -528,7 +528,8 @@ class InputLord:
         self.ui.open_dialog(SaveGameStateDialog)
     
     def BIND_reset_game(self):
-        self.app.gw.reset_game()
+        if self.app.game_mode and self.app.gw.game_dir:
+            self.app.gw.reset_game()
     
     def BIND_toggle_picker(self):
         if not self.ui.active_art:
@@ -547,7 +548,7 @@ class InputLord:
     
     def BIND_save_current(self):
         # save current game state in game mode, else save current art
-        if self.app.game_mode:
+        if self.app.game_mode and self.app.gw.game_dir:
             # as with reset, save over last loaded state
             self.app.gw.save_last_state()
         elif self.ui.active_art:
@@ -647,7 +648,7 @@ class InputLord:
             button = self.ui.keyboard_focus_element.keyboard_select_item()
             if selected_element is self.ui.pulldown:
                 # mirror behavior from MenuItemButton.click: close on select if needed
-                if button.item.close_on_select:
+                if button and button.item.close_on_select:
                     self.ui.menu_bar.close_active_menu()
             return
         if not self.ui.active_art:
@@ -907,14 +908,17 @@ class InputLord:
     def BIND_toggle_all_collision_viz(self):
         if self.app.game_mode:
             self.app.gw.toggle_all_collision_viz()
+            self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_bounds_viz(self):
         if self.app.game_mode:
             self.app.gw.toggle_all_bounds_viz()
+            self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_origin_viz(self):
         if self.app.game_mode:
             self.app.gw.toggle_all_origin_viz()
+            self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:
@@ -947,14 +951,14 @@ class InputLord:
         self.app.cursor.center_in_art()
     
     def BIND_choose_spawn_object_class(self):
-        if self.app.game_mode:
+        if self.app.game_mode and self.app.gw.game_dir:
             self.ui.edit_list_panel.set_list_operation(LO_SET_SPAWN_CLASS)
     
     def BIND_duplicate_selected_objects(self):
         self.app.gw.duplicate_selected_objects()
     
     def BIND_select_objects(self):
-        if self.app.game_mode:
+        if self.app.game_mode and self.app.gw.game_dir:
             self.ui.edit_list_panel.set_list_operation(LO_SELECT_OBJECTS)
     
     def BIND_edit_art_for_selected_objects(self):
