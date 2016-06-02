@@ -3,8 +3,8 @@ TODO
 for 0.8.0:
 
 docs!
-- games howto page: finish fleshing out outline
 - art howto: add a note on scripts
+- games howto page: brief section on object state?
 
 ---
 
