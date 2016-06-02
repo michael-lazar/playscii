@@ -361,7 +361,13 @@ Tunneling refers to bugs where moving objects can punch through other objects wi
 <a id="sound"> <h4>Sound and Music Playback</h4> </a>
 <div class="block">
 <p>
-	yep
+Playscii's audio capabilities are not extensive but they should cover basic uses. Sound assets can be in any format supported by <a href="http://www.libsdl.org/projects/SDL_mixer/">SDL2_mixer</a>, and go in the <tt>sounds/</tt> subfolder of your game folder.
+</p>
+<p>
+<a href="./generated/game_object.html#game_object.GameObject.play_sound">GameObject.play_sound</a> plays a sound by name, and names are mapped to asset filenames in an object's <tt>sound_filenames</tt> dictionary. Sounds can play N times or loop indefinitely, and you can stop them by name with <tt>stop_sound</tt>. You can also define looping sounds to play while an object is in a given state via <tt>looping_state_sounds</tt>
+</p>
+<p>
+Music is controlled globally with <a href="./generated/game_world.html#game_world.GameWorld.play_music">GameWorld.play_music</a> / <tt>stop_music</tt>.
 </p>
 </div>
 
