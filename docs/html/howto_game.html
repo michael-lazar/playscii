@@ -67,6 +67,7 @@
   <li> <a href="#worldprops">World Properties and Globals</a> </li>
   <li> <a href="#camera">Camera</a> </li>
   <li> <a href="#rooms">Rooms</a> </li>
+  <li> <a href="#hud">HUD</a> </li>
 </ul>
 
 <br/>
@@ -173,7 +174,7 @@ In Game Mode, the boundary between editing a game and playing it is intentionall
 You can hide this UI at any time with "Hide edit UI" in the Game menu or <code>Shift-E</code>. When distributing games, you can add the line <tt>Application.can_edit = False</tt> to <a href="./howto_main.html#config"><tt>playscii.cfg</tt></a> which will prevent players from using the interface, switching into Art Mode, or doing anything besides just what you as a the game's designer intend.
 </p>
 <p>
-The most basic actions one can do in this edit UI are <code>primary mouse button</code> on an object to select it and drag to move it. Similar to Art Mode's <a href="./howto_art.html#tools">Select tool</a>, you can select multiple objcets at once: <code>Shift + primary mouse button</code> adds an object to the current selection set, while <code> Control + primary mouse button</code> removes an object from the selection set.
+The most basic actions one can do in this edit UI are <code>primary mouse button</code> on an object to select it and drag to move it. Selected objects have a thin pulsing outline that shows their "bounds", ie the edges of their current Art. Similar to Art Mode's <a href="./howto_art.html#tools">Select tool</a>, you can select multiple objcets at once: <code>Shift + primary mouse button</code> adds an object to the current selection set, while <code> Control + primary mouse button</code> removes an object from the selection set.
 </p>
 <p>
 You can also select from a list of all objects in the world with "Select objects" in the Object menu, or <code>Control-L</code>. The aforementioned modifier keys have the same effect here as when you click in the world.
@@ -247,32 +248,73 @@ It's sometimes useful to use a LocationMarker object to remember a camera positi
 </p>
 </div>
 
-Rooms
-world has "current room"
-each object has a list of rooms it's in
-objects in no room are in all rooms (by default, this is everything, making the rooms concept fully optional, most of the [example games] don't use it at all while the [maze game] uses it heavily
-objects that /are/ in a given room don't render or simulate unless their room is the game world's current active room.
-UI: moving objects between rooms
-room camera marker - camera automatically snaps here when room is entered
-room edge warps - technically does same thing as warp triggers, but eliminates need for another object. see [maze] for cases where this is and isn't appropriate.
 
-HUD
-draws in screen space
-create renderables directly
+<a id="rooms"> <h4>Rooms</h4> </a>
+<div class="block">
+<p>
+Sometimes your game will have multiple "screens" worth of content, like a large world to explore. It's usually easier, for both the designer and the computer, to not be thinking about every single object in such a world at all times. To this end, Playscii allows you to organize objects into Rooms, represented by the <a href="./generated/game_room.html">GameRoom</a> class.
+</p>
+<p>
+Rooms are strictly an opt-in concept: every object keeps track of which rooms it's in, and an object that is not in any rooms is considered to be everywhere. So by default the world updates and renders every object in it, and you don't need to think about rooms at all if you're not using them. Most of the example games don't use rooms at all, while the <a href="#example_maze">Maze game</a> uses them extensively. If you've got Playscii open as you read these docs, opening the Maze game and poking at it might help you understand some of the functionality.
+</p>
+<p>
+The game world has a notion of what the "current room" is, and by default it's None. Once you've created a room, with "Add room" in the Room menu, you can set it as current either with "Change current room" from the Room menu, or clicking on a room's name in the list at the bottom of that same menu - a checkmark will appear next to the current room.
+</p>
+<p>
+Once you have a room set as current, you can set which objects are in it with "Add selected objects to this room" and "Remove selected objects from this room". "Add/remove objects from this room" will bring up a list in the left pane, in which objects in the room are highlighted and clicking adds or removes them. On the code side, if you have a handle to the room itself you can do this with <tt>GameRoom.add_object_by_name</tt> (passing the object's string name), <tt>GameRoom.add_object</tt> (passing the object by reference), <tt>GameRoom.remove_object_by_name</tt>, and so on.
+</p>
+<p>
+Again, objects that you know will always be on-screen - it's usually a safe bet that the player is, for example - can be kept outside of all rooms.
+</p>
+<p>
+Objects that are not in the current room (and aren't "everywhere" as described above) are not rendered or updated (unless their <tt>GameObject.update_if_outside_room</tt> property is set True), so as you're organizing objects you'll see some of them blink out of sight.
+</p>
+<p>
+If you get confused and what's where, you can toggle a global view of all objects in all rooms with "Show all rooms" in the Room menu.
+</p>
+<p>
+Managing room transitions and camera changes as the player moves around are very common uses of rooms - again, the Maze game's explorable world does this a lot. If a room's <tt>camera_marker_name</tt> is set, the camera will warp there when the room is entered. You can easily set this with "Set this room's camera marker" in the Room menu.
+</p>
+<p>
+Often you'll want to warp the player to a different room when they reach the "edge" of it. You need to provide two bits of information to the room to make this work: give it an object to define the "edges" of the room, with "Set this room's edge object" in the Room menu, and telling the world which room or point to warp to when the player reaches the north/south/east/west edges of those bounds, with "Set this room's edge warps". In the pane on the left, you'll notice you can select both room names and object names. If a room name is given for an edge warp, the player will warp to that room; if an object name is given, the player will warp to that object's location and change to that object's room.
+</p>
+<p>
+Technically this "edge warp" functionality is doing something very similar to the <a href="./generated/game_util_objects.html#game_util_objects.WarpTrigger">WarpTrigger</a> class, but its close integration with the room concept makes it somewhat easier.
+</p>
+<p>
+A few more intricacies of Rooms are covered in the <a href="#example_maze">Maze game</a> section below, so have a look if any of this isn't clear.
+</p>
+</div>
 
-collision
+<a id="hud"> <h4>HUD</h4> </a>
+<div class="block">
+<p>
+The GameHUD (HUD is short for Heads-Up Display) is a simple singleton member of GameWorld that draws in 2D screen space and manages its Renderables directly, useful for UI/HUD like purposes. The whole point of a GameHUD is that it has game-specific logic, so you'll want to create a subclass in your scripts and set your <tt>GameWorld.hud_class_name</tt> to its name via the <a href="#worldprops">WorldPropertiesObject</a>, much as you set <tt>globals_object_class_name</tt>.
+</p>
+<p>
+  When you're setting Renderable sizes and locations in a GameHUD, remember that it uses OpenGL screen space coordinates, where (0,0) is the center of the screen and (1,1) is the top right corner.
+</p>
+</div>
+
+
+Debug Views
+
+origins - object locations
+bounds - outer edges of objects' arts
+collision - object collision shapes
+
+<tt>renderable_line.DebugLineRenderable</tt>
+
+
+Collision Detection and Resolution
 three types: circle, box (AABB), and tile.
 tune an object's collision size with col_radius/width/height, see it with [debug views]
 tiles: turn an art's "collision layer" into boxes
 static or dynamic - tile must be static, circles and boxes can be static or dynamic
 fast_move_steps - use it if an object is tunneling
 
-debug views
-origins - object locations
-bounds - outer edges of objects' arts
-collision - object collision shapes
 
-handling input
+Handling Input
 objects can handle input if you set [flag]. override handle_key_up/down to do stuff when that key is pressed.
 
 the Developer Console
@@ -280,13 +322,14 @@ dev console has some specific commands, type "help" to see a list of them
 dev console also takes any python expression, and has access to the global application namespace. so you can do stuff like [examples]: get and set object properties directly, built-in aliases: app, world, camera, sel, player
 be careful though, it's definitely possible to crash the application with that kind of power!
 
-workflow (quick reload, states)
+Workflow
+(quick reload, states)
 game mode designed so you can "live edit" and see your changes instantly as much as possible without having to restart playscii every time you make a small change.
 most property changes should be reflected instantly, and game scripts reload with the game state file, so a quick F2 press is usually all that's needed.
 if you need the game in a specific state to test something, that's exactly what save states are for; create as many states as you need.
 changes from art mode also take effect instantly, so you can tune a piece of art or animation, press G and see it in-game.
 
-tour of example games:
+Tour of Example Games
 cronotest: art test, character with states and facings, basic collision
 maze: rooms, large tile-based collision, warptriggers, spawners, camera markers
 flood: operations on an object's Art, simple object input handling
