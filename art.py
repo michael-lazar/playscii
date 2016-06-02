@@ -23,7 +23,7 @@ EDSCII_FILE_EXTENSION = 'ed'
 
 THUMBNAIL_CACHE_DIR = 'thumbnails/'
 
-SCRIPT_DIR = 'scripts/'
+ART_SCRIPT_DIR = 'artscripts/'
 SCRIPT_FILE_EXTENSION = 'arsc'
 
 # flip/rotate UV constants
@@ -716,7 +716,7 @@ class Art:
     
     def get_valid_script_filename(self, script_filename):
         if not type(script_filename) is str: return None
-        return self.app.find_filename_path(script_filename, SCRIPT_DIR,
+        return self.app.find_filename_path(script_filename, ART_SCRIPT_DIR,
                                            SCRIPT_FILE_EXTENSION)
     
     def run_script_every(self, script_filename, rate=0.1):

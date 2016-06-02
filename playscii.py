@@ -46,7 +46,7 @@ from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION
 from renderable import TileRenderable, OnionTileRenderable
 from renderable_line import DebugLineRenderable
 from framebuffer import Framebuffer
-from art import ART_DIR, ART_FILE_EXTENSION, SCRIPT_DIR
+from art import ART_DIR, ART_FILE_EXTENSION, ART_SCRIPT_DIR
 from ui import UI
 from cursor import Cursor
 from grid import Grid
@@ -825,7 +825,7 @@ def get_paths():
     documents_dir += '/%s/' % APP_NAME
     # create Playscii dir AND subdirs for user art, charsets etc if not present
     for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR,
-                   SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
+                   ART_SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
         if not os.path.exists(documents_dir + subdir):
             os.mkdir(documents_dir + subdir)
     return config_dir, documents_dir, cache_dir
