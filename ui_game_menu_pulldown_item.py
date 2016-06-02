@@ -36,24 +36,28 @@ class ResetStateItem(PulldownMenuItem):
     label = 'Reset to last state'
     command = 'reset_game'
     close_on_select = True
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 class LoadStateItem(PulldownMenuItem):
     label = 'Load state…'
     command = 'load_game_state'
     close_on_select = True
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 class SaveStateItem(PulldownMenuItem):
     label = 'Save current state'
     command = 'save_current'
     close_on_select = True
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 class SaveNewStateItem(PulldownMenuItem):
     label = 'Save new state…'
     command = 'save_game_state'
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 #
 # view menu
@@ -75,25 +79,32 @@ class CameraToObjectsItem(PulldownMenuItem):
 class ToggleDebugObjectsItem(PulldownMenuItem):
     label = '  Draw debug objects'
     command = 'toggle_debug_objects'
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
     def should_mark(ui):
         return ui.app.gw.properties and ui.app.gw.properties.draw_debug_objects
 
 class ToggleOriginVizItem(PulldownMenuItem):
     label = '  Show all object origins'
     command = 'toggle_all_origin_viz'
+    def should_dim(app):
+        return not app.gw.game_dir
     def should_mark(ui):
         return ui.app.gw.show_origin_all
 
 class ToggleBoundsVizItem(PulldownMenuItem):
     label = '  Show all object bounds'
     command = 'toggle_all_bounds_viz'
+    def should_dim(app):
+        return not app.gw.game_dir
     def should_mark(ui):
         return ui.app.gw.show_bounds_all
 
 class ToggleCollisionVizItem(PulldownMenuItem):
     label = '  Show all object collision'
     command = 'toggle_all_collision_viz'
+    def should_dim(app):
+        return not app.gw.game_dir
     def should_mark(ui):
         return ui.app.gw.show_collision_all
 
@@ -104,7 +115,8 @@ class EditWorldPropertiesItem(PulldownMenuItem):
     label = 'Edit world properties…'
     command = 'edit_world_properties'
     close_on_select = True
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 #
 # room menu
@@ -120,7 +132,8 @@ class ChangeRoomItem(PulldownMenuItem):
 class AddRoomItem(PulldownMenuItem):
     label = 'Add room…'
     command = 'add_room'
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 class SetRoomObjectsItem(PulldownMenuItem):
     label = 'Add/remove objects from room…'
@@ -204,7 +217,8 @@ class SpawnObjectItem(PulldownMenuItem):
     label = 'Spawn object…'
     command = 'choose_spawn_object_class'
     close_on_select = True
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 class DuplicateObjectsItem(PulldownMenuItem):
     label = 'Duplicate selected objects'
@@ -217,7 +231,8 @@ class SelectObjectsItem(PulldownMenuItem):
     label = 'Select objects…'
     command = 'select_objects'
     close_on_select = True
-    always_active = True
+    def should_dim(app):
+        return not app.gw.game_dir
 
 class EditArtForObjectsItem(PulldownMenuItem):
     label = 'Edit art for selected…'
