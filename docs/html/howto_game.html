@@ -68,6 +68,11 @@
   <li> <a href="#camera">Camera</a> </li>
   <li> <a href="#rooms">Rooms</a> </li>
   <li> <a href="#hud">HUD</a> </li>
+  <li> <a href="#debugview">Debug Views</a> </li>
+  <li> <a href="#collision">Collision Detection and Resolution</a> </li>
+  <li> <a href="#inputhandling">Handling Input</a> </li>
+  <li> <a href="#console">the Developer Console</a> </li>
+  <li> <a href="#workflow">Workflow</a> </li>
 </ul>
 
 <br/>
@@ -296,15 +301,20 @@ The GameHUD (HUD is short for Heads-Up Display) is a simple singleton member of 
 </p>
 </div>
 
-
-Debug Views
-
-origins - object locations
-bounds - outer edges of objects' arts
-collision - object collision shapes
-
-<tt>renderable_line.DebugLineRenderable</tt>
-
+<a id="debugview"> <h4>Debug Views</h4> </a>
+<div class="block">
+<p>
+Game Mode has a few visualization modes that are helpful for debugging in the View menu:
+<ul>
+<li> Show all object origins: show each object's "origin" or XYZ location using a familiar red/green/blue axis marker. </li>
+<li> Show all object bounds: show each object's "bounds", ie the edges of their current Art. </li>
+<li> Show all object collision: show each object's collision shapes - see the <a href="#collision">Collision</a> section below. </li>
+</ul>
+</p>
+<p>
+If you want to use debug lines for a more specific purpose, check out the <tt>renderable_line.DebugLineRenderable</tt> class - you can feed it a list of 3D coordinate tuples and it will draw those lines in the world.
+</p>
+</div>
 
 Collision Detection and Resolution
 three types: circle, box (AABB), and tile.
