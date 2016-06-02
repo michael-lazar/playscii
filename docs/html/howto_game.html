@@ -64,6 +64,7 @@
   <li> <a href="#editing">the Editor Interface</a> </li>
   <li> <a href="#propertieseditor">the Properties Editor</a> </li>
   <li> <a href="#spawning">Spawning New Object Instances</a> </li>
+  <li> <a href="#statefacing">Object State and Facing</a> </li>
   <li> <a href="#worldprops">World Properties and Globals</a> </li>
   <li> <a href="#camera">Camera</a> </li>
   <li> <a href="#rooms">Rooms</a> </li>
@@ -89,7 +90,7 @@
 <a id="gamemode"> <h4>Entering Game Mode</h4> </a>
 <div class="block">
   <p>
-	By default Playscii launches into Art Mode. To switch between Art Mode and Game Mode, click the top right corner of the screen, or press <code>G</code>.
+	By default Playscii launches into <a href="./howto_art.html">Art Mode</a>. To switch between Art Mode and Game Mode, click the top right corner of the screen, or press <code>G</code>.
   </p>
 </div>
 
@@ -159,7 +160,7 @@ The <a href="./generated/game_object.html">GameObject class</a> defined in the b
 Every GameObject has two components that help it render (draw to the screen) and collide, respectively: a <a href="#rendering">Renderable</a> and a <a href="#collision">Collideable</a>. Renderables in turn can draw data from one or more <a href="">Art</a>s, pieces of art you can create in <a href="./howto_art.html">Art Mode</a> or generate on-the-fly with code.
 </p>
 <p>
-GameObjects have many properties you can change, functions you can call and/or override, and concepts such as "state" and "facing" to let you define custom behaviors. Rather than try to detail all of them here, please have a look at the <a href="./generated/game_object.html">GameObject generated documentation</a> and <a href="./generated/game_util_objects.html">Game Object Utility Library generated documentation</a>, as well as the code for the <a href="#examplegames">example games</a>, for an idea of how these can be used.
+GameObjects have many properties you can change, functions you can call and/or override, and <a href="#statefacing">concepts such as state and facing</a> to let you define custom behaviors. Rather than try to detail all of them here, please have a look at the <a href="./generated/game_object.html">GameObject generated documentation</a> and <a href="./generated/game_util_objects.html">Game Object Utility Library generated documentation</a>, as well as the code for the <a href="#examplegames">example games</a>, for an idea of how these can be used.
 </p>
 </div>
 
@@ -223,6 +224,26 @@ You can create new instances of the classes you've defined in scripts with "Spaw
 </p>
 </div>
 
+<a id="statefacing"> <h4>Object State and Facing</h4> </a>
+<div class="block">
+<p>
+In almost any game that uses 2D artwork, different sprites and animations are used to represent an object's different states (standing, walking, jumping) and facings (left, front, back). GameObjects use a string variable called <tt>state</tt> and an integer called <tt>facing</tt> (with <tt>GOF_LEFT</tt>, <tt>GOF_RIGHT</tt>, <tt>GOF_FRONT</tt>, <tt>GOF_BACK</tt> as the possible values) for these.
+</p>
+<h4>Object State</h4>
+<p>
+<tt>GameObject.state</tt> can be any string, but the default state name is "stand". There is no setter method for state, you can just set it, get it, and compare it directly.
+</p>
+<p>
+Any custom state names you define for a class need to be included in its <tt>valid_states</tt> list. The <tt>get_art_for_state</tt> <tt>get_art_for_state</tt> methods use this list to load and find state-appropriate art, respectively. When a GameObject's <tt>state_changes_art</tt> property is set True, its <tt>art_src</tt> value becomes a prefix for finding art filenames for the appropriate state, eg "player_stand", "monster_die" etc. When <tt>state_changes_art</tt> is False, the base <tt>art_src</tt> property is used and the object won't change its art unless you have custom code doing so.
+</p>
+<h4>Object Facing</h4>
+<p>
+Similar to the above, when an object's <tt>facing_changes_art</tt> property is True then <tt>get_art_for_state</tt> will try to return an art that is appropriate to both the object's current state <i>and</i> its art. The <a href="#example_cronotest">cronotest example game</a> shows this in action: "crono_stand_front" is the art for the player standing (ie not moving) and facing to the front, while "crono_walk_right" is the art for the player walking to the right.
+</p>
+<p>
+Unique left and right facings will be used if found, otherwise <tt>get_art_for_state</tt> will mirror the one it finds so you don't need to make extra art. In general, the system will fall back to whatever facing <i>is</i> available, so that if you're just roughing in an object quickly you can get away with just having a front or side-facing art and do the other assets later.
+</p>
+</div>
 
 <a id="worldprops"> <h4>World Properties and Globals</h4> </a>
 <div class="block">
@@ -427,7 +448,7 @@ Playscii includes some example games to demonstrate many of the features availab
 <div class="block">
 <center> <img src="./game_cronotest.png" alt="Cronotest game" width="25%"/> </center>
 <p>
-No real "game" to it, this was the first test space for Game Mode made in April-May of 2015, and shows off what was new at the time: <a href="./howto_art.html#imageconversion">bitmap image conversion</a> from a certain beloved 1990s JRPG, a Player class that uses "facing" to drive front/side/back view stand and walk state animations, and basic examples of circle (player and the urn), box (the chest), and tile (room walls, bed, stair railing) collision types.
+No real "game" to it, this was the first test space for Game Mode made in April-May of 2015, and shows off what was new at the time: <a href="./howto_art.html#imageconversion">bitmap image conversion</a> from a certain beloved 1990s JRPG, a Player class that uses <a href="#statefacing">facing</a> to drive front/side/back view stand and walk state animations, and basic examples of circle (player and the urn), box (the chest), and tile (room walls, bed, stair railing) collision types.
 </p>
 </div>
 
