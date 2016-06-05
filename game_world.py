@@ -1,5 +1,6 @@
-import os, sys, time, importlib, traceback, json
+import os, sys, time, importlib, json
 from collections import namedtuple
+from traceback import TracebackException
 
 import sdl2
 
@@ -463,7 +464,7 @@ class GameWorld:
                     m = importlib.import_module(module_name)
                 self.modules[module_name] = m
             except Exception as e:
-                t = traceback.TracebackException.from_exception(e)
+                t = TracebackException.from_exception(e)
                 for line in t.format():
                     # ignore the importlib parts of the call stack,
                     # not useful and always the same
