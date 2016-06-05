@@ -523,16 +523,22 @@ class Application:
             return self.ui.active_art.palette
     
     def set_window_title(self, text=None):
-        new_title = APP_NAME
-        if text:
-            new_title += ' - %s' % text
+        # if editing is locked, don't even show Playscii name
+        new_title = '%s - %s' % (APP_NAME, text) if self.can_edit else str(text)
         new_title = bytes(new_title, 'utf-8')
         sdl2.SDL_SetWindowTitle(self.window, new_title)
     
     def update_window_title(self):
-        if self.game_mode and self.gw.game_dir:
-            #title = '%s - %s' % (self.gw.game_name, self.gw.last_state_loaded)
-            title = self.gw.last_state_loaded
+        if self.game_mode:
+            if self.gw.game_dir:
+                # if edit UI is up, show last loaded state
+                if self.ui.game_menu_bar.visible:
+                    title = self.gw.last_state_loaded
+                # if not, show user-friendly game name
+                else:
+                    title = self.gw.game_title
+            else:
+                title = 'Game Mode'
             self.set_window_title(title)
             return
         if not self.ui.active_art:

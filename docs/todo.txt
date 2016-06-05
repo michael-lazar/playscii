@@ -1,18 +1,16 @@
 TODO
 
-for 0.8.0:
-
-docs!
-- art howto: add a note on scripts
-- games howto page: brief section on object state?
-
----
-
 for 0.8.1:
 
 add "game name" to world properties object, show it in title bar when edit UI is hidden
 
 if a bind has >1 commands, see if that command only applies to art or game mode and ignore it if it's not in the right mode; currently one has to detect game mode in the il.BIND function which is silly
+
+special color for non-default object property values in property edit panel
+
+fix Z errors in vector.screen_to_world, probably by tearing relevant code all the way down and reasoning through it bit by bit :[
+
+"clicked on screen/object" in game mode api, so point n click games are possible
 
 ---
 
@@ -59,10 +57,6 @@ general framework for importers/exporters - read scripts from eg a formats/ dir,
 ---
 
 fixes / minor improvements:
-
-- special color for non-default object property values in property edit panel
-
-- fix Z errors in vector.screen_to_world, probably by tearing relevant code all the way down and reasoning through it bit by bit :[
 
 usablity notes from Jim:
 - way to toggle a layer's visibility without selecting it - some kind of layer list?
