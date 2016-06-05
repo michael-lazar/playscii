@@ -1,6 +1,5 @@
-import os, sys, time, importlib, json
+import os, sys, time, importlib, traceback, json
 from collections import namedtuple
-from traceback import TracebackException
 
 import sdl2
 
@@ -464,12 +463,11 @@ class GameWorld:
                     m = importlib.import_module(module_name)
                 self.modules[module_name] = m
             except Exception as e:
-                t = TracebackException.from_exception(e)
-                for line in t.format():
+                for line in traceback.format_exc().split('\n'):
                     # ignore the importlib parts of the call stack,
                     # not useful and always the same
-                    if not 'importlib' in line:
-                        self.app.log(line)
+                    if line and not 'importlib' in line:
+                        self.app.log(line.rstrip())
                 s = 'Error importing module %s! See console.' % module_name
                 if self.app.ui:
                     self.app.ui.message_line.post_line(s, 5)
