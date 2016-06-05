@@ -240,6 +240,8 @@ class GameObject:
         "Dict of running GameObjectTimerFuctions that run during update"
         self.timer_functions_post_update = {}
         "Dict of running GameObjectTimerFuctions that run during post_update"
+        self.last_update_failed = False
+        "When True, object's last update threw an exception"
         # load/create assets
         self.arts = {}
         "Dict of all Arts this object can reference, eg for states"

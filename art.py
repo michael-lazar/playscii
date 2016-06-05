@@ -268,7 +268,9 @@ class Art:
         # set new layer as active
         if self is self.app.ui.active_art:
             self.app.ui.set_active_layer(self.layers - 1)
-        self.app.log('Added new layer %s' % new_name)
+        # don't log new layers created on the fly in game mode
+        if not self.app.game_mode:
+            self.app.log('Added new layer %s' % new_name)
         self.set_unsaved_changes(True)
     
     def clear_frame_layer(self, frame, layer, bg_color=0, fg_color=None):

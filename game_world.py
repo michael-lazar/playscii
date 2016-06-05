@@ -466,11 +466,13 @@ class GameWorld:
                 for line in traceback.format_exc().split('\n'):
                     # ignore the importlib parts of the call stack,
                     # not useful and always the same
-                    if line and not 'importlib' in line:
+                    if line and not 'importlib' in line and \
+                       not 'in _import_all' in line and \
+                       not '_bootstrap._gcd_import' in line:
                         self.app.log(line.rstrip())
                 s = 'Error importing module %s! See console.' % module_name
                 if self.app.ui:
-                    self.app.ui.message_line.post_line(s, 5)
+                    self.app.ui.message_line.post_line(s, 10, True)
     
     def toggle_pause(self):
         "Toggles game pause state."
@@ -513,10 +515,11 @@ class GameWorld:
         mods = (shift_pressed, alt_pressed, ctrl_pressed)
         for obj in self.objects.values():
             if obj.handle_input_events:
+                args = (key, *mods)
                 if event.type == sdl2.SDL_KEYDOWN:
-                    obj.handle_key_down(key, *mods)
+                    self.try_object_method(obj, obj.handle_key_down, args)
                 elif event.type == sdl2.SDL_KEYUP:
-                    obj.handle_key_up(key, *mods)
+                    self.try_object_method(obj, obj.handle_key_up, args)
                 # TODO: handle_ functions for other types of input
     
     def get_colliders_at_point(self, point_x, point_y,
@@ -602,6 +605,23 @@ class GameWorld:
         for obj in self.objects.values():
             obj.frame_update()
     
+    def try_object_method(self, obj, method, args=()):
+        "Try to run given object's given method, printing error if encountered."
+        #print('running %s.%s' % (obj.name, method.__name__))
+        try:
+            method(*args)
+            if method.__name__ == 'update':
+                obj.last_update_failed = False
+        except Exception as e:
+            if method.__name__ == 'update' and obj.last_update_failed:
+                return
+            obj.last_update_failed = True
+            for line in traceback.format_exc().split('\n'):
+                if line and not 'try_object_method' in line and line.strip() != 'method()':
+                    self.app.log(line.rstrip())
+                s = 'Error in %s.%s! See console.' % (obj.name, method.__name__)
+                self.app.ui.message_line.post_line(s, 10, True)
+    
     def pre_update(self):
         "Run GO and Room pre_updates before GameWorld.update"
         # add newly spawned objects to table
@@ -610,7 +630,7 @@ class GameWorld:
         # run pre_first_update / pre_update on all appropriate objects
         for obj in self.objects.values():
             if not obj.pre_first_update_run:
-                obj.pre_first_update()
+                self.try_object_method(obj, obj.pre_first_update)
                 obj.pre_first_update_run = True
             # only run pre_update if not paused
             elif not self.paused and (obj.is_in_current_room() or obj.update_if_outside_room):
@@ -635,7 +655,7 @@ class GameWorld:
                     # update timers
                     for timer in list(obj.timer_functions_update.values())[:]:
                         timer.update()
-                    obj.update()
+                    self.try_object_method(obj, obj.update)
                     # subclass update may not call GameObject.update,
                     # set last update time here once we're sure it's done
                     obj.last_update_end = self.get_elapsed_time()

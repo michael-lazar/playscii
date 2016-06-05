@@ -92,10 +92,11 @@ class CollisionShape:
             other.go.y -= b_push * overlap.y
             other.go.collision.update_transform_from_object()
         # call objs' started_colliding once collisions have been resolved
+        world = self.go.world
         if a_started_b:
-            self.go.started_colliding(other.go)
+            world.try_object_method(self.go, self.go.started_colliding, [other.go])
         if b_started_a:
-            other.go.started_colliding(self.go)
+            world.try_object_method(other.go, other.go.started_colliding, [self.go])
     
     def get_overlapping_static_shapes(self):
         "Return a list of static shapes that overlap with this shape."
