@@ -74,6 +74,7 @@
   <li> <a href="#sound">Sound and Music Playback</a> </li>
   <li> <a href="#inputhandling">Handling Input</a> </li>
   <li> <a href="#console">the Developer Console</a> </li>
+  <li> <a href="#errorhandling">Crash/Error Handling</a> </li>
   <li> <a href="#workflow">Workflow</a> </li>
   <li> <a href="#examples">Tour of Example Games</a> </li>
   <ul>
@@ -422,6 +423,13 @@ Type <tt>help</tt> at the dev console to see a list of available commands, with 
 </p>
 <p>
 An example of how one might use this: select an object in Game Mode, open the console and type <tt>sel.art.set_tile_at(0, 0, 0, 0, 1 + 3, 4, 5)</tt>. This will set the top left tile of the selected object's current Art to a specific character and color. That particular function is a bit wordy to call, but it demonstrates that you can call actual functions, use expressions, and set values directly from the console. The better you know Playscii's internals, the more powerful this tool can be for debugging and quick hacks.
+</p>
+</div>
+
+<a id="errorhandling"> <h4>Crash/Error Handling</h4> </a>
+<div class="block">
+<p>
+As you're iterating on game code, it's possible your code will cause Playscii to crash. Since 0.8.1, where possible Playscii will try to catch this and print the Python exception information to the console instead of crashing. If you run into a situation where this reasonably should have happened but you got a crash instead, please <a href="https://bitbucket.org/JPLeBreton/playscii/issues?status=new&status=open">file a bug</a>.
 </p>
 </div>
 
