@@ -7,30 +7,25 @@ from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, L
 
 class NewGameDirDialog(UIDialog):
     title = 'New game'
-    fields = 1
+    fields = 2
     field0_label = 'Name of new game folder:'
+    field1_label = 'Name of new game:'
+    field1_type = str
     confirm_caption = 'Create'
     game_mode_visible = True
     
     # TODO: only allow names that don't already exist
     
+    def get_initial_field_text(self, field_number):
+        # provide a reasonable non-blank name
+        if field_number == 0:
+            return 'newgame'
+        elif field_number == 1:
+            return type(self.ui.app.gw).game_title
+    
     def confirm_pressed(self):
-        if self.ui.app.gw.create_new_game(self.field0_text):
+        if self.ui.app.gw.create_new_game(self.field0_text, self.field1_text):
             self.ui.app.enter_game_mode()
-        self.dismiss()
-
-class SetGameDirDialog(UIDialog):
-    
-    title = 'Open game'
-    fields = 1
-    field0_label = 'Folder to load game data from:'
-    confirm_caption = 'Open'
-    game_mode_visible = True
-    
-    # TODO: only allow valid game directory
-    
-    def confirm_pressed(self):
-        SetGameDirCommand.execute(self.ui.console, [self.field0_text])
         self.dismiss()
 
 class LoadGameStateDialog(UIDialog):

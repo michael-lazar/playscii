@@ -29,6 +29,12 @@ class PauseGameItem(PulldownMenuItem):
     def get_label(app):
         return ['Pause game', 'Unpause game'][app.gw.paused]
 
+class OpenConsoleItem(PulldownMenuItem):
+    label = 'Open dev console'
+    command = 'toggle_console'
+    close_on_select = True
+    always_active = True
+
 #
 # state menu
 #
@@ -256,14 +262,16 @@ class DeleteSelectedObjectsItem(PulldownMenuItem):
         return len(app.gw.selected_objects) == 0
 
 class GameMenuData(PulldownMenuData):
-    items = [HideEditUIItem, SeparatorItem, NewGameDirItem, SetGameDirItem,
-             PauseGameItem, SeparatorItem, FileQuitItem]
+    items = [HideEditUIItem, OpenConsoleItem, SeparatorItem,
+             NewGameDirItem, SetGameDirItem, PauseGameItem, SeparatorItem,
+             FileQuitItem]
 
 class GameStateMenuData(PulldownMenuData):
     items = [ResetStateItem, LoadStateItem, SaveStateItem, SaveNewStateItem]
 
 class GameViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTItem, ViewSetZoomItem, ViewToggleCameraTiltItem, SeparatorItem,
+    items = [ViewToggleCRTItem, ViewSetZoomItem, ViewToggleCameraTiltItem,
+             SeparatorItem,
              ObjectsToCameraItem, CameraToObjectsItem, ToggleDebugObjectsItem,
              ToggleOriginVizItem, ToggleBoundsVizItem, ToggleCollisionVizItem]
     

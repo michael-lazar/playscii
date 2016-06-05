@@ -151,7 +151,7 @@ class WorldPropertiesObject(GameObject):
     locked = True
     physics_move = False
     do_not_list = True
-    world_props = ['gravity_x', 'gravity_y', 'gravity_z',
+    world_props = ['game_title', 'gravity_x', 'gravity_y', 'gravity_z',
                    'hud_class_name', 'globals_object_class_name',
                    'camera_x', 'camera_y', 'camera_z',
                    'bg_color_r', 'bg_color_g', 'bg_color_b', 'bg_color_a',

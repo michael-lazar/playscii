@@ -610,6 +610,7 @@ class UI:
             self.message_line.post_line(self.show_edit_ui_log % bind, 10)
         else:
             self.message_line.post_line('')
+        self.app.update_window_title()
     
     def object_selection_changed(self):
         if len(self.app.gw.selected_objects) == 0:

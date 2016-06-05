@@ -1,4 +1,4 @@
-import os, sys, time, importlib, json
+import os, sys, time, importlib, traceback, json
 from collections import namedtuple
 
 import sdl2
@@ -53,6 +53,8 @@ class GameWorld:
     Properties serialized via WorldPropertiesObject.
     Global state can be controlled via a WorldGlobalsObject.
     """
+    game_title = 'Untitled Game'
+    "Title for game, shown in window titlebar when not editing"
     gravity_x, gravity_y, gravity_z = 0., 0., 0.
     "Gravity applied to all objects who are affected by gravity."
     bg_color = [0., 0., 0., 1.]
@@ -93,6 +95,7 @@ class GameWorld:
         "Currently loaded game directory."
         self.sounds_dir = None
         self.game_name = None
+        "Game's internal name, based on its directory."
         self.selected_objects = []
         self.last_click_on_ui = False
         self.properties = None
@@ -273,12 +276,12 @@ class GameWorld:
         self.selected_objects = []
         self.app.ui.object_selection_changed()
     
-    def create_new_game(self, game_name):
+    def create_new_game(self, new_game_dir, new_game_title):
         "Create appropriate dirs and files for a new game, return success."
         self.unload_game()
-        new_dir = self.app.documents_dir + TOP_GAME_DIR + game_name + '/'
+        new_dir = self.app.documents_dir + TOP_GAME_DIR + new_game_dir + '/'
         if os.path.exists(new_dir):
-            self.app.log('Game dir %s already exists!' % game_name)
+            self.app.log('Game dir %s already exists!' % new_game_dir)
             return False
         os.mkdir(new_dir)
         os.mkdir(new_dir + ART_DIR)
@@ -287,16 +290,17 @@ class GameWorld:
         os.mkdir(new_dir + CHARSET_DIR)
         os.mkdir(new_dir + PALETTE_DIR)
         # create a generic starter script with a GO and Player subclass
-        f = open(new_dir + GAME_SCRIPTS_DIR + game_name + '.py', 'w')
+        f = open(new_dir + GAME_SCRIPTS_DIR + new_game_dir + '.py', 'w')
         f.write(STARTER_SCRIPT)
         f.close()
         # load game
-        self.set_game_dir(game_name)
-        # HACK: set collision enabled by default, no idea why it's not :[
+        self.set_game_dir(new_game_dir)
         self.properties = self.spawn_object_of_class('WorldPropertiesObject')
         self.objects.update(self.new_objects)
         self.new_objects = {}
+        # HACK: set some property defaults, no idea why they don't take :[
         self.collision_enabled = self.properties.collision_enabled = True
+        self.game_title = self.properties.game_title = new_game_title
         self.save_to_file(DEFAULT_STATE_FILENAME)
         return True
     
@@ -450,11 +454,24 @@ class GameWorld:
         self.modules = {}
         # load/reload new modules
         for module_name in self._get_game_modules_list():
-            # always reload built in modules
-            if module_name in self.builtin_module_names or module_name in old_modules:
-                self.modules[module_name] = importlib.reload(old_modules[module_name])
-            else:
-                self.modules[module_name] = importlib.import_module(module_name)
+            try:
+                # always reload built in modules
+                if module_name in self.builtin_module_names or \
+                   module_name in old_modules:
+                    m = importlib.reload(old_modules[module_name])
+                else:
+                    m = importlib.import_module(module_name)
+                self.modules[module_name] = m
+            except Exception as e:
+                t = traceback.TracebackException.from_exception(e)
+                for line in t.format():
+                    # ignore the importlib parts of the call stack,
+                    # not useful and always the same
+                    if not 'importlib' in line:
+                        self.app.log(line)
+                s = 'Error importing module %s! See console.' % module_name
+                if self.app.ui:
+                    self.app.ui.message_line.post_line(s, 5)
     
     def toggle_pause(self):
         "Toggles game pause state."
@@ -767,6 +784,7 @@ class GameWorld:
         json.dump(d, open(filename, 'w'),
                   sort_keys=True, indent=1)
         self.app.log('Saved game state %s to disk.' % filename)
+        self.app.update_window_title()
     
     def _get_all_loaded_classes(self):
         """
@@ -854,7 +872,8 @@ class GameWorld:
     def spawn_object_of_class(self, class_name, x=None, y=None):
         "Spawn a new object of given class name at given location."
         if not class_name in self.classes:
-            self.app.log("Couldn't find class %s" % class_name)
+            # no need for log here, import_all prints exception cause
+            #self.app.log("Couldn't find class %s" % class_name)
             return
         d = {'class_name': class_name}
         if x is not None and y is not None:
@@ -868,7 +887,8 @@ class GameWorld:
         # load module and class
         class_name = object_data.get('class_name', None)
         if not class_name or not class_name in self.classes:
-            self.app.log("Couldn't parse class %s" % class_name)
+            # no need for log here, import_all prints exception cause
+            #self.app.log("Couldn't parse class %s" % class_name)
             return
         obj_class = self.classes[class_name]
         # pass in object data
@@ -937,9 +957,12 @@ class GameWorld:
             self.app.log("Couldn't load game state from %s" % filename)
             #self.app.log(sys.exc_info())
             return
+        errors = False
         # spawn objects
         for obj_data in d['objects']:
-            self.spawn_object_from_data(obj_data)
+            obj = self.spawn_object_from_data(obj_data)
+            if not obj:
+                errors = True
         # spawn a WorldPropertiesObject if one doesn't exist
         for obj in self.new_objects.values():
             if type(obj).__name__ == self.properties_object_class_name:
@@ -965,7 +988,8 @@ class GameWorld:
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
         self.hud_class_name = hud_class.__name__
-        self.app.log('Loaded game state from %s' % filename)
+        if not errors:
+            self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.show_collision_all)
         self.set_for_all_objects('show_bounds', self.show_bounds_all)

@@ -2,7 +2,7 @@ import os
 
 from ui_element import UIElement
 from ui_button import UIButton
-from ui_game_dialog import LoadGameStateDialog, SaveGameStateDialog, SetGameDirDialog
+from ui_game_dialog import LoadGameStateDialog, SaveGameStateDialog
 from ui_chooser_dialog import ScrollArrowButton
 from ui_colors import UIColors
 
