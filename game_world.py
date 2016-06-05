@@ -512,10 +512,9 @@ class GameWorld:
             return
         key = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode()
         key = key.lower()
-        mods = (shift_pressed, alt_pressed, ctrl_pressed)
+        args = (key, shift_pressed, alt_pressed, ctrl_pressed)
         for obj in self.objects.values():
             if obj.handle_input_events:
-                args = (key, *mods)
                 if event.type == sdl2.SDL_KEYDOWN:
                     self.try_object_method(obj, obj.handle_key_down, args)
                 elif event.type == sdl2.SDL_KEYUP:
