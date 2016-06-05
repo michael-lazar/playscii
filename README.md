@@ -26,6 +26,12 @@ If you run into any issues with Playscii, please report a bug here:
 
 [https://bitbucket.org/JPLeBreton/playscii/issues?status=new&status=open](https://bitbucket.org/JPLeBreton/playscii/issues?status=new&status=open)
 
+## Roadmap
+
+For possible future features see Playscii's Trello:
+
+[https://trello.com/b/BLQBXn5H/playscii](https://trello.com/b/BLQBXn5H/playscii)
+
 ## Contact
 
 If you've made something cool with Playscii and/or have any suggestions on how
