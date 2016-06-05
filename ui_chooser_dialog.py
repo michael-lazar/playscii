@@ -204,10 +204,13 @@ class ChooserDialog(UIDialog):
                 self.scroll_index = self.selected_item_index - self.items_in_view + 1
             # keep scroll in bounds
             self.scroll_index = min(self.scroll_index, self.get_max_scroll())
+        # don't select/load null items
+        item = None
         if set_field_text:
             item = self.get_selected_item()
-            self.set_field_text(self.active_field, item.name)
-        if update_view:
+            if item:
+                self.set_field_text(self.active_field, item.name)
+        if update_view and item:
             self.load_selected_item()
             self.reset_art(False)
             self.position_preview()
@@ -216,7 +219,8 @@ class ChooserDialog(UIDialog):
         return len(self.items) - self.items_in_view
     
     def get_selected_item(self):
-        return self.items[self.selected_item_index]
+        # return None if out of bounds
+        return self.items[self.selected_item_index] if self.selected_item_index < len(self.items) else None
     
     def load_selected_item(self):
         item = self.get_selected_item()
@@ -270,6 +274,8 @@ class ChooserDialog(UIDialog):
             # ??? each button's callback loads charset/palette/whatev
             if i >= len(self.items):
                 button.never_draw = True
+                # clear item, might be left over from a previous dir view!
+                button.item = None
                 continue
             item = self.items[self.scroll_index + i]
             button.caption = item.label
