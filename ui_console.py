@@ -98,6 +98,7 @@ class ConvertImageCommand(ConsoleCommand):
             return 'Usage: conv [image filename]'
         image_filename = ' '.join(args)
         ImageConverter(console.ui.app, image_filename, console.ui.active_art)
+        console.ui.app.update_window_title()
 
 class ShowImageCommand(ConsoleCommand):
     description = 'Show given bitmap image on screen. (DEBUG ONLY)'

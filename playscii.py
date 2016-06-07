@@ -114,6 +114,7 @@ class Application:
     welcome_message = 'Welcome to Playscii! Press SPACE to select characters and colors to paint.'
     compat_fail_message = "your hardware doesn't appear to meet Playscii's requirements!  Sorry ;________;"
     game_mode_message = 'Game Mode active, press %s to return to Art Mode.'
+    img_convert_message = 'converting bitmap image: %s'
     # can_edit: if False, user can't use art or edit functionality
     can_edit = True
     
@@ -530,7 +531,7 @@ class Application:
     
     def update_window_title(self):
         if self.game_mode:
-            if self.gw.game_dir:
+            if self.gw and self.gw.game_dir:
                 # if edit UI is up, show last loaded state
                 if self.ui.game_menu_bar.visible:
                     title = self.gw.last_state_loaded
@@ -541,8 +542,13 @@ class Application:
                 title = 'Game Mode'
             self.set_window_title(title)
             return
-        if not self.ui.active_art:
+        if not self.ui or not self.ui.active_art:
             self.set_window_title()
+            return
+        # show message if converting
+        if self.converter:
+            title = self.img_convert_message % self.converter.image_filename
+            self.set_window_title(title)
             return
         # display current active document's name and info
         filename = self.ui.active_art.filename

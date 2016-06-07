@@ -205,12 +205,11 @@ class ChooserDialog(UIDialog):
             # keep scroll in bounds
             self.scroll_index = min(self.scroll_index, self.get_max_scroll())
         # don't select/load null items
-        item = None
         if set_field_text:
             item = self.get_selected_item()
             if item:
                 self.set_field_text(self.active_field, item.name)
-        if update_view and item:
+        if update_view:
             self.load_selected_item()
             self.reset_art(False)
             self.position_preview()
