@@ -214,3 +214,4 @@ class ImageConverter:
         self.app.log('Conversion of image %s %s after %.3f seconds' % (self.image_filename, verb, time_taken))
         self.app.converter = None
         self.preview_sprite = None
+        self.app.update_window_title()
