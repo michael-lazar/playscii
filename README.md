@@ -1,6 +1,7 @@
 # PLAYSCII - an ASCII art and game creation tool
 
-Playscii (pronounced play-skee) is an art, animation, and game creation tool.  The latest version will always be available here:
+Playscii (pronounced play-skee) is an art, animation, and game creation tool.
+The latest version will always be available here:
 
 * [http://jp.itch.io/playscii](http://jp.itch.io/playscii)
 * [https://bitbucket.org/JPLeBreton/playscii](https://bitbucket.org/JPLeBreton/playscii)
@@ -31,6 +32,9 @@ If you run into any issues with Playscii, please report a bug here:
 For possible future features see Playscii's Trello:
 
 [https://trello.com/b/BLQBXn5H/playscii](https://trello.com/b/BLQBXn5H/playscii)
+
+Please don't take anything there as a promise, though. If you'd find something
+on there especially valuable, feel free to vote or comment!
 
 ## Contact
 
