@@ -35,7 +35,7 @@ void main()
 	vec4 bgColor = texture(palette, colorUV);
 	bgColor.a *= bgColorAlpha;
 	// thanks Mark Wonnacott for tip on how to do this w/o a branch
-	outColor = mix(bgColor, fgColor, outColor.a);
+	outColor = mix(bgColor, outColor, outColor.a);
 	// apply "grain" for eg UI elements
 	vec4 grainColor = texture(grain, gl_FragCoord.xy * grainSize);
 	outColor.rgb += (0.5 - grainColor.rgb) * grainStrength;
