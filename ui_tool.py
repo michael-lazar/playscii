@@ -338,16 +338,12 @@ class SelectTool(UITool):
         # context: cursor has already updated, UI.update calls this
         if self.selection_in_progress and self.ui.app.cursor.moved_this_frame():
             self.current_drag = {}
-            start_x, end_x = self.drag_start_x, int(self.ui.app.cursor.x)
-            start_y, end_y = self.drag_start_y, int(-self.ui.app.cursor.y)
+            start_x, end_x = int(self.drag_start_x), int(self.ui.app.cursor.x)
+            start_y, end_y = int(self.drag_start_y), int(-self.ui.app.cursor.y)
             if start_x > end_x:
-                swap = start_x
-                start_x = end_x
-                end_x = swap
+                start_x, end_x, = end_x, start_x
             if start_y > end_y:
-                swap = start_y
-                start_y = end_y
-                end_y = swap
+                start_y, end_y, = end_y, start_y
             w, h = self.ui.active_art.width, self.ui.active_art.height
             for y in range(start_y, end_y):
                 for x in range(start_x, end_x):
@@ -398,8 +394,8 @@ class PasteTool(UITool):
             frame = art.active_frame
             layer = art.active_layer
             # offset cursor position, center paste on cursor
-            x += self.ui.app.cursor.x - int(self.ui.clipboard_width / 2)
-            y -= self.ui.app.cursor.y + int(self.ui.clipboard_height / 2)
+            x += int(self.ui.app.cursor.x) - int(self.ui.clipboard_width / 2)
+            y -= int(self.ui.app.cursor.y) + int(self.ui.clipboard_height / 2)
             if not (0 <= x < art.width and 0 <= y < art.height):
                 continue
             # if a selection is active, only paint inside it
