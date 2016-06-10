@@ -1,4 +1,4 @@
-import os.path
+import os.path, string
 from PIL import Image
 
 from texture import Texture
@@ -49,6 +49,20 @@ class CharacterSet:
                 index += 1
             if index >= self.map_width * self.map_height:
                 break
+        # if no lower case included, map upper to lower & vice versa
+        has_upper, has_lower = False, False
+        for line in char_data:
+            for char in line:
+                if char.isupper():
+                    has_upper = True
+                elif char.islower():
+                    has_lower = True
+        if has_upper and not has_lower:
+            for char in string.ascii_lowercase:
+                self.char_mapping[char] = self.char_mapping[char.upper()]
+        elif has_lower and not has_upper:
+            for char in string.ascii_uppercase:
+                self.char_mapping[char] = self.char_mapping[char.lower()]
         # last valid index a character can be
         self.last_index = index
         # load and process image
