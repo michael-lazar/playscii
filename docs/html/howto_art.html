@@ -349,6 +349,9 @@ You can also see a list of all open documents at the bottom of the Art menu.
   All subsequent lines are "mapping" data, a 1:1 correspondance between the characters on each line and the blocks in the bitmap. If a block doesn't have a representative character you can type on a keyboard, just leave it a blank space, but keep track of the number of blank spaces.
 </p>
 <p>
+As of Playscii 0.8.2, tiles can contain multiple colors, and the Ultima IV tile set is provided as an example of this. All pure black (RGB 0, 0, 0) pixels are treated as transparent, everything else is "tinted" by the foreground color, with pure white showing the tile pixels as-is.
+</p>
+<p>
   If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the <tt>charsets/</tt> subfolder of the folder you're running Playscii from. Here's the ZX Spectrum character set data as an example:
 </p>
 <center>
