@@ -221,8 +221,9 @@ class Cursor:
         if not self.app.keyboard_editing and not self.app.ui.tool_settings_changed:
             w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
             char_aspect = w / h
-            self.x = math.floor(self.x / w) * w
-            self.y = math.ceil(self.y / h) * h * char_aspect
+            # round result for oddly proportioned charsets
+            self.x = round(math.floor(self.x / w) * w)
+            self.y = round(math.ceil(self.y / h) * h * char_aspect)
         # adjust for brush size
         if self.app.ui.selected_tool.brush_size:
             size = self.app.ui.selected_tool.brush_size
