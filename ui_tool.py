@@ -245,13 +245,13 @@ class TextTool(UITool):
             if -self.cursor.y > 0:
                 self.cursor.y += 1
         elif keystr == 'Down':
-            if -self.cursor.y < art.height:
+            if -self.cursor.y < art.height - 1:
                 self.cursor.y -= 1
         elif keystr == 'Left':
             if self.cursor.x > 0:
                 self.cursor.x -= char_w
         elif keystr == 'Right':
-            if self.cursor.x < art.width:
+            if self.cursor.x < art.width - 1:
                 self.cursor.x += char_w
         elif keystr == 'Escape':
             self.finish_entry()
@@ -263,6 +263,9 @@ class TextTool(UITool):
             keystr = keystr.lower()
         elif not keystr.isalpha() and shift_pressed:
             keystr = shift_map.get(keystr, ' ')
+        # if cursor got out of bounds, don't input
+        if 0 > x or x >= art.width or 0 > y or y >= art.height:
+            return
         # create tile command
         new_tc = EditCommandTile(art)
         new_tc.set_tile(frame, layer, x, y)
