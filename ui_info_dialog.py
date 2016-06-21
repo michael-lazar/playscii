@@ -87,7 +87,7 @@ Katelyn Gigante, Isaac Halvorson, Leon Hartwig,
 Aubrey Hesselgren, Nick Keirle, Jón Kristinsson,
 Pat LaBine, Jeremy Lonien, Rohit Nirmal,
 James Noble, David Pittman, Richard Porczak,
-Dan Sanderson, Shannon Smith, Pablo López Soriano,
+Dan Sanderson, Shannon Strucci, Pablo López Soriano,
 Jack Turner, Chris Welch, Andrew Yoder
 """,
 """
