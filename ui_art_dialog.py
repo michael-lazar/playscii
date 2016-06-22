@@ -241,7 +241,7 @@ class AddFrameDialog(UIDialog):
     def is_valid_frame_index(self, index):
         try: index = int(index)
         except: return False
-        if 1 > index or index > self.ui.active_art.frames + 1:
+        if index < 1 or index > self.ui.active_art.frames + 1:
             return False
         return True
     
@@ -273,7 +273,7 @@ class DuplicateFrameDialog(AddFrameDialog):
         if not valid: return
         index = int(self.get_field_text(0))
         delay = float(self.get_field_text(1))
-        self.ui.active_art.duplicate_frame(self.ui.active_art.active_frame, index, delay)
+        self.ui.active_art.duplicate_frame(self.ui.active_art.active_frame, index - 1, delay)
         self.dismiss()
 
 class FrameDelayDialog(AddFrameDialog):
