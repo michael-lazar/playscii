@@ -1044,6 +1044,8 @@ class ArtFromEDSCII(Art):
         self.char_changed_frames, self.uv_changed_frames = [], []
         self.fg_changed_frames, self.bg_changed_frames = [], []
         self.renderables = []
+        self.instances = []
+        self.camera_x, self.camera_y, self.camera_z = 0, 0, 0
         self.command_stack = CommandStack(self)
         self.unsaved_changes = False
         # running scripts and timing info

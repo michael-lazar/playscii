@@ -29,6 +29,7 @@ class Camera:
     # starting values only, bounds are generated according to art size
     min_x,max_x = 0, 50
     min_y,max_y = -50, 0
+    use_bounds = True
     min_zoom,max_zoom = 1, 100
     # matrices -> worldspace renderable vertex shader uniforms
     fov = 90
@@ -209,7 +210,7 @@ class Camera:
             self.vel_z = 0
         self.z += self.vel_z
         # keep within bounds
-        if not self.app.game_mode:
+        if self.use_bounds:
             self.x = clamp(self.x, self.min_x, self.max_x)
             self.y = clamp(self.y, self.min_y, self.max_y)
             self.z = clamp(self.z, self.min_zoom, self.max_zoom)
