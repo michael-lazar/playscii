@@ -46,6 +46,7 @@ RenderItem = namedtuple('RenderItem', ['obj', 'layer', 'sort_value'])
 
 class GameCamera(Camera):
     pan_friction = 0.2
+    use_bounds = False
 
 class GameWorld:
     """
