@@ -167,8 +167,10 @@ class GameObject:
     "If True, user can delete this object in edit mode"
     is_debug = False
     "If True, object's visibility can be toggled with View menu option"
-    do_not_list = False
+    exclude_from_object_list = False
     "If True, do not list object in edit mode UI - system use only!"
+    exclude_from_class_list = False
+    "If True, do not list class in edit mode UI - system use only!"
     attachment_classes = {}
     "Objects to spawn as attachments: key is member name, value is class"
     noncolliding_classes = []
@@ -317,6 +319,8 @@ class GameObject:
     def load_arts(self):
         "Fill self.arts dict with Art references for eg states and facings."
         self.art = self.app.load_art(self.art_src, False)
+        if self.art:
+            self.arts[self.art_src] = self.art
         # if no states, use a single art always
         if not self.state_changes_art:
             self.arts[self.art_src] = self.art
@@ -619,8 +623,13 @@ class GameObject:
                 return self.arts[art_state_name], False
             else:
                 default_name = '%s_%s' % (self.art_src, self.state or DEFAULT_STATE)
-                assert(default_name in self.arts)
-                return self.arts[default_name], False
+                #assert(default_name in self.arts
+                # don't assert - if base+state name available, use that
+                if default_name in self.arts:
+                    return self.arts[default_name], False
+                else:
+                    #self.app.log('%s: Art with name %s not available, using %s' % (self.name, default_name, self.art_src))
+                    return self.arts[self.art_src], False
         # more complex case: art determined by both state and facing
         facing_suffix = FACINGS[self.facing]
         # first see if anim exists for this exact state, skip subsequent logic
@@ -646,7 +655,9 @@ class GameObject:
         has_right = right_name in self.arts
         has_sides = has_left or has_right
         # throw an error if nothing basic is available
-        assert(has_front or has_sides)
+        #assert(has_front or has_sides)
+        if not has_front and not has_sides:
+            return self.arts[self.art_src], False
         # if left/right opposite available, flip it
         if self.facing == GOF_LEFT and has_right:
             return self.arts[right_name], True

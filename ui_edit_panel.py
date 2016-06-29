@@ -340,8 +340,14 @@ class EditListPanel(GamePanel):
     #
     def list_classes(self):
         items = []
+        base_class = self.world.modules['game_object'].GameObject
         # get list of available classes from GameWorld
         for classname,classdef in self.world._get_all_loaded_classes().items():
+            # ignore non-GO classes, eg GameRoom, GameHUD
+            if not issubclass(classdef, base_class):
+                continue
+            if classdef.exclude_from_class_list:
+                continue
             item = self.ListItem(classname, classdef)
             items.append(item)
         # sort classes alphabetically
@@ -354,7 +360,7 @@ class EditListPanel(GamePanel):
         all_objects = self.world.objects.copy()
         all_objects.update(self.world.new_objects)
         for obj in all_objects.values():
-            if obj.do_not_list:
+            if obj.exclude_from_object_list:
                 continue
             if self.world.list_only_current_room_objects and not self.world.current_room.name in obj.rooms:
                 continue
