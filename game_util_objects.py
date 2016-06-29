@@ -9,6 +9,7 @@ class GameObjectAttachment(GameObject):
     collision_type = CT_NONE
     should_save = False
     selectable = False
+    exclude_from_class_list = True
     physics_move = False
     offset_x, offset_y, offset_z = 0., 0., 0.
     "Offset from parent object's origin"
@@ -150,7 +151,8 @@ class WorldPropertiesObject(GameObject):
     visible = deleteable = selectable = False
     locked = True
     physics_move = False
-    do_not_list = True
+    exclude_from_object_list = True
+    exclude_from_class_list = True
     world_props = ['game_title', 'gravity_x', 'gravity_y', 'gravity_z',
                    'hud_class_name', 'globals_object_class_name',
                    'camera_x', 'camera_y', 'camera_z',
@@ -222,7 +224,8 @@ class WorldGlobalsObject(GameObject):
     should_save = False
     visible = deleteable = selectable = False
     locked = True
-    do_not_list = True
+    exclude_from_object_list = True
+    exclude_from_class_list = True
     physics_move = False
     serialized = []
     editable = []
