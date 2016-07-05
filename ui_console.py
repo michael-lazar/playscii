@@ -112,6 +112,23 @@ class ShowImageCommand(ConsoleCommand):
         console.ui.app.img_renderables.append(r)
         r.scale_x, r.scale_y = w / 8, h / 8
 
+class ImportCommand(ConsoleCommand):
+    description = 'Import file using an ArtImport class'
+    def execute(console, args):
+        if len(args) < 2:
+            return 'Usage: imp [ArtImporter class name] [filename]'
+        importers = console.ui.app.get_importers()
+        importer_classname, filename = args[0], args[1]
+        importer_class = None
+        for c in importers:
+            if c.__name__ == importer_classname:
+                importer_class = c
+        if not importer_class:
+            console.ui.app.log("Couldn't find importer class %s" % importer_classname)
+        if not os.path.exists(filename):
+            console.ui.app.log("Couldn't find file %s" % filename)
+        importer = importer_class(console.ui.app, filename)
+
 class PaletteFromImageCommand(ConsoleCommand):
     description = 'Convert given image into a palette file.'
     def execute(console, args):
@@ -214,7 +231,8 @@ commands = {
     'screv': RunEveryArtScriptCommand,
     'scrstop': StopArtScriptsCommand,
     'revert': RevertArtCommand,
-    'img': ShowImageCommand
+    'img': ShowImageCommand,
+    'imp': ImportCommand
 }
 
 

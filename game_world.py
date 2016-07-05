@@ -1,4 +1,4 @@
-import os, sys, time, importlib, traceback, json
+import os, sys, time, importlib, json
 from collections import namedtuple
 
 import sdl2
@@ -464,16 +464,7 @@ class GameWorld:
                     m = importlib.import_module(module_name)
                 self.modules[module_name] = m
             except Exception as e:
-                for line in traceback.format_exc().split('\n'):
-                    # ignore the importlib parts of the call stack,
-                    # not useful and always the same
-                    if line and not 'importlib' in line and \
-                       not 'in _import_all' in line and \
-                       not '_bootstrap._gcd_import' in line:
-                        self.app.log(line.rstrip())
-                s = 'Error importing module %s! See console.' % module_name
-                if self.app.ui:
-                    self.app.ui.message_line.post_line(s, 10, True)
+                self.app.log_import_exception(e, module_name)
     
     def toggle_pause(self):
         "Toggles game pause state."
