@@ -129,6 +129,21 @@ class ImportCommand(ConsoleCommand):
             console.ui.app.log("Couldn't find file %s" % filename)
         importer = importer_class(console.ui.app, filename)
 
+class ExportCommand(ConsoleCommand):
+    description = 'Export current art using an ArtExport class'
+    def execute(console, args):
+        if len(args) < 2:
+            return 'Usage: exp [ArtExporter class name] [filename]'
+        exporters = console.ui.app.get_exporters()
+        exporter_classname, filename = args[0], args[1]
+        exporter_class = None
+        for c in exporters:
+            if c.__name__ == exporter_classname:
+                exporter_class = c
+        if not exporter_class:
+            console.ui.app.log("Couldn't find exporter class %s" % exporter_classname)
+        exporter = exporter_class(console.ui.app, filename)
+
 class PaletteFromImageCommand(ConsoleCommand):
     description = 'Convert given image into a palette file.'
     def execute(console, args):
@@ -218,7 +233,7 @@ commands = {
     'open': OpenCommand,
     'char': LoadCharSetCommand,
     'pal': LoadPaletteCommand,
-    'export': ImageExportCommand,
+    'imgexp': ImageExportCommand,
     'animexport': AnimExportCommand,
     'conv': ConvertImageCommand,
     'getpal': PaletteFromImageCommand,
@@ -232,7 +247,8 @@ commands = {
     'scrstop': StopArtScriptsCommand,
     'revert': RevertArtCommand,
     'img': ShowImageCommand,
-    'imp': ImportCommand
+    'imp': ImportCommand,
+    'exp': ExportCommand
 }
 
 
