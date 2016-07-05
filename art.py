@@ -13,6 +13,11 @@ ELEM_STRIDE = 6
 # UVs: 2 floats per vert * 4 verts in a quad
 UV_STRIDE = 2 * 4
 
+# starting document defaults
+DEFAULT_CHARSET = 'c64_petscii'
+DEFAULT_PALETTE = 'c64_original'
+DEFAULT_WIDTH, DEFAULT_HEIGHT = 20, 15
+
 DEFAULT_FRAME_DELAY = 0.1
 DEFAULT_LAYER_Z = 0
 DEFAULT_LAYER_Z_OFFSET = 0.5
@@ -994,8 +999,8 @@ class ArtFromEDSCII(Art):
         # 2-byte line breaks might produce non-int result, cast erases this
         self.height = int(len(data) / self.width / 3)
         # defaults
-        self.charset = self.app.load_charset(app.starting_charset)
-        self.palette = self.app.load_palette(app.starting_palette)
+        self.charset = self.app.load_charset(DEFAULT_CHARSET)
+        self.palette = self.app.load_palette(DEFAULT_PALETTE)
         # use correct character aspect
         self.quad_height = self.charset.char_height / self.charset.char_width
         self.frames = 1

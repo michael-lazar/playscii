@@ -20,7 +20,7 @@ if platform.system() == 'Darwin' and hasattr(sys, 'frozen'):
     os.chdir(os.path.abspath(os.path.dirname(sys.executable)))
 
 # app imports
-import ctypes, time, hashlib
+import ctypes, time, hashlib, importlib, traceback
 import webbrowser
 import sdl2
 import sdl2.ext
@@ -42,7 +42,8 @@ from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet, CHARSET_DIR
 from palette import Palette, PALETTE_DIR
-from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION
+from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
+from art_import import ArtImporter
 from renderable import TileRenderable, OnionTileRenderable
 from renderable_line import DebugLineRenderable
 from framebuffer import Framebuffer
@@ -69,6 +70,7 @@ CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
 LOG_FILENAME = 'console.log'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_DIR = 'screenshots/'
+FORMATS_DIR = 'formats/'
 AUTOPLAY_GAME_FILENAME = 'autoplay_this_game'
 
 WEBSITE_URL = 'http://vectorpoem.com/playscii'
@@ -90,10 +92,6 @@ class Application:
     update_rate = 30
     # force to run even if we can't get an OpenGL 2.1 context
     run_if_opengl_incompatible = False
-    # starting document defaults
-    starting_charset = 'c64_petscii'
-    starting_palette = 'c64_original'
-    new_art_width, new_art_height = 20, 15
     # arbitrary size cap, but something bigger = probably a bad idea
     max_art_width, max_art_height = 9999, 9999
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
@@ -337,13 +335,28 @@ class Application:
         if self.show_dev_log:
             self.log(new_line)
     
+    def log_import_exception(self, e, module_name):
+        """
+        Logs a readable version of stack trace of given exception encountered
+        importing given module name.
+        """
+        for line in traceback.format_exc().split('\n'):
+            # ignore the importlib parts of the call stack,
+            # not useful and always the same
+            if line and not 'importlib' in line and \
+               not 'in _import_all' in line and \
+               not '_bootstrap._gcd_import' in line:
+                self.log(line.rstrip())
+            s = 'Error importing module %s! See console.' % module_name
+            if self.ui:
+                self.ui.message_line.post_line(s, 10, True)
+    
     def new_art(self, filename, width=None, height=None,
                 charset=None, palette=None):
-        width = width or self.new_art_width
-        height = height or self.new_art_height
+        width, height = width or DEFAULT_WIDTH, height or DEFAULT_HEIGHT
         filename = filename if filename and filename != '' else 'new'
-        charset = self.load_charset(charset or self.starting_charset)
-        palette = self.load_palette(palette or self.starting_palette)
+        charset = self.load_charset(charset or DEFAULT_CHARSET)
+        palette = self.load_palette(palette or DEFAULT_PALETTE)
         art = Art(filename, self, charset, palette, width, height)
         art.set_filename(filename)
         art.time_loaded = time.time()
@@ -376,8 +389,13 @@ class Application:
         art.time_loaded = time.time()
         return art
     
-    def new_art_for_edit(self, filename, width, height):
+    def new_art_for_edit(self, filename, width=None, height=None):
+        "Create a new Art and set it editable in Art Mode."
         art = self.new_art(filename, width, height)
+        self.set_new_art_for_edit(art)
+    
+    def set_new_art_for_edit(self, art):
+        "Makes given Art editable in Art Mode UI."
         self.art_loaded_for_edit.insert(0, art)
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)
@@ -472,6 +490,27 @@ class Application:
             if f is not None and os.path.exists(f) and os.path.isfile(f):
                 return f
         return None
+    
+    def get_importers(self):
+        "Returns list of all ArtImporter subclasses found in formats/ dir."
+        importers = []
+        for filename in os.listdir(FORMATS_DIR):
+            basename, ext = os.path.splitext(filename)
+            if not ext.lower() == '.py':
+                continue
+            try:
+                m = importlib.import_module('formats.%s' % basename)
+            except Exception as e:
+                self.log_import_exception(e, basename)
+            for k,v in m.__dict__.items():
+                if not type(v) is type:
+                    continue
+                if issubclass(v, ArtImporter) and v is not ArtImporter:
+                    importers.append(v)
+        return importers
+    
+    def get_exporters(self):
+        pass
     
     def import_edscii(self, filename, width_override=None):
         """

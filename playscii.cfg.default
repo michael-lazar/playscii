@@ -11,10 +11,9 @@ Application.window_width, Application.window_height = 1280, 720
 # try it, you'll like it :]
 Application.capslock_is_ctrl = True
 
-Application.starting_charset = 'c64_petscii'
-Application.starting_palette = 'c64_original'
-
-Application.new_art_width, Application.new_art_height = 40, 25
+Art.DEFAULT_CHARSET = 'c64_petscii'
+Art.DEFAULT_PALETTE = 'c64_original'
+Art.DEFAULT_WIDTH, Art.DEFAULT_HEIGHT = 40, 25
 
 Camera.start_x, Camera.start_y = 20, -12
 Camera.start_zoom = 15

@@ -3,7 +3,7 @@ import os.path
 from ui_dialog import UIDialog
 
 from ui_console import OpenCommand, SaveCommand
-from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
+from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
 from palette import PaletteFromFile
 
 
@@ -25,8 +25,8 @@ class NewArtDialog(UIDialog):
         UIDialog.__init__(self, ui)
         # populate with good defaults
         self.field0_text = 'new%s' % len(ui.app.art_loaded_for_edit)
-        self.field1_text = str(ui.app.new_art_width)
-        self.field2_text = str(ui.app.new_art_height)
+        self.field1_text = str(DEFAULT_WIDTH)
+        self.field2_text = str(DEFAULT_HEIGHT)
     
     def is_input_valid(self):
         "file can't already exist, dimensions must be >0 and <= max"
