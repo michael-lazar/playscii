@@ -44,6 +44,7 @@ from charset import CharacterSet, CHARSET_DIR
 from palette import Palette, PALETTE_DIR
 from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
 from art_import import ArtImporter
+from art_export import ArtExporter
 from renderable import TileRenderable, OnionTileRenderable
 from renderable_line import DebugLineRenderable
 from framebuffer import Framebuffer
@@ -227,6 +228,8 @@ class Application:
         # raster images (debug)
         self.img_renderables = []
         self.converter = None
+        # dict of available importer/exporter modules
+        self.format_modules = {}
         self.game_mode = False
         self.gw = GameWorld(self)
         # if game dir specified, set it before we try to load any art
@@ -491,26 +494,34 @@ class Application:
                 return f
         return None
     
-    def get_importers(self):
-        "Returns list of all ArtImporter subclasses found in formats/ dir."
-        importers = []
+    def get_format_classes(self, base_class):
+        classes = []
         for filename in os.listdir(FORMATS_DIR):
             basename, ext = os.path.splitext(filename)
             if not ext.lower() == '.py':
                 continue
             try:
-                m = importlib.import_module('formats.%s' % basename)
+                if basename in self.format_modules:
+                    m = importlib.reload(self.format_modules[basename])
+                else:
+                    m = importlib.import_module('formats.%s' % basename)
+                    self.format_modules[basename] = m
             except Exception as e:
                 self.log_import_exception(e, basename)
             for k,v in m.__dict__.items():
                 if not type(v) is type:
                     continue
-                if issubclass(v, ArtImporter) and v is not ArtImporter:
-                    importers.append(v)
-        return importers
+                if issubclass(v, base_class) and v is not base_class:
+                    classes.append(v)
+        return classes
+    
+    def get_importers(self):
+        "Returns list of all ArtImporter subclasses found in formats/ dir."
+        return self.get_format_classes(ArtImporter)
     
     def get_exporters(self):
-        pass
+        "Returns list of all ArtExporter subclasses found in formats/ dir."
+        return self.get_format_classes(ArtExporter)
     
     def import_edscii(self, filename, width_override=None):
         """
