@@ -1,6 +1,7 @@
 import os.path
 
 from ui_dialog import UIDialog
+from ui_chooser_dialog import ChooserDialog, ChooserItemButton
 
 from ui_console import OpenCommand, SaveCommand
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
@@ -73,6 +74,41 @@ class SaveAsDialog(UIDialog):
     
     def confirm_pressed(self):
         SaveCommand.execute(self.ui.console, [self.field0_text])
+        self.dismiss()
+
+class ImportItemButton(ChooserItemButton):
+    width = 15
+    big_width = 20
+
+class ImportFileDialog(ChooserDialog):
+    # TODO: generalize this so exporter can inherit from it trivially
+    title = 'Choose an importer'
+    confirm_caption = 'Choose'
+    show_preview_image = False
+    item_button_class = ImportItemButton
+    
+    def get_items(self):
+        items = []
+        importers = self.ui.app.get_importers()
+        i = 0
+        for importer in importers:
+            item = self.chooser_item_class(i, importer.format_name)
+            item.importer_class = importer
+            item.description = importer.format_description
+            items.append(item)
+            i += 1
+        return items
+    
+    def set_preview(self):
+        item = self.get_selected_item()
+        x = self.item_button_width + 4
+        y = 3
+        for line in item.description.split('\n'):
+            self.art.write_string(0, 0, x, y, line)
+            y += 1
+    
+    def confirm_pressed(self):
+        # TODO: open file dialog, sets importer as current
         self.dismiss()
 
 
