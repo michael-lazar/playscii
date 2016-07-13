@@ -69,6 +69,11 @@ class FileRevertItem(PulldownMenuItem):
     def should_dim(app):
         return app.ui.active_art is None or not app.ui.active_art.unsaved_changes
 
+class FileImportItem(PulldownMenuItem):
+    label = 'Import…'
+    command = 'import_file'
+    always_active = True
+
 class FileEDSCIIImportItem(PulldownMenuItem):
     label = 'Import from EDSCII'
     command = 'import_edscii'
@@ -512,7 +517,7 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewItem, FileOpenItem, FileSaveItem, FileSaveAsItem,
-             FileCloseItem, FileRevertItem, SeparatorItem,
+             FileCloseItem, FileRevertItem, SeparatorItem, FileImportItem,
              FileEDSCIIImportItem, FileConvertImageItem, SeparatorItem,
              FilePNGExportItem, FileGIFExportItem,
              SeparatorItem, FileQuitItem]

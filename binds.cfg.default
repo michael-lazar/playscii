@@ -131,6 +131,7 @@ self.edit_bind_src = {
 	'_open_game_assets' : 'open_all_game_assets',
 	'_export_anim'  : 'export_anim',
 	'_import_edscii': 'import_edscii',
+	'_import_file': 'import_file',
 	'_revert'   : 'revert_art',
 	'_new_game'     : 'new_game_dir',
 	'_duplicate_objects': 'duplicate_selected_objects',

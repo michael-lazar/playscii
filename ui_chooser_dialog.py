@@ -101,6 +101,7 @@ class ChooserDialog(UIDialog):
     field0_width = tile_width - 4
     item_start_x, item_start_y = 2, 4
     no_preview_label = 'No preview available!'
+    show_preview_image = True
     item_button_class = ChooserItemButton
     chooser_item_class = ChooserItem
     scrollbar_shade_char = 54
@@ -456,5 +457,5 @@ class ChooserDialog(UIDialog):
     
     def render(self):
         UIDialog.render(self)
-        if self.preview_renderable.texture:
+        if self.preview_renderable.texture and self.show_preview_image:
             self.preview_renderable.render()
