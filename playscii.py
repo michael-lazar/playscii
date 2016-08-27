@@ -184,11 +184,14 @@ class Application:
         try: gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
         except: gpu_renderer = "[couldn't detect renderer]"
         self.log('GPU: %s - %s' % (gpu_vendor, gpu_renderer))
-        # try single-argument GL2.0 version first
-        gl_ver = GL.glGetString(GL.GL_VERSION)
-        if not gl_ver:
-            gl_ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
-        gl_ver = gl_ver.decode('utf-8')
+        try:
+            # try single-argument GL2.0 version first
+            gl_ver = GL.glGetString(GL.GL_VERSION)
+            if not gl_ver:
+                gl_ver = GL.glGetString(GL.GL_VERSION, ctypes.c_int(0))
+            gl_ver = gl_ver.decode('utf-8')
+        except:
+            gl_ver = "[couldn't detect GL version]"
         self.log('OpenGL detected: %s' % gl_ver)
         # GL 1.1 doesn't even habla shaders, quit if we fail GLSL version check
         try:

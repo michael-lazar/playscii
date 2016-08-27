@@ -517,7 +517,7 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewItem, FileOpenItem, FileSaveItem, FileSaveAsItem,
-             FileCloseItem, FileRevertItem, SeparatorItem, FileImportItem,
+             FileCloseItem, FileRevertItem, SeparatorItem, #FileImportItem, disable for now
              FileEDSCIIImportItem, FileConvertImageItem, SeparatorItem,
              FilePNGExportItem, FileGIFExportItem,
              SeparatorItem, FileQuitItem]
