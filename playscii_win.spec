@@ -50,7 +50,7 @@ exe = EXE(pyz,
           strip=None,
           upx=True,
           icon='ui\playscii.ico',
-          console=False )
+          console=True )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
