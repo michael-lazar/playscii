@@ -43,6 +43,8 @@ http://www.syntacticbayleaves.com/2008/12/03/determining-image-similarity/
 
 http://www.guguncube.com/1656/python-image-similarity-comparison-using-several-techniques
 
+http://wiki.unity3d.com/index.php/Dithering_Shader
+
 
 
 
@@ -99,4 +101,6 @@ http://www.gamedev.net/topic/508784-unproject--mouse-coordinates-sdl-using-openg
 https://www.opengl.org/discussion_boards/showthread.php/165951-Glut-Mouse-Coordinates
 
 http://www.antongerdelan.net/opengl/raycasting.html
+
+https://gist.github.com/LordNed/6e7d0f5069112665b6364faa32692d25
 

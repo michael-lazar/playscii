@@ -211,8 +211,15 @@ class Application:
         context_version = majorv.value + (minorv.value * 0.1)
         vao_support = bool(GL.glGenVertexArrays)
         self.log('Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
-        if not vao_support  or context_version < 2.1 or gl_ver.startswith('2.0'):
+        # enforce VAO / GL version requirement
+        if not vao_support or context_version < 2.1 or gl_ver.startswith('2.0'):
             self.log("Couldn't create a compatible OpenGL context, " + self.compat_fail_message)
+            if not self.run_if_opengl_incompatible:
+                self.should_quit = True
+                return
+        # enforce GLSL version requirement
+        if bool(glsl_ver) and float(glsl_ver.split()[0]) <= 1.2:
+            self.log("GLSL 1.30 or higher is required, " + self.compat_fail_message)
             if not self.run_if_opengl_incompatible:
                 self.should_quit = True
                 return
