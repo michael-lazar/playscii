@@ -69,6 +69,7 @@ VERSION_FILENAME = 'version'
 CONFIG_FILENAME = 'playscii.cfg'
 CONFIG_TEMPLATE_FILENAME = CONFIG_FILENAME + '.default'
 LOG_FILENAME = 'console.log'
+SESSION_FILENAME = 'playscii.session'
 LOGO_FILENAME = 'ui/logo.png'
 SCREENSHOT_DIR = 'screenshots/'
 FORMATS_DIR = 'formats/'
@@ -306,6 +307,8 @@ class Application:
             self.gw.draw_debug_objects = False
         elif self.gw.game_dir and self.always_launch_art_mode:
             self.exit_game_mode()
+        if self.can_edit:
+            self.restore_session()
     
     def get_desktop_resolution(self):
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
@@ -811,7 +814,7 @@ class Application:
         GL.glUseProgram(0)
         sdl2.SDL_GL_SwapWindow(self.window)
     
-    def write_persistent_setting(self, setting_name, setting_value):
+    def save_persistent_setting(self, setting_name, setting_value):
         # iterate over list backwards so we may safely remove from it
         for line in reversed(self.config_lines):
             if line.strip().startswith(setting_name):
@@ -823,18 +826,35 @@ class Application:
         # get current value from top-level scope and write it to end of cfg
         self.config_lines += '%s = %s\n' % (setting_name, setting_value)
     
-    def write_persistent_config(self):
+    def save_persistent_config(self):
         "write options we want to persist across sessions to config file"
         for name in self.persistent_setting_names:
             # get current setting value from top-level scope
             obj, member = self.persistent_setting_names[name]
             obj = self if obj == '' else getattr(self, obj)
             value = getattr(obj, member)
-            self.write_persistent_setting(name, value)
+            self.save_persistent_setting(name, value)
+    
+    def restore_session(self):
+        session_filename = self.config_dir + SESSION_FILENAME
+        if not os.path.exists(session_filename):
+            return
+        for filename in open(session_filename).readlines():
+            self.load_art_for_edit(filename.strip())
+    
+    def save_session(self):
+        if not self.can_edit:
+            return
+        # write all currently open art to a file
+        session_file = open(self.config_dir + SESSION_FILENAME, 'w')
+        for art in self.art_loaded_for_edit:
+            session_file.write(art.filename + '\n')
+        session_file.close()
     
     def quit(self):
         if self.init_success:
-            self.write_persistent_config()
+            self.save_persistent_config()
+            self.save_session()
             self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
