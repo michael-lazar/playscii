@@ -209,10 +209,11 @@ class TextTool(UITool):
     def finish_entry(self):
         self.input_active = False
         self.ui.tool_settings_changed = True
-        x, y = int(self.cursor.x) + 1, int(-self.cursor.y) + 1
+        if self.cursor:
+            x, y = int(self.cursor.x) + 1, int(-self.cursor.y) + 1
+            self.cursor.finish_paint()
         #self.ui.message_line.post_line('Finished text entry at %s, %s' % (x, y))
         self.ui.message_line.post_line('Finished text entry.')
-        self.cursor.finish_paint()
     
     def reset_cursor_start(self, new_x, new_y):
         self.start_x, self.start_y = int(new_x), int(new_y)
