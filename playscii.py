@@ -428,7 +428,8 @@ class Application:
     def load_art_for_edit(self, filename):
         art = self.load_art(filename)
         if art in self.art_loaded_for_edit:
-            self.ui.message_line.post_line('Art file %s already loaded' % filename)
+            self.ui.set_active_art(art)
+            #self.ui.message_line.post_line('Art file %s already loaded' % filename)
             return
         self.art_loaded_for_edit.insert(0, art)
         renderable = TileRenderable(self, art)
