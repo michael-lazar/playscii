@@ -116,11 +116,18 @@ class Application:
     img_convert_message = 'converting bitmap image: %s'
     # can_edit: if False, user can't use art or edit functionality
     can_edit = True
+    # these values should be written to cfg files on exit
+    # key = module path, value = [member object (blank if self), var name]
+    persistent_setting_names = {
+        'UI.popup_hold_to_show': ['ui', 'popup_hold_to_show']
+    }
     
     def __init__(self, config_dir, documents_dir, cache_dir, log_lines,
                  art_filename, game_dir_to_load, state_to_load, autoplay_game):
         self.init_success = False
         self.config_dir = config_dir
+        # keep playscii.cfg lines in case we want to add some
+        self.config_lines = open(self.config_dir + CONFIG_FILENAME).readlines()
         self.documents_dir = documents_dir
         self.cache_dir = cache_dir
         # last dir art was opened from
@@ -804,8 +811,30 @@ class Application:
         GL.glUseProgram(0)
         sdl2.SDL_GL_SwapWindow(self.window)
     
+    def write_persistent_setting(self, setting_name, setting_value):
+        # iterate over list backwards so we may safely remove from it
+        for line in reversed(self.config_lines):
+            if line.strip().startswith(setting_name):
+                # ignore lines that contain setting name but don't set it
+                if line.find('=') == -1:
+                    continue
+                # setting already found, remove this redundant line
+                self.config_lines.remove(line)
+        # get current value from top-level scope and write it to end of cfg
+        self.config_lines += '%s = %s\n' % (setting_name, setting_value)
+    
+    def write_persistent_config(self):
+        "write options we want to persist across sessions to config file"
+        for name in self.persistent_setting_names:
+            # get current setting value from top-level scope
+            obj, member = self.persistent_setting_names[name]
+            obj = self if obj == '' else getattr(self, obj)
+            value = getattr(obj, member)
+            self.write_persistent_setting(name, value)
+    
     def quit(self):
         if self.init_success:
+            self.write_persistent_config()
             self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
@@ -822,6 +851,10 @@ class Application:
         sdl2.SDL_GL_DeleteContext(self.context)
         sdl2.SDL_DestroyWindow(self.window)
         sdl2.SDL_Quit()
+        # write to config file
+        cfg_file = open(self.config_dir + CONFIG_FILENAME, 'w')
+        cfg_file.writelines(self.config_lines)
+        cfg_file.close()
         self.log_file.close()
     
     def open_local_url(self, url):
