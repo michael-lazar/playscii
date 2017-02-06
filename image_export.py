@@ -82,7 +82,8 @@ def export_animation(app, art):
                 output_img.write(b)
             continue
         delta = ImageChops.subtract_modulo(img, frames[i-1])
-        bbox = delta.getbbox()
+        # Image.getbbox() rather unhelpfully returns None if no delta
+        bbox = delta.getbbox() or (0, 0, *delta.size)
         for b in GifImagePlugin.getdata(img.crop(bbox), offset=bbox[:2],
                                         duration=delay, transparency=0,
                                         loop=0):
