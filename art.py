@@ -241,7 +241,7 @@ class Art:
     def add_layer(self, z=None, name=None):
         "Add a new layer with given Z with given name."
         # offset Z from last layer's Z if none given
-        z = z or self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
+        z = z if z is not None else self.layers_z[-1] + DEFAULT_LAYER_Z_OFFSET
         # index isn't user-facing, z is what matters
         index = self.layers - 1
         # duplicate_layer increases self.layers by 1
@@ -263,7 +263,7 @@ class Art:
             self.bg_colors[frame] = duplicate_layer_array(self.bg_colors[frame])
             self.uv_mods[frame] = duplicate_layer_array(self.uv_mods[frame])
         self.layers += 1
-        z = z or self.layers_z
+        z = z if z is not None else self.layers_z[src_index]
         self.layers_z.append(z)
         self.layers_visibility.append(True)
         new_name = new_name or 'Copy of %s' % self.layer_names[src_index]
