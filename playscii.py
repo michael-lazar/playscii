@@ -41,7 +41,7 @@ from audio import AudioLord
 from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet, CHARSET_DIR
-from palette import Palette, PALETTE_DIR
+from palette import Palette, PaletteLord, PALETTE_DIR
 from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
 from art_import import ArtImporter
 from art_export import ArtExporter
@@ -264,6 +264,7 @@ class Application:
         self.onion_renderables_prev, self.onion_renderables_next = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
+        self.pl = PaletteLord(self)
         self.load_art_for_edit(art_filename)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
@@ -698,6 +699,7 @@ class Application:
             self.last_frame_end = self.get_elapsed_time()
             self.frames += 1
             self.sl.check_hot_reload()
+            self.pl.check_hot_reload()
             # determine FPS
             # alpha: lower = smoother
             alpha = 0.05
