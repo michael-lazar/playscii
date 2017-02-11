@@ -1,11 +1,28 @@
 import platform
 import sdl2
+from collections import namedtuple
 
 from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
 
 from key_shifts import shift_map
+
+
+"""
+TODO radio buttons et al:
+- UIDialog.fields now a (variable length) list of FieldDefinitions
+- field height and Y now computable from rest of fields list + field label + field type (bool = draw label on same line)
+- UIDialog width now computable as max size field label + max field width
+- radio_groups: list of (exclusive) tuples, when one is chosen set all others False
+- support bool field type
+- if field is in a radio group, draw it as a radio button, else draw it as a check box
+"""
+
+
+FieldDefinition = namedtuple('FieldDefinition', ['label', 'type', 'width',
+                                                 'rjust'])
+
 
 class ConfirmButton(UIButton):
     caption = 'Confirm'
