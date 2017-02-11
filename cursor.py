@@ -214,7 +214,7 @@ class Cursor:
                 self.x, self.y, self.z = vector.screen_to_world(self.app,
                                                                 self.app.mouse_x,
                                                                 self.app.mouse_y)
-            self.moved = True
+                self.moved = True
         if not self.moved and not self.app.ui.tool_settings_changed:
             return
         # snap to tile
