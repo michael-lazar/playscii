@@ -173,16 +173,15 @@ class UIDialog(UIElement):
         self.draw_fields(False)
         # don't allow confirmation if all field input isn't valid
         valid, reason = self.is_input_valid()
-        if valid:
-            if self.confirm_button.state == 'dimmed':
-                self.confirm_button.set_state('normal')
-        else:
-            # display reason
-            # TODO: somewhere better to show this than message line?
-            # how about: transparent, red, beneath dialog bottom edge?
-            self.ui.message_line.post_line(reason)
-            if self.confirm_button.state != 'dimmed':
-                self.confirm_button.set_state('dimmed')
+        # if input invalid, show reason in red along button of window
+        bottom_y = self.tile_height - 1
+        # first clear any previous warnings
+        self.art.clear_line(0, 0, bottom_y)
+        self.confirm_button.set_state('normal')
+        if not valid:
+            fg = self.ui.error_color_index
+            self.art.write_string(0, 0, 1, bottom_y, reason, fg)
+            self.confirm_button.set_state('dimmed')
         UIElement.update(self)
     
     def get_message(self):

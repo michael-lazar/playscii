@@ -51,6 +51,8 @@ class NewArtDialog(UIDialog):
         return 0 < dimension <= max_dimension
     
     def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
         name = self.field_texts[0]
         w, h = int(self.field_texts[1]), int(self.field_texts[2])
         self.ui.app.new_art_for_edit(name, w, h)
@@ -245,6 +247,8 @@ class ResizeArtDialog(UIDialog):
         return 0 < dimension <= max_dimension
     
     def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
         w, h = int(self.field_texts[0]), int(self.field_texts[1])
         start_x, start_y = int(self.field_texts[2]), int(self.field_texts[3])
         self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y)

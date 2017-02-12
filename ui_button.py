@@ -55,8 +55,7 @@ class UIButton:
         if not new_state in BUTTON_STATES:
             self.element.ui.app.log('Unrecognized state for button %s: %s' % (self.__class__.__name__, new_state))
             return
-        if new_state == 'dimmed':
-            self.dimmed = True
+        self.dimmed = new_state == 'dimmed'
         self.state = new_state
         self.set_state_colors()
     
