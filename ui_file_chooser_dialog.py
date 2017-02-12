@@ -251,6 +251,10 @@ class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
         self.dismiss()
         self.ui.open_dialog(PaletteFromFileDialog)
         self.ui.active_dialog.field_texts[0] = filename
+        # base new palette filename on source image
+        palette_filename = os.path.basename(filename)
+        palette_filename = os.path.splitext(palette_filename)[0]
+        self.ui.active_dialog.field_texts[1] = palette_filename
 
 #
 # palette chooser

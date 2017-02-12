@@ -506,6 +506,8 @@ class PaletteFromFileDialog(UIDialog):
     bad_output_filename_error = 'Enter a filename for the new palette.'
     
     def get_initial_field_text(self, field_number):
+        # NOTE: PaletteFromImageChooserDialog.confirm_pressed which invokes us
+        # sets fields 0 and 1
         if field_number == 2:
             return str(256)
         return ''
