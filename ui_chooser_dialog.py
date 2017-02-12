@@ -4,7 +4,7 @@ import os
 import sdl2
 
 from renderable_sprite import SpriteRenderable
-from ui_dialog import UIDialog
+from ui_dialog import UIDialog, Field
 from ui_button import UIButton
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
 from ui_colors import UIColors
@@ -95,9 +95,9 @@ class ChooserDialog(UIDialog):
     tile_width, tile_height = 60, 20
     # use these if screen is big enough
     big_width, big_height = 80, 30
-    fields = 1
-    field0_label = ''
-    field0_width = tile_width - 4
+    fields = [
+        Field(label='', type=str, width=tile_width - 4, oneline=True)
+    ]
     item_start_x, item_start_y = 2, 4
     no_preview_label = 'No preview available!'
     show_preview_image = True
@@ -113,10 +113,12 @@ class ChooserDialog(UIDialog):
         self.first_selection_made = False
         if self.ui.width_tiles - 20 > self.big_width:
             self.tile_width = self.big_width
-            self.field0_width = self.tile_width - 4
+            self.fields[0] = Field(label='', type=str,
+                                   width=self.tile_width - 4, oneline=True)
         if self.ui.height_tiles - 30 > self.big_height:
             self.tile_height = self.big_height
         self.items_in_view = self.tile_height - self.item_start_y - 3
+        self.field_texts = ['']
         # set active field earlier than UIDialog.init so set_initial_dir
         # can change its text
         self.active_field = 0
@@ -177,7 +179,7 @@ class ChooserDialog(UIDialog):
         # redo items and redraw
         self.selected_item_index = 0
         self.scroll_index = 0
-        self.set_field_text(self.active_field, self.current_dir)
+        self.field_texts[self.active_field] = self.current_dir
         self.items = self.get_items()
         self.reset_art(False)
     
@@ -208,7 +210,7 @@ class ChooserDialog(UIDialog):
         if set_field_text:
             item = self.get_selected_item()
             if item:
-                self.set_field_text(self.active_field, item.name)
+                self.field_texts[self.active_field] = item.name
         if update_view:
             self.load_selected_item()
             self.reset_art(False)
@@ -403,7 +405,7 @@ class ChooserDialog(UIDialog):
             self.text_input_seek()
     
     def text_input_seek(self):
-        field_text = self.get_field_text(self.active_field)
+        field_text = self.field_texts[self.active_field]
         if field_text.strip() == '':
             return
         for i,item in enumerate(self.items):
@@ -417,11 +419,10 @@ class ChooserDialog(UIDialog):
     def handle_enter(self, shift_pressed, alt_pressed, ctrl_pressed):
         "handle Enter key, return False if rest of handle_input should continue"
         # if selected item is already in text field, pick it
-        field_text = self.get_field_text(self.active_field)
+        field_text = self.field_texts[self.active_field]
         selected_item = self.get_selected_item()
         if field_text.strip() == '':
-            self.set_field_text(self.active_field, selected_item.name)
-            field_text = self.get_field_text(self.active_field)
+            self.field_texts[self.active_field] = field_text = selected_item.name
             return True
         if field_text == selected_item.name:
             # this (and similar following cases) should count as having
@@ -431,7 +432,7 @@ class ChooserDialog(UIDialog):
             return True
         # else navigate to directory or file if it's real
         if not os.path.exists(field_text):
-            self.set_field_text(self.active_field, selected_item.name)
+            self.field_texts[self.active_field] = selected_item.name
             return True
         # special case for parent dir ..
         if self.directory_aware and field_text == self.current_dir and selected_item.name == '..':
