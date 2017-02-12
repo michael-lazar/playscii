@@ -28,6 +28,8 @@ class UI:
     max_onion_alpha = 0.5
     charset_name = 'ui'
     palette_name = 'c64_original'
+    # red color for warnings
+    error_color_index = 3
     # low-contrast background texture that distinguishes UI from flat color
     grain_texture = 'bgnoise_alpha.png'
     visible = True
