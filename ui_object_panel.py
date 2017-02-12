@@ -2,7 +2,7 @@ import os
 
 from ui_button import UIButton, TEXT_RIGHT
 from ui_edit_panel import GamePanel
-from ui_dialog import UIDialog
+from ui_dialog import UIDialog, Field
 from ui_colors import UIColors
 
 
@@ -18,14 +18,17 @@ class EditObjectPropertyDialog(UIDialog):
     
     "dialog invoked by panel property click, modified at runtime as needed"
     base_title = 'Set %s'
-    fields = 1
     field0_base_label = 'New %s for %s:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_base_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
     center_in_window = False
     game_mode_visible = True
     
     def is_input_valid(self):
-        try: self.field0_type(self.get_field_text(0))
+        try: self.fields[0].type(self.field_texts[0])
         except: return False, ''
         return True, None
     
@@ -33,7 +36,7 @@ class EditObjectPropertyDialog(UIDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         # set property for selected object(s)
-        new_value = self.field0_type(self.get_field_text(0))
+        new_value = self.fields[0].type(self.field_texts[0])
         for obj in self.ui.app.gw.selected_objects:
             obj.set_object_property(self.item.prop_name, new_value)
         self.dismiss()
@@ -126,17 +129,24 @@ class EditObjectPanel(GamePanel):
             return
         # set dialog values appropriate to property being edited
         EditObjectPropertyDialog.title = EditObjectPropertyDialog.base_title % item.prop_name
-        EditObjectPropertyDialog.field0_label = EditObjectPropertyDialog.field0_base_label % (item.prop_type.__name__, item.prop_name)
-        EditObjectPropertyDialog.field0_type = item.prop_type
+        
+        # can't set named tuple values directly, build a new one and set it
+        old_field = EditObjectPropertyDialog.fields[0]
+        new_label = EditObjectPropertyDialog.field0_base_label % (item.prop_type.__name__, item.prop_name)
+        new_type = item.prop_type
         # if None, assume string
-        if EditObjectPropertyDialog.field0_type is type(None):
-            EditObjectPropertyDialog.field0_type = str
+        if item.prop_type is type(None):
+            new_type = str
+        new_field = Field(label=new_label, type=new_type, width=old_field.width,
+                          oneline=old_field.oneline)
+        EditObjectPropertyDialog.fields[0] = new_field
+        
         tile_x = int(self.ui.width_tiles * self.ui.scale) - self.tile_width
         tile_x -= EditObjectPropertyDialog.tile_width
         # give dialog a handle to item
         EditObjectPropertyDialog.item = item
         self.ui.open_dialog(EditObjectPropertyDialog)
-        self.ui.active_dialog.field0_text = str(item.prop_value)
+        self.ui.active_dialog.field_texts[0] = str(item.prop_value)
         self.ui.active_dialog.tile_x, self.ui.active_dialog.tile_y = tile_x, self.tile_y
         self.ui.active_dialog.reset_loc()
     

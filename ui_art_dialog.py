@@ -15,7 +15,7 @@ class NewArtDialog(UIDialog):
     field1_label = 'Width:'
     field2_label = 'Height:'
     field0_width = UIDialog.default_field_width
-    field1_width = field2_width = int(field0_width / 4)
+    field1_width = field2_width = UIDialog.default_short_field_width
     fields = [
         Field(label=field0_label, type=str, width=field0_width, oneline=False),
         Field(label=field1_label, type=int, width=field1_width, oneline=True),
@@ -58,28 +58,18 @@ class NewArtDialog(UIDialog):
         self.dismiss()
 
 
-class OpenArtDialog(UIDialog):
-    
-    title = 'Open art'
-    fields = 1
-    field0_label = 'Filename of art to open:'
-    confirm_caption = 'Open'
-    
-    def confirm_pressed(self):
-        # run console command for same code path
-        OpenCommand.execute(self.ui.console, [self.get_field_text(0)])
-        self.dismiss()
-
-
 class SaveAsDialog(UIDialog):
     
     title = 'Save art'
     field0_label = 'New filename for art:'
-    fields = 1
+    field0_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field0_width, oneline=False)
+    ]
     confirm_caption = 'Save'
     
     def confirm_pressed(self):
-        SaveCommand.execute(self.ui.console, [self.field0_text])
+        SaveCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
 class ImportItemButton(ChooserItemButton):
@@ -121,9 +111,13 @@ class ImportFileDialog(ChooserDialog):
 class ImportEDSCIIDialog(UIDialog):
     title = 'Import EDSCII (legacy format) art'
     field0_label = 'Filename of EDSCII art to open:'
-    fields = 2
     field1_label = 'Width override (leave 0 to guess):'
-    field1_type = int
+    field0_width = UIDialog.default_field_width
+    field1_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field0_width, oneline=False),
+        Field(label=field1_label, type=int, width=field1_width, oneline=False)
+    ]
     confirm_caption = 'Import'
     invalid_width_error = 'Invalid width override.'
     
@@ -135,13 +129,13 @@ class ImportEDSCIIDialog(UIDialog):
     def is_input_valid(self):
         try: int(self.field1_text)
         except: return False, self.invalid_width_error
-        if int(self.field1_text) < 0:
+        if int(self.field_texts[1]) < 0:
             return False, self.invalid_width_error
         return True, None
     
     def confirm_pressed(self):
-        filename = self.field0_text
-        width = int(self.get_field_text(1))
+        filename = self.field_texts[0]
+        width = int(self.field_texts[1])
         width = width if width > 0 else None
         self.ui.app.import_edscii(filename, width)
         self.dismiss()
@@ -154,7 +148,6 @@ class QuitUnsavedChangesDialog(UIDialog):
     confirm_caption = 'Save'
     other_button_visible = True
     other_caption = "Don't Save"
-    fields = 0
     
     def confirm_pressed(self):
         SaveCommand.execute(self.ui.console, [])
@@ -193,7 +186,6 @@ class RevertChangesDialog(UIDialog):
     title = 'Revert changes'
     message = 'Revert changes to %s?'
     confirm_caption = 'Revert'
-    fields = 0
     
     def confirm_pressed(self):
         self.ui.app.revert_active_art()
@@ -207,18 +199,18 @@ class RevertChangesDialog(UIDialog):
 class ResizeArtDialog(UIDialog):
     
     title = 'Resize art'
-    fields = 4
+    field_width = UIDialog.default_short_field_width
     field0_label = 'New Width:'
     field1_label = 'New Height:'
     field2_label = 'Crop Start X:'
     field3_label = 'Crop Start Y:'
-    field0_type = int
-    field1_type = int
-    field2_type = int
-    field3_type = int
+    fields = [
+        Field(label=field0_label, type=int, width=field_width, oneline=True),
+        Field(label=field1_label, type=int, width=field_width, oneline=True),
+        Field(label=field2_label, type=int, width=field_width, oneline=True),
+        Field(label=field3_label, type=int, width=field_width, oneline=True)
+    ]
     confirm_caption = 'Resize'
-    # TODO: warning about how this can't be undone at the moment!
-    field0_width = field1_width = field2_width = field3_width = int(36 / 4)
     invalid_width_error = 'Invalid width.'
     invalid_height_error = 'Invalid height.'
     invalid_start_error = 'Invalid crop origin.'
@@ -233,17 +225,17 @@ class ResizeArtDialog(UIDialog):
     
     def is_input_valid(self):
         "file can't already exist, dimensions must be >0 and <= max"
-        if not self.is_valid_dimension(self.field0_text, self.ui.app.max_art_width):
+        if not self.is_valid_dimension(self.field_texts[0], self.ui.app.max_art_width):
             return False, self.invalid_width_error
-        if not self.is_valid_dimension(self.field1_text, self.ui.app.max_art_height):
+        if not self.is_valid_dimension(self.field_texts[1], self.ui.app.max_art_height):
             return False, self.invalid_height_error
-        try: int(self.field2_text)
+        try: int(self.field_texts[2])
         except: return False, self.invalid_start_error
-        if not 0 <= int(self.field2_text) < self.ui.active_art.width:
+        if not 0 <= int(self.field_texts[2]) < self.ui.active_art.width:
             return False, self.invalid_start_error
-        try: int(self.field3_text)
+        try: int(self.field_texts[3])
         except: return False, self.invalid_start_error
-        if not 0 <= int(self.field3_text) < self.ui.active_art.height:
+        if not 0 <= int(self.field_texts[3]) < self.ui.active_art.height:
             return False, self.invalid_start_error
         return True, None
     
@@ -253,8 +245,8 @@ class ResizeArtDialog(UIDialog):
         return 0 < dimension <= max_dimension
     
     def confirm_pressed(self):
-        w, h = int(self.get_field_text(0)), int(self.get_field_text(1))
-        start_x, start_y = int(self.get_field_text(2)), int(self.get_field_text(3))
+        w, h = int(self.field_texts[0]), int(self.field_texts[1])
+        start_x, start_y = int(self.field_texts[2]), int(self.field_texts[3])
         self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y)
         self.dismiss()
 
@@ -266,11 +258,13 @@ class ResizeArtDialog(UIDialog):
 class AddFrameDialog(UIDialog):
     
     title = 'Add new frame'
-    fields = 2
-    field0_type = int
     field0_label = 'Index to add frame before:'
-    field1_type = float
     field1_label = 'Hold time (in seconds) for new frame:'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=int, width=field_width, oneline=True),
+        Field(label=field1_label, type=float, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Add'
     invalid_index_error = 'Invalid index. (1-%s allowed)'
     invalid_delay_error = 'Invalid hold time.'
@@ -294,17 +288,17 @@ class AddFrameDialog(UIDialog):
         return delay > 0
     
     def is_input_valid(self):
-        if not self.is_valid_frame_index(self.field0_text):
+        if not self.is_valid_frame_index(self.field_texts[0]):
             return False, self.invalid_index_error % str(self.ui.active_art.frames + 1)
-        if not self.is_valid_frame_delay(self.field1_text):
+        if not self.is_valid_frame_delay(self.field_texts[1]):
             return False, self.invalid_delay_error
         return True, None
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        index = int(self.get_field_text(0))
-        delay = float(self.get_field_text(1))
+        index = int(self.field_texts[0])
+        delay = float(self.field_texts[1])
         self.ui.active_art.insert_frame_before_index(index - 1, delay)
         self.dismiss()
 
@@ -314,16 +308,18 @@ class DuplicateFrameDialog(AddFrameDialog):
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        index = int(self.get_field_text(0))
-        delay = float(self.get_field_text(1))
+        index = int(self.field_texts[0])
+        delay = float(self.field_texts[1])
         self.ui.active_art.duplicate_frame(self.ui.active_art.active_frame, index - 1, delay)
         self.dismiss()
 
 class FrameDelayDialog(AddFrameDialog):
     
-    fields = 1
-    field0_type = float
     field0_label = 'New hold time (in seconds) for frame:'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=float, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
     
     def get_initial_field_text(self, field_number):
@@ -331,38 +327,50 @@ class FrameDelayDialog(AddFrameDialog):
             return str(self.ui.active_art.frame_delays[self.ui.active_art.active_frame])
     
     def is_input_valid(self):
-        if not self.is_valid_frame_delay(self.field0_text):
+        if not self.is_valid_frame_delay(self.field_texts[0]):
             return False, self.invalid_delay_error
         return True, None
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        delay = float(self.get_field_text(0))
+        delay = float(self.field_texts[0])
         self.ui.active_art.frame_delays[self.ui.active_art.active_frame] = delay
         self.dismiss()
 
 class FrameDelayAllDialog(FrameDelayDialog):
     field0_label = 'New hold time (in seconds) for all frames:'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=float, width=field_width, oneline=False)
+    ]
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        delay = float(self.get_field_text(0))
+        delay = float(self.field_texts[0])
         for i in range(self.ui.active_art.frames):
             self.ui.active_art.frame_delays[i] = delay
         self.dismiss()
 
 class FrameIndexDialog(AddFrameDialog):
-    fields = 1
-    field0_type = int
     field0_label = 'Move this frame before index:'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=int, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
+    
+    def is_input_valid(self):
+        if not self.is_valid_frame_index(self.field_texts[0]):
+            return False, self.invalid_index_error % str(self.ui.active_art.frames + 1)
+        return True, None
+    
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
         # set new frame index (effectively moving it in the sequence)
-        dest_index = int(self.get_field_text(0))
+        dest_index = int(self.field_texts[0])
         self.ui.active_art.move_frame_to_index(self.ui.active_art.active_frame, dest_index)
         self.dismiss()
 
@@ -374,11 +382,14 @@ class FrameIndexDialog(AddFrameDialog):
 class AddLayerDialog(UIDialog):
     
     title = 'Add new layer'
-    fields = 2
-    field0_type = str
     field0_label = 'Name for new layer:'
-    field1_type = float
     field1_label = 'Z-depth for new layer:'
+    field0_width = UIDialog.default_field_width
+    field1_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field0_width, oneline=False),
+        Field(label=field1_label, type=float, width=field1_width, oneline=True)
+    ]
     confirm_caption = 'Add'
     name_exists_error = 'Layer by that name already exists.'
     invalid_z_error = 'Invalid number.'
@@ -398,18 +409,18 @@ class AddLayerDialog(UIDialog):
         return True
     
     def is_input_valid(self):
-        valid_name = self.is_valid_layer_name(self.get_field_text(0))
+        valid_name = self.is_valid_layer_name(self.field_texts[0])
         if not valid_name:
             return False, self.name_exists_error
-        try: z = float(self.get_field_text(1))
+        try: z = float(self.field_texts[1])
         except: return False, self.invalid_z_error
         return True, None
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        name = self.get_field_text(0)
-        z = float(self.get_field_text(1))
+        name = self.field_texts[0]
+        z = float(self.field_texts[1])
         self.ui.active_art.add_layer(z, name)
         self.dismiss()
 
@@ -421,8 +432,8 @@ class DuplicateLayerDialog(AddLayerDialog):
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        name = self.get_field_text(0)
-        z = float(self.get_field_text(1))
+        name = self.field_texts[0]
+        z = float(self.field_texts[1])
         self.ui.active_art.duplicate_layer(self.ui.active_art.active_layer, z, name)
         self.dismiss()
 
@@ -430,15 +441,15 @@ class DuplicateLayerDialog(AddLayerDialog):
 class SetLayerNameDialog(AddLayerDialog):
     
     title = 'Set layer name'
-    fields = 1
-    field0_type = str
     field0_label = 'New name for this layer:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Rename'
     
     def confirm_pressed(self):
-        valid, reason = self.is_input_valid()
-        if not valid: return
-        new_name = self.get_field_text(0)
+        new_name = self.field_texts[0]
         self.ui.active_art.layer_names[self.ui.active_art.active_layer] = new_name
         self.ui.active_art.set_unsaved_changes(True)
         self.dismiss()
@@ -446,9 +457,11 @@ class SetLayerNameDialog(AddLayerDialog):
 
 class SetLayerZDialog(UIDialog):
     title = 'Set layer Z-depth'
-    fields = 1
-    field0_type = float
     field0_label = 'Z-depth for layer:'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=float, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
     invalid_z_error = 'Invalid number.'
     
@@ -458,14 +471,14 @@ class SetLayerZDialog(UIDialog):
             return str(self.ui.active_art.layers_z[self.ui.active_art.active_layer])
     
     def is_input_valid(self):
-        try: z = float(self.get_field_text(0))
+        try: z = float(self.field_texts[0])
         except: return False, self.invalid_z_error
         return True, None
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        new_z = float(self.get_field_text(0))
+        new_z = float(self.field_texts[0])
         self.ui.active_art.layers_z[self.ui.active_art.active_layer] = new_z
         self.ui.active_art.set_unsaved_changes(True)
         self.ui.app.grid.reset()
@@ -474,15 +487,17 @@ class SetLayerZDialog(UIDialog):
 
 class PaletteFromFileDialog(UIDialog):
     title = 'Create palette from file'
-    confirm_caption = 'Create'
-    fields = 3
-    field0_type = str
     field0_label = 'Filename to create palette from:'
-    field1_type = str
     field1_label = 'Filename for new palette:'
-    field2_type = int
     field2_label = 'Colors in new palette:'
-    field2_width = int(36 / 4)
+    field0_width = field1_width = UIDialog.default_field_width
+    field2_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field0_width, oneline=False),
+        Field(label=field1_label, type=str, width=field1_width, oneline=False),
+        Field(label=field2_label, type=int, width=field2_width, oneline=True)
+    ]
+    confirm_caption = 'Create'
     invalid_color_error = 'Palettes must be between 2 and 256 colors.'
     
     def get_initial_field_text(self, field_number):
@@ -496,7 +511,7 @@ class PaletteFromFileDialog(UIDialog):
         return 2 <= c <= 256
     
     def is_input_valid(self):
-        valid_colors = self.valid_colors(self.get_field_text(2))
+        valid_colors = self.valid_colors(self.field_texts[2])
         if not valid_colors:
             return False, self.invalid_color_error
         return True, None
@@ -504,36 +519,38 @@ class PaletteFromFileDialog(UIDialog):
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        src_filename = self.get_field_text(0)
-        palette_filename = self.get_field_text(1)
-        colors = int(self.get_field_text(2))
+        src_filename = self.field_texts[0]
+        palette_filename = self.field_texts[1]
+        colors = int(self.field_texts[2])
         new_pal = PaletteFromFile(self.ui.app, src_filename, palette_filename, colors)
         self.dismiss()
 
 
 class SetCameraZoomDialog(UIDialog):
     title = 'Set camera zoom'
-    confirm_caption = 'Set'
-    fields = 1
-    field0_type = float
     field0_label = 'New camera zoom:'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=float, width=field_width, oneline=True)
+    ]
+    confirm_caption = 'Set'
     invalid_zoom_error = 'Invalid number.'
     all_modes_visible = True
     game_mode_visible = True
     
     def get_initial_field_text(self, field_number):
         if field_number == 0:
-            return str(ui.app.camera.z)
+            return str(self.ui.app.camera.z)
         return ''
     
     def is_input_valid(self):
-        try: zoom = float(self.get_field_text(0))
+        try: zoom = float(self.field_texts[0])
         except: return False, self.invalid_zoom_error
         return True, None
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        new_zoom = float(self.get_field_text(0))
+        new_zoom = float(self.field_texts[0])
         self.ui.app.camera.z = new_zoom
         self.dismiss()

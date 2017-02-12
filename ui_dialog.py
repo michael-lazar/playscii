@@ -50,6 +50,7 @@ class UIDialog(UIElement):
     # list of tuples of field #s for linked radio button options
     radio_groups = []
     default_field_width = 36
+    default_short_field_width = int(default_field_width / 4)
     active_field_fg_color = UIColors.white
     active_field_bg_color = UIColors.darkgrey
     inactive_field_fg_color = UIColors.black
@@ -85,11 +86,10 @@ class UIDialog(UIElement):
         self.other_button.callback = self.other_pressed
         self.cancel_button.callback = self.cancel_pressed
         self.buttons = [self.confirm_button, self.other_button, self.cancel_button]
+        # populate fields with text
         self.field_texts = []
         for i,field in enumerate(self.fields):
-            text = self.get_initial_field_text(i)
-            print('field %s: %s' % (i, text))
-            self.field_texts.append(text)
+            self.field_texts.append(self.get_initial_field_text(i))
         # field cursor starts on
         self.active_field = 0
         UIElement.__init__(self, ui)
@@ -150,10 +150,12 @@ class UIDialog(UIElement):
         for i,field in enumerate(self.fields):
             field_button = DialogFieldButton(self)
             field_button.field_number = i
-            field_button.width = field.width if field.type is not bool else 1
-            y = self.get_field_y(i) + 1
-            field_button.x = 2
-            field_button.y = y
+            # field settings mean button can be in a variety of places
+            field_button.width = 1 if field.type is bool else field.width
+            field_button.x = 2 if not field.oneline or field.type is bool else len(field.label) + 1
+            field_button.y = self.get_field_y(i)
+            if not field.oneline:
+                field_button.y += 1
             field_button.never_draw = True
             self.buttons.append(field_button)
         # draw buttons
@@ -263,8 +265,11 @@ class UIDialog(UIElement):
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
-        field = self.fields[self.active_field]
-        field_text = self.field_texts[self.active_field]
+        field = None
+        field_text = ''
+        if self.active_field < len(self.fields):
+            field = self.fields[self.active_field]
+            field_text = self.field_texts[self.active_field]
         # special case: shortcut 'D' for 3rd button if no field input
         if len(self.fields) == 0 and keystr.lower() == 'd':
             self.other_pressed()
@@ -314,7 +319,7 @@ class UIDialog(UIElement):
             field_text += ' '
         elif len(keystr) > 1:
             return
-        else:
+        elif field:
             if field.type is str:
                 if not shift_pressed:
                     keystr = keystr.lower()
@@ -326,7 +331,7 @@ class UIDialog(UIElement):
             elif field.type is float and not keystr.isdigit() and keystr != '.' and keystr != '-':
                 return
             field_text += keystr
-        if len(field_text) < field.width:
+        if field and len(field_text) < field.width:
             self.field_texts[self.active_field] = field_text
         self.draw_fields(False)
     
