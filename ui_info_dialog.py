@@ -11,7 +11,6 @@ class PagedInfoDialog(UIDialog):
     # message = list of page strings, each can be triple-quoted / contain line breaks
     message = ['']
     tile_width = 54
-    fields = 0
     confirm_caption = '>>'
     other_caption = '<<'
     cancel_caption = 'Done'

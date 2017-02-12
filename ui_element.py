@@ -197,7 +197,8 @@ class UIElement:
         # don't allow selecting dimmed buttons
         if button.state == 'dimmed':
             return
-        if button.cb_arg:
+        # check for None; cb_arg could be 0
+        if button.cb_arg is not None:
             button.callback(button.cb_arg)
         else:
             button.callback()
