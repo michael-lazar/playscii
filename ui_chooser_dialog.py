@@ -89,7 +89,6 @@ class ChooserDialog(UIDialog):
     confirm_caption = 'Set'
     cancel_caption = 'Close'
     message = ''
-    draw_field_labels = False
     # if True, chooser shows files; show filename on first line of description
     show_filenames = False
     directory_aware = False
