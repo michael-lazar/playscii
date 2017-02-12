@@ -19,7 +19,7 @@ class BaseFileChooserDialog(ChooserDialog):
     
     def set_initial_dir(self):
         self.current_dir = self.ui.app.documents_dir
-        self.set_field_text(self.active_field, self.current_dir)
+        self.field_texts[self.active_field] = self.current_dir
     
     def get_filenames(self):
         "subclasses override: get list of desired filenames"
@@ -187,7 +187,7 @@ class ArtChooserDialog(BaseFileChooserDialog):
         else:
             self.current_dir = self.ui.app.gw.game_dir if self.ui.app.gw.game_dir else self.ui.app.documents_dir
             self.current_dir += ART_DIR
-        self.set_field_text(self.active_field, self.current_dir)
+        self.field_texts[self.active_field] = self.current_dir
     
     def get_initial_selection(self):
         # first item in dir list
@@ -197,10 +197,10 @@ class ArtChooserDialog(BaseFileChooserDialog):
         return self.get_sorted_dir_list([ART_FILE_EXTENSION])
     
     def confirm_pressed(self):
-        if not os.path.exists(self.get_field_text(0)):
+        if not os.path.exists(self.field_texts[0]):
             return
         self.ui.app.last_art_dir = self.current_dir
-        OpenCommand.execute(self.ui.console, [self.get_field_text(0)])
+        OpenCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
 #
@@ -233,9 +233,9 @@ class ConvertImageChooserDialog(BaseFileChooserDialog):
         return self.get_sorted_dir_list(self.supported_formats)
     
     def confirm_pressed(self):
-        if not os.path.exists(self.get_field_text(0)):
+        if not os.path.exists(self.field_texts[0]):
             return
-        ConvertImageCommand.execute(self.ui.console, [self.get_field_text(0)])
+        ConvertImageCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
 class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
@@ -244,13 +244,13 @@ class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
     confirm_caption = 'Choose'
     
     def confirm_pressed(self):
-        if not os.path.exists(self.get_field_text(0)):
+        if not os.path.exists(self.field_texts[0]):
             return
         # open new dialog, pipe our field 0 into its field 0
-        filename = self.get_field_text(0)
+        filename = self.field_texts[0]
         self.dismiss()
         self.ui.open_dialog(PaletteFromFileDialog)
-        self.ui.active_dialog.set_field_text(0, filename)
+        self.ui.active_dialog.field_texts[0] = filename
 
 #
 # palette chooser
