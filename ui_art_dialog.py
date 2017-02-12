@@ -1,6 +1,6 @@
 import os.path
 
-from ui_dialog import UIDialog
+from ui_dialog import UIDialog, Field
 from ui_chooser_dialog import ChooserDialog, ChooserItemButton
 
 from ui_console import OpenCommand, SaveCommand
@@ -11,31 +11,37 @@ from palette import PaletteFromFile
 class NewArtDialog(UIDialog):
     
     title = 'New art'
-    fields = 3
     field0_label = 'Filename of new art:'
     field1_label = 'Width:'
     field2_label = 'Height:'
-    confirm_caption = 'Create'
-    field0_width = 36
+    field0_width = UIDialog.default_field_width
     field1_width = field2_width = int(field0_width / 4)
+    fields = [
+        Field(label=field0_label, type=str, width=field0_width, oneline=False),
+        Field(label=field1_label, type=int, width=field1_width, oneline=True),
+        Field(label=field2_label, type=int, width=field2_width, oneline=True)
+    ]
+    confirm_caption = 'Create'
     file_exists_error = 'File by that name already exists.'
     invalid_width_error = 'Invalid width.'
     invalid_height_error = 'Invalid height.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        # populate with good defaults
-        self.field0_text = 'new%s' % len(ui.app.art_loaded_for_edit)
-        self.field1_text = str(DEFAULT_WIDTH)
-        self.field2_text = str(DEFAULT_HEIGHT)
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return 'new%s' % len(self.ui.app.art_loaded_for_edit)
+        elif field_number == 1:
+            return str(DEFAULT_WIDTH)
+        elif field_number == 2:
+            return str(DEFAULT_HEIGHT)
+        return ''
     
     def is_input_valid(self):
         "file can't already exist, dimensions must be >0 and <= max"
-        if os.path.exists('%s%s.%s' % (ART_DIR, self.field0_text, ART_FILE_EXTENSION)):
+        if os.path.exists('%s%s.%s' % (ART_DIR, self.field_texts[0], ART_FILE_EXTENSION)):
             return False, self.file_exists_error
-        if not self.is_valid_dimension(self.field1_text, self.ui.app.max_art_width):
+        if not self.is_valid_dimension(self.field_texts[1], self.ui.app.max_art_width):
             return False, self.invalid_width_error
-        if not self.is_valid_dimension(self.field2_text, self.ui.app.max_art_height):
+        if not self.is_valid_dimension(self.field_texts[2], self.ui.app.max_art_height):
             return False, self.invalid_height_error
         return True, None
     
@@ -45,8 +51,8 @@ class NewArtDialog(UIDialog):
         return 0 < dimension <= max_dimension
     
     def confirm_pressed(self):
-        name = self.get_field_text(0)
-        w, h = int(self.get_field_text(1)), int(self.get_field_text(2))
+        name = self.field_texts[0]
+        w, h = int(self.field_texts[1]), int(self.field_texts[2])
         self.ui.app.new_art_for_edit(name, w, h)
         self.ui.app.log('Created %s.psci with size %s x %s' % (name, w, h))
         self.dismiss()
@@ -121,9 +127,10 @@ class ImportEDSCIIDialog(UIDialog):
     confirm_caption = 'Import'
     invalid_width_error = 'Invalid width override.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        self.field1_text = '0'
+    def get_initial_field_text(self, field_number):
+        if field_number == 1:
+            return '0'
+        return ''
     
     def is_input_valid(self):
         try: int(self.field1_text)
@@ -478,9 +485,10 @@ class PaletteFromFileDialog(UIDialog):
     field2_width = int(36 / 4)
     invalid_color_error = 'Palettes must be between 2 and 256 colors.'
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        self.field2_text = str(256)
+    def get_initial_field_text(self, field_number):
+        if field_number == 2:
+            return str(256)
+        return ''
     
     def valid_colors(self, colors):
         try: c = int(colors)
@@ -513,9 +521,10 @@ class SetCameraZoomDialog(UIDialog):
     all_modes_visible = True
     game_mode_visible = True
     
-    def __init__(self, ui):
-        UIDialog.__init__(self, ui)
-        self.field0_text = str(ui.app.camera.z)
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return str(ui.app.camera.z)
+        return ''
     
     def is_input_valid(self):
         try: zoom = float(self.get_field_text(0))

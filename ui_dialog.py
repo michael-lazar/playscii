@@ -9,19 +9,10 @@ from ui_colors import UIColors
 from key_shifts import shift_map
 
 
-"""
-TODO radio buttons et al:
-- UIDialog.fields now a (variable length) list of FieldDefinitions
-- field height and Y now computable from rest of fields list + field label + field type (bool = draw label on same line)
-- UIDialog width now computable as max size field label + max field width
-- radio_groups: list of (exclusive) tuples, when one is chosen set all others False
-- support bool field type
-- if field is in a radio group, draw it as a radio button, else draw it as a check box
-"""
-
-
-FieldDefinition = namedtuple('FieldDefinition', ['label', 'type', 'width',
-                                                 'rjust'])
+Field = namedtuple('Field', ['label', # text label for field
+                             'type', # supported: str int float bool
+                             'width', # width in tiles of the field
+                             'oneline']) # label and field drawn on same line
 
 
 class ConfirmButton(UIButton):
@@ -55,30 +46,27 @@ class UIDialog(UIElement):
     other_button_visible = False
     titlebar_fg_color = UIColors.white
     titlebar_bg_color = UIColors.black
-    fields = 4
-    field_width = 36
+    fields = []
+    # list of tuples of field #s for linked radio button options
+    radio_groups = []
+    default_field_width = 36
     active_field_fg_color = UIColors.white
     active_field_bg_color = UIColors.darkgrey
     inactive_field_fg_color = UIColors.black
     inactive_field_bg_color = UIColors.lightgrey
-    field0_label = 'Field 1 label:'
-    field1_label = 'Field 2 label:'
-    field2_label = 'Field 3 label:'
-    field3_label = 'Field 4 label:'
-    # if False, skip line where field label would go entirely
-    draw_field_labels = True
-    # field types - filters text input handling
-    field0_type = str
-    field1_type = int
-    field2_type = int
-    field3_type = int
-    field0_width = field1_width = field2_width = field3_width = field_width
     # allow subclasses to override confirm caption, eg Save
     confirm_caption = None
     other_caption = None
     cancel_caption = None
     # center in window vs use tile_x/y to place
     center_in_window = True
+    # checkbox char index (UI charset)
+    checkbox_char_index = 131
+    # radio buttons, filled and unfilled
+    radio_true_char_index = 127
+    radio_false_char_index = 126
+    # field text set for bool fields with True value
+    true_field_text = 'x'
     
     def __init__(self, ui):
         self.ui = ui
@@ -97,10 +85,11 @@ class UIDialog(UIElement):
         self.other_button.callback = self.other_pressed
         self.cancel_button.callback = self.cancel_pressed
         self.buttons = [self.confirm_button, self.other_button, self.cancel_button]
-        self.field0_text = self.get_initial_field_text(0)
-        self.field1_text = self.get_initial_field_text(1)
-        self.field2_text = self.get_initial_field_text(2)
-        self.field3_text = self.get_initial_field_text(3)
+        self.field_texts = []
+        for i,field in enumerate(self.fields):
+            text = self.get_initial_field_text(i)
+            print('field %s: %s' % (i, text))
+            self.field_texts.append(text)
         # field cursor starts on
         self.active_field = 0
         UIElement.__init__(self, ui)
@@ -116,7 +105,12 @@ class UIDialog(UIElement):
         # base height = 4, titlebar + padding + buttons + padding
         h = 4
         h += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
-        h += 3 * self.fields
+        # determine height of each field from self.fields
+        for field in self.fields:
+            if field.oneline or field.type is bool:
+                h += 2
+            else:
+                h += 3
         h += self.extra_lines
         return h
     
@@ -153,10 +147,10 @@ class UIDialog(UIElement):
         self.cancel_button.x = 2
         self.cancel_button.y = self.tile_height - 2
         # create field buttons so you can click em
-        for i in range(self.fields):
+        for i,field in enumerate(self.fields):
             field_button = DialogFieldButton(self)
             field_button.field_number = i
-            field_button.width = self.get_field_width(i)
+            field_button.width = field.width if field.type is not bool else 1
             y = self.get_field_y(i) + 1
             field_button.x = 2
             field_button.y = y
@@ -199,44 +193,80 @@ class UIDialog(UIElement):
         # TODO: split over multiple lines if too long
         return msg_lines
     
-    def get_field_y(self, field_index):
-        "returns a Y value for where the given field (caption) should start"
-        start_y = 2
-        # add # of message lines
-        if self.message:
-            start_y += len(self.get_message()) + 1
-        field_height = 3 if self.draw_field_labels else 2
-        return (field_index * field_height) + start_y
+    def get_field_colors(self, index):
+        "return FG and BG colors for field with given index"
+        fg, bg = self.inactive_field_fg_color, self.inactive_field_bg_color
+        # only highlight active field if we have kb focus
+        if self is self.ui.keyboard_focus_element and index == self.active_field:
+            fg, bg = self.active_field_fg_color, self.active_field_bg_color
+        return fg, bg
     
     def draw_fields(self, with_labels=True):
-        for i in range(self.fields):
-            y = self.get_field_y(i)
-            if with_labels and self.draw_field_labels:
-                label = getattr(self, 'field%s_label' % i)
-                self.art.write_string(0, 0, 2, y, label, self.fg_color)
-            if self.draw_field_labels:
-                y += 1
-            field_width = self.get_field_width(i)
-            field_text = self.get_field_text(i)
-            # draw cursor at end if this is the active field
-            cursor = ''
-            fg, bg = self.inactive_field_fg_color, self.inactive_field_bg_color
-            # only highlight active field if we have kb focus
-            if self is self.ui.keyboard_focus_element and i == self.active_field:
-                fg, bg = self.active_field_fg_color, self.active_field_bg_color
-                # blink cursor
-                blink_on = int(self.ui.app.get_elapsed_time() / 250) % 2
-                if blink_on:
-                    cursor = '_'
-            field_text = (field_text + cursor).ljust(field_width)
-            self.art.write_string(0, 0, 2, y, field_text, fg, bg)
+        y = 2
+        if self.message:
+            y += len(self.get_message()) + 1
+        for i,field in enumerate(self.fields):
+            x = 2
+            # bool values: checkbox or radio button, always draw label to right
+            if field.type is bool:
+                # if field index is in any radio group, it's a radio button
+                is_radio = False
+                for group in self.radio_groups:
+                    if i in group:
+                        is_radio = True
+                        break
+                # true/false ~ field text is 'x'
+                field_true = self.field_texts[i] == self.true_field_text
+                if is_radio:
+                    char = self.radio_true_char_index if field_true else self.radio_false_char_index
+                else:
+                    char = self.checkbox_char_index if field_true else 0
+                fg, bg = self.get_field_colors(i)
+                self.art.set_tile_at(0, 0, x, y, char, fg, bg)
+                x += 2
+            # draw label
+            if field.label:
+                if with_labels:
+                    self.art.write_string(0, 0, x, y, field.label, self.fg_color)
+                if field.type is bool:
+                    pass
+                elif field.oneline:
+                    x += len(field.label) + 1
+                else:
+                    y += 1
+            # draw field contents
+            if field.type is not bool:
+                fg, bg = self.get_field_colors(i)
+                text = self.field_texts[i]
+                # caret for active field
+                if i == self.active_field:
+                    blink_on = int(self.ui.app.get_elapsed_time() / 250) % 2
+                    if blink_on:
+                        text += '_'
+                # pad with spaces to full width of field
+                text = text.ljust(field.width)
+                self.art.write_string(0, 0, x, y, text, fg, bg)
+            y += 2
+    
+    def get_field_y(self, field_index):
+        "returns a Y value for where the given field (caption) should start"
+        y = 2
+        # add # of message lines
+        if self.message:
+            y += len(self.get_message()) + 1
+        for i in range(field_index):
+            if self.fields[i].oneline or self.fields[i].type is bool:
+                y += 2
+            else:
+                y += 3
+        return y
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
-        field_text = self.get_field_text(self.active_field)
-        field_type = getattr(self, 'field%s_type' % self.active_field)
+        field = self.fields[self.active_field]
+        field_text = self.field_texts[self.active_field]
         # special case: shortcut 'D' for 3rd button if no field input
-        if self.fields == 0 and keystr.lower() == 'd':
+        if len(self.fields) == 0 and keystr.lower() == 'd':
             self.other_pressed()
             return
         if keystr == '`' and not shift_pressed:
@@ -248,14 +278,14 @@ class UIDialog(UIElement):
             self.cancel_pressed()
         # cycle through fields with up/down
         elif keystr == 'Up':
-            if self.fields > 1:
+            if len(self.fields) > 1:
                 self.active_field -= 1
-                self.active_field %= self.fields
+                self.active_field %= len(self.fields)
             return
         elif keystr == 'Down':
-            if self.fields > 1:
+            if len(self.fields) > 1:
                 self.active_field += 1
-                self.active_field %= self.fields
+                self.active_field %= len(self.fields)
             return
         elif keystr == 'Tab':
             # if list panel is visible, switch keyboard focus
@@ -280,38 +310,29 @@ class UIDialog(UIElement):
             else:
                 field_text = field_text[:-1]
         elif keystr == 'Space':
+            # TODO: if field.type is bool, toggle value
             field_text += ' '
         elif len(keystr) > 1:
             return
         else:
-            if field_type is str:
+            if field.type is str:
                 if not shift_pressed:
                     keystr = keystr.lower()
                 if not keystr.isalpha() and shift_pressed:
                     keystr = shift_map.get(keystr, '')
-            elif field_type is int and not keystr.isdigit() and keystr != '-':
+            elif field.type is int and not keystr.isdigit() and keystr != '-':
                 return
             # this doesn't guard against things like 0.00.001
-            elif field_type is float and not keystr.isdigit() and keystr != '.' and keystr != '-':
+            elif field.type is float and not keystr.isdigit() and keystr != '.' and keystr != '-':
                 return
             field_text += keystr
-        if len(field_text) < self.get_field_width(self.active_field):
-            self.set_field_text(self.active_field, field_text)
+        if len(field_text) < field.width:
+            self.field_texts[self.active_field] = field_text
         self.draw_fields(False)
     
     def is_input_valid(self):
         "subclasses that want to filter input put logic here"
         return True, None
-    
-    def get_field_width(self, field_number):
-        return getattr(self, 'field%s_width' % field_number)
-    
-    def get_field_text(self, field_number):
-        return getattr(self, 'field%s_text' % field_number)
-    
-    def set_field_text(self, field_number, new_text):
-        #print('s_f_t: setting %s to %s' % (field_number, new_text))
-        setattr(self, 'field%s_text' % field_number, new_text)
     
     def dismiss(self):
         # let UI forget about us
