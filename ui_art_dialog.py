@@ -503,6 +503,7 @@ class PaletteFromFileDialog(UIDialog):
     ]
     confirm_caption = 'Create'
     invalid_color_error = 'Palettes must be between 2 and 256 colors.'
+    bad_output_filename_error = 'Enter a filename for the new palette.'
     
     def get_initial_field_text(self, field_number):
         if field_number == 2:
@@ -518,6 +519,8 @@ class PaletteFromFileDialog(UIDialog):
         valid_colors = self.valid_colors(self.field_texts[2])
         if not valid_colors:
             return False, self.invalid_color_error
+        if not self.field_texts[1].strip():
+            return False, self.bad_output_filename_error
         return True, None
     
     def confirm_pressed(self):
