@@ -122,39 +122,6 @@ class ImportFileDialog(ChooserDialog):
         self.ui.open_dialog(self.ui.app.importer.file_chooser_dialog_class)
 
 
-class ImportEDSCIIDialog(UIDialog):
-    title = 'Import EDSCII (legacy format) art'
-    field0_label = 'Filename of EDSCII art to open:'
-    field1_label = 'Width override (leave 0 to guess):'
-    field0_width = UIDialog.default_field_width
-    field1_width = UIDialog.default_short_field_width
-    fields = [
-        Field(label=field0_label, type=str, width=field0_width, oneline=False),
-        Field(label=field1_label, type=int, width=field1_width, oneline=False)
-    ]
-    confirm_caption = 'Import'
-    invalid_width_error = 'Invalid width override.'
-    
-    def get_initial_field_text(self, field_number):
-        if field_number == 1:
-            return '0'
-        return ''
-    
-    def is_input_valid(self):
-        try: int(self.field1_text)
-        except: return False, self.invalid_width_error
-        if int(self.field_texts[1]) < 0:
-            return False, self.invalid_width_error
-        return True, None
-    
-    def confirm_pressed(self):
-        filename = self.field_texts[0]
-        width = int(self.field_texts[1])
-        width = width if width > 0 else None
-        self.ui.app.import_edscii(filename, width)
-        self.dismiss()
-
-
 class QuitUnsavedChangesDialog(UIDialog):
     
     title = 'Unsaved changes'

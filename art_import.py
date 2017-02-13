@@ -26,7 +26,7 @@ class ArtImporter:
     options_dialog_class = None
     "UIDialog subclass exposing import options to user."
     
-    def __init__(self, app, in_filename):
+    def __init__(self, app, in_filename, options={}):
         self.app = app
         new_filename = '%s.%s' % (os.path.splitext(in_filename)[0],
                                   ART_FILE_EXTENSION)
@@ -34,7 +34,7 @@ class ArtImporter:
         self.success = False
         # run_import returns success, log it separately from exceptions
         try:
-            if self.run_import(in_filename):
+            if self.run_import(in_filename, options):
                 self.success = True
                 self.app.set_new_art_for_edit(self.art)
                 # TODO: GROSS! figure out why this works but
