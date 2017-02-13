@@ -846,7 +846,10 @@ class Application:
         session_filename = self.config_dir + SESSION_FILENAME
         if not os.path.exists(session_filename):
             return
-        for filename in open(session_filename).readlines():
+        # more recent arts should open later
+        filenames = open(session_filename).readlines()
+        filenames.reverse()
+        for filename in filenames:
             self.load_art_for_edit(filename.strip())
     
     def save_session(self):
@@ -855,6 +858,9 @@ class Application:
         # write all currently open art to a file
         session_file = open(self.config_dir + SESSION_FILENAME, 'w')
         for art in self.art_loaded_for_edit:
+            # if an art has never been saved, don't bother storing it
+            if not os.path.exists(art.filename):
+                continue
             session_file.write(art.filename + '\n')
         session_file.close()
     
