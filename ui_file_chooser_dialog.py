@@ -5,7 +5,7 @@ from PIL import Image
 
 from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
-from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand, ConvertImageCommand
+from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand
 from ui_art_dialog import PaletteFromFileDialog
 from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
@@ -246,10 +246,6 @@ class GenericImportChooserDialog(BaseFileChooserDialog):
             self.ui.app.importer = None
 
 
-#
-# image chooser
-#
-
 class ImageChooserItem(BaseFileChooserItem):
     
     def get_preview_texture(self, app):
@@ -260,24 +256,15 @@ class ImageChooserItem(BaseFileChooserItem):
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         return Texture(img.tobytes(), *img.size)
 
-
-class ConvertImageChooserDialog(BaseFileChooserDialog):
+class ImageFileChooserDialog(BaseFileChooserDialog):
     
-    title = 'Convert image'
-    confirm_caption = 'Convert'
     cancel_caption = 'Cancel'
     chooser_item_class = ImageChooserItem
     flip_preview_y = False
     directory_aware = True
     file_extensions = ['png', 'jpg', 'jpeg', 'bmp']
-    
-    def confirm_pressed(self):
-        if not os.path.exists(self.field_texts[0]):
-            return
-        ConvertImageCommand.execute(self.ui.console, [self.field_texts[0]])
-        self.dismiss()
 
-class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
+class PaletteFromImageChooserDialog(ImageFileChooserDialog):
     
     title = 'Palette from image'
     confirm_caption = 'Choose'
