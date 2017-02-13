@@ -240,7 +240,8 @@ class ChooserDialog(UIDialog):
         return []
     
     def position_preview(self, reset=True):
-        if reset: self.set_preview()
+        if reset and self.show_preview_image:
+            self.set_preview()
         if not self.preview_renderable.texture:
             return
         qw, qh = self.art.quad_width, self.art.quad_height
@@ -457,5 +458,5 @@ class ChooserDialog(UIDialog):
     
     def render(self):
         UIDialog.render(self)
-        if self.preview_renderable.texture and self.show_preview_image:
+        if self.show_preview_image and self.preview_renderable.texture:
             self.preview_renderable.render()
