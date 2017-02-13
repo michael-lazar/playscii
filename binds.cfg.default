@@ -7,7 +7,7 @@
 self.edit_bind_src = {
     'ctrl q'   : 'quit',
     '`'        : 'toggle_console',
-    'ctrl m'   : 'convert_image',
+    'ctrl m'   : 'import_file',
     'ctrl e'   : ('export_image', 'edit_art_for_selected_objects'),
     'ctrl -'   : 'decrease_ui_scale',
     'ctrl ='   : 'increase_ui_scale',

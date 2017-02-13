@@ -1,7 +1,7 @@
 import os.path
 
 from ui_dialog import UIDialog, Field
-from ui_chooser_dialog import ChooserDialog, ChooserItemButton
+from ui_chooser_dialog import ChooserDialog, ChooserItemButton, ChooserItem
 
 from ui_console import OpenCommand, SaveCommand
 from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_FRAME_DELAY, DEFAULT_LAYER_Z_OFFSET
@@ -78,12 +78,19 @@ class ImportItemButton(ChooserItemButton):
     width = 15
     big_width = 20
 
+class ImportChooserItem(ChooserItem):
+    
+    def picked(self, element):
+        ChooserItem.picked(self, element)
+        element.confirm_pressed()
+
 class ImportFileDialog(ChooserDialog):
     # TODO: generalize this so exporter can inherit from it trivially
     title = 'Choose an importer'
     confirm_caption = 'Choose'
     show_preview_image = False
     item_button_class = ImportItemButton
+    chooser_item_class = ImportChooserItem
     
     def get_items(self):
         items = []
@@ -106,8 +113,13 @@ class ImportFileDialog(ChooserDialog):
             y += 1
     
     def confirm_pressed(self):
-        # TODO: open file dialog, sets importer as current
+        # open file select dialog so user can choose what to import
+        item = self.get_selected_item()
+        self.ui.app.importer = item.importer_class
+        if not self.ui.app.importer:
+            return
         self.dismiss()
+        self.ui.open_dialog(self.ui.app.importer.file_chooser_dialog_class)
 
 
 class ImportEDSCIIDialog(UIDialog):

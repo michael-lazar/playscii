@@ -133,6 +133,8 @@ class Application:
         self.cache_dir = cache_dir
         # last dir art was opened from
         self.last_art_dir = None
+        # last dir file was imported from
+        self.last_import_dir = None
         # class to use for temp thumbnail renderable
         self.thumbnail_renderable_class = TileRenderable
         # log fed in from __main__, might already have stuff in it
@@ -246,6 +248,8 @@ class Application:
         # raster images (debug)
         self.img_renderables = []
         self.converter = None
+        # set when an import is in progress
+        self.importer = None
         # dict of available importer/exporter modules
         self.format_modules = {}
         self.game_mode = False
