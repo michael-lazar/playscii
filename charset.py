@@ -59,9 +59,14 @@ class CharacterSet:
                     has_lower = True
         if has_upper and not has_lower:
             for char in string.ascii_lowercase:
+                # set may not have all letters
+                if not char.upper() in self.char_mapping:
+                    continue
                 self.char_mapping[char] = self.char_mapping[char.upper()]
         elif has_lower and not has_upper:
             for char in string.ascii_uppercase:
+                if not char.lower() in self.char_mapping:
+                    continue
                 self.char_mapping[char] = self.char_mapping[char.lower()]
         # last valid index a character can be
         self.last_index = index
