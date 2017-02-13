@@ -35,7 +35,7 @@ Bitmap image in PNG, JPEG, or BMP format.
     file_chooser_dialog_class = ConvertImageChooserDialog
     #options_dialog_class = TODO: conversion options
     
-    def run_import(self, in_filename):
+    def run_import(self, in_filename, options={}):
         # ImageConverter does all the heavy lifting
         ImageConverter(self.app, in_filename, self.app.ui.active_art)
         self.app.update_window_title()

@@ -42,7 +42,7 @@ from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet, CHARSET_DIR
 from palette import Palette, PaletteLord, PALETTE_DIR
-from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
+from art import Art, ArtFromDisk, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
 from art_import import ArtImporter
 from art_export import ArtExporter
 from renderable import TileRenderable, OnionTileRenderable
@@ -548,26 +548,6 @@ class Application:
     def get_exporters(self):
         "Returns list of all ArtExporter subclasses found in formats/ dir."
         return self.get_format_classes(ArtExporter)
-    
-    def import_edscii(self, filename, width_override=None):
-        """
-        imports an EDSCII legacy file for edit
-        use width_override to recover an incorrectly-saved file
-        """
-        valid_filename = self.find_filename_path(filename, ART_DIR,
-                                                 EDSCII_FILE_EXTENSION)
-        if not valid_filename:
-            self.log("Couldn't find EDSCII file %s" % filename)
-        art = ArtFromEDSCII(valid_filename, self, width_override)
-        if not art.valid:
-            self.log('Failed to load %s' % valid_filename)
-            return
-        art.time_loaded = time.time()
-        self.art_loaded_for_edit.insert(0, art)
-        renderable = TileRenderable(self, art)
-        self.edit_renderables.insert(0, renderable)
-        if self.ui:
-            self.ui.set_active_art(art)
     
     def load_charset(self, charset_to_load, log=False):
         "creates and returns a character set with the given name"

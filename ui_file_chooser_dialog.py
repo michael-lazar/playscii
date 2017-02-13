@@ -238,6 +238,8 @@ class GenericImportChooserDialog(BaseFileChooserDialog):
         self.dismiss()
         if self.ui.app.importer.options_dialog_class:
             self.ui.open_dialog(self.ui.app.importer.options_dialog_class)
+            # stash the filename we chose in a special property in new dialog
+            self.ui.active_dialog.filename = filename
         else:
             # if importer needs no options, run it
             importer = self.ui.app.importer(self.ui.app, filename)

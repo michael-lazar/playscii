@@ -74,11 +74,6 @@ class FileImportItem(PulldownMenuItem):
     command = 'import_file'
     always_active = True
 
-class FileEDSCIIImportItem(PulldownMenuItem):
-    label = 'Import from EDSCII'
-    command = 'import_edscii'
-    always_active = True
-
 class FileConvertImageItem(PulldownMenuItem):
     label = 'Convert Image…'
     command = 'convert_image'
