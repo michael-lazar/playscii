@@ -180,6 +180,10 @@ class UI:
         # set for popup
         self.popup.set_active_charset(new_charset)
         self.popup.set_active_palette(new_palette)
+        # if popup up eg toggled, redraw it completely
+        if self.popup.visible:
+            self.popup.reset_art()
+            self.popup.reset_loc()
         self.reset_onion_frames()
         # reposition all art renderables and change their opacity
         x, y, margin = 0, 0, self.app.grid.art_margin
