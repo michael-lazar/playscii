@@ -27,11 +27,14 @@ class ImageConverter:
     
     tiles_per_tick = 1
     lab_color_comparison = True
+    # delay in seconds before beginning to convert tiles.
+    # lets eg UI catch up to BitmapImageImporter changes to Art.
+    start_delay = 1.0
     
     def __init__(self, app, image_filename, art):
         image_filename = app.find_filename_path(image_filename)
         if not image_filename or not os.path.exists(image_filename):
-            app.log("Couldn't find image %s" % image_filename)
+            app.log("ImageConverter: Couldn't find image %s" % image_filename)
             return
         self.app = app
         self.app.converter = self
@@ -123,6 +126,8 @@ class ImageConverter:
         return math.sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8))
     
     def update(self):
+        if time.time() < self.start_time + self.start_delay:
+            return
         for i in range(self.tiles_per_tick):
             x_start, y_start = self.x * self.char_w, self.y * self.char_h
             x_end, y_end = x_start + self.char_w, y_start + self.char_h

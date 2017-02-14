@@ -51,6 +51,8 @@ class UIDialog(UIElement):
     radio_groups = []
     default_field_width = 36
     default_short_field_width = int(default_field_width / 4)
+    # default amount of lines padding each field
+    y_spacing = 1
     active_field_fg_color = UIColors.white
     active_field_bg_color = UIColors.darkgrey
     inactive_field_fg_color = UIColors.black
@@ -107,10 +109,10 @@ class UIDialog(UIElement):
         h += 0 if len(msg_lines) == 0 else len(msg_lines) + 1
         # determine height of each field from self.fields
         for field in self.fields:
-            if field.oneline or field.type is bool:
-                h += 2
+            if field.oneline or field.type is bool or field.type is None:
+                h += self.y_spacing + 1
             else:
-                h += 3
+                h += self.y_spacing + 2
         h += self.extra_lines
         return h
     
@@ -148,6 +150,9 @@ class UIDialog(UIElement):
         self.cancel_button.y = self.tile_height - 2
         # create field buttons so you can click em
         for i,field in enumerate(self.fields):
+            # None-type field = just a label
+            if field.type is None:
+                continue
             field_button = DialogFieldButton(self)
             field_button.field_number = i
             # field settings mean button can be in a variety of places
@@ -229,14 +234,14 @@ class UIDialog(UIElement):
             if field.label:
                 if with_labels:
                     self.art.write_string(0, 0, x, y, field.label, self.fg_color)
-                if field.type is bool:
+                if field.type in [bool, None]:
                     pass
                 elif field.oneline:
                     x += len(field.label) + 1
                 else:
                     y += 1
             # draw field contents
-            if field.type is not bool:
+            if not field.type in [bool, None]:
                 fg, bg = self.get_field_colors(i)
                 text = self.field_texts[i]
                 # caret for active field
@@ -247,7 +252,7 @@ class UIDialog(UIElement):
                 # pad with spaces to full width of field
                 text = text.ljust(field.width)
                 self.art.write_string(0, 0, x, y, text, fg, bg)
-            y += 2
+            y += self.y_spacing + 1
     
     def get_field_y(self, field_index):
         "returns a Y value for where the given field (caption) should start"
@@ -256,11 +261,22 @@ class UIDialog(UIElement):
         if self.message:
             y += len(self.get_message()) + 1
         for i in range(field_index):
-            if self.fields[i].oneline or self.fields[i].type is bool:
-                y += 2
+            if self.fields[i].oneline or self.fields[i].type in [bool, None]:
+                y += self.y_spacing + 1
             else:
                 y += 3
         return y
+    
+    def get_toggled_bool_field(self, field_index):
+        field_text = self.true_field_text if self.field_texts[field_index] != self.true_field_text else ' '
+        # if in a radio group, toggle off the others
+        for group in self.radio_groups:
+            if field_index in group:
+                for i in group:
+                    if i != field_index:
+                        self.field_texts[i] = ' '
+                break
+        return field_text
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
@@ -285,11 +301,18 @@ class UIDialog(UIElement):
             if len(self.fields) > 1:
                 self.active_field -= 1
                 self.active_field %= len(self.fields)
+                # skip over None-type fields aka dead labels
+                while self.fields[self.active_field].type is None:
+                    self.active_field -= 1
+                    self.active_field %= len(self.fields)
             return
         elif keystr == 'Down':
             if len(self.fields) > 1:
                 self.active_field += 1
                 self.active_field %= len(self.fields)
+                while self.fields[self.active_field].type is None:
+                    self.active_field += 1
+                    self.active_field %= len(self.fields)
             return
         elif keystr == 'Tab':
             # if list panel is visible, switch keyboard focus
@@ -314,11 +337,15 @@ class UIDialog(UIElement):
             else:
                 field_text = field_text[:-1]
         elif keystr == 'Space':
-            # TODO: if field.type is bool, toggle value
-            field_text += ' '
+            # if field.type is bool, toggle value
+            if field.type is bool:
+                field_text = self.get_toggled_bool_field(self.active_field)
+            else:
+                field_text += ' '
         elif len(keystr) > 1:
             return
-        elif field:
+        # alphanumeric text input
+        elif field and not field.type is bool:
             if field.type is str:
                 if not shift_pressed:
                     keystr = keystr.lower()
@@ -330,7 +357,8 @@ class UIDialog(UIElement):
             elif field.type is float and not keystr.isdigit() and keystr != '.' and keystr != '-':
                 return
             field_text += keystr
-        if field and len(field_text) < field.width:
+        # apply new field text and redraw
+        if field and (len(field_text) < field.width or field.type is bool):
             self.field_texts[self.active_field] = field_text
         self.draw_fields(False)
     
@@ -369,3 +397,6 @@ class DialogFieldButton(UIButton):
     def click(self):
         UIButton.click(self)
         self.element.active_field = self.field_number
+        # toggle if a bool field
+        if self.element.fields[self.field_number].type is bool:
+            self.element.field_texts[self.field_number] = self.element.get_toggled_bool_field(self.field_number)

@@ -236,6 +236,7 @@ class GenericImportChooserDialog(BaseFileChooserDialog):
             return
         self.ui.app.last_import_dir = self.current_dir
         self.dismiss()
+        # importer might offer a dialog for options
         if self.ui.app.importer.options_dialog_class:
             self.ui.open_dialog(self.ui.app.importer.options_dialog_class)
             # stash the filename we chose in a special property in new dialog
