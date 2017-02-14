@@ -97,7 +97,6 @@ class ConvertImageOptionsDialog(UIDialog):
         else:
             # create new palette
             palette_filename = os.path.basename(self.filename)
-            palette_filename = os.path.splitext(palette_filename)[0]
             colors = int(self.field_texts[3])
             new_pal = PaletteFromFile(self.ui.app, self.filename,
                                       palette_filename, colors)
