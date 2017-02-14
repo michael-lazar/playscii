@@ -1,9 +1,10 @@
 
 from art_import import ArtImporter
 from ui_dialog import UIDialog, Field
+from ui_art_dialog import ImportOptionsDialog
 
 
-class EDSCIIImportOptionsDialog(UIDialog):
+class EDSCIIImportOptionsDialog(ImportOptionsDialog):
     title = 'Import EDSCII (legacy format) art'
     field0_label = 'Width override (leave 0 to guess):'
     field_width = UIDialog.default_short_field_width
@@ -34,7 +35,7 @@ class EDSCIIImportOptionsDialog(UIDialog):
         options = {'width_override':width}
         self.dismiss()
         # self.filename is set in our importer's file_chooser_dialog_class
-        importer = self.ui.app.importer(self.ui.app, self.filename, options)
+        ImportOptionsDialog.do_import(self.ui.app, self.filename, options)
 
 
 class EDSCIIImporter(ArtImporter):

@@ -60,7 +60,7 @@ class ArtImporter:
         palette = self.app.load_palette(palette_name)
         self.art.set_palette(palette)
     
-    def run_import(self, in_filename, options={}):
+    def run_import(self, in_filename, options):
         """
         Read input file, set Art size/charset/palette, set tiles from data,
         return success.

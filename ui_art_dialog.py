@@ -69,39 +69,50 @@ class SaveAsDialog(UIDialog):
         Field(label=field0_label, type=str, width=field0_width, oneline=False)
     ]
     confirm_caption = 'Save'
+    invalid_filename_error = 'Filename is not valid.'
+    
+    def is_input_valid(self):
+        # filename can't be only whitespace
+        if not self.field_texts[0].strip():
+            return False, self.invalid_filename_error
+        return True, None
     
     def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
         SaveCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
-class ImportItemButton(ChooserItemButton):
+class ConvertItemButton(ChooserItemButton):
     width = 15
     big_width = 20
 
-class ImportChooserItem(ChooserItem):
+class ConvertChooserItem(ChooserItem):
     
     def picked(self, element):
         ChooserItem.picked(self, element)
         element.confirm_pressed()
 
-class ImportFileDialog(ChooserDialog):
-    # TODO: generalize this so exporter can inherit from it trivially
-    title = 'Choose an importer'
+class ConvertFileDialog(ChooserDialog):
+    "Common functionality for importer and exporter selection dialogs"
     tile_width = 70
     tile_height, big_height = 15, 20
     confirm_caption = 'Choose'
     show_preview_image = False
-    item_button_class = ImportItemButton
-    chooser_item_class = ImportChooserItem
+    item_button_class = ConvertItemButton
+    chooser_item_class = ConvertChooserItem
+    
+    def get_converters(self):
+        return []
     
     def get_items(self):
         items = []
-        importers = self.ui.app.get_importers()
+        converters = self.get_converters()
         i = 0
-        for importer in importers:
-            item = self.chooser_item_class(i, importer.format_name)
-            item.importer_class = importer
-            item.description = importer.format_description
+        for converter in converters:
+            item = self.chooser_item_class(i, converter.format_name)
+            item.converter_class = converter
+            item.description = converter.format_description
             items.append(item)
             i += 1
         return items
@@ -113,15 +124,82 @@ class ImportFileDialog(ChooserDialog):
         for line in item.description.split('\n'):
             self.art.write_string(0, 0, x, y, line)
             y += 1
+
+class ImportFileDialog(ConvertFileDialog):
+    title = 'Choose an importer'
+    
+    def get_converters(self):
+        return self.ui.app.get_importers()
     
     def confirm_pressed(self):
         # open file select dialog so user can choose what to import
         item = self.get_selected_item()
-        self.ui.app.importer = item.importer_class
+        self.ui.app.importer = item.converter_class
         if not self.ui.app.importer:
             return
         self.dismiss()
         self.ui.open_dialog(self.ui.app.importer.file_chooser_dialog_class)
+
+class ImportOptionsDialog(UIDialog):
+    "Generic base class for importer options"
+    def do_import(app, filename, options):
+        "Common 'run importer' code for end of import options dialog"
+        # if importer needs no options, run it
+        importer = app.importer(app, filename, options)
+        if importer.success:
+            app.log('Imported %s successfully.' % filename)
+            app.importer = None
+
+class ExportOptionsDialog(UIDialog):
+    "Generic base class for exporter options"
+    def do_export(app, filename, options):
+        "Common 'run exporter' code for end of import options dialog"
+        # if importer needs no options, run it
+        exporter = app.exporter(app, filename, options)
+        if exporter.success:
+            app.log('Exported %s successfully.' % filename)
+
+class ExportFileDialog(ConvertFileDialog):
+    title = 'Choose an exporter'
+    
+    def get_converters(self):
+        return self.ui.app.get_exporters()
+    
+    def confirm_pressed(self):
+        # open file select dialog so user can choose what to import
+        item = self.get_selected_item()
+        self.ui.app.exporter = item.converter_class
+        if not self.ui.app.exporter:
+            return
+        self.dismiss()
+        self.ui.open_dialog(ExportFilenameInputDialog)
+
+
+class ExportFilenameInputDialog(SaveAsDialog):
+    title = 'Export art'
+    field0_label = 'New filename for exported art:'
+    confirm_caption = 'Export'
+    
+    def get_initial_field_text(self, field_number):
+        # base output filename on art filename
+        if field_number == 0:
+            out_filename = self.ui.active_art.filename
+            out_filename = os.path.basename(out_filename)
+            out_filename = os.path.splitext(out_filename)[0]
+            return out_filename
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        filename = self.field_texts[0]
+        self.dismiss()
+        # invoke options dialog if exporter has one, else invoke exporter
+        if self.ui.app.exporter.options_dialog_class:
+            self.ui.open_dialog(self.ui.app.exporter.options_dialog_class)
+            # stash the filename we input in a special property in new dialog
+            self.ui.active_dialog.filename = filename
+        else:
+            ExportOptionsDialog.do_export(self.ui.app, filename, {})
 
 
 class QuitUnsavedChangesDialog(UIDialog):

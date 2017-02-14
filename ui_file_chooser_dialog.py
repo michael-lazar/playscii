@@ -6,7 +6,7 @@ from PIL import Image
 from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
 from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand
-from ui_art_dialog import PaletteFromFileDialog
+from ui_art_dialog import PaletteFromFileDialog, ImportOptionsDialog
 from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
@@ -242,11 +242,7 @@ class GenericImportChooserDialog(BaseFileChooserDialog):
             # stash the filename we chose in a special property in new dialog
             self.ui.active_dialog.filename = filename
         else:
-            # if importer needs no options, run it
-            importer = self.ui.app.importer(self.ui.app, filename)
-            if importer.success:
-                self.ui.app.log('Imported %s successfully.' % filename)
-            self.ui.app.importer = None
+            ImportOptionsDialog.do_import(self.ui.app, filename, {})
 
 
 class ImageChooserItem(BaseFileChooserItem):
