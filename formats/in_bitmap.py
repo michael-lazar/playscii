@@ -7,6 +7,7 @@ from PIL import Image
 
 from ui_file_chooser_dialog import ImageFileChooserDialog
 from ui_dialog import UIDialog, Field
+from ui_art_dialog import ImportOptionsDialog
 from image_convert import ImageConverter
 from art_import import ArtImporter
 from palette import PaletteFromFile
@@ -33,9 +34,9 @@ class ConvertImageChooserDialog(ImageFileChooserDialog):
 
 # custom dialog box providing convert options
 
-class ConvertImageOptionsDialog(UIDialog):
+class ConvertImageOptionsDialog(ImportOptionsDialog):
     
-    title = 'Convert image options'
+    title = 'Convert bitmap image options'
     field0_label = 'Color palette:'
     field1_label = 'Current palette (%s)'
     field2_label = 'From source image; # of colors:'
@@ -153,8 +154,7 @@ class ConvertImageOptionsDialog(UIDialog):
         else:
             # art dimensions = scale% of image dimensions, in tiles
             options['art_width'], options['art_height'] = self.get_tile_scale()
-        importer = self.ui.app.importer(self.ui.app, self.filename, options)
-        self.ui.app.importer = None
+        ImportOptionsDialog.do_import(self.ui.app, self.filename, options)
 
 
 class BitmapImageImporter(ArtImporter):

@@ -250,6 +250,9 @@ class Application:
         self.converter = None
         # set when an import is in progress
         self.importer = None
+        # set when an exporter is chosen, remains so last_export can run
+        self.exporter = None
+        self.last_export_options = {}
         # dict of available importer/exporter modules
         self.format_modules = {}
         self.game_mode = False
