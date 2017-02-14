@@ -70,6 +70,8 @@ class UIDialog(UIElement):
     radio_false_char_index = 126
     # field text set for bool fields with True value
     true_field_text = 'x'
+    # if True, field labels will redraw with fields after handling input
+    always_redraw_labels = False
     
     def __init__(self, ui):
         self.ui = ui
@@ -207,6 +209,10 @@ class UIDialog(UIElement):
             fg, bg = self.active_field_fg_color, self.active_field_bg_color
         return fg, bg
     
+    def get_field_label(self, field_index):
+        "Subclasses can override to do custom label logic eg string formatting"
+        return self.fields[field_index].label
+    
     def draw_fields(self, with_labels=True):
         y = 2
         if self.message:
@@ -232,12 +238,14 @@ class UIDialog(UIElement):
                 x += 2
             # draw label
             if field.label:
+                label = self.get_field_label(i)
                 if with_labels:
-                    self.art.write_string(0, 0, x, y, field.label, self.fg_color)
+                    self.art.clear_line(0, 0, y)
+                    self.art.write_string(0, 0, x, y, label, self.fg_color)
                 if field.type in [bool, None]:
                     pass
                 elif field.oneline:
-                    x += len(field.label) + 1
+                    x += len(label) + 1
                 else:
                     y += 1
             # draw field contents
@@ -268,15 +276,26 @@ class UIDialog(UIElement):
         return y
     
     def get_toggled_bool_field(self, field_index):
-        field_text = self.true_field_text if self.field_texts[field_index] != self.true_field_text else ' '
-        # if in a radio group, toggle off the others
+        field_text = self.field_texts[field_index]
+        on = field_text == self.true_field_text
+        # if in a radio group and turning on, toggle off the others
+        radio_button = False
         for group in self.radio_groups:
             if field_index in group:
-                for i in group:
-                    if i != field_index:
-                        self.field_texts[i] = ' '
+                radio_button = True
+                if not on:
+                    for i in group:
+                        if i != field_index:
+                            self.field_texts[i] = ' '
                 break
-        return field_text
+        # toggle checkbox
+        if not radio_button:
+            return ' ' if on else self.true_field_text
+        # only toggle radio button on; selecting others toggles it off
+        elif on:
+            return field_text
+        else:
+            return self.true_field_text
     
     def handle_input(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         keystr = sdl2.SDL_GetKeyName(key).decode()
@@ -360,7 +379,7 @@ class UIDialog(UIElement):
         # apply new field text and redraw
         if field and (len(field_text) < field.width or field.type is bool):
             self.field_texts[self.active_field] = field_text
-        self.draw_fields(False)
+        self.draw_fields(self.always_redraw_labels)
     
     def is_input_valid(self):
         "subclasses that want to filter input put logic here"
