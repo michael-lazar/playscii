@@ -239,15 +239,20 @@ class PaletteFromFile(Palette):
         # method:
         src_img = src_img.convert('P', None, Image.FLOYDSTEINBERG, Image.ADAPTIVE, colors)
         src_img = src_img.convert('RGBA')
-        # write converted source image w/ same name as final palette image
-        
-        # TODO: while src_filename exists, add a number to avoid overwriting something
-        
-        if not palette_filename.lower().endswith('.png'):
-            palette_filename += '.png'
+        # write converted source image with new filename
+        # snip path & extension if it has em
+        palette_filename = os.path.basename(palette_filename)
+        palette_filename = os.path.splitext(palette_filename)[0]
         # get most appropriate path for palette image
         palette_path = app.get_dirnames(PALETTE_DIR, False)[0]
-        palette_filename = palette_path + palette_filename
+        # if new filename exists, add a number to avoid overwriting
+        if os.path.exists(palette_path + palette_filename + '.png'):
+            i = 0
+            while os.path.exists('%s%s%s.png' % (palette_path, palette_filename, str(i))):
+                i += 1
+            palette_filename += str(i)
+        # (re-)add path and PNG extension
+        palette_filename = palette_path + palette_filename + '.png'
         src_img.save(palette_filename)
         # create the actual palette and export it as an image
         Palette.__init__(self, app, palette_filename, True)
