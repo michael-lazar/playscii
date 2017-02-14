@@ -347,9 +347,6 @@ class InputLord:
     def BIND_import_file(self):
         self.ui.open_dialog(ImportFileDialog)
     
-    def BIND_convert_image(self):
-        self.ui.open_dialog(ConvertImageChooserDialog)
-    
     def BIND_export_image(self):
         if not self.ui.active_art or self.app.game_mode:
             return

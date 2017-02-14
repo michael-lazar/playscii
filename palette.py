@@ -240,6 +240,9 @@ class PaletteFromFile(Palette):
         src_img = src_img.convert('P', None, Image.FLOYDSTEINBERG, Image.ADAPTIVE, colors)
         src_img = src_img.convert('RGBA')
         # write converted source image w/ same name as final palette image
+        
+        # TODO: while src_filename exists, add a number to avoid overwriting something
+        
         if not palette_filename.lower().endswith('.png'):
             palette_filename += '.png'
         # get most appropriate path for palette image
