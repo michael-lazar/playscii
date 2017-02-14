@@ -87,6 +87,8 @@ class ImportChooserItem(ChooserItem):
 class ImportFileDialog(ChooserDialog):
     # TODO: generalize this so exporter can inherit from it trivially
     title = 'Choose an importer'
+    tile_width = 70
+    tile_height, big_height = 15, 20
     confirm_caption = 'Choose'
     show_preview_image = False
     item_button_class = ImportItemButton

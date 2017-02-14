@@ -233,14 +233,15 @@ class ChooserDialog(UIDialog):
     
     def set_preview(self):
         item = self.get_selected_item()
-        self.preview_renderable.texture = item.get_preview_texture(self.ui.app)
+        if self.show_preview_image:
+            self.preview_renderable.texture = item.get_preview_texture(self.ui.app)
     
     def get_items(self):
         # subclasses generate lists of items here
         return []
     
     def position_preview(self, reset=True):
-        if reset and self.show_preview_image:
+        if reset:
             self.set_preview()
         if not self.preview_renderable.texture:
             return
