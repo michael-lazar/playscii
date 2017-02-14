@@ -27,8 +27,8 @@ class ConvertImageChooserDialog(ImageFileChooserDialog):
         # get dialog box class and invoke it
         dialog_class = self.ui.app.importer.options_dialog_class
         self.ui.open_dialog(dialog_class)
-        # stash the filename we chose in a special property in new dialog
-        self.ui.active_dialog.filename = filename
+        # tell the dialog which image we chose
+        self.ui.active_dialog.set_image(filename)
 
 
 # custom dialog box providing convert options
@@ -42,7 +42,7 @@ class ConvertImageOptionsDialog(UIDialog):
     field3_label = '  '
     field5_label = 'Converted art size:'
     field6_label = 'Best fit to current size (%s)'
-    field7_label = '% of source image: (%s)'
+    field7_label = '%% of source image: (%s)'
     field8_label = '  '
     radio_groups = [(1, 2), (6, 7)]
     field_width = UIDialog.default_short_field_width
@@ -64,6 +64,8 @@ class ConvertImageOptionsDialog(UIDialog):
     confirm_caption = 'Convert'
     invalid_color_error = 'Palettes must be between 2 and 256 colors.'
     invalid_scale_error = 'Scale must be greater than 0.0'
+    # redraw dynamic labels
+    always_redraw_labels = True
     
     def get_initial_field_text(self, field_number):
         if field_number == 1:
@@ -78,12 +80,54 @@ class ConvertImageOptionsDialog(UIDialog):
             return '50.0'
         return ''
     
+    def get_field_label(self, field_index):
+        label = self.fields[field_index].label
+        # custom label replacements to show palette, possible convert sizes
+        if field_index == 1:
+            label %= self.ui.active_art.palette.name
+        elif field_index == 6:
+            label %= '%s x %s' % (self.ui.active_art.width, self.ui.active_art.height)
+        elif field_index == 7:
+            # scale # might not be valid
+            valid,_ = self.is_input_valid()
+            if not valid:
+                return label % '???'
+            label %= '%s x %s' % self.get_tile_scale()
+        return label
+    
+    def get_tile_scale(self):
+        "returns scale in tiles of image dimensions"
+        # filename won't be set just after dialog is created
+        if not hasattr(self, 'filename'):
+            return 0, 0
+        scale = float(self.field_texts[8]) / 100
+        width = self.image_width / self.ui.active_art.charset.char_width
+        height = self.image_height / self.ui.active_art.charset.char_height
+        width *= scale
+        height *= scale
+        return int(width), int(height)
+    
     def is_input_valid(self):
-        
+        # colors: int between 2 and 256
         try: int(self.field_texts[3])
         except: return False, self.invalid_color_error
-        
+        colors = int(self.field_texts[3])
+        if colors < 2  or colors > 256:
+            return False, self.invalid_color_error
+        # % scale: >0 float
+        try: float(self.field_texts[8])
+        except: return False, self.invalid_scale_error
+        if float(self.field_texts[8]) <= 0:
+            return False, self.invalid_scale_error
         return True, None
+    
+    def set_image(self, image_filename):
+        "sets image from file chooser that invokes us"
+        # (do this once so we don't have to re-read Image to get its size)
+        self.filename = image_filename
+        self.image_width, self.image_height = Image.open(self.filename).size
+        # redraw labels
+        self.draw_fields(True)
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
@@ -108,13 +152,7 @@ class ConvertImageOptionsDialog(UIDialog):
             options['art_height'] = self.ui.active_art.height
         else:
             # art dimensions = scale% of image dimensions, in tiles
-            img = Image.open(self.filename)
-            img_width, img_height = img.size
-            scale = float(self.field_texts[8]) / 100
-            width = img_width / self.ui.active_art.charset.char_width
-            height = img_height / self.ui.active_art.charset.char_height
-            options['art_width'] = int(width * scale)
-            options['art_height'] = int(height * scale)
+            options['art_width'], options['art_height'] = self.get_tile_scale()
         importer = self.ui.app.importer(self.ui.app, self.filename, options)
         self.ui.app.importer = None
 
