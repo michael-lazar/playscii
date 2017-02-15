@@ -311,7 +311,7 @@ class Art:
             self.app.ui.set_active_layer(self.layers - 1)
         self.set_unsaved_changes(True)
     
-    def set_charset(self, new_charset):
+    def set_charset(self, new_charset, log=False):
         "Set Art to use given character set (referenced by object, not name)."
         if new_charset is self.charset:
             return
@@ -321,13 +321,17 @@ class Art:
             self.quad_height = 1 * (self.charset.char_height / self.charset.char_width)
         self.set_unsaved_changes(True)
         self.geo_changed = True
+        if log:
+            self.app.ui.message_line.post_line('Character set changed to %s' % self.charset.name)
     
-    def set_palette(self, new_palette):
+    def set_palette(self, new_palette, log=False):
         "Set Art to use given color palette (referenced by object, not name)."
         if new_palette is self.palette:
             return
         self.palette = new_palette
         self.set_unsaved_changes(True)
+        if log:
+            self.app.ui.message_line.post_line('Color palette changed to %s' % self.palette.name)
     
     def set_active_frame(self, new_frame):
         "Set frame at given index for active editing in Art Mode."

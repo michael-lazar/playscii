@@ -90,8 +90,23 @@ class ConvertItemButton(ChooserItemButton):
 class ConvertChooserItem(ChooserItem):
     
     def picked(self, element):
-        ChooserItem.picked(self, element)
+        
+        # TODO: following is c+p'd from BaseFileChooserItem.picked,
+        # move this functionality into ChooserItem and override in BFCI?
+        
+        # if this is different from the last clicked item, pick it
+        if element.selected_item_index != self.index:
+            ChooserItem.picked(self, element)
+            element.first_selection_made = True
+            return
+        # if we haven't yet clicked something in this view, require another
+        # click before opening it (consistent double click behavior for
+        # initial selections)
+        if not element.first_selection_made:
+            element.first_selection_made = True
+            return
         element.confirm_pressed()
+        element.first_selection_made = False
 
 class ConvertFileDialog(ChooserDialog):
     "Common functionality for importer and exporter selection dialogs"
