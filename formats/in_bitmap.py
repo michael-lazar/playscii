@@ -11,6 +11,7 @@ from ui_art_dialog import ImportOptionsDialog
 from image_convert import ImageConverter
 from art_import import ArtImporter
 from palette import PaletteFromFile
+from art import DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
 
 # custom chooser showing image previews, shares parent w/ "palette from image"
 
@@ -84,9 +85,12 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         label = self.fields[field_index].label
         # custom label replacements to show palette, possible convert sizes
         if field_index == 1:
-            label %= self.ui.active_art.palette.name
+            label %= self.ui.active_art.palette.name if self.ui.active_art else DEFAULT_PALETTE
         elif field_index == 6:
-            label %= '%s x %s' % (self.ui.active_art.width, self.ui.active_art.height)
+            # can't assume any art is open, use defaults if needed
+            w = self.ui.active_art.width if self.ui.active_art else DEFAULT_WIDTH
+            h = self.ui.active_art.height if self.ui.active_art else DEFAULT_HEIGHT
+            label %= '%s x %s' % (w, h)
         elif field_index == 7:
             # scale # might not be valid
             valid,_ = self.is_input_valid()
@@ -101,8 +105,15 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         if not hasattr(self, 'filename'):
             return 0, 0
         scale = float(self.field_texts[8]) / 100
-        width = self.image_width / self.ui.active_art.charset.char_width
-        height = self.image_height / self.ui.active_art.charset.char_height
+        # can't assume any art is open, use defaults if needed
+        if self.ui.active_art:
+            cw = self.ui.active_art.charset.char_width
+            ch = self.ui.active_art.charset.char_height
+        else:
+            charset = self.ui.app.load_charset(DEFAULT_CHARSET)
+            cw, ch = charset.char_width, charset.char_height
+        width = self.image_width / cw
+        height = self.image_height / ch
         width *= scale
         height *= scale
         return int(width), int(height)
@@ -137,7 +148,7 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         options = {}
         # create new palette from image?
         if self.field_texts[1].strip():
-            options['palette'] = self.ui.active_art.palette.name
+            options['palette'] = self.ui.active_art.palette.name if self.ui.active_art else DEFAULT_PALETTE
         else:
             # create new palette
             palette_filename = os.path.basename(self.filename)
@@ -148,8 +159,8 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
             options['palette'] = new_pal.name
         # rescale art?
         if self.field_texts[6].strip():
-            options['art_width'] = self.ui.active_art.width
-            options['art_height'] = self.ui.active_art.height
+            options['art_width'] = self.ui.active_art.width if self.ui.active_art else DEFAULT_WIDTH
+            options['art_height'] = self.ui.active_art.height if self.ui.active_art else DEFAULT_HEIGHT
         else:
             # art dimensions = scale% of image dimensions, in tiles
             options['art_width'], options['art_height'] = self.get_tile_scale()

@@ -1,7 +1,7 @@
 
 import os, traceback
 
-from art import Art, ART_FILE_EXTENSION
+from art import Art, ART_FILE_EXTENSION, DEFAULT_CHARSET
 from ui_file_chooser_dialog import GenericImportChooserDialog
 
 class ArtImporter:
@@ -31,6 +31,9 @@ class ArtImporter:
         new_filename = '%s.%s' % (os.path.splitext(in_filename)[0],
                                   ART_FILE_EXTENSION)
         self.art = self.app.new_art(new_filename)
+        # use charset of existing art
+        charset = self.app.ui.active_art.charset if self.app.ui.active_art else self.app.load_charset(DEFAULT_CHARSET)
+        self.art.set_charset(charset)
         self.app.set_new_art_for_edit(self.art)
         self.success = False
         # run_import returns success, log it separately from exceptions
