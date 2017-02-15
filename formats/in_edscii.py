@@ -43,7 +43,7 @@ class EDSCIIImporter(ArtImporter):
     format_description = """
 Binary format for EDSCII, Playscii's predecessor.
 Assumes single frame, single layer document.
-Existing character set and palette will be used.
+Current character set and palette will be used.
     """
     options_dialog_class = EDSCIIImportOptionsDialog
     
