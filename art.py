@@ -677,7 +677,8 @@ class Art:
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
         end_time = time.time()
         self.set_unsaved_changes(False)
-        self.app.log('saved %s to disk in %.5f seconds' % (self.filename, end_time - start_time))
+        #self.app.log('saved %s to disk in %.5f seconds' % (self.filename, end_time - start_time))
+        self.app.log('saved %s' % self.filename)
         # write thumbnail
         new_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
         write_thumbnail(self.app, self.filename, new_thumb_filename)

@@ -114,7 +114,9 @@ class InputLord:
     
     def is_command_function_dimmed(self, function):
         "returns True if given function's menu bar item is currently dimmed"
-        for button in self.ui.art_menu_bar.menu_buttons + self.ui.game_menu_bar.menu_buttons:
+        buttons = self.ui.game_menu_bar.menu_buttons if self.app.game_mode else self.ui.art_menu_bar.menu_buttons
+        for button in buttons:
+            # skip eg playscii button
             if not hasattr(button, 'menu_data'):
                 continue
             for item in button.menu_data.items:
