@@ -330,7 +330,7 @@ class PaletteChooserDialog(BaseFileChooserDialog):
     
     def confirm_pressed(self):
         item = self.get_selected_item()
-        self.ui.active_art.set_palette(item.palette)
+        self.ui.active_art.set_palette(item.palette, log=True)
         self.ui.popup.set_active_palette(item.palette)
 
 #
@@ -379,5 +379,5 @@ class CharSetChooserDialog(BaseFileChooserDialog):
     
     def confirm_pressed(self):
         item = self.get_selected_item()
-        self.ui.active_art.set_charset(item.charset)
+        self.ui.active_art.set_charset(item.charset, log=True)
         self.ui.popup.set_active_charset(item.charset)

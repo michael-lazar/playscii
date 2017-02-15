@@ -341,6 +341,10 @@ class UIDialog(UIElement):
         elif keystr == 'Backspace':
             if len(field_text) == 0:
                 pass
+            # don't let user clear a bool value
+            # TODO: allow for checkboxes but not radio buttons
+            elif field and field.type is bool:
+                pass
             elif alt_pressed:
                 # for file dialogs, delete back to last slash
                 last_slash = field_text[:-1].rfind('/')
