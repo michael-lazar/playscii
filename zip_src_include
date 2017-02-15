@@ -4,6 +4,7 @@ charsets/*
 palettes/*
 games/*.*
 artscripts/*.arsc
+formats/*.*
 shaders/*.glsl
 ui/*.png
 docs/html/howto_*.html
@@ -22,3 +23,4 @@ README.md
 license.txt
 code_of_conduct.txt
 requirements.txt
+playscii_linux.sh

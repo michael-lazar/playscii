@@ -1,0 +1,4 @@
+
+[[actions]]
+name = "play"
+path = "playscii/playscii_linux.sh"
