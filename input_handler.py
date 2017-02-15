@@ -5,13 +5,12 @@ from sys import exit
 
 from ui import SCALE_INCREMENT
 from renderable import LAYER_VIS_FULL, LAYER_VIS_DIM, LAYER_VIS_NONE
-from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameDelayAllDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportFileDialog, ImportEDSCIIDialog, SetCameraZoomDialog
+from ui_art_dialog import NewArtDialog, SaveAsDialog, QuitUnsavedChangesDialog, CloseUnsavedChangesDialog, RevertChangesDialog, ResizeArtDialog, AddFrameDialog, DuplicateFrameDialog, FrameDelayDialog, FrameDelayAllDialog, FrameIndexDialog, AddLayerDialog, DuplicateLayerDialog, SetLayerNameDialog, SetLayerZDialog, PaletteFromFileDialog, ImportFileDialog, ExportFileDialog, SetCameraZoomDialog, ExportOptionsDialog
 from ui_game_dialog import NewGameDirDialog, LoadGameStateDialog, SaveGameStateDialog, AddRoomDialog, SetRoomCamDialog, SetRoomEdgeWarpsDialog, SetRoomBoundsObjDialog, RenameRoomDialog
 from ui_info_dialog import PagedInfoDialog, HelpScreenDialog
-from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog, ConvertImageChooserDialog, PaletteFromImageChooserDialog
+from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, PaletteChooserDialog, PaletteFromImageChooserDialog
 from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ, LO_SET_ROOM_CAMERA
 from collision import CT_NONE
-from image_export import export_still_image, export_animation
 from art import ART_DIR, ART_FILE_EXTENSION
 
 BINDS_FILENAME = 'binds.cfg'
@@ -347,21 +346,20 @@ class InputLord:
     def BIND_import_file(self):
         self.ui.open_dialog(ImportFileDialog)
     
-    def BIND_import_edscii(self):
-        self.ui.open_dialog(ImportEDSCIIDialog)
+    def BIND_export_file(self):
+        self.ui.open_dialog(ExportFileDialog)
     
-    def BIND_convert_image(self):
-        self.ui.open_dialog(ConvertImageChooserDialog)
-    
-    def BIND_export_image(self):
-        if not self.ui.active_art or self.app.game_mode:
-            return
-        export_still_image(self.app, self.ui.active_art)
-    
-    def BIND_export_anim(self):
-        if not self.ui.active_art:
-            return
-        export_animation(self.app, self.ui.active_art)
+    def BIND_export_file_last(self):
+        # if user hasn't exported this session, pick an exporter
+        if self.ui.app.exporter:
+            # redo export with appropriate filename & last options if they have
+            out_filename = self.ui.active_art.filename
+            out_filename = os.path.basename(out_filename)
+            out_filename = os.path.splitext(out_filename)[0]
+            ExportOptionsDialog.do_export(self.ui.app, out_filename,
+                                          self.ui.app.last_export_options)
+        else:
+            self.ui.open_dialog(ExportFileDialog)
     
     def BIND_decrease_ui_scale(self):
         if self.ui.scale > SCALE_INCREMENT * 2:

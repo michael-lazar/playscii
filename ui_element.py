@@ -197,7 +197,8 @@ class UIElement:
         # don't allow selecting dimmed buttons
         if button.state == 'dimmed':
             return
-        if button.cb_arg:
+        # check for None; cb_arg could be 0
+        if button.cb_arg is not None:
             button.callback(button.cb_arg)
         else:
             button.callback()
@@ -299,7 +300,6 @@ class MessageLineUI(UIElement):
     fade_rate = 0.025
     game_mode_visible = True
     all_modes_visible = True
-    error_color_index = 11
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)
@@ -319,7 +319,7 @@ class MessageLineUI(UIElement):
         "write a line to this element (ie so as not to spam console log)"
         self.hold_time = hold_time or self.default_hold_time
         # use a different color if it's an error
-        color = self.error_color_index if error else self.ui.colors.white
+        color = self.ui.error_color_index if error else self.ui.colors.white
         start_x = 1
         # trim to screen width
         self.line = new_line[:self.tile_width-start_x-1]

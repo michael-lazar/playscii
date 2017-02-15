@@ -74,26 +74,21 @@ class FileImportItem(PulldownMenuItem):
     command = 'import_file'
     always_active = True
 
-class FileEDSCIIImportItem(PulldownMenuItem):
-    label = 'Import from EDSCII'
-    command = 'import_edscii'
-    always_active = True
+class FileExportItem(PulldownMenuItem):
+    label = 'Export…'
+    command = 'export_file'
+    def should_dim(app):
+        return app.ui.active_art is None
+
+class FileExportLastItem(PulldownMenuItem):
+    label = 'Export last'
+    command = 'export_file_last'
+    def should_dim(app):
+        return app.ui.active_art is None
 
 class FileConvertImageItem(PulldownMenuItem):
     label = 'Convert Image…'
     command = 'convert_image'
-    def should_dim(app):
-        return app.ui.active_art is None
-
-class FilePNGExportItem(PulldownMenuItem):
-    label = 'Export PNG'
-    command = 'export_image'
-    def should_dim(app):
-        return app.ui.active_art is None
-
-class FileGIFExportItem(PulldownMenuItem):
-    label = 'Export animated GIF'
-    command = 'export_anim'
     def should_dim(app):
         return app.ui.active_art is None
 
@@ -517,10 +512,8 @@ class PulldownMenuData:
 
 class FileMenuData(PulldownMenuData):
     items = [FileNewItem, FileOpenItem, FileSaveItem, FileSaveAsItem,
-             FileCloseItem, FileRevertItem, SeparatorItem, #FileImportItem, disable for now
-             FileEDSCIIImportItem, FileConvertImageItem, SeparatorItem,
-             FilePNGExportItem, FileGIFExportItem,
-             SeparatorItem, FileQuitItem]
+             FileCloseItem, FileRevertItem, SeparatorItem, FileImportItem,
+             FileExportItem, FileExportLastItem, SeparatorItem, FileQuitItem]
 
 class EditMenuData(PulldownMenuData):
     items = [EditUndoItem, EditRedoItem, SeparatorItem,

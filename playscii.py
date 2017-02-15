@@ -41,8 +41,8 @@ from audio import AudioLord
 from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet, CHARSET_DIR
-from palette import Palette, PALETTE_DIR
-from art import Art, ArtFromDisk, ArtFromEDSCII, EDSCII_FILE_EXTENSION, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
+from palette import Palette, PaletteLord, PALETTE_DIR
+from art import Art, ArtFromDisk, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
 from art_import import ArtImporter
 from art_export import ArtExporter
 from renderable import TileRenderable, OnionTileRenderable
@@ -99,10 +99,6 @@ class Application:
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
     bg_color = [0.2, 0.2, 0.2, 2]
-    # scaling factor used when CRT filter is on during image export
-    export_crt_scale_factor = 4
-    # scale for export when no CRT
-    export_no_crt_scale_factor = 1
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
     # launch into art mode even if a game dir is specified via CLI
@@ -133,6 +129,8 @@ class Application:
         self.cache_dir = cache_dir
         # last dir art was opened from
         self.last_art_dir = None
+        # last dir file was imported from
+        self.last_import_dir = None
         # class to use for temp thumbnail renderable
         self.thumbnail_renderable_class = TileRenderable
         # log fed in from __main__, might already have stuff in it
@@ -246,8 +244,13 @@ class Application:
         # raster images (debug)
         self.img_renderables = []
         self.converter = None
+        # set when an import is in progress
+        self.importer = None
+        # set when an exporter is chosen, remains so last_export can run
+        self.exporter = None
+        self.last_export_options = {}
         # dict of available importer/exporter modules
-        self.format_modules = {}
+        self.converter_modules = {}
         self.game_mode = False
         self.gw = GameWorld(self)
         # if game dir specified, set it before we try to load any art
@@ -264,6 +267,7 @@ class Application:
         self.onion_renderables_prev, self.onion_renderables_next = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
+        self.pl = PaletteLord(self)
         self.load_art_for_edit(art_filename)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
@@ -515,18 +519,25 @@ class Application:
                 return f
         return None
     
-    def get_format_classes(self, base_class):
+    def get_converter_classes(self, base_class):
+        "return a list of converter classes for importer/exporter selection"
         classes = []
-        for filename in os.listdir(FORMATS_DIR):
+        # on first load, documents dir may not be in import path
+        if not self.documents_dir in sys.path:
+            sys.path += [self.documents_dir]
+        # read from application (builtins) and user documents dirs
+        files = os.listdir(FORMATS_DIR)
+        files += os.listdir(self.documents_dir + FORMATS_DIR)
+        for filename in files:
             basename, ext = os.path.splitext(filename)
             if not ext.lower() == '.py':
                 continue
             try:
-                if basename in self.format_modules:
-                    m = importlib.reload(self.format_modules[basename])
+                if basename in self.converter_modules:
+                    m = importlib.reload(self.converter_modules[basename])
                 else:
                     m = importlib.import_module('formats.%s' % basename)
-                    self.format_modules[basename] = m
+                    self.converter_modules[basename] = m
             except Exception as e:
                 self.log_import_exception(e, basename)
             for k,v in m.__dict__.items():
@@ -538,31 +549,11 @@ class Application:
     
     def get_importers(self):
         "Returns list of all ArtImporter subclasses found in formats/ dir."
-        return self.get_format_classes(ArtImporter)
+        return self.get_converter_classes(ArtImporter)
     
     def get_exporters(self):
         "Returns list of all ArtExporter subclasses found in formats/ dir."
-        return self.get_format_classes(ArtExporter)
-    
-    def import_edscii(self, filename, width_override=None):
-        """
-        imports an EDSCII legacy file for edit
-        use width_override to recover an incorrectly-saved file
-        """
-        valid_filename = self.find_filename_path(filename, ART_DIR,
-                                                 EDSCII_FILE_EXTENSION)
-        if not valid_filename:
-            self.log("Couldn't find EDSCII file %s" % filename)
-        art = ArtFromEDSCII(valid_filename, self, width_override)
-        if not art.valid:
-            self.log('Failed to load %s' % valid_filename)
-            return
-        art.time_loaded = time.time()
-        self.art_loaded_for_edit.insert(0, art)
-        renderable = TileRenderable(self, art)
-        self.edit_renderables.insert(0, renderable)
-        if self.ui:
-            self.ui.set_active_art(art)
+        return self.get_converter_classes(ArtExporter)
     
     def load_charset(self, charset_to_load, log=False):
         "creates and returns a character set with the given name"
@@ -698,6 +689,7 @@ class Application:
             self.last_frame_end = self.get_elapsed_time()
             self.frames += 1
             self.sl.check_hot_reload()
+            self.pl.check_hot_reload()
             # determine FPS
             # alpha: lower = smoother
             alpha = 0.05
@@ -840,7 +832,10 @@ class Application:
         session_filename = self.config_dir + SESSION_FILENAME
         if not os.path.exists(session_filename):
             return
-        for filename in open(session_filename).readlines():
+        # more recent arts should open later
+        filenames = open(session_filename).readlines()
+        filenames.reverse()
+        for filename in filenames:
             self.load_art_for_edit(filename.strip())
     
     def save_session(self):
@@ -849,6 +844,9 @@ class Application:
         # write all currently open art to a file
         session_file = open(self.config_dir + SESSION_FILENAME, 'w')
         for art in self.art_loaded_for_edit:
+            # if an art has never been saved, don't bother storing it
+            if not os.path.exists(art.filename):
+                continue
             session_file.write(art.filename + '\n')
         session_file.close()
     
@@ -950,7 +948,7 @@ def get_paths():
     # add Playscii/ to documents path
     documents_dir += '/%s/' % APP_NAME
     # create Playscii dir AND subdirs for user art, charsets etc if not present
-    for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR,
+    for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR, FORMATS_DIR,
                    ART_SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
         if not os.path.exists(documents_dir + subdir):
             os.mkdir(documents_dir + subdir)

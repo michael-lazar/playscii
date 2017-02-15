@@ -10,7 +10,7 @@ ENDOOM lump file format for Doom engine games.
 80x25 DOS ASCII with EGA palette.
 Background colors can only be EGA colors 0-8.
     """
-    def run_export(self, out_filename):
+    def run_export(self, out_filename, options):
         if self.art.width < WIDTH or self.art.height < HEIGHT:
             self.app.log("ENDOOM export: Art isn't big enough!")
             return False

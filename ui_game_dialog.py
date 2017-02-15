@@ -1,5 +1,5 @@
 
-from ui_dialog import UIDialog
+from ui_dialog import UIDialog, Field
 
 from ui_console import SetGameDirCommand, LoadGameStateCommand, SaveGameStateCommand
 from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP
@@ -7,10 +7,13 @@ from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, L
 
 class NewGameDirDialog(UIDialog):
     title = 'New game'
-    fields = 2
     field0_label = 'Name of new game folder:'
     field1_label = 'Name of new game:'
-    field1_type = str
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False),
+        Field(label=field1_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Create'
     game_mode_visible = True
     
@@ -24,41 +27,51 @@ class NewGameDirDialog(UIDialog):
             return type(self.ui.app.gw).game_title
     
     def confirm_pressed(self):
-        if self.ui.app.gw.create_new_game(self.field0_text, self.field1_text):
+        if self.ui.app.gw.create_new_game(self.field_texts[0], self.field_texts[1]):
             self.ui.app.enter_game_mode()
         self.dismiss()
 
 class LoadGameStateDialog(UIDialog):
     
     title = 'Open game state'
-    fields = 1
-    field0_label = 'Game state file to open:'
+    field_label = 'Game state file to open:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Open'
     game_mode_visible = True
     
     # TODO: only allow valid game state file in current game directory
     
     def confirm_pressed(self):
-        LoadGameStateCommand.execute(self.ui.console, [self.field0_text])
+        LoadGameStateCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
 class SaveGameStateDialog(UIDialog):
     
     title = 'Save game state'
-    fields = 1
-    field0_label = 'New filename for game state:'
+    field_label = 'New filename for game state:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Save'
     game_mode_visible = True
     
     def confirm_pressed(self):
-        SaveGameStateCommand.execute(self.ui.console, [self.field0_text])
+        SaveGameStateCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
 class AddRoomDialog(UIDialog):
     title = 'Add new room'
-    fields = 2
     field0_label = 'Name for new room:'
     field1_label = 'Class of new room:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False),
+        Field(label=field1_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Add'
     game_mode_visible = True
     invalid_room_name_error = 'Invalid room name.'
@@ -71,23 +84,26 @@ class AddRoomDialog(UIDialog):
             return 'GameRoom'
     
     def is_input_valid(self):
-        return self.field0_text != '', self.invalid_room_name_error
+        return self.field_texts[0] != '', self.invalid_room_name_error
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        self.ui.app.gw.add_room(self.field0_text, self.field1_text)
+        self.ui.app.gw.add_room(self.field_texts[0], self.field_texts[1])
         self.dismiss()
 
 class SetRoomCamDialog(UIDialog):
     title = 'Set room camera marker'
-    fields = 1
     field0_label = 'Name of location marker object for this room:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
     game_mode_visible = True
     
     def confirm_pressed(self):
-        self.ui.app.gw.current_room.set_camera_marker_name(self.field0_text)
+        self.ui.app.gw.current_room.set_camera_marker_name(self.field_texts[0])
         self.dismiss()
 
 class SetRoomEdgeWarpsDialog(UIDialog):
@@ -98,7 +114,13 @@ class SetRoomEdgeWarpsDialog(UIDialog):
     field1_label = 'Name of room/object to warp at RIGHT edge:'
     field2_label = 'Name of room/object to warp at TOP edge:'
     field3_label = 'Name of room/object to warp at BOTTOM edge:'
-    field0_type = field1_type = field2_type = field3_type = str
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False),
+        Field(label=field1_label, type=str, width=field_width, oneline=False),
+        Field(label=field2_label, type=str, width=field_width, oneline=False),
+        Field(label=field3_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
     game_mode_visible = True
     
@@ -114,17 +136,20 @@ class SetRoomEdgeWarpsDialog(UIDialog):
     
     def confirm_pressed(self):
         room = self.ui.app.gw.current_room
-        room.left_edge_warp_dest_name = self.field0_text
-        room.right_edge_warp_dest_name = self.field1_text
-        room.top_edge_warp_dest_name = self.field2_text
-        room.bottom_edge_warp_dest_name = self.field3_text
+        room.left_edge_warp_dest_name = self.field_texts[0]
+        room.right_edge_warp_dest_name = self.field_texts[1]
+        room.top_edge_warp_dest_name = self.field_texts[2]
+        room.bottom_edge_warp_dest_name = self.field_texts[3]
         room.reset_edge_warps()
         self.dismiss()
 
 class SetRoomBoundsObjDialog(UIDialog):
     title = 'Set room edge object'
-    fields = 1
     field0_label = 'Name of object to use for room bounds:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Set'
     game_mode_visible = True
     
@@ -138,14 +163,17 @@ class SetRoomBoundsObjDialog(UIDialog):
     
     def confirm_pressed(self):
         room = self.ui.app.gw.current_room
-        room.warp_edge_bounds_obj_name = self.field0_text
+        room.warp_edge_bounds_obj_name = self.field_texts[0]
         room.reset_edge_warps()
         self.dismiss()
 
 class RenameRoomDialog(UIDialog):
     title = 'Rename room'
-    fields = 1
     field0_label = 'New name for current room:'
+    field_width = UIDialog.default_field_width
+    fields = [
+        Field(label=field0_label, type=str, width=field_width, oneline=False)
+    ]
     confirm_caption = 'Rename'
     game_mode_visible = True
     invalid_room_name_error = 'Invalid room name.'
@@ -155,11 +183,11 @@ class RenameRoomDialog(UIDialog):
             return self.ui.app.gw.current_room.name
     
     def is_input_valid(self):
-        return self.field0_text != '', self.invalid_room_name_error
+        return self.field_texts[0] != '', self.invalid_room_name_error
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
         world = self.ui.app.gw
-        world.rename_room(world.current_room, self.field0_text)
+        world.rename_room(world.current_room, self.field_texts[0])
         self.dismiss()

@@ -8,6 +8,26 @@ PALETTE_DIR = 'palettes/'
 PALETTE_EXTENSIONS = ['png', 'gif', 'bmp']
 MAX_COLORS = 1024
 
+class PaletteLord:
+    
+    # time in ms between checks for hot reload
+    hot_reload_check_interval = 2 * 1000
+    
+    def __init__(self, app):
+        self.app = app
+        self.last_check = 0
+    
+    def check_hot_reload(self):
+        if self.app.get_elapsed_time() - self.last_check < self.hot_reload_check_interval:
+            return
+        self.last_check = self.app.get_elapsed_time()
+        changed = None
+        for palette in self.app.palettes:
+            if palette.has_updated():
+                changed = palette.filename
+                palette.load_image()
+
+
 class Palette:
     
     def __init__(self, app, src_filename, log):
@@ -18,8 +38,20 @@ class Palette:
         if self.filename is None:
             self.app.log("Couldn't find palette image %s" % src_filename)
             return
+        self.last_image_change = os.path.getmtime(self.filename)
         self.name = os.path.basename(self.filename)
         self.name = os.path.splitext(self.name)[0]
+        self.load_image()
+        self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
+        if log and not self.app.game_mode:
+            self.app.log("loaded palette '%s' from %s:" % (self.name, self.filename))
+            self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
+            self.app.log('  darkest color index: %s' % self.darkest_index)
+            self.app.log('  lightest color index: %s' % self.lightest_index)
+        self.init_success = True
+    
+    def load_image(self):
+        "loads palette data from the given bitmap image"
         src_img = Image.open(self.filename)
         src_img = src_img.convert('RGBA')
         width, height = src_img.size
@@ -57,13 +89,13 @@ class Palette:
         # debug: save out generated palette texture
         #img.save('palette.png')
         self.texture = Texture(img.tobytes(), MAX_COLORS, 1)
-        self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
-        if log and not self.app.game_mode:
-            self.app.log("loaded palette '%s' from %s:" % (self.name, self.filename))
-            self.app.log('  unique colors found: %s' % int(len(self.colors)-1))
-            self.app.log('  darkest color index: %s' % self.darkest_index)
-            self.app.log('  lightest color index: %s' % self.lightest_index)
-        self.init_success = True
+    
+    def has_updated(self):
+        "return True if source image file has changed since last check"
+        changed = os.path.getmtime(self.filename) > self.last_image_change
+        if changed:
+            self.last_image_change = time.time()
+        return changed
     
     def generate_image(self):
         width = min(16, len(self.colors) - 1)
@@ -188,6 +220,10 @@ class PaletteFromList(Palette):
             self.app.log('  unique colors: %s' % int(len(self.colors)-1))
             self.app.log('  darkest color index: %s' % self.darkest_index)
             self.app.log('  lightest color index: %s' % self.lightest_index)
+    
+    def has_updated(self):
+        "No bitmap source for this type of palette, so no hot-reload"
+        return False
 
 
 class PaletteFromFile(Palette):
@@ -203,12 +239,20 @@ class PaletteFromFile(Palette):
         # method:
         src_img = src_img.convert('P', None, Image.FLOYDSTEINBERG, Image.ADAPTIVE, colors)
         src_img = src_img.convert('RGBA')
-        # write converted source image w/ same name as final palette image
-        if not palette_filename.lower().endswith('.png'):
-            palette_filename += '.png'
+        # write converted source image with new filename
+        # snip path & extension if it has em
+        palette_filename = os.path.basename(palette_filename)
+        palette_filename = os.path.splitext(palette_filename)[0]
         # get most appropriate path for palette image
         palette_path = app.get_dirnames(PALETTE_DIR, False)[0]
-        palette_filename = palette_path + palette_filename
+        # if new filename exists, add a number to avoid overwriting
+        if os.path.exists(palette_path + palette_filename + '.png'):
+            i = 0
+            while os.path.exists('%s%s%s.png' % (palette_path, palette_filename, str(i))):
+                i += 1
+            palette_filename += str(i)
+        # (re-)add path and PNG extension
+        palette_filename = palette_path + palette_filename + '.png'
         src_img.save(palette_filename)
         # create the actual palette and export it as an image
         Palette.__init__(self, app, palette_filename, True)

@@ -5,61 +5,13 @@ from PIL import Image
 
 from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
-from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand, ConvertImageCommand
-from ui_art_dialog import PaletteFromFileDialog
+from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand
+from ui_art_dialog import PaletteFromFileDialog, ImportOptionsDialog
 from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
 from image_export import write_thumbnail
 
-class BaseFileChooserDialog(ChooserDialog):
-    
-    "base class for choosers whose items correspond with files"
-    show_filenames = True
-    
-    def set_initial_dir(self):
-        self.current_dir = self.ui.app.documents_dir
-        self.set_field_text(self.active_field, self.current_dir)
-    
-    def get_filenames(self):
-        "subclasses override: get list of desired filenames"
-        return []
-    
-    def get_sorted_dir_list(self, extensions=[]):
-        "common code for getting sorted directory + file lists"
-        # list parent, then dirs, then filenames with extension(s)
-        parent = [] if self.current_dir == '/' else ['..']
-        dirs, files = [], []
-        for filename in os.listdir(self.current_dir):
-            # skip unix-hidden files
-            if filename.startswith('.'):
-                continue
-            full_filename = self.current_dir + filename
-            for ext in extensions:
-                if os.path.isdir(full_filename):
-                    dirs += [full_filename + '/']
-                    break
-                elif filename.endswith(ext):
-                    files += [full_filename]
-                    break
-        dirs.sort()
-        files.sort()
-        return parent + dirs + files
-    
-    def get_items(self):
-        "populate and return items from list of files, loading as needed"
-        items = []
-        # find all suitable files (images)
-        filenames = self.get_filenames()
-        # use manual counter, as we skip past some files that don't fit
-        i = 0
-        for filename in filenames:
-            item = self.chooser_item_class(i, filename)
-            if not item.valid:
-                continue
-            items.append(item)
-            i += 1
-        return items
 
 class BaseFileChooserItem(ChooserItem):
     
@@ -109,6 +61,61 @@ class BaseFileChooserItem(ChooserItem):
         else:
             element.confirm_pressed()
         element.first_selection_made = False
+
+class BaseFileChooserDialog(ChooserDialog):
+    
+    "base class for choosers whose items correspond with files"
+    chooser_item_class = BaseFileChooserItem
+    show_filenames = True
+    file_extensions = []
+    
+    def set_initial_dir(self):
+        self.current_dir = self.ui.app.documents_dir
+        self.field_texts[self.active_field] = self.current_dir
+    
+    def get_filenames(self):
+        "subclasses override: get list of desired filenames"
+        return self.get_sorted_dir_list()
+    
+    def get_sorted_dir_list(self):
+        "common code for getting sorted directory + file lists"
+        # list parent, then dirs, then filenames with extension(s)
+        parent = [] if self.current_dir == '/' else ['..']
+        dirs, files = [], []
+        for filename in os.listdir(self.current_dir):
+            # skip unix-hidden files
+            if filename.startswith('.'):
+                continue
+            full_filename = self.current_dir + filename
+            # if no extensions specified, take any file
+            if len(self.file_extensions) == 0:
+                self.file_extensions = ['']
+            for ext in self.file_extensions:
+                if os.path.isdir(full_filename):
+                    dirs += [full_filename + '/']
+                    break
+                elif filename.endswith(ext):
+                    files += [full_filename]
+                    break
+        dirs.sort()
+        files.sort()
+        return parent + dirs + files
+    
+    def get_items(self):
+        "populate and return items from list of files, loading as needed"
+        items = []
+        # find all suitable files (images)
+        filenames = self.get_filenames()
+        # use manual counter, as we skip past some files that don't fit
+        i = 0
+        for filename in filenames:
+            item = self.chooser_item_class(i, filename)
+            if not item.valid:
+                continue
+            items.append(item)
+            i += 1
+        return items
+
 
 #
 # art chooser
@@ -178,6 +185,7 @@ class ArtChooserDialog(BaseFileChooserDialog):
     chooser_item_class = ArtChooserItem
     flip_preview_y = False
     directory_aware = True
+    file_extensions = [ART_FILE_EXTENSION]
     
     def set_initial_dir(self):
         # TODO: IF no art in Documents dir yet, start in app/art/ for examples?
@@ -187,25 +195,55 @@ class ArtChooserDialog(BaseFileChooserDialog):
         else:
             self.current_dir = self.ui.app.gw.game_dir if self.ui.app.gw.game_dir else self.ui.app.documents_dir
             self.current_dir += ART_DIR
-        self.set_field_text(self.active_field, self.current_dir)
-    
-    def get_initial_selection(self):
-        # first item in dir list
-        return 0
-    
-    def get_filenames(self):
-        return self.get_sorted_dir_list([ART_FILE_EXTENSION])
+        self.field_texts[self.active_field] = self.current_dir
     
     def confirm_pressed(self):
-        if not os.path.exists(self.get_field_text(0)):
+        if not os.path.exists(self.field_texts[0]):
             return
         self.ui.app.last_art_dir = self.current_dir
-        OpenCommand.execute(self.ui.console, [self.get_field_text(0)])
+        OpenCommand.execute(self.ui.console, [self.field_texts[0]])
         self.dismiss()
 
+
 #
-# image chooser
+# generic file chooser for importers
 #
+class GenericImportChooserDialog(BaseFileChooserDialog):
+    
+    title = 'Import %s'
+    confirm_caption = 'Import'
+    cancel_caption = 'Cancel'
+    # allowed extensions set by invoking 
+    file_extensions = []
+    show_preview_image = False
+    directory_aware = True
+    
+    def __init__(self, ui):
+        self.title %= ui.app.importer.format_name
+        self.file_extensions = ui.app.importer.allowed_file_extensions
+        BaseFileChooserDialog.__init__(self, ui)
+    
+    def set_initial_dir(self):
+        if self.ui.app.last_import_dir:
+            self.current_dir = self.ui.app.last_import_dir
+        else:
+            self.current_dir = self.ui.app.documents_dir
+        self.field_texts[self.active_field] = self.current_dir
+    
+    def confirm_pressed(self):
+        filename = self.field_texts[0]
+        if not os.path.exists(filename):
+            return
+        self.ui.app.last_import_dir = self.current_dir
+        self.dismiss()
+        # importer might offer a dialog for options
+        if self.ui.app.importer.options_dialog_class:
+            self.ui.open_dialog(self.ui.app.importer.options_dialog_class)
+            # stash the filename we chose in a special property in new dialog
+            self.ui.active_dialog.filename = filename
+        else:
+            ImportOptionsDialog.do_import(self.ui.app, filename, {})
+
 
 class ImageChooserItem(BaseFileChooserItem):
     
@@ -217,40 +255,31 @@ class ImageChooserItem(BaseFileChooserItem):
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         return Texture(img.tobytes(), *img.size)
 
-
-class ConvertImageChooserDialog(BaseFileChooserDialog):
+class ImageFileChooserDialog(BaseFileChooserDialog):
     
-    title = 'Convert image'
-    confirm_caption = 'Convert'
     cancel_caption = 'Cancel'
     chooser_item_class = ImageChooserItem
     flip_preview_y = False
     directory_aware = True
-    
-    supported_formats = ['png', 'jpg', 'jpeg', 'bmp']
-    
-    def get_filenames(self):
-        return self.get_sorted_dir_list(self.supported_formats)
-    
-    def confirm_pressed(self):
-        if not os.path.exists(self.get_field_text(0)):
-            return
-        ConvertImageCommand.execute(self.ui.console, [self.get_field_text(0)])
-        self.dismiss()
+    file_extensions = ['png', 'jpg', 'jpeg', 'bmp']
 
-class PaletteFromImageChooserDialog(ConvertImageChooserDialog):
+class PaletteFromImageChooserDialog(ImageFileChooserDialog):
     
     title = 'Palette from image'
     confirm_caption = 'Choose'
     
     def confirm_pressed(self):
-        if not os.path.exists(self.get_field_text(0)):
+        if not os.path.exists(self.field_texts[0]):
             return
         # open new dialog, pipe our field 0 into its field 0
-        filename = self.get_field_text(0)
+        filename = self.field_texts[0]
         self.dismiss()
         self.ui.open_dialog(PaletteFromFileDialog)
-        self.ui.active_dialog.set_field_text(0, filename)
+        self.ui.active_dialog.field_texts[0] = filename
+        # base new palette filename on source image
+        palette_filename = os.path.basename(filename)
+        palette_filename = os.path.splitext(palette_filename)[0]
+        self.ui.active_dialog.field_texts[1] = palette_filename
 
 #
 # palette chooser

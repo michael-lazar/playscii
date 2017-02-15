@@ -24,7 +24,6 @@ DEFAULT_LAYER_Z_OFFSET = 0.5
 
 ART_DIR = 'art/'
 ART_FILE_EXTENSION = 'psci'
-EDSCII_FILE_EXTENSION = 'ed'
 
 THUMBNAIL_CACHE_DIR = 'thumbnails/'
 
@@ -971,98 +970,6 @@ class ArtInstance(Art):
         self.geo_changed = True
         self.mark_all_frames_changed()
         self.update()
-
-
-class ArtFromEDSCII(Art):
-    """
-    File loader for legacy EDSCII format.
-    Assumes single frames, single layer, default charset and palette.
-    """
-    # TODO: make this init more like ArtFromDisk, ie use mostly Art.init
-    def __init__(self, filename, app, width_override=None):
-        # once load process is complete set this true to signify valid data
-        self.valid = False
-        try:
-            data = open(filename, 'rb').read()
-        except:
-            return
-        self.filename = '%s.%s' % (os.path.splitext(filename)[0], ART_FILE_EXTENSION)
-        self.app = app
-        self.time_loaded = 0
-        # document width = find longest stretch before a \n
-        longest_line = 0
-        for line in data.splitlines():
-            if len(line) > longest_line:
-                longest_line = len(line)
-        self.width = width_override or int(longest_line / 3)
-        # derive height from width
-        # 2-byte line breaks might produce non-int result, cast erases this
-        self.height = int(len(data) / self.width / 3)
-        # defaults
-        self.charset = self.app.load_charset(DEFAULT_CHARSET)
-        self.palette = self.app.load_palette(DEFAULT_PALETTE)
-        # use correct character aspect
-        self.quad_height = self.charset.char_height / self.charset.char_width
-        self.frames = 1
-        self.frame_delays = [DEFAULT_FRAME_DELAY]
-        self.active_frame = 0
-        self.layers = 1
-        self.layers_z = [DEFAULT_LAYER_Z]
-        self.layers_visibility = [True]
-        self.layer_names = ['Layer 1']
-        self.active_layer = 0
-        shape = (self.layers, self.height, self.width, 4)
-        chars = np.zeros(shape, dtype=np.float32)
-        fg_colors = chars.copy()
-        bg_colors = chars.copy()
-        # populate char/color arrays by scanning width-long chunks of file
-        def chunks(l, n):
-            for i in range(0, len(l), n):
-                yield l[i:i+n]
-        # 3 bytes per tile, +1 for line ending
-        # BUT: files saved in windows may have 2 byte line breaks, try to detect
-        lb_length = 1
-        lines = chunks(data, (self.width * 3) + lb_length)
-        for line in lines:
-            if line[-2] == ord('\r') and line[-1] == ord('\n'):
-                self.app.log('windows-style line breaks detected')
-                lb_length = 2
-                break
-        # recreate generator after first use
-        lines = chunks(data, (self.width * 3) + lb_length)
-        x, y = 0, 0
-        for line in lines:
-            index = 0
-            while index < len(line) - lb_length:
-                chars[0][y][x] = line[index]
-                # +1 to color indices: playscii color index 0 = transparent
-                fg_colors[0][y][x] = line[index+1] + 1
-                bg_colors[0][y][x] = line[index+2] + 1
-                index += 3
-                x += 1
-                if x >= self.width:
-                    x = 0
-                    y += 1
-        self.chars = [chars]
-        self.uv_mods = [self.new_uv_layers(self.layers)]
-        self.fg_colors, self.bg_colors = [fg_colors], [bg_colors]
-        self.char_changed_frames, self.uv_changed_frames = [], []
-        self.fg_changed_frames, self.bg_changed_frames = [], []
-        self.renderables = []
-        self.instances = []
-        self.camera_x, self.camera_y, self.camera_z = 0, 0, 0
-        self.command_stack = CommandStack(self)
-        self.unsaved_changes = False
-        # running scripts and timing info
-        self.scripts = []
-        self.script_rates = []
-        self.scripts_next_exec_time = []
-        self.geo_changed = True
-        self.update()
-        if self.log_creation and not self.app.game_mode:
-            self.app.log('EDSCII file %s loaded from disk:' % filename)
-            self.app.log('  width/height: %s x %s' % (self.width, self.height))
-        self.valid = True
 
 
 class TileIter:
