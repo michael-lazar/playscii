@@ -23,10 +23,10 @@ include_files = [
 ]
 
 include_bins = [
-    ('/usr/local/Cellar/sdl2/2.0.4/lib/libSDL2-2.0.0.dylib', '.'),
+    ('/usr/local/Cellar/sdl2/2.0.5/lib/libSDL2-2.0.0.dylib', '.'),
     ('/usr/local/Cellar/sdl2_mixer/2.0.1/lib/libSDL2_mixer-2.0.0.dylib', '.'),
-    ('/usr/local/Cellar/flac/1.3.1/lib/libFLAC.8.dylib', '.'),
-    ('/usr/local/Cellar/libmikmod/3.3.8/lib/libmikmod.3.dylib', '.'),
+    ('/usr/local/Cellar/flac/1.3.2/lib/libFLAC.8.dylib', '.'),
+    ('/usr/local/Cellar/libmikmod/3.3.10/lib/libmikmod.3.dylib', '.'),
     ('/usr/local/Cellar/libmodplug/0.8.8.5/lib/libmodplug.1.dylib', '.'),
     ('/usr/local/Cellar/libogg/1.3.2/lib/libogg.0.dylib', '.'),
     ('/usr/local/Cellar/libvorbis/1.3.5/lib/libvorbis.0.dylib', '.'),
