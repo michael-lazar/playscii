@@ -13,6 +13,7 @@ include_files = [
     ('charsets', 'charsets'),
     ('palettes', 'palettes'),
     ('artscripts', 'artscripts'),
+    ('formats', 'formats'),
     ('shaders', 'shaders'),
     ('games', 'games'),
     ('ui/*.png', 'ui'),
