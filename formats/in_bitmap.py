@@ -62,7 +62,6 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         Field(label=field8_label, type=float, width=field_width, oneline=True),
         Field(label='', type=None, width=0, oneline=True)
     ]
-    confirm_caption = 'Convert'
     invalid_color_error = 'Palettes must be between 2 and 256 colors.'
     invalid_scale_error = 'Scale must be greater than 0.0'
     # redraw dynamic labels

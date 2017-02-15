@@ -99,10 +99,6 @@ class Application:
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
     bg_color = [0.2, 0.2, 0.2, 2]
-    # scaling factor used when CRT filter is on during image export
-    export_crt_scale_factor = 4
-    # scale for export when no CRT
-    export_no_crt_scale_factor = 1
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
     # launch into art mode even if a game dir is specified via CLI
@@ -254,7 +250,7 @@ class Application:
         self.exporter = None
         self.last_export_options = {}
         # dict of available importer/exporter modules
-        self.format_modules = {}
+        self.converter_modules = {}
         self.game_mode = False
         self.gw = GameWorld(self)
         # if game dir specified, set it before we try to load any art
@@ -523,18 +519,25 @@ class Application:
                 return f
         return None
     
-    def get_format_classes(self, base_class):
+    def get_converter_classes(self, base_class):
+        "return a list of converter classes for importer/exporter selection"
         classes = []
-        for filename in os.listdir(FORMATS_DIR):
+        # on first load, documents dir may not be in import path
+        if not self.documents_dir in sys.path:
+            sys.path += [self.documents_dir]
+        # read from application (builtins) and user documents dirs
+        files = os.listdir(FORMATS_DIR)
+        files += os.listdir(self.documents_dir + FORMATS_DIR)
+        for filename in files:
             basename, ext = os.path.splitext(filename)
             if not ext.lower() == '.py':
                 continue
             try:
-                if basename in self.format_modules:
-                    m = importlib.reload(self.format_modules[basename])
+                if basename in self.converter_modules:
+                    m = importlib.reload(self.converter_modules[basename])
                 else:
                     m = importlib.import_module('formats.%s' % basename)
-                    self.format_modules[basename] = m
+                    self.converter_modules[basename] = m
             except Exception as e:
                 self.log_import_exception(e, basename)
             for k,v in m.__dict__.items():
@@ -546,11 +549,11 @@ class Application:
     
     def get_importers(self):
         "Returns list of all ArtImporter subclasses found in formats/ dir."
-        return self.get_format_classes(ArtImporter)
+        return self.get_converter_classes(ArtImporter)
     
     def get_exporters(self):
         "Returns list of all ArtExporter subclasses found in formats/ dir."
-        return self.get_format_classes(ArtExporter)
+        return self.get_converter_classes(ArtExporter)
     
     def load_charset(self, charset_to_load, log=False):
         "creates and returns a character set with the given name"
@@ -945,7 +948,7 @@ def get_paths():
     # add Playscii/ to documents path
     documents_dir += '/%s/' % APP_NAME
     # create Playscii dir AND subdirs for user art, charsets etc if not present
-    for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR,
+    for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR, FORMATS_DIR,
                    ART_SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
         if not os.path.exists(documents_dir + subdir):
             os.mkdir(documents_dir + subdir)
