@@ -95,8 +95,8 @@ class ConvertChooserItem(ChooserItem):
 
 class ConvertFileDialog(ChooserDialog):
     "Common functionality for importer and exporter selection dialogs"
-    tile_width = 70
-    tile_height, big_height = 15, 20
+    tile_width, big_width = 70, 90
+    tile_height, big_height = 15, 25
     confirm_caption = 'Choose'
     show_preview_image = False
     item_button_class = ConvertItemButton
@@ -142,6 +142,7 @@ class ImportFileDialog(ConvertFileDialog):
 
 class ImportOptionsDialog(UIDialog):
     "Generic base class for importer options"
+    confirm_caption = 'Import'
     def do_import(app, filename, options):
         "Common 'run importer' code for end of import options dialog"
         # if importer needs no options, run it
@@ -152,6 +153,7 @@ class ImportOptionsDialog(UIDialog):
 
 class ExportOptionsDialog(UIDialog):
     "Generic base class for exporter options"
+    confirm_caption = 'Export'
     def do_export(app, filename, options):
         "Common 'run exporter' code for end of import options dialog"
         # if importer needs no options, run it

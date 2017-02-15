@@ -11,7 +11,6 @@ class EDSCIIImportOptionsDialog(ImportOptionsDialog):
     fields = [
         Field(label=field0_label, type=int, width=field_width, oneline=False)
     ]
-    confirm_caption = 'Import'
     invalid_width_error = 'Invalid width override.'
     
     def get_initial_field_text(self, field_number):
