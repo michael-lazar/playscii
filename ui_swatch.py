@@ -4,6 +4,9 @@ import numpy as np
 from ui_element import UIElement, UIArt, UIRenderable
 from renderable_line import LineRenderable, SwatchSelectionBoxRenderable, UIRenderableX
 
+# min width for charset; if charset is tiny adjust to this
+MIN_CHARSET_WIDTH = 16
+
 class UISwatch(UIElement):
     
     def __init__(self, ui, popup):
@@ -241,7 +244,7 @@ class PaletteSwatch(UISwatch):
     
     def get_size(self):
         # balance rows/columns according to character set swatch width
-        charmap_width = self.popup.charset_swatch.art.charset.map_width
+        charmap_width = max(self.popup.charset_swatch.art.charset.map_width, MIN_CHARSET_WIDTH)
         colors = len(self.popup.charset_swatch.art.palette.colors)
         rows = math.ceil(colors / charmap_width)
         columns = math.ceil(colors / rows)
@@ -251,8 +254,9 @@ class PaletteSwatch(UISwatch):
         # base our quad size on charset's
         cqw, cqh = self.popup.charset_swatch.art.quad_width, self.popup.charset_swatch.art.quad_height
         # maximize item size based on row/column determined in get_size()
-        self.art.quad_width = (self.art.charset.map_width / self.art.width) * cqw
-        self.art.quad_height = (self.art.charset.map_width / self.art.width) * cqh
+        charmap_width = max(self.art.charset.map_width, MIN_CHARSET_WIDTH)
+        self.art.quad_width = (charmap_width / self.art.width) * cqw
+        self.art.quad_height = (charmap_width / self.art.width) * cqh
         self.art.clear_frame_layer(0, 0, 0)
         palette = self.ui.active_art.palette
         # clear color is index 0, start after that
@@ -295,7 +299,8 @@ class PaletteSwatch(UISwatch):
         return index < len(self.art.palette.colors)
     
     def set_cursor_selection_index(self, index):
-        self.popup.cursor_color = index + 1
+        # modulo wrap if selecting last color
+        self.popup.cursor_color = (index + 1) % len(self.art.palette.colors)
         self.popup.cursor_char = -1
     
     def move_cursor(self, cursor, dx, dy):
@@ -316,16 +321,24 @@ class PaletteSwatch(UISwatch):
         self.fg_selection_box.x = self.renderable.x
         # draw transparent color last (even tho it's first in color list)
         fg_x = (self.ui.selected_fg_color - 1) % self.art.width
+        # uneven # of palette columns, handle box specially
+        odd_colors = len(self.art.palette.colors) % 2 == 1
+        if self.ui.selected_fg_color == 0 and odd_colors:
+            fg_x -= 1
         self.fg_selection_box.x += fg_x * self.art.quad_width
         self.fg_selection_box.y = self.renderable.y
         fg_y = math.floor((self.ui.selected_fg_color - 1) / self.art.width)
+        fg_y %= self.art.height
         self.fg_selection_box.y -= fg_y * self.art.quad_height
         # bg box position
-        bg_x = (self.ui.selected_bg_color - 1) % self.art.width
         self.bg_selection_box.x = self.renderable.x
+        bg_x = (self.ui.selected_bg_color - 1) % self.art.width
+        if self.ui.selected_bg_color == 0 and odd_colors:
+            bg_x -= 1
         self.bg_selection_box.x += bg_x * self.art.quad_width
         self.bg_selection_box.y = self.renderable.y
         bg_y = math.floor((self.ui.selected_bg_color - 1) / self.art.width)
+        bg_y %= self.art.height
         self.bg_selection_box.y -= bg_y * self.art.quad_height
         # FG label position
         self.f_renderable.alpha = 1 - color

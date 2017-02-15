@@ -9,7 +9,7 @@ ENDOOM lump file format for Doom engine games.
 Background colors can only be EGA colors 0-8.
     """
     
-    def run_import(self, in_filename):
+    def run_import(self, in_filename, options={}):
         """
         from http://doomwiki.org/wiki/ENDOOM:
         80x25 tiles, dos charset, ega palette

@@ -1,7 +1,7 @@
  
 from ui_element import UIElement, UIArt, UIRenderable
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
-from ui_swatch import CharacterSetSwatch, PaletteSwatch
+from ui_swatch import CharacterSetSwatch, PaletteSwatch, MIN_CHARSET_WIDTH
 from ui_colors import UIColors
 from renderable_line import LineRenderable, SwatchSelectionBoxRenderable
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
@@ -469,7 +469,9 @@ class ToolPopup(UIElement):
         charset = self.ui.active_art.charset
         cqw, cqh = self.charset_swatch.art.quad_width, self.charset_swatch.art.quad_height
         old_width, old_height = self.tile_width, self.tile_height
-        self.tile_width = (cqw * charset.map_width + margin) / UIArt.quad_width
+        # min width in case of tiny charsets
+        charset_tile_width = max(charset.map_width, MIN_CHARSET_WIDTH)
+        self.tile_width = (cqw * charset_tile_width + margin) / UIArt.quad_width
         # tile height = height of charset + distance from top of popup
         self.tile_height = (cqh * charset.map_height) / UIArt.quad_height + margin
         # account for popup info lines etc: charset name + palette name + 1 padding each
@@ -537,6 +539,8 @@ class ToolPopup(UIElement):
         self.ui.selected_char %= new_charset.last_index
         self.ui.status_bar.set_active_charset(new_charset)
         self.charset_swatch.reset()
+        # charset width drives palette swatch width
+        self.palette_swatch.reset()
         self.reset_art()
     
     def set_active_palette(self, new_palette):
@@ -557,9 +561,11 @@ class ToolPopup(UIElement):
             # bail if mouse didn't move
             mouse_moved = self.ui.app.mouse_dx != 0 or self.ui.app.mouse_dy != 0
             if mouse_moved and self in self.ui.hovered_elements:
+                self.cursor_box.visible = False
                 x, y = self.ui.get_screen_coords(self.ui.app.mouse_x, self.ui.app.mouse_y)
                 for e in [self.charset_swatch, self.palette_swatch]:
                     if e.is_inside(x, y):
+                        self.cursor_box.visible = True
                         e.set_cursor_loc_from_mouse(self.cursor_box, x, y)
                         break
             # note: self.cursor_box updates in charset_swatch.update

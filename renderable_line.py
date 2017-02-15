@@ -22,6 +22,7 @@ class LineRenderable():
         # we may be attached to a game object
         self.go = game_object
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
+        self.visible = True
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y = 1, 1
@@ -138,6 +139,8 @@ class LineRenderable():
             self.app.log('destroyed: %s' % self)
     
     def render(self):
+        if not self.visible:
+            return
         GL.glUseProgram(self.shader.program)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.get_view_matrix())

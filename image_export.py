@@ -4,18 +4,12 @@ from PIL import Image, ImageChops, GifImagePlugin
 
 from framebuffer import ExportFramebuffer, ExportFramebufferNoCRT
 
-def get_frame_image(app, art, frame, force_no_crt=False, bg_color=(0, 0, 0, 0)):
+def get_frame_image(app, art, frame, allow_crt=True, scale=1, bg_color=(0, 0, 0, 0)):
     "returns a PIL image of given frame of given art"
+    post_fb_class = ExportFramebuffer if allow_crt else ExportFramebufferNoCRT
     # determine art's native size in pixels
     w = art.charset.char_width * art.width
     h = art.charset.char_height * art.height
-    # use appropriate scale factor if CRT is on vs off
-    if not force_no_crt and app.fb.crt and not app.fb.disable_crt:
-        scale = app.export_crt_scale_factor
-        post_fb_class = ExportFramebuffer
-    else:
-        scale = app.export_no_crt_scale_factor
-        post_fb_class = ExportFramebufferNoCRT
     w, h = int(w * scale), int(h * scale)
     # create CRT framebuffer
     post_fb = post_fb_class(app, w, h)
@@ -52,8 +46,7 @@ def get_frame_image(app, art, frame, force_no_crt=False, bg_color=(0, 0, 0, 0)):
     src_img = src_img.transpose(Image.FLIP_TOP_BOTTOM)
     return src_img
 
-def export_animation(app, art):
-    output_filename = '%s.gif' % os.path.splitext(art.filename)[0]
+def export_animation(app, art, out_filename):
     # get list of rendered frame images
     frames = []
     # use arbitrary color for transparency
@@ -61,13 +54,14 @@ def export_animation(app, art):
     # GL wants floats
     f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
     for frame in range(art.frames):
-        frame_img = get_frame_image(app, art, frame, True, f_transp)
+        frame_img = get_frame_image(app, art, frame, allow_crt=False,
+                                    scale=1, bg_color=f_transp)
         frame_img = art.palette.get_palettized_image(frame_img, i_transp[:3])
         frames.append(frame_img)
     # compile frames into animated GIF with proper frame delays
     # technique thanks to:
     # https://github.com/python-pillow/Pillow/blob/master/Scripts/gifmaker.py
-    output_img = open(output_filename, 'wb')
+    output_img = open(out_filename, 'wb')
     for i,img in enumerate(frames):
         delay = art.frame_delays[i] * 1000
         if i == 0:
@@ -92,26 +86,27 @@ def export_animation(app, art):
     output_img.write(b';')
     output_img.close()
     output_format = 'Animated GIF'
-    app.log('%s exported (%s)' % (output_filename, output_format))
+    #app.log('%s exported (%s)' % (out_filename, output_format))
 
 
-def export_still_image(app, art):
-    output_filename = '%s.png' % os.path.splitext(art.filename)[0]
+def export_still_image(app, art, out_filename, crt=True, scale=1):
+    # respect "disable CRT entirely" setting for slow GPUs
+    crt = False if app.fb.disable_crt else crt
     # just write RGBA if palette has more than one color with <1 alpha
-    if not art.palette.all_colors_opaque() or (app.fb.crt and not app.fb.disable_crt):
-        src_img = get_frame_image(app, art, art.active_frame)
-        src_img.save(output_filename, 'PNG')
+    if crt or not art.palette.all_colors_opaque():
+        src_img = get_frame_image(app, art, art.active_frame, True, scale)
+        src_img.save(out_filename, 'PNG')
         output_format = '32-bit w/ alpha'
     else:
         # else convert to current palette.
         # as with aniGIF export, use arbitrary color for transparency
         i_transp = art.palette.get_random_non_palette_color()
         f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
-        src_img = get_frame_image(app, art, art.active_frame, True, f_transp)
+        src_img = get_frame_image(app, art, art.active_frame, False, scale, f_transp)
         output_img = art.palette.get_palettized_image(src_img, i_transp[:3])
-        output_img.save(output_filename, 'PNG', transparency=0)
+        output_img.save(out_filename, 'PNG', transparency=0)
         output_format = '8-bit palettized w/ transparency'
-    app.log('%s exported (%s)' % (output_filename, output_format))
+    #app.log('%s exported (%s)' % (out_filename, output_format))
 
 
 def write_thumbnail(app, art_filename, thumb_filename):
@@ -121,7 +116,7 @@ def write_thumbnail(app, art_filename, thumb_filename):
     if len(art.renderables) == 0:
         renderable = app.thumbnail_renderable_class(app, art)
         art.renderables.append(renderable)
-    img = get_frame_image(app, art, 0, True)
+    img = get_frame_image(app, art, 0, allow_crt=False)
     img.save(thumb_filename, 'PNG')
     if renderable:
         renderable.destroy()

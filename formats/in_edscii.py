@@ -1,23 +1,61 @@
 
 from art_import import ArtImporter
+from ui_dialog import UIDialog, Field
+from ui_art_dialog import ImportOptionsDialog
+
+
+class EDSCIIImportOptionsDialog(ImportOptionsDialog):
+    title = 'Import EDSCII (legacy format) art'
+    field0_label = 'Width override (leave 0 to guess):'
+    field_width = UIDialog.default_short_field_width
+    fields = [
+        Field(label=field0_label, type=int, width=field_width, oneline=False)
+    ]
+    invalid_width_error = 'Invalid width override.'
+    
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            return '0'
+        return ''
+    
+    def is_input_valid(self):
+        # valid widths: any >=0 int
+        try: int(self.field_texts[0])
+        except: return False, self.invalid_width_error
+        if int(self.field_texts[0]) < 0:
+            return False, self.invalid_width_error
+        return True, None
+    
+    def confirm_pressed(self):
+        valid, reason = self.is_input_valid()
+        if not valid: return
+        width = int(self.field_texts[0])
+        width = width if width > 0 else None
+        options = {'width_override':width}
+        self.dismiss()
+        # self.filename is set in our importer's file_chooser_dialog_class
+        ImportOptionsDialog.do_import(self.ui.app, self.filename, options)
+
 
 class EDSCIIImporter(ArtImporter):
+    
     format_name = 'EDSCII'
     format_description = """
 Binary format for EDSCII, Playscii's predecessor.
 Assumes single frame, single layer document.
-Default character set and palette will be used.
+Existing character set and palette will be used.
     """
-    def run_import(self, in_filename):
+    options_dialog_class = EDSCIIImportOptionsDialog
+    
+    def run_import(self, in_filename, options={}):
         data = open(in_filename, 'rb').read()
         # document width = find longest stretch before a \n
         longest_line = 0
         for line in data.splitlines():
             if len(line) > longest_line:
                 longest_line = len(line)
-        # TODO: support width_override in new importer system
-        #width = width_override or int(longest_line / 3)
-        width = int(longest_line / 3)
+        # user can override assumed document width, needed for a few files
+        width = options.get('width_override', None) or int(longest_line / 3)
         # derive height from width
         # 2-byte line breaks might produce non-int result, cast erases this
         height = int(len(data) / width / 3)
