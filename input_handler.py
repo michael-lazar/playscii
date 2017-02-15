@@ -112,6 +112,17 @@ class InputLord:
                 return bind
         return ''
     
+    def is_command_function_dimmed(self, function):
+        "returns True if given function's menu bar item is currently dimmed"
+        for button in self.ui.art_menu_bar.menu_buttons + self.ui.game_menu_bar.menu_buttons:
+            if not hasattr(button, 'menu_data'):
+                continue
+            for item in button.menu_data.items:
+                if function.__name__ == 'BIND_%s' % item.command:
+                    if not item.always_active and item.should_dim(self.app):
+                        return True
+        return False
+    
     def handle_input(self):
         app = self.app
         # get and store mouse state
@@ -182,7 +193,9 @@ class InputLord:
                     flist = self.get_bind_functions(event, *mods)
                     if flist:
                         for f in flist:
-                            f()
+                            # don't run any command whose menu bar item's dimmed
+                            if not self.is_command_function_dimmed(f):
+                                f()
                     # if game mode active, pass to world as well as any binds
                     if self.app.game_mode:
                         self.app.gw.handle_input(event, *mods)
