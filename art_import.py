@@ -36,6 +36,7 @@ class ArtImporter:
         self.art.set_charset(charset)
         self.app.set_new_art_for_edit(self.art)
         self.success = False
+        "Set True on successful import."
         # run_import returns success, log it separately from exceptions
         try:
             if self.run_import(in_filename, options):
@@ -60,12 +61,13 @@ class ArtImporter:
         self.art.set_charset(charset)
     
     def set_art_palette(self, palette_name):
+        "Convenience function for setting palette by name from run_import."
         palette = self.app.load_palette(palette_name)
         self.art.set_palette(palette)
     
     def run_import(self, in_filename, options):
         """
-        Read input file, set Art size/charset/palette, set tiles from data,
-        return success.
+        Contains the actual import logic. Read input file, set Art
+        size/charset/palette, set tiles from data, return success.
         """
         return False
