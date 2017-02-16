@@ -79,7 +79,8 @@ WEBSITE_URL = 'http://vectorpoem.com/playscii'
 WEBSITE_HELP_URL = 'docs/html/howto_main.html'
 AUTOGEN_DOCS_PATH = 'docs/html/generated/'
 AUTOGEN_DOC_MODULES = ['game_object', 'game_world', 'game_room', 'collision',
-                       'game_util_objects', 'art', 'renderable', 'vector']
+                       'game_util_objects', 'art', 'renderable', 'vector',
+                       'art_import', 'art_export']
 AUTOGEN_DOC_TOC_PAGE = 'pdoc_toc.html'
 
 MAX_ONION_FRAMES = 3

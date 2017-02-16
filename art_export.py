@@ -16,7 +16,7 @@ class ArtExporter:
     format_description = "ERROR - ArtExporter.format_description"
     "String (can be triple-quoted) describing format, shown in export chooser."
     file_extension = ''
-    "Extension to give the exported file"
+    "Extension to give the exported file, sans dot."
     options_dialog_class = None
     "UIDialog subclass exposing export options to user."
     
@@ -30,6 +30,7 @@ class ArtExporter:
         if not out_filename.startswith(self.app.documents_dir + ART_DIR):
             out_filename = self.app.documents_dir + ART_DIR + out_filename
         self.success = False
+        "Set True on successful export."
         try:
             if self.run_export(out_filename, options):
                 self.success = True
@@ -43,4 +44,8 @@ class ArtExporter:
         self.app.last_export_options = options
     
     def run_export(self, out_filename, options):
+        """
+        Contains the actual export logic. Write data based on current art,
+        return success.
+        """
         return False

@@ -56,9 +56,9 @@
   <li> <a href="#animation">Animation and Frames</a> </li>
   <li> <a href="#charsets">Character Set Selector</a> </li>
   <li> <a href="#palettes">Color Palette Selector</a> </li>
+  <li> <a href="#importandexport">Importing and Exporting</a> </li>
   <li> <a href="#export">Image and Animation Export</a> </li>
   <li> <a href="#imageconversion">Bitmap Image Conversion</a> </li>
-  <li> <a href="#edscii">Importing from EDSCII</a> </li>
   <li> <a href="#customcharsets">Custom Character Sets</a> </li>
   <li> <a href="#custompalettes">Custom Color Palettes</a> </li>
   <li> <a href="#indices">Technical Note: Indices</a> </li>
@@ -284,13 +284,21 @@ You can also see a list of all open documents at the bottom of the Art menu.
 </p>
 </div>
 
-<a id="export"> <h4>Image and Animation Export</h4> </a>
+<a id="importandexport"> <h4>Importing and Exporting</h4> </a>
 <div class="block">
 <p>
-  Playscii documents use a custom file format with a .PSCI extension which saves things like tile and layer data, but you may want to export your art as a conventional bitmap image. You can export the current active frame of the current document to a PNG format image with "Export PNG" in the File menu.
+  New with version 0.9.0, Playscii has an Import/Export plugin system you can use to get images in and out of Playscii from other formats. For example, you can export your art into a <a href="#exportimage">standard image format</a> for easy sharing, export animations in GIF format, <a href="#imageconversion">convert bitmap images into ASCII</a>, and import art that was originally created in other ASCII formats or even text files.
 </p>
+<center><img src="./art_converters.jpg" alt="image of importer chooser"/></center>
 <p>
-  It's worth noting that the exported image will or won't be affected by the status of the <a href="#crt">CRT filter</a> in the View menu. If you want an exported image that's 1:1 pixel accurate with the source image for the character set you're using, turn off the CRT filter before you export.
+  As it's a plugin system, you can also write your own converters. Playscii's built-in converters are stored in its <a href="../../formats/"><tt>formats/</tt></a> subfolder, and you can place any you write in the <tt>formats/</tt> subfolder of your Playscii documents folder. Weighing in at under 30 lines of code, the <a href="../../formats/in_txt.py">Plain Text Importer</a> is a good example of how to get data from a very simple format into a Playscii art document.
+</p>
+</div>
+
+<a id="exportimage"> <h4>Image and Animation Export</h4> </a>
+<div class="block">
+<p>
+  Playscii documents use a custom file format with a .PSCI extension which saves things like tile and layer data, but you may want to export your art as a conventional bitmap image. You can export the current active frame of the current document to a PNG format image with "Export" in the File menu and then selecting "PNG image". You'll then see an options screen allowing you to set the pixel dimensions of the output, and whether or not it uses the CRT filter.
 </p>
 <p>
   You can also export animated documents in animated GIF format with "Export animated GIF" in the File menu. GIF image animation uses the same "frame hold time" concept that Playscii uses, so the resulting GIF should look the same as it does in Playscii.
@@ -300,7 +308,7 @@ You can also see a list of all open documents at the bottom of the Art menu.
 <a id="imageconversion"> <h4>Bitmap Image Conversion</h4> </a>
 <div class="block">
 <p>
-  Converting a Playscii document to a conventional bitmap image is very straightforward and preserves the image 100%, but doing the reverse is trickier and can have a very aesthetically unique result.
+  Converting a Playscii document to a conventional bitmap image is very straightforward and preserves the image 100%, but doing the reverse is trickier and can have very aesthetically unique results.
 </p>
 <center>
   <table>
@@ -314,20 +322,13 @@ You can also see a list of all open documents at the bottom of the Art menu.
   </table>
 </center>
 <p>
-  With "Convert image" in the File menu, you can select a bitmap image in JPEG or PNG format to convert into Playscii using the current document size, character set, and color palette.
+  With the "Bitmap image" importer under "Import" in the File menu, you can select a bitmap image in JPEG or PNG format to convert into Playscii using the current document character set. An options screen then lets you specify whether to use the current document's palette, or generate a new one from the source image (as with <a href="#custompalettes">Palette from File</a>), as well as define the dimensions of the new art document.
 </p>
 <p>
   In brief, here's how the conversion process works: the source image is first resized to the current document size and its colors converted to the current palette. Each tile-sized block in the source image is then compared against all possible combinations of character and foreground/background color. When a best fit is found, that tile is painted at the source block's location and the next block is converted. This process is quite computationally intensive and may take a long time, even on fast computers. You can press <code>Escape</code> at any time to abort it.
 </p>
 <p>
-  The document size and color palette at the time of conversion have a big impact on the look of the final result, so you may want to experiment with different settings. If you'd like a fairly accurate color reproduction, see <a href="#custompalettes">Palette from File</a> in the Custom Palettes section below.
-</p>
-</div>
-
-<a id="edscii"> <h4>Importing from EDSCII</h4> </a>
-<div class="block">
-<p>
-  On the off chance you have a document made in the file format used by <a href="http://vectorpoem.com/edscii">EDSCII</a>, Playscii's predecessor from 2012, you can import it into Playscii with "Import from EDSCII" in the File menu. The resulting document will have a single frame and a single layer, and will use whatever character set and color palette you had active at the time of import.
+  The document size and color palette at the time of conversion have a big impact on the look of the final result, so you may want to experiment with different settings.
 </p>
 </div>
 
@@ -357,7 +358,7 @@ As of Playscii 0.8.2, tiles can contain multiple colors, and the Ultima IV tile 
 <center>
 <table>
   <tr>
-	<td> <img src="../../charsets/speccy.png" alt="ZX Spectrum character set" width="256px"/> </td>
+	<td> <img src="speccy.png" alt="ZX Spectrum character set" width="256px"/> </td>
 	<td width="100px"> </td>
 	<td bgcolor="#484848">
 	  <tt>

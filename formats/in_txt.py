@@ -1,3 +1,4 @@
+
 from art_import import ArtImporter
 
 class TextImporter(ArtImporter):
@@ -11,16 +12,14 @@ Current character set and palette will be used.
     
     def run_import(self, in_filename, options={}):
         lines = open(in_filename).readlines()
-        # determine longest line
+        # determine length of longest line
         longest = 0
         for line in lines:
             if len(line) > longest:
                 longest = len(line)
         if len(lines) == 0 or longest == 0:
             return False
-        # resize art
-        width, height = longest, len(lines)
-        self.art.resize(width, height)
+        self.art.resize(longest, len(lines))
         x, y = 0, 0
         for line in lines:
             for char in line:
