@@ -130,6 +130,8 @@ class ConvertFileDialog(ChooserDialog):
             item.description = converter.format_description
             items.append(item)
             i += 1
+        # sort alphabetically
+        items.sort(key=lambda item: item.label)
         return items
     
     def set_preview(self):

@@ -168,7 +168,7 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
 
 
 class BitmapImageImporter(ArtImporter):
-    format_name = 'Image'
+    format_name = 'Bitmap image'
     format_description = """
 Bitmap image in PNG, JPEG, or BMP format.
     """
