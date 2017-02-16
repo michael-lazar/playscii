@@ -4,6 +4,9 @@ from image_export import export_still_image
 from ui_dialog import UIDialog, Field
 from ui_art_dialog import ExportOptionsDialog
 
+DEFAULT_SCALE = 4
+DEFAULT_CRT = True
+
 class PNGExportOptionsDialog(ExportOptionsDialog):
     title = 'PNG image export options'
     field0_label = 'Scale factor (%s pixels)'
@@ -18,9 +21,9 @@ class PNGExportOptionsDialog(ExportOptionsDialog):
     
     def get_initial_field_text(self, field_number):
         if field_number == 0:
-            return '4'
+            return str(DEFAULT_SCALE)
         elif field_number == 1:
-            return UIDialog.true_field_text
+            return [' ', UIDialog.true_field_text][DEFAULT_CRT]
     
     def get_field_label(self, field_index):
         label = self.fields[field_index].label
@@ -73,5 +76,6 @@ If CRT filter is enabled, image will always be 32-bit.
     def run_export(self, out_filename, options):
         # heavy lifting done by image_export module
         export_still_image(self.app, self.app.ui.active_art, out_filename,
-                           crt=options['crt'], scale=options['scale'])
+                           crt=options.get('crt', DEFAULT_CRT),
+                           scale=options.get('scale', DEFAULT_SCALE))
         return True

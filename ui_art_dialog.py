@@ -123,15 +123,16 @@ class ConvertFileDialog(ChooserDialog):
     def get_items(self):
         items = []
         converters = self.get_converters()
+        # sort alphabetically
+        converters.sort(key=lambda item: item.format_name)
         i = 0
         for converter in converters:
-            item = self.chooser_item_class(i, converter.format_name)
+            item = self.chooser_item_class(i, converter.__name__)
             item.converter_class = converter
+            item.label = converter.format_name
             item.description = converter.format_description
             items.append(item)
             i += 1
-        # sort alphabetically
-        items.sort(key=lambda item: item.label)
         return items
     
     def set_preview(self):
