@@ -9,5 +9,6 @@ cd playscii
 unzip ../playscii_source.zip
 cd ..
 rm playscii_source.zip
-zip -ur9 playscii_source-`cat version`.zip playscii/*
+# zip and put itch manifest at same level as playscii/ dir
+zip -ur9 playscii_source-`cat version`.zip playscii/* .itch.toml
 rm -rf playscii/
