@@ -6,10 +6,12 @@ WIDTH = 80
 MAX_LINES = 250
 
 class ANSImporter(ArtImporter):
-    format_name = 'ANS'
+    format_name = 'ANSI'
     format_description = """
-ANS format.
+Classic scene format using ANSI standard codes.
+Assumes 80 columns, DOS character set and EGA palette.
     """
+    allowed_file_extensions = ['ans', 'txt']
     
     def get_sequence(self, data):
         "returns a list of ints from given data ending in a letter"
