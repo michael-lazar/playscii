@@ -135,7 +135,7 @@ ANS format.
                     # 2: clear entire screen, move cursor to 0,0
                     elif cmd == 2:
                         x, y = 0, 0
-                        self.art.clear_frame_layer(0, 0, DEFAULT_BG)
+                        self.art.clear_frame_layer(0, 0, DEFAULT_BG + 1)
                 # save cursor position
                 elif cmd_type == 's':
                     saved_x, saved_y = x, y
