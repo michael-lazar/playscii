@@ -30,6 +30,7 @@ ANS format.
             else:
                 cmds.append(new_cmd)
                 new_cmd = ''
+        # include last command
         cmds.append(new_cmd)
         return seq[-1], cmds
     
@@ -58,9 +59,6 @@ ANS format.
                 seq = self.get_sequence(data[i+2:])
                 # split sequence into individual commands
                 cmd_type, cmds = self.get_commands_from_sequence(seq)
-                #print('sequence found at %s:' % i)
-                #print('  %s' % seq)
-                #print('  %s: %s' % (cmd_type, cmds))
                 # display control
                 if chr(cmd_type) == 'm':
                     # empty command = reset
@@ -76,8 +74,13 @@ ANS format.
                                 fg_bright, bg_bright = False, False
                             # "bright" colors
                             elif code == 1:
+                                # bump fg color if isn't already bright
+                                if not fg_bright:
+                                    fg += 8
                                 fg_bright = True
                             elif code == 5:
+                                if not bg_bright:
+                                    bg += 8
                                 bg_bright = True
                             # swap fg/bg
                             elif code == 7:
@@ -97,13 +100,7 @@ ANS format.
                 elif chr(cmd_type) == 'B':
                     y += int(cmds[0]) if cmds[0] else 1
                 elif chr(cmd_type) == 'C':
-                    spaces = int(cmds[0]) if cmds else 1
-                    #print('%s spaces starting at %s,%s' % (spaces, x, y))
-                    # paint bg while moving cursor?
-                    # TODO: figure out why "Pablodraw v.3.0" bar doesn't show up
-                    #for xi in range(spaces):
-                    #    self.art.set_tile_at(0, 0, x + xi, y, 0, fg + 1, bg + 1)
-                    x += spaces
+                    x += int(cmds[0]) if cmds[0] else 1
                 elif cmd_type == 68:
                     x -= int(cmds[0]) if cmds[0] else 1
                 # break
