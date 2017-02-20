@@ -25,6 +25,7 @@ class ArtImporter:
     """
     options_dialog_class = None
     "UIDialog subclass exposing import options to user."
+    generic_error = '%s failed to import %s'
     
     def __init__(self, app, in_filename, options={}):
         self.app = app
@@ -35,25 +36,27 @@ class ArtImporter:
         charset = self.app.ui.active_art.charset if self.app.ui.active_art else self.app.load_charset(DEFAULT_CHARSET)
         self.art.set_charset(charset)
         self.app.set_new_art_for_edit(self.art)
+        self.art.clear_frame_layer(0, 0, 1)
         self.success = False
         "Set True on successful import."
         # run_import returns success, log it separately from exceptions
         try:
             if self.run_import(in_filename, options):
                 self.success = True
-                # TODO: GROSS! figure out why this works but
-                # art.geo_changed=True and art.mark_all_frames_changed() don't!
-                self.app.ui.erase_selection_or_art()
-                self.app.ui.undo()
-                # adjust for new art size and set it active
-                self.app.ui.adjust_for_art_resize(self.art)
-                self.app.ui.set_active_art(self.art)
-            else:
-                classname = self.__class__.__name__
-                self.app.log('%s failed to import %s' % (classname, in_filename))
         except:
             for line in traceback.format_exc().split('\n'):
                 self.app.log(line)
+        if not self.success:
+            classname = self.__class__.__name__
+            self.app.log(self.generic_error % (classname, in_filename))
+        # tidy final result, whether or not it was successful
+        # TODO: GROSS! figure out why this works but
+        # art.geo_changed=True and art.mark_all_frames_changed() don't!
+        self.app.ui.erase_selection_or_art()
+        self.app.ui.undo()
+        # adjust for new art size and set it active
+        self.app.ui.adjust_for_art_resize(self.art)
+        self.app.ui.set_active_art(self.art)
     
     def set_art_charset(self, charset_name):
         "Convenience function for setting charset by name from run_import."
@@ -64,6 +67,11 @@ class ArtImporter:
         "Convenience function for setting palette by name from run_import."
         palette = self.app.load_palette(palette_name)
         self.art.set_palette(palette)
+    
+    def resize(self, new_width, new_height):
+        "Convenience function for resizing art from run_import"
+        self.art.resize(new_width, new_height)
+        self.app.ui.adjust_for_art_resize(self.art)
     
     def run_import(self, in_filename, options):
         """
