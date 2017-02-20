@@ -2,6 +2,7 @@
 from art_import import ArtImporter
 
 DEFAULT_FG, DEFAULT_BG = 7, 0
+WIDTH = 80
 MAX_LINES = 250
 
 class ANSImporter(ArtImporter):
@@ -32,13 +33,13 @@ ANS format.
                 new_cmd = ''
         # include last command
         cmds.append(new_cmd)
-        return seq[-1], cmds
+        return chr(seq[-1]), cmds
     
     def run_import(self, in_filename, options={}):
         self.set_art_charset('dos')
         self.set_art_palette('ansi')
         # resize to arbitrary height, crop once we know final line count
-        self.resize(80, MAX_LINES)
+        self.resize(WIDTH, MAX_LINES)
         self.art.clear_frame_layer(0, 0, DEFAULT_BG + 1)
         data = open(in_filename, 'rb').read()
         x, y = 0, 0
@@ -47,7 +48,7 @@ ANS format.
         i = 0
         fg_bright, bg_bright = False, False
         while i < len(data):
-            if x >= 80:
+            if x >= WIDTH:
                 x = 0
                 y += 1
             # how much we will advance through bytes for next iteration
@@ -60,7 +61,7 @@ ANS format.
                 # split sequence into individual commands
                 cmd_type, cmds = self.get_commands_from_sequence(seq)
                 # display control
-                if chr(cmd_type) == 'm':
+                if cmd_type == 'm':
                     # empty command = reset
                     if len(cmds) == 0:
                         fg, bg = DEFAULT_FG, DEFAULT_BG
@@ -95,29 +96,51 @@ ANS format.
                                 if bg_bright: bg += 8
                             #else: print('unhandled display code %s' % code)
                 # cursor up/down/forward/back
-                elif chr(cmd_type) == 'A':
+                elif cmd_type == 'A':
                     y -= int(cmds[0]) if cmds[0] else 1
-                elif chr(cmd_type) == 'B':
+                elif cmd_type == 'B':
                     y += int(cmds[0]) if cmds[0] else 1
-                elif chr(cmd_type) == 'C':
+                elif cmd_type == 'C':
                     x += int(cmds[0]) if cmds[0] else 1
-                elif cmd_type == 68:
+                elif cmd_type == 'D':
                     x -= int(cmds[0]) if cmds[0] else 1
                 # break
-                elif cmd_type == 26:
+                elif ord(cmd_type) == 26:
                     break
                 # set line wrap (ignore for now)
-                elif cmd_type == 104:
+                elif cmd_type == 'h':
                     pass
-                # move cursor to X,Y
-                elif cmd_type == 72:
-                    if len(cmds) == 2:
-                        x, y = cmds[0], cmds[1]
+                # move cursor to Y,X
+                elif cmd_type == 'H' or cmd_type == 'f':
+                    if len(cmds) == 0 or len(cmds[0]) == 0:
+                        new_y = 0
+                    else:
+                        new_y = int(cmds[0]) - 1
+                    if len(cmds) < 2 or len(cmds[1]) == 0:
+                        new_x = 0
+                    else:
+                        new_x = int(cmds[1]) - 1
+                    x, y = new_x, new_y
+                # clear line/screen
+                elif cmd_type == 'J':
+                    cmd = int(cmds[0]) if cmds else 0
+                    # 0: clear from cursor to end of screen
+                    if cmd == 0:
+                        for xi in range(x, WIDTH):
+                            self.art.set_char_index_at(0, 0, xi, y, 0)
+                    # 1: clear from cursor to beginning of screen
+                    elif cmd == 1:
+                        for xi in range(x):
+                            self.art.set_char_index_at(0, 0, xi, y, 0)
+                    # 2: clear entire screen, move cursor to 0,0
+                    elif cmd == 2:
+                        x, y = 0, 0
+                        self.art.clear_frame_layer(0, 0, DEFAULT_BG)
                 # save cursor position
-                elif cmd_type == 115:
+                elif cmd_type == 's':
                     saved_x, saved_y = x, y
                 # restore cursor position
-                elif cmd_type == 117:
+                elif cmd_type == 'u':
                     x, y = saved_x, saved_y
                 #else: print('unhandled escape code %s' % cmd_type)
                 increment += len(seq)
@@ -143,5 +166,5 @@ ANS format.
         # resize to last line touched
         # TODO: current value of y might be lower than last line touched if
         # cursor up/reset codes used - see if this comes up in .ANS samples
-        self.resize(80, y)
+        self.resize(WIDTH, y)
         return True
