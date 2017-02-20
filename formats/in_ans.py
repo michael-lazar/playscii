@@ -43,7 +43,11 @@ ANS format.
         self.art.clear_frame_layer(0, 0, DEFAULT_BG + 1)
         data = open(in_filename, 'rb').read()
         x, y = 0, 0
+        # cursor save/restore codes position
         saved_x, saved_y = 0, 0
+        # final value of y might be lower than last line touched if
+        # cursor up/reset codes used; track highest value
+        max_y = 0
         fg, bg = DEFAULT_FG, DEFAULT_BG
         i = 0
         fg_bright, bg_bright = False, False
@@ -51,6 +55,7 @@ ANS format.
             if x >= WIDTH:
                 x = 0
                 y += 1
+                if y > max_y: max_y = y
             # how much we will advance through bytes for next iteration
             increment = 1
             # escape sequence
@@ -100,6 +105,7 @@ ANS format.
                     y -= int(cmds[0]) if cmds[0] else 1
                 elif cmd_type == 'B':
                     y += int(cmds[0]) if cmds[0] else 1
+                    if y > max_y: max_y = y
                 elif cmd_type == 'C':
                     x += int(cmds[0]) if cmds[0] else 1
                 elif cmd_type == 'D':
@@ -121,6 +127,7 @@ ANS format.
                     else:
                         new_x = int(cmds[1]) - 1
                     x, y = new_x, new_y
+                    if y > max_y: max_y = y
                 # clear line/screen
                 elif cmd_type == 'J':
                     cmd = int(cmds[0]) if cmds else 0
@@ -149,10 +156,12 @@ ANS format.
                 increment += 1
                 x = 0
                 y += 1
+                if y > max_y: max_y = y
             # LF
             elif data[i] == 10:
                 x = 0
                 y += 1
+                if y > max_y: max_y = y
             # indent
             elif data[i] == 9:
                 x += 8
@@ -164,7 +173,5 @@ ANS format.
                 x += 1
             i += increment
         # resize to last line touched
-        # TODO: current value of y might be lower than last line touched if
-        # cursor up/reset codes used - see if this comes up in .ANS samples
-        self.resize(WIDTH, y)
+        self.resize(WIDTH, max_y)
         return True
