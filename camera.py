@@ -16,11 +16,14 @@ class Camera:
     # pan/zoom speed tuning
     mouse_pan_rate = 10
     pan_accel = 0.005
-    max_pan_speed = 0.4
+    base_max_pan_speed = 0.8
     pan_friction = 0.1
+    # min/max zoom % between which pan speed variation scales
+    pan_min_pct = 25.0
+    pan_max_pct = 200.0
     # factor by which zoom level modifies pan speed
-    pan_zoom_increase_factor = 2
-    zoom_accel = 0.03
+    pan_zoom_increase_factor = 16
+    zoom_accel = 0.1
     max_zoom_speed = 0.5
     zoom_friction = 0.1
     # kill velocity if below this
@@ -39,6 +42,7 @@ class Camera:
     def __init__(self, app):
         self.app = app
         self.reset()
+        self.max_pan_speed = self.base_max_pan_speed
         # set True when "zoom extents" toggles on
         self.zoomed_extents = False
         self.saved_x, self.saved_y, self.saved_z = 0, 0, self.start_zoom
@@ -129,7 +133,7 @@ class Camera:
     
     def pan(self, dx, dy, keyboard=False):
         # modify pan speed based on zoom according to a factor
-        m = ((1 * self.pan_zoom_increase_factor) * self.z) / self.min_zoom
+        m = (self.pan_zoom_increase_factor * self.z) / self.min_zoom
         self.vel_x += dx * self.pan_accel * m
         self.vel_y += dy * self.pan_accel * m
         # for brevity, app passes in whether user appears to be keyboard editing
@@ -238,6 +242,8 @@ class Camera:
         self.mouse_panned = True
     
     def update(self):
+        speed_scale = clamp(self.get_current_zoom_pct(), self.pan_min_pct, self.pan_max_pct)
+        self.max_pan_speed = self.base_max_pan_speed / (speed_scale / 100)
         # remember last position to see if it changed
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         # if focus object is set, use it for X and Y transforms
