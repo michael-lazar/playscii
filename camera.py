@@ -242,8 +242,13 @@ class Camera:
         self.mouse_panned = True
     
     def update(self):
-        speed_scale = clamp(self.get_current_zoom_pct(), self.pan_min_pct, self.pan_max_pct)
-        self.max_pan_speed = self.base_max_pan_speed / (speed_scale / 100)
+        # zoom-proportional pan scale is based on art
+        if self.app.ui.active_art:
+            speed_scale = clamp(self.get_current_zoom_pct(),
+                                self.pan_min_pct, self.pan_max_pct)
+            self.max_pan_speed = self.base_max_pan_speed / (speed_scale / 100)
+        else:
+            self.max_pan_speed = self.base_max_pan_speed
         # remember last position to see if it changed
         self.last_x, self.last_y, self.last_z = self.x, self.y, self.z
         # if focus object is set, use it for X and Y transforms
