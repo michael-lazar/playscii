@@ -146,6 +146,9 @@ class Camera:
         "returns camera Z needed for 1:1 pixel zoom"
         return self.app.window_height / self.app.ui.active_art.charset.char_height
     
+    def set_to_base_zoom(self):
+        self.z = self.get_base_zoom()
+    
     def zoom_proportional(self, direction):
         "zooms in or out via increments of 1:1 pixel scales for active art"
         if not self.app.ui.active_art:
