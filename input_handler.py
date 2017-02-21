@@ -273,7 +273,8 @@ class InputLord:
                     else:
                         app.cursor.start_paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
-                    self.ui.quick_grab()
+                    if self.app.ui.active_art:
+                        self.ui.quick_grab()
         # none of the below applies to cases where a dialog is up
         if self.ui.active_dialog:
             sdl2.SDL_PumpEvents()
