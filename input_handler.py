@@ -637,6 +637,12 @@ class InputLord:
     def BIND_set_camera_zoom(self):
         self.ui.open_dialog(SetCameraZoomDialog)
     
+    def BIND_camera_zoom_in_proportional(self):
+        self.app.camera.zoom_proportional(1)
+    
+    def BIND_camera_zoom_out_proportional(self):
+        self.app.camera.zoom_proportional(-1)
+    
     def BIND_toggle_camera_tilt(self):
         if self.app.camera.y_tilt == 2:
             self.app.camera.y_tilt = 0

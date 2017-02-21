@@ -267,6 +267,14 @@ class ViewSetZoomItem(PulldownMenuItem):
     label = 'Set camera zoom…'
     command = 'set_camera_zoom'
 
+class ViewZoomInItem(PulldownMenuItem):
+    label = 'Zoom in'
+    command = 'camera_zoom_in_proportional'
+
+class ViewZoomOutItem(PulldownMenuItem):
+    label = 'Zoom out'
+    command = 'camera_zoom_out_proportional'
+
 class ViewToggleCameraTiltItem(PulldownMenuItem):
     label = '  Camera tilt'
     command = 'toggle_camera_tilt'
@@ -537,8 +545,10 @@ class ToolMenuData(PulldownMenuData):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 class ViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTItem, ViewToggleGridItem, ViewSetZoomItem, ViewToggleCameraTiltItem]
-             
+    items = [ViewToggleCRTItem, ViewToggleGridItem, SeparatorItem,
+             ViewSetZoomItem, ViewZoomInItem, ViewZoomOutItem,
+             ViewToggleCameraTiltItem]
+    
     def should_mark_item(item, ui):
         if hasattr(item, 'should_mark'):
             return item.should_mark(ui)
