@@ -297,17 +297,18 @@ class StatusBarUI(UIElement):
         self.file_cycle_button.caption = os.path.basename(art.filename) if art else FileCycleButton.caption
         self.file_cycle_button.width = len(self.file_cycle_button.caption) + 2
         # NOTE: button X offsets will be set in write_right_elements
+        null = '---'
         layers = art.layers if art else 0
-        layer = '%s/%s' % (art.active_layer + 1, layers) if art else 'n/a'
+        layer = '%s/%s' % (art.active_layer + 1, layers) if art else null
         self.layer_cycle_button.caption = layer
         self.layer_cycle_button.width = len(self.layer_cycle_button.caption)
         frames = art.frames if art else 0
-        frame = '%s/%s' % (art.active_frame + 1, frames) if art else 'n/a'
+        frame = '%s/%s' % (art.active_frame + 1, frames) if art else null
         self.frame_cycle_button.caption = frame
         self.frame_cycle_button.width = len(self.frame_cycle_button.caption)
         # zoom %
-        zoom_pct = self.ui.app.camera.get_current_zoom_pct()
-        self.zoom_set_button.caption = '%.1f' % zoom_pct
+        zoom = '%.1f' % self.ui.app.camera.get_current_zoom_pct() if art else null
+        self.zoom_set_button.caption = zoom
     
     def update(self):
         # update buttons
