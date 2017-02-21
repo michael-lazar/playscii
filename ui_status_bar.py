@@ -78,6 +78,10 @@ class FrameCycleButton(StatusBarTextCycleButton):
     caption = 'X/Y'
     width = len(caption)
 
+class ZoomSetButton(StatusBarTextCycleButton):
+    caption = '100.0'
+    width = len(caption)
+
 class StatusBarUI(UIElement):
     
     snap_bottom = True
@@ -93,7 +97,8 @@ class StatusBarUI(UIElement):
     tile_label = 'tile:'
     layer_label = 'layer:'
     frame_label = 'frame:'
-    right_items_width = len(tile_label) + len(layer_label) + len(frame_label) + (len('X/Y') + 2) * 2 + len('XX/YY') + 2 + 10
+    zoom_label = '%'
+    right_items_width = len(tile_label) + len(layer_label) + len(frame_label) + (len('X/Y') + 2) * 2 + len('XX/YY') + 2 + len(zoom_label) + 10
     button_names = {
         CharToggleButton: 'char_toggle',
         CharCycleButton: 'char_cycle',
@@ -106,7 +111,8 @@ class StatusBarUI(UIElement):
         ToolCycleButton: 'tool_cycle',
         FileCycleButton: 'file_cycle',
         LayerCycleButton: 'layer_cycle',
-        FrameCycleButton: 'frame_cycle'
+        FrameCycleButton: 'frame_cycle',
+        ZoomSetButton: 'zoom_set'
     }
     
     def __init__(self, ui):
@@ -223,6 +229,13 @@ class StatusBarUI(UIElement):
         elif mouse_button == 3:
             self.ui.set_active_frame(self.ui.active_art.active_frame - 1)
     
+    def zoom_set_button_pressed(self, mouse_button):
+        if not self.ui.active_art: return
+        if mouse_button == 1:
+            self.ui.app.camera.zoom_proportional(1)
+        elif mouse_button == 3:
+            self.ui.app.camera.zoom_proportional(-1)
+    
     def reset_art(self):
         UIElement.reset_art(self)
         self.tile_width = ceil(self.ui.width_tiles * self.ui.scale)
@@ -258,11 +271,13 @@ class StatusBarUI(UIElement):
             self.file_cycle_button.visible = True
             self.layer_cycle_button.visible = True
             self.frame_cycle_button.visible = True
+            self.zoom_set_button.visible = True
             self.write_right_elements()
         else:
             self.file_cycle_button.visible = False
             self.layer_cycle_button.visible = False
             self.frame_cycle_button.visible = False
+            self.zoom_set_button.visible = False
     
     def set_active_charset(self, new_charset):
         self.char_art.charset = self.fg_art.charset = self.bg_art.charset = new_charset
@@ -290,6 +305,9 @@ class StatusBarUI(UIElement):
         frame = '%s/%s' % (art.active_frame + 1, frames) if art else 'n/a'
         self.frame_cycle_button.caption = frame
         self.frame_cycle_button.width = len(self.frame_cycle_button.caption)
+        # zoom %
+        zoom_pct = self.ui.app.camera.get_current_zoom_pct()
+        self.zoom_set_button.caption = '%.1f' % zoom_pct
     
     def update(self):
         # update buttons
@@ -333,6 +351,11 @@ class StatusBarUI(UIElement):
         # position file button
         x = self.tile_width - (self.file_cycle_button.width + 1)
         self.file_cycle_button.x = x
+        x -= padding
+        # zoom
+        self.art.write_string(0, 0, x, 0, self.zoom_label, dark, light, True)
+        x -= len(self.zoom_label) + self.zoom_set_button.width
+        self.zoom_set_button.x = x
         x -= padding
         # tile
         tile = 'X/Y'

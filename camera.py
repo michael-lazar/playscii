@@ -138,13 +138,19 @@ class Camera:
         if keyboard:
             self.app.keyboard_editing = True
     
+    def get_current_zoom_pct(self):
+        "returns % of base (1:1) for current camera"
+        return (self.get_base_zoom() / self.z) * 100
+    
+    def get_base_zoom(self):
+        "returns camera Z needed for 1:1 pixel zoom"
+        return self.app.window_height / self.app.ui.active_art.charset.char_height
+    
     def zoom_proportional(self, direction):
         "zooms in or out via increments of 1:1 pixel scales for active art"
         if not self.app.ui.active_art:
             return
-        wh = self.app.window_height
-        ch = self.app.ui.active_art.charset.char_height
-        base_zoom = wh / ch
+        base_zoom = self.get_base_zoom()
         # build span of all 1:1 zoom increments
         zooms = []
         m = 1
