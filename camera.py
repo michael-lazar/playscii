@@ -30,7 +30,7 @@ class Camera:
     min_x,max_x = 0, 50
     min_y,max_y = -50, 0
     use_bounds = True
-    min_zoom,max_zoom = 1, 100
+    min_zoom,max_zoom = 1, 1000
     # matrices -> worldspace renderable vertex shader uniforms
     fov = 90
     near_z = 0.0001
@@ -137,6 +137,37 @@ class Camera:
         self.vel_z += dz * self.zoom_accel
         if keyboard:
             self.app.keyboard_editing = True
+    
+    def zoom_proportional(self, direction):
+        "zooms in or out via increments of 1:1 pixel scales for active art"
+        if not self.app.ui.active_art:
+            return
+        wh = self.app.window_height
+        ch = self.app.ui.active_art.charset.char_height
+        base_zoom = wh / ch
+        # build span of all 1:1 zoom increments
+        zooms = []
+        m = 1
+        while base_zoom / m > self.min_zoom:
+            zooms.append(base_zoom / m)
+            m *= 2
+        zooms.reverse()
+        m = 1
+        while base_zoom * m < self.max_zoom:
+            zooms.append(base_zoom * m)
+            m *= 2
+        # set zoom to nearest increment in direction we're heading
+        if direction > 0:
+            zooms.reverse()
+            for zoom in zooms:
+                if self.z > zoom:
+                    self.z = zoom
+                    break
+        elif direction < 0:
+            for zoom in zooms:
+                if self.z < zoom:
+                    self.z = zoom
+                    break
     
     def window_resized(self):
         self.calc_projection_matrix()

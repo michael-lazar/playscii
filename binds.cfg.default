@@ -64,6 +64,8 @@ self.edit_bind_src = {
     'shift ctrl z': 'redo',
     'q'        : 'quick_grab',
     'shift t'  : 'toggle_camera_tilt',
+	'='    : 'camera_zoom_in_proportional',
+	'-'    : 'camera_zoom_out_proportional',
     'return'   : 'select_or_paint',
 	'shift return': 'add_to_list_selection',
 	'ctrl return': 'remove_from_list_selection',
