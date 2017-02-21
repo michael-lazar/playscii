@@ -168,6 +168,8 @@ class Camera:
                 if self.z < zoom:
                     self.z = zoom
                     break
+        # kill all Z velocity for camera so we don't drift out of 1:1
+        self.vel_z = 0
     
     def window_resized(self):
         self.calc_projection_matrix()
