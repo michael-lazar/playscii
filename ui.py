@@ -474,7 +474,7 @@ class UI:
         # update grid, camera, cursor
         if art is self.active_art:
             self.app.camera.set_for_art(art)
-            self.app.camera.center_camera_for_art(art)
+            self.app.camera.toggle_zoom_extents(override=True)
             self.app.grid.reset()
             if self.app.cursor.x > art.width:
                self.app.cursor.x = art.width
