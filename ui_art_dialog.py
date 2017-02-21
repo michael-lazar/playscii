@@ -616,29 +616,32 @@ class PaletteFromFileDialog(UIDialog):
 
 class SetCameraZoomDialog(UIDialog):
     title = 'Set camera zoom'
-    field0_label = 'New camera zoom:'
+    field0_label = 'New camera zoom %:'
     field_width = UIDialog.default_short_field_width
     fields = [
         Field(label=field0_label, type=float, width=field_width, oneline=True)
     ]
     confirm_caption = 'Set'
-    invalid_zoom_error = 'Invalid number.'
+    invalid_zoom_error = 'Zoom % must be a number greater than zero.'
     all_modes_visible = True
     game_mode_visible = True
     
     def get_initial_field_text(self, field_number):
         if field_number == 0:
-            return str(self.ui.app.camera.z)
+            return '%.1f' % self.ui.app.camera.get_current_zoom_pct()
         return ''
     
     def is_input_valid(self):
         try: zoom = float(self.field_texts[0])
         except: return False, self.invalid_zoom_error
+        if zoom <= 0:
+            return False, self.invalid_zoom_error
         return True, None
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
         if not valid: return
-        new_zoom = float(self.field_texts[0])
-        self.ui.app.camera.z = new_zoom
+        new_zoom_pct = float(self.field_texts[0])
+        camera = self.ui.app.camera
+        camera.z = camera.get_base_zoom() / (new_zoom_pct / 100)
         self.dismiss()

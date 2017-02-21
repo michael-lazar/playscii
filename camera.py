@@ -24,7 +24,7 @@ class Camera:
     max_zoom_speed = 0.5
     zoom_friction = 0.1
     # kill velocity if below this
-    min_velocity = 0.001
+    min_velocity = 0.05
     # map extents
     # starting values only, bounds are generated according to art size
     min_x,max_x = 0, 50
@@ -39,6 +39,9 @@ class Camera:
     def __init__(self, app):
         self.app = app
         self.reset()
+        # set True when "zoom extents" toggles on
+        self.zoomed_extents = False
+        self.saved_x, self.saved_y, self.saved_z = 0, 0, self.start_zoom
     
     def reset(self):
         self.x, self.y = self.start_x, self.start_y
@@ -144,7 +147,12 @@ class Camera:
     
     def get_base_zoom(self):
         "returns camera Z needed for 1:1 pixel zoom"
-        return self.app.window_height / self.app.ui.active_art.charset.char_height
+        wh = self.app.window_height
+        ch = self.app.ui.active_art.charset.char_height
+        # TODO: understand why this produces correct result for 8x8 charsets
+        if ch == 8:
+            ch = 16
+        return wh / ch
     
     def set_to_base_zoom(self):
         self.z = self.get_base_zoom()
@@ -153,6 +161,7 @@ class Camera:
         "zooms in or out via increments of 1:1 pixel scales for active art"
         if not self.app.ui.active_art:
             return
+        self.zoomed_extents = False
         base_zoom = self.get_base_zoom()
         # build span of all 1:1 zoom increments
         zooms = []
@@ -180,6 +189,23 @@ class Camera:
         # kill all Z velocity for camera so we don't drift out of 1:1
         self.vel_z = 0
     
+    def toggle_zoom_extents(self, override=None):
+        if override is not None:
+            self.zoomed_extents = not override
+        if self.zoomed_extents:
+            self.x, self.y, self.z = self.saved_x, self.saved_y, self.saved_z
+        else:
+            self.saved_x, self.saved_y, self.saved_z = self.x, self.y, self.z
+            # TODO: more involved zoom-extents that picks the best zoom level
+            self.set_to_base_zoom()
+            # center camera on art
+            art = self.app.ui.active_art
+            self.x = (art.width * art.quad_width) / 2
+            self.y = -(art.height * art.quad_height) / 2
+        # kill all camera velocity when snapping
+        self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
+        self.zoomed_extents = not self.zoomed_extents
+    
     def window_resized(self):
         self.calc_projection_matrix()
     
@@ -199,11 +225,6 @@ class Camera:
         self.min_y = -art.height * art.quad_height
         # use saved pan/zoom
         self.set_loc(art.camera_x, art.camera_y, art.camera_z)
-    
-    def center_camera_for_art(self, art):
-        self.x = art.width / 2
-        self.y = -art.height / 2
-        # TODO: set z appropriately so entire art is on screen
     
     def mouse_pan(self, dx, dy):
         "pan view based on mouse delta"
@@ -242,6 +263,9 @@ class Camera:
                 self.vel_x = 0
             if abs(self.vel_y) < self.min_velocity:
                 self.vel_y = 0
+            # if camera moves, we're not in zoom-extents state anymore
+            if self.vel_x or self.vel_y:
+                self.zoomed_extents = False
             # move
             self.x += self.vel_x
             self.y += self.vel_y
@@ -250,6 +274,9 @@ class Camera:
         self.vel_z *= 1 - self.zoom_friction
         if abs(self.vel_z) < self.min_velocity:
             self.vel_z = 0
+        # as bove, if zooming turn off zoom-extents state
+        if self.vel_z:
+            self.zoomed_extents = False
         self.z += self.vel_z
         # keep within bounds
         if self.use_bounds:

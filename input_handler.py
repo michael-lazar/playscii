@@ -643,6 +643,10 @@ class InputLord:
     def BIND_camera_zoom_out_proportional(self):
         self.app.camera.zoom_proportional(-1)
     
+    def BIND_toggle_zoom_extents(self):
+        self.app.camera.toggle_zoom_extents()
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_toggle_camera_tilt(self):
         if self.app.camera.y_tilt == 2:
             self.app.camera.y_tilt = 0

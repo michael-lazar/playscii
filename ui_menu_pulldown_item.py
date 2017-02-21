@@ -263,9 +263,11 @@ class ViewToggleGridItem(PulldownMenuItem):
     def should_mark(ui):
         return ui.app.grid.visible
 
-class ViewSetZoomItem(PulldownMenuItem):
-    label = 'Set camera zoom…'
-    command = 'set_camera_zoom'
+class ViewToggleZoomExtentsItem(PulldownMenuItem):
+    label = '  Zoom to Art extents'
+    command = 'toggle_zoom_extents'
+    def should_mark(ui):
+        return ui.app.camera.zoomed_extents
 
 class ViewZoomInItem(PulldownMenuItem):
     label = 'Zoom in'
@@ -274,6 +276,10 @@ class ViewZoomInItem(PulldownMenuItem):
 class ViewZoomOutItem(PulldownMenuItem):
     label = 'Zoom out'
     command = 'camera_zoom_out_proportional'
+
+class ViewSetZoomItem(PulldownMenuItem):
+    label = 'Set camera zoom…'
+    command = 'set_camera_zoom'
 
 class ViewToggleCameraTiltItem(PulldownMenuItem):
     label = '  Camera tilt'
@@ -546,8 +552,8 @@ class ToolMenuData(PulldownMenuData):
 
 class ViewMenuData(PulldownMenuData):
     items = [ViewToggleCRTItem, ViewToggleGridItem, SeparatorItem,
-             ViewSetZoomItem, ViewZoomInItem, ViewZoomOutItem,
-             ViewToggleCameraTiltItem]
+             ViewToggleZoomExtentsItem, ViewZoomInItem, ViewZoomOutItem,
+             ViewSetZoomItem, ViewToggleCameraTiltItem]
     
     def should_mark_item(item, ui):
         if hasattr(item, 'should_mark'):
