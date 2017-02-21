@@ -38,7 +38,7 @@ Exports active layer of active frame.
         for y in range(self.art.height):
             for x in range(WIDTH):
                 # cut off tiles beyond supported width
-                if x >= self.art.width:
+                if x >= self.art.width - 1:
                     continue
                 char, fg, bg, xform = self.art.get_tile_at(frame, layer, x, y)
                 # offset palette indices so 0 = black not transparent
@@ -50,6 +50,6 @@ Exports active layer of active frame.
                 # write the character for this tile
                 self.write(chr(char))
             # carriage return + line feed
-            self.write('\r')
+            self.outfile.write(b'\r\n')
         self.outfile.close()
         return True

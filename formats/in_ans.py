@@ -60,7 +60,7 @@ Assumes 80 columns, DOS character set and EGA palette.
                 if y > max_y: max_y = y
             # how much we will advance through bytes for next iteration
             increment = 1
-            # escape sequence
+            # command sequence
             if data[i] == 27 and data[i+1] == 91:
                 increment += 1
                 # grab full length of sequence
@@ -176,4 +176,7 @@ Assumes 80 columns, DOS character set and EGA palette.
             i += increment
         # resize to last line touched
         self.resize(WIDTH, max_y)
+        # rare cases where no lines covered
+        if self.art.height == 0:
+            return False
         return True
