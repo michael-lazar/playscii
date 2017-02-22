@@ -666,12 +666,6 @@ class Art:
             frame['layers'] = layers
             frames.append(frame)
         d['frames'] = frames
-        # remove old thumbnail
-        thumb_dir = self.app.cache_dir + THUMBNAIL_CACHE_DIR
-        if os.path.exists(self.filename):
-            old_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
-            if os.path.exists(old_thumb_filename):
-                os.remove(old_thumb_filename)
         # MAYBE-TODO: below gives not-so-pretty-printing, find out way to control
         # formatting for better output
         json.dump(d, open(self.filename, 'w'), sort_keys=True, indent=1)
@@ -679,9 +673,54 @@ class Art:
         self.set_unsaved_changes(False)
         #self.app.log('saved %s to disk in %.5f seconds' % (self.filename, end_time - start_time))
         self.app.log('saved %s' % self.filename)
+        # remove old thumbnail
+        thumb_dir = self.app.cache_dir + THUMBNAIL_CACHE_DIR
+        if os.path.exists(self.filename):
+            old_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
+            if os.path.exists(old_thumb_filename):
+                os.remove(old_thumb_filename)
         # write thumbnail
         new_thumb_filename = thumb_dir + self.app.get_file_hash(self.filename) + '.png'
         write_thumbnail(self.app, self.filename, new_thumb_filename)
+    
+    def ALT_save_to_file(self):
+        # TEST alt save format research
+        # main idea: save flat lists of char/fg/bg/xform per-frame-per-layer
+        # savetest.psci: 500x300x5, 38s vs 8.6s save, 63MB vs 33MB (vs 11MB w/ indent=None)
+        # TODO:
+        # - test read perf too
+        # - save version checking (if none found in PSCI, assume v1)
+        # - support multiple save+load code paths for different save versions
+        def get_flat_int_list(layer_array):
+            return list(map(int, layer_array.flatten()))[::4]
+        start_time = time.time()
+        d = {'width': self.width, 'height': self.height,
+             'charset': self.charset.name, 'palette': self.palette.name,
+             'active_frame': self.active_frame,
+             'active_layer': self.active_layer,
+             'camera': (self.camera_x, self.camera_y, self.camera_z)
+        }
+        frames = []
+        for frame_index in range(self.frames):
+            frame = { 'delay': self.frame_delays[frame_index] }
+            layers = []
+            for layer_index in range(self.layers):
+                layer = {'z': self.layers_z[layer_index],
+                         'visible': int(self.layers_visibility[layer_index]),
+                         'name': self.layer_names[layer_index]
+                }
+                # compile lists-of-ints for chars, colors, xforms
+                layer['chars'] = get_flat_int_list(self.chars[frame_index][layer_index])
+                layer['fgs'] = get_flat_int_list(self.fg_colors[frame_index][layer_index])
+                layer['bgs'] = get_flat_int_list(self.bg_colors[frame_index][layer_index])
+                layer['xforms'] = get_flat_int_list(self.uv_mods[frame_index][layer_index])
+                layers.append(layer)
+            frame['layers'] = layers
+            frames.append(frame)
+        d['frames'] = frames
+        json.dump(d, open(self.filename + '2', 'w'), sort_keys=True, indent=None)
+        end_time = time.time()
+        self.app.log('ALT saved %s to disk in %.5f seconds' % (self.filename, end_time - start_time))
     
     def set_unsaved_changes(self, new_status):
         "Mark this Art as having unsaved changes in Art Mode."
