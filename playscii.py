@@ -47,6 +47,7 @@ from art_import import ArtImporter
 from art_export import ArtExporter
 from renderable import TileRenderable, OnionTileRenderable
 from renderable_line import DebugLineRenderable
+from renderable_sprite import UIBGTextureRenderable
 from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION, ART_SCRIPT_DIR
 from ui import UI
@@ -103,6 +104,7 @@ class Application:
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
     capslock_is_ctrl = False
     bg_color = [0.2, 0.2, 0.2, 2]
+    show_bg_texture = True
     # if True, ignore camera loc saved in .psci files
     override_saved_camera = False
     # launch into art mode even if a game dir is specified via CLI
@@ -120,7 +122,10 @@ class Application:
     # these values should be written to cfg files on exit
     # key = module path, value = [member object (blank if self), var name]
     persistent_setting_names = {
-        'UI.popup_hold_to_show': ['ui', 'popup_hold_to_show']
+        'UI.popup_hold_to_show': ['ui', 'popup_hold_to_show'],
+        'Framebuffer.start_crt_enabled': ['fb', 'crt'],
+        'Application.show_bg_texture': ['', 'show_bg_texture'],
+        'Grid.visible': ['grid', 'visible']
     }
     
     def __init__(self, config_dir, documents_dir, cache_dir, log_lines,
@@ -280,6 +285,8 @@ class Application:
         self.il = None
         # initialize UI with first art loaded active
         self.ui = UI(self, self.art_loaded_for_edit[0])
+        # textured background renderable
+        self.bg_texture = UIBGTextureRenderable(self)
         # init onion skin
         for i in range(self.onion_show_frames):
             renderable = OnionTileRenderable(self, self.ui.active_art)
@@ -780,6 +787,8 @@ class Application:
         else:
             for renderable in self.edit_renderables:
                 renderable.update()
+            if self.show_bg_texture:
+                self.bg_texture.render()
             if self.converter:
                 self.converter.preview_sprite.render()
             for r in self.edit_renderables:

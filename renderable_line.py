@@ -16,13 +16,13 @@ class LineRenderable():
     vert_items = 2
     # use game object's art_off_pct values
     use_art_offset = True
+    visible = True
     
     def __init__(self, app, quad_size_ref, game_object=None):
         self.app = app
         # we may be attached to a game object
         self.go = game_object
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
-        self.visible = True
         self.quad_size_ref = quad_size_ref
         self.x, self.y, self.z = 0, 0, 0
         self.scale_x, self.scale_y = 1, 1

@@ -31,7 +31,7 @@ class UI:
     # red color for warnings
     error_color_index = 3
     # low-contrast background texture that distinguishes UI from flat color
-    grain_texture = 'bgnoise_alpha.png'
+    grain_texture_path = UI_ASSET_DIR + 'bgnoise_alpha.png'
     visible = True
     logg = False
     popup_hold_to_show = True
@@ -120,11 +120,11 @@ class UI:
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
-        img = Image.open(UI_ASSET_DIR + self.grain_texture)
+        img = Image.open(self.grain_texture_path)
         img = img.convert('RGBA')
         width, height = img.size
         self.grain_texture = Texture(img.tobytes(), width, height)
-        self.grain_texture.set_wrap(GL.GL_REPEAT)
+        self.grain_texture.set_wrap(True)
         self.grain_texture.set_filter(GL.GL_LINEAR, GL.GL_LINEAR_MIPMAP_LINEAR)
         # update elements that weren't created when UI scale was determined
         self.set_elements_scale()

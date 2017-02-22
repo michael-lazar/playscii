@@ -308,7 +308,7 @@ class StatusBarUI(UIElement):
         self.frame_cycle_button.width = len(self.frame_cycle_button.caption)
         # zoom %
         zoom = '%.1f' % self.ui.app.camera.get_current_zoom_pct() if art else null
-        self.zoom_set_button.caption = zoom
+        self.zoom_set_button.caption = zoom[:5] # maintain size
     
     def update(self):
         # update buttons

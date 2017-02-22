@@ -263,6 +263,13 @@ class ViewToggleGridItem(PulldownMenuItem):
     def should_mark(ui):
         return ui.app.grid.visible
 
+class ViewBGTextureItem(PulldownMenuItem):
+    label = '  Textured background'
+    command = 'toggle_bg_texture'
+    always_active = True
+    def should_mark(ui):
+        return ui.app.show_bg_texture
+
 class ViewToggleZoomExtentsItem(PulldownMenuItem):
     label = '  Zoom to Art extents'
     command = 'toggle_zoom_extents'
@@ -551,7 +558,8 @@ class ToolMenuData(PulldownMenuData):
         return item.label == '  %s' % ui.selected_tool.button_caption
 
 class ViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTItem, ViewToggleGridItem, SeparatorItem,
+    items = [ViewToggleCRTItem, ViewToggleGridItem, ViewBGTextureItem,
+             SeparatorItem,
              ViewToggleZoomExtentsItem, ViewZoomInItem, ViewZoomOutItem,
              ViewSetZoomItem, ViewToggleCameraTiltItem]
     

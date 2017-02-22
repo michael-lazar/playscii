@@ -158,5 +158,6 @@ self.edit_bind_src = {
     '_rename_room'  : 'rename_current_room',
     '_toggle_debug_objects': 'toggle_debug_objects',
     '_toggle_picker_hold': 'toggle_picker_hold',
-    '_set_camera_zoom': 'set_camera_zoom'
+    '_set_camera_zoom': 'set_camera_zoom',
+    '_toggle_bg_texture': 'toggle_bg_texture'
 }

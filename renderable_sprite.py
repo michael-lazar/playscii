@@ -14,14 +14,16 @@ class SpriteRenderable:
     frag_shader_source = 'sprite_f.glsl'
     texture_filename = 'ui/icon.png'
     alpha = 1
+    tex_scale_x, tex_scale_y = 1, 1
     blend = True
     flip_y = True
+    tex_wrap = False
     
     def __init__(self, app, texture_filename=None, image_data=None):
         self.app = app
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
-        self.x, self.y, self.z = 0, 0, 0
-        self.scale_x, self.scale_y, self.scale_z = 1, 1, 1
+        self.x, self.y, self.z = self.get_initial_position()
+        self.scale_x, self.scale_y, self.scale_z = self.get_initial_scale()
         self.vao = GL.glGenVertexArrays(1)
         GL.glBindVertexArray(self.vao)
         # support loading texture from file or from provided data
@@ -38,6 +40,7 @@ class SpriteRenderable:
         self.position_uniform = self.shader.get_uniform_location('objectPosition')
         self.scale_uniform = self.shader.get_uniform_location('objectScale')
         self.tex_uniform = self.shader.get_uniform_location('texture0')
+        self.tex_scale_uniform = self.shader.get_uniform_location('texScale')
         self.alpha_uniform = self.shader.get_uniform_location('alpha')
         self.vert_buffer = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
@@ -51,12 +54,22 @@ class SpriteRenderable:
                                  GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindVertexArray(0)
+        self.texture.set_wrap(self.tex_wrap)
+    
+    def get_initial_position(self):
+        return 0, 0, 0
+    
+    def get_initial_scale(self):
+        return 1, 1, 1
     
     def get_projection_matrix(self):
         return np.eye(4, 4)
     
     def get_view_matrix(self):
         return np.eye(4, 4)
+    
+    def get_texture_scale(self):
+        return self.tex_scale_x, self.tex_scale_y
     
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
@@ -66,6 +79,7 @@ class SpriteRenderable:
         GL.glUseProgram(self.shader.program)
         GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glUniform1i(self.tex_uniform, 0)
+        GL.glUniform2f(self.tex_scale_uniform, *self.get_texture_scale())
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture.gltex)
         GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE, self.get_projection_matrix())
         GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE, self.get_view_matrix())
@@ -99,3 +113,16 @@ class ImagePreviewRenderable(SpriteRenderable):
     
     def get_view_matrix(self):
         return self.app.camera.view_matrix
+
+
+class UIBGTextureRenderable(UISpriteRenderable):
+    alpha = 0.8
+    tex_wrap = True
+    texture_filename = 'ui/bgnoise_alpha.png'
+    tex_scale_x, tex_scale_y = 8, 8
+    
+    def get_initial_position(self):
+        return -1, -1, 0
+    
+    def get_initial_scale(self):
+        return 2, 2, 1
