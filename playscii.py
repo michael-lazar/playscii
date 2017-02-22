@@ -40,7 +40,7 @@ except:
 from audio import AudioLord
 from shader import ShaderLord
 from camera import Camera
-from charset import CharacterSet, CHARSET_DIR
+from charset import CharacterSet, CharacterSetLord, CHARSET_DIR
 from palette import Palette, PaletteLord, PALETTE_DIR
 from art import Art, ArtFromDisk, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
 from art_import import ArtImporter
@@ -276,6 +276,7 @@ class Application:
         self.onion_renderables_prev, self.onion_renderables_next = [], []
         # lists of currently loaded character sets and palettes
         self.charsets, self.palettes = [], []
+        self.csl = CharacterSetLord(self)
         self.pl = PaletteLord(self)
         self.load_art_for_edit(art_filename)
         self.fb = Framebuffer(self)
@@ -361,13 +362,13 @@ class Application:
         sdl2.SDL_SetWindowIcon(self.window, icon_surf)
         sdl2.SDL_FreeSurface(icon_surf)
     
-    def log(self, new_line):
+    def log(self, new_line, error=False):
         "write to log file, stdout, and in-app console log"
         self.log_file.write('%s\n' % new_line)
         self.log_lines.append(new_line)
         print(new_line)
         if self.ui:
-            self.ui.message_line.post_line(new_line)
+            self.ui.message_line.post_line(new_line, None, error)
     
     def dev_log(self, new_line):
         if self.show_dev_log:
@@ -700,6 +701,7 @@ class Application:
             self.last_frame_end = self.get_elapsed_time()
             self.frames += 1
             self.sl.check_hot_reload()
+            self.csl.check_hot_reload()
             self.pl.check_hot_reload()
             # determine FPS
             # alpha: lower = smoother

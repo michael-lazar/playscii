@@ -96,9 +96,9 @@ class Shader:
         new_shader_source = self.get_shader_source(file_to_reload)
         try:
             new_shader = shaders.compileShader(new_shader_source, shader_type)
-            self.sl.app.log('success: reloaded shader %s' % file_to_reload)
+            self.sl.app.log('ShaderLord: success reloading %s' % file_to_reload)
         except:
-            self.sl.app.log('error: failed reloading shader %s' % file_to_reload)
+            self.sl.app.log('ShaderLord: failed reloading %s' % file_to_reload)
             return
         # recompile program with new shader
         if shader_type == GL.GL_VERTEX_SHADER:
