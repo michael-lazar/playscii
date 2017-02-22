@@ -25,7 +25,11 @@ class PaletteLord:
         for palette in self.app.palettes:
             if palette.has_updated():
                 changed = palette.filename
-                palette.load_image()
+                try:
+                    palette.load_image()
+                    self.app.log('PaletteLord: success reloading %s' % palette.filename)
+                except:
+                    self.app.log('PaletteLord: failed reloading %s' % palette.filename, True)
 
 
 class Palette:

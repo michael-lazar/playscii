@@ -1,10 +1,39 @@
-import os.path, string
+import os.path, string, time
 from PIL import Image
 
 from texture import Texture
 
 CHARSET_DIR = 'charsets/'
 CHARSET_FILE_EXTENSION = 'char'
+
+
+class CharacterSetLord:
+    
+    # time in ms between checks for hot reload
+    hot_reload_check_interval = 2 * 1000
+    
+    def __init__(self, app):
+        self.app = app
+        self.last_check = 0
+    
+    def check_hot_reload(self):
+        if self.app.get_elapsed_time() - self.last_check < self.hot_reload_check_interval:
+            return
+        self.last_check = self.app.get_elapsed_time()
+        changed = None
+        for charset in self.app.charsets:
+            if charset.has_updated():
+                changed = charset.filename
+                # reload data and image even if only one changed
+                try:
+                    success = charset.load_char_data()
+                    if success:
+                        self.app.log('CharacterSetLord: success reloading %s' % charset.filename)
+                    else:
+                        self.app.log('CharacterSetLord: failed reloading %s' % charset.filename, True)
+                except:
+                    self.app.log('CharacterSetLord: failed reloading %s' % charset.filename, True)
+
 
 class CharacterSet:
     
@@ -20,6 +49,22 @@ class CharacterSet:
             return
         self.name = os.path.basename(self.filename)
         self.name = os.path.splitext(self.name)[0]
+        # image filename discovered by character data load process
+        self.image_filename = None
+        # remember last modified times for data and image files
+        self.last_data_change = os.path.getmtime(self.filename)
+        self.last_image_change = 0
+        # do most stuff in load_char_data so we can hot reload
+        if not self.load_char_data():
+            return
+        # report
+        if log and not self.app.game_mode:
+            self.app.log("loaded charmap '%s' from %s:" % (self.name, self.filename))
+            self.report()
+        self.init_success = True
+    
+    def load_char_data(self):
+        "carries out majority of CharacterSet init, including loading image"
         char_data_src = open(self.filename, encoding='utf-8').readlines()
         # allow comments: discard any line in char data starting with //
         # (make sure this doesn't muck up legit mapping data)
@@ -28,11 +73,14 @@ class CharacterSet:
             if not line.startswith('//'):
                 char_data.append(line)
         # first line = image file
-        image_filename = self.app.find_filename_path(char_data.pop(0).strip(),
-                                                     CHARSET_DIR, 'png')
-        if not image_filename:
-            self.app.log("Couldn't find character set image %s" % image_filename)
-            return
+        # hold off assigning to self.image_filename til we know it's valid
+        img_filename = self.app.find_filename_path(char_data.pop(0).strip(), CHARSET_DIR, 'png')
+        if not img_filename:
+            self.app.log("Couldn't find character set image %s" % self.image_filename)
+            return False
+        self.image_filename = img_filename
+        # now that we know the image file's name, store its last modified time
+        self.last_image_change = os.path.getmtime(self.image_filename)
         # second line = character set dimensions
         second_line = char_data.pop(0).strip().split(',')
         self.map_width, self.map_height = int(second_line[0]), int(second_line[1])
@@ -70,8 +118,16 @@ class CharacterSet:
                 self.char_mapping[char] = self.char_mapping[char.lower()]
         # last valid index a character can be
         self.last_index = index
+        # load image
+        self.load_image_data()
+        self.set_char_dimensions()
+        # store base filename for easy comparisons with not-yet-loaded sets
+        self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
+        return True
+    
+    def load_image_data(self):
         # load and process image
-        img = Image.open(image_filename)
+        img = Image.open(self.image_filename)
         img = img.convert('RGBA')
         # flip for openGL
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
@@ -89,21 +145,36 @@ class CharacterSet:
         self.texture = Texture(img.tobytes(), self.image_width, self.image_height)
         # save image data for later, eg image conversion
         self.image_data = img
+    
+    def set_char_dimensions(self):
         # store character dimensions and UV size
         self.char_width = int(self.image_width / self.map_width)
         self.char_height = int(self.image_height / self.map_height)
         self.u_width = self.char_width / self.image_width
         self.v_height = self.char_height / self.image_height
-        # store base filename for easy comparisons with not-yet-loaded sets
-        self.base_filename = os.path.splitext(os.path.basename(self.filename))[0]
-        # report
-        if log and not self.app.game_mode:
-            self.app.log("loaded charmap '%s' from %s:" % (self.name, self.filename))
-            self.app.log('  source texture %s is %s x %s pixels' % (image_filename, self.image_width, self.image_height))
-            self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
-            self.app.log('  char map width/height is %s x %s' % (self.map_width, self.map_height))
-            self.app.log('  last character index: %s' % self.last_index)
-        self.init_success = True
+    
+    def report(self):
+        self.app.log('  source texture %s is %s x %s pixels' % (self.image_filename, self.image_width, self.image_height))
+        self.app.log('  char pixel width/height is %s x %s' % (self.char_width, self.char_height))
+        self.app.log('  char map width/height is %s x %s' % (self.map_width, self.map_height))
+        self.app.log('  last character index: %s' % self.last_index)
+    
+    def has_updated(self):
+        "return True if source image file has changed since last check"
+        
+        # TODO: work out how to handle case where image_filename is now
+        
+        # tolerate bad filenames in data, don't check stamps on nonexistent ones
+        if not self.image_filename or not os.path.exists(self.filename) or \
+           not os.path.exists(self.image_filename):
+            return False
+        data_changed = os.path.getmtime(self.filename) > self.last_data_change
+        img_changed = os.path.getmtime(self.image_filename) > self.last_image_change
+        if data_changed:
+            self.last_data_change = time.time()
+        if img_changed:
+            self.last_image_change = time.time()
+        return data_changed or img_changed
     
     def get_char_index(self, char):
         return self.char_mapping.get(char, 0)
