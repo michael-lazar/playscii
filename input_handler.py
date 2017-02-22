@@ -583,6 +583,10 @@ class InputLord:
         self.app.grid.visible = not self.app.grid.visible
         self.ui.menu_bar.refresh_active_menu()
     
+    def BIND_toggle_bg_texture(self):
+        self.app.show_bg_texture = not self.app.show_bg_texture
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_previous_frame(self):
         self.ui.set_active_frame(self.ui.active_art.active_frame - 1)
     

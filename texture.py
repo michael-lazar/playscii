@@ -8,7 +8,6 @@ class Texture:
     mag_filter = GL.GL_NEAREST
     min_filter = GL.GL_NEAREST
     #min_filter = GL.GL_NEAREST_MIPMAP_NEAREST
-    wrap = GL.GL_CLAMP_TO_EDGE
     packing = GL.GL_UNPACK_ALIGNMENT
     
     def __init__(self, string_data, width, height):
@@ -18,7 +17,7 @@ class Texture:
         GL.glPixelStorei(self.packing, 1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltex)
         self.set_filter(self.mag_filter, self.min_filter, False)
-        self.set_wrap(self.wrap, False)
+        self.set_wrap(False, False)
         GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, width, height, 0,
                         GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img_data)
         if bool(GL.glGenerateMipmap):
@@ -33,8 +32,9 @@ class Texture:
     def set_wrap(self, new_wrap, bind_first=True):
         if bind_first:
             GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltex)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, new_wrap)
-        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, new_wrap)
+        wrap = GL.GL_REPEAT if new_wrap else GL.GL_CLAMP_TO_EDGE
+        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, wrap)
+        GL.glTexParameterf(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, wrap)
     
     def destroy(self):
         GL.glDeleteTextures([self.gltex])
