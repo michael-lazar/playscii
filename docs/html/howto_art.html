@@ -176,10 +176,16 @@
 <a id="camera"> <h4>Panning and Zooming</h4> </a>
 <div class="block">
 <p>
-  To zoom the view closer or further from the document you're editing, press shift-X or shift-Z respectively or scroll the mouse wheel up or down.
+  To zoom the view closer or further from the document you're editing, press <code>Shift-X</code> or <code>Shift-Z</code> respectively or scroll the mouse wheel up or down.
 </p>
 <p>
-  To pan the view, use shift and the <code>arrow keys</code> or <code>W/A/S/D</code> (for up/left/down/right respectively), or click and drag the <code>middle mouse button</code>.
+  Pressing <code>=</code> or <code>-</code> will snap-zoom the view closer or further in "pixel exact" increments, which gives a 1:1, 2:2, 4:4 etc correspondance between what you're seeing and the pixel size of your character set. This can be useful if you intend to export images where exact dimensions are important.
+</p>
+<p>
+  To pan the view, use <code>shift</code> and the <code>arrow keys</code> or <code>W/A/S/D</code> (for up/left/down/right respectively), or click and drag the <code>middle mouse button</code>.
+</p>
+<p>
+  Pressing <code>Z</code> will center the view on your art and snap the view to a 1:1 pixel exact zoom level. Pressing <code>Z</code> again without moving the view will return it to its previous location. This is good for stepping back for a quick look at the overall piece while you're working on details.
 </p>
 <p>
   You can also set the zoom level manually with "Set camera zoom..." in the View menu.
@@ -199,7 +205,7 @@
 <a id="crt"> <h4>CRT Filter</h4> </a>
 <div class="block">
 <p>
-  By default, Playscii displays your work with a screen effect that emulates the look of old TVs or Monitors, ie cathode ray tubes. You can disable this with "CRT filter" in the View menu, or pressing shift-R. If Playscii runs slowly on your computer, try disabling the CRT filter.
+  By default, Playscii displays your work with a screen effect that emulates the look of old TVs or Monitors, ie cathode ray tubes. You can disable this with "CRT filter" in the View menu, or pressing <code>Shift-R</code>. If Playscii runs slowly on your computer, try disabling the CRT filter.
 </p>
 <center>
   <table>
@@ -379,6 +385,10 @@ KLMNOPQRSTUVWXYZ<br/>
   </tr>
 </table>
 </center>
+<p>
+  Lastly, know that if you're working on character set data or images in an external program such as a text or image editor, Playscii (as of version 0.9.2) will automatically reload changes as you save them.
+</p>
+
 </div>
 
 <a id="custompalettes"> <h4>Custom Color Palettes</h4> </a>
@@ -387,7 +397,7 @@ KLMNOPQRSTUVWXYZ<br/>
   Playscii includes several classic color palettes from old computers and game systems, which you can preview and select in the <a href="#palettes">Palette Selector</a>. You can also define custom color palettes in two different ways:
 </p>
 <ul>
-  <li> You can simply drop an image into the <tt>palettes/</tt> subfolder of your Playscii documents folder. The image is scanned from top left to bottom right, and each unique color found is added to the palette. You can create color swatch images in traditional paint programs for this purpose quite easily. </li>
+  <li> You can simply drop an image into the <tt>palettes/</tt> subfolder of your Playscii documents folder. The image is scanned from top left to bottom right, and each unique color found is added to the palette. You can create color swatch images in traditional paint programs for this purpose quite easily. As of version 0.9.0, Playscii will automatically reload palette images as you change them in another program.</li>
   <li> If you have an image with a larger number of unique colors, you can easily turn it into a custom palette with "Palette from image" in the Char/Color menu. After selecting a source image, the dialog lets you specify a name for the new palette file, and a target number of unique colors the source image will be reduced to. </li>
 </ul>
 </div>
