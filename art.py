@@ -495,6 +495,7 @@ class Art:
         "Return character transform enum for given frame/layer/x,y tile."
         uvs = self.uv_mods[frame][layer][y][x]
         # use reverse dict of tuples b/c they're hashable
+        # TODO: this is sadly very slow, see notes on bitbucket issue #46
         return uv_types_reverse.get(tuple(uvs), UV_NORMAL)
     
     def get_tile_at(self, frame, layer, x, y):

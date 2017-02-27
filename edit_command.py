@@ -47,6 +47,10 @@ class EditCommand:
             self.tile_commands[ct.frame][ct.layer][ct.y][ct.x] = ct
     
     def undo_commands_for_tile(self, frame, layer, x, y):
+        # tile might not have undo commands, eg text entry beyond start region
+        if not y in self.tile_commands[frame][layer] or \
+           not x in self.tile_commands[frame][layer][y]:
+            return
         self.tile_commands[frame][layer][y][x].undo()
     
     def undo(self):
