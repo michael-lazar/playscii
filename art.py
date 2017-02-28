@@ -104,10 +104,12 @@ class Art:
         # camera position - updated in Art.update, saved in .psci
         self.update_saved_camera(self.app.camera)
         # list of char/fg/bg arrays, one for each frame
-        self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
-        # lists of changed frames, processed each update()
-        self.char_changed_frames, self.uv_changed_frames = [], []
-        self.fg_changed_frames, self.bg_changed_frames = [], []
+        self.chars, self.fg_colors, self.bg_colors = [], [], []
+        # char transforms: UV coords, plus map (unused by renderer) for fast access
+        self.uv_mods, self.uv_maps = [], []
+        # table of {frame_number: bool} changed frames, processed each update()
+        self.char_changed_frames, self.uv_changed_frames = {}, {}
+        self.fg_changed_frames, self.bg_changed_frames = {}, {}
         self.renderables = []
         "List of TileRenderables using us - each new Renderable adds itself"
         self.instances = []
@@ -176,9 +178,11 @@ class Art:
         new_char = np.zeros(shape, dtype=np.float32)
         new_fg = np.full(shape, fg, dtype=np.float32)
         new_bg = np.full(shape, bg, dtype=np.float32)
+        new_uv = np.full(shape, UV_NORMAL, dtype=np.uint32)
         self.chars.insert(index, new_char)
         self.fg_colors.insert(index, new_fg)
         self.bg_colors.insert(index, new_bg)
+        self.uv_maps.insert(index, new_uv)
         # UV init is more complex than just all zeroes
         self.uv_mods.insert(index, self.new_uv_layers(self.layers))
         # all but lowest layer = transparent
@@ -206,6 +210,7 @@ class Art:
         # copy source frame's char/color arrays
         self.chars.insert(dest_frame_index, self.chars[src_frame_index].copy())
         self.uv_mods.insert(dest_frame_index, self.uv_mods[src_frame_index].copy())
+        self.uv_maps.insert(dest_frame_index, self.uv_maps[src_frame_index].copy())
         self.fg_colors.insert(dest_frame_index, self.fg_colors[src_frame_index].copy())
         self.bg_colors.insert(dest_frame_index, self.bg_colors[src_frame_index].copy())
         self.mark_all_frames_changed()
@@ -220,6 +225,7 @@ class Art:
         self.fg_colors.pop(index)
         self.bg_colors.pop(index)
         self.uv_mods.pop(index)
+        self.uv_maps.pop(index)
         self.frames -= 1
         self.mark_all_frames_changed()
         if self is self.app.ui.active_art:
@@ -231,10 +237,12 @@ class Art:
         fg_data = self.fg_colors.pop(src_index)
         bg_data = self.bg_colors.pop(src_index)
         uv_data = self.uv_mods.pop(src_index)
+        uv_map_data = self.uv_maps.pop(src_index)
         self.chars.insert(dest_index, char_data)
         self.fg_colors.insert(dest_index, fg_data)
         self.bg_colors.insert(dest_index, bg_data)
         self.uv_mods.insert(dest_index, uv_data)
+        self.uv_maps.insert(dest_index, uv_map_data)
         self.mark_all_frames_changed()
     
     def add_layer(self, z=None, name=None):
@@ -261,6 +269,7 @@ class Art:
             self.fg_colors[frame] = duplicate_layer_array(self.fg_colors[frame])
             self.bg_colors[frame] = duplicate_layer_array(self.bg_colors[frame])
             self.uv_mods[frame] = duplicate_layer_array(self.uv_mods[frame])
+            self.uv_maps[frame] = duplicate_layer_array(self.uv_maps[frame])
         self.layers += 1
         z = z if z is not None else self.layers_z[src_index]
         self.layers_z.append(z)
@@ -283,16 +292,15 @@ class Art:
         for y in range(self.height):
             for x in range(self.width):
                 self.uv_mods[frame][layer][y][x] = uv_types[UV_NORMAL]
+                self.uv_maps[frame][layer][y][x] = UV_NORMAL
                 self.chars[frame][layer][y][x] = 0
                 self.fg_colors[frame][layer][y][x] = fg_color or 0
                 self.bg_colors[frame][layer][y][x] = bg_color
         # tell this frame to update
-        if frame not in self.char_changed_frames:
-            self.char_changed_frames.append(frame)
-        if frame not in self.fg_changed_frames:
-            self.fg_changed_frames.append(frame)
-        if frame not in self.bg_changed_frames:
-            self.bg_changed_frames.append(frame)
+        self.char_changed_frames[frame] = True
+        self.fg_changed_frames[frame] = True
+        self.bg_changed_frames[frame] = True
+        self.uv_changed_frames[frame] = True
     
     def delete_layer(self, index):
         "Delete layer at given index."
@@ -301,6 +309,7 @@ class Art:
             self.fg_colors[frame] = np.delete(self.fg_colors[frame], index, 0)
             self.bg_colors[frame] = np.delete(self.bg_colors[frame], index, 0)
             self.uv_mods[frame] = np.delete(self.uv_mods[frame], index, 0)
+            self.uv_maps[frame] = np.delete(self.uv_maps[frame], index, 0)
         self.layers_z.pop(index)
         self.layers_visibility.pop(index)
         self.layer_names.pop(index)
@@ -356,8 +365,8 @@ class Art:
         crop_x = new_width < self.width
         crop_y = new_height < self.height
         for frame in range(self.frames):
-            for array in [self.chars, self.fg_colors,
-                          self.bg_colors, self.uv_mods]:
+            for array in [self.chars, self.fg_colors, self.bg_colors,
+                          self.uv_mods, self.uv_maps]:
                 if crop_x:
                     array[frame] = array[frame].take(range(x0, x1), axis=2)
                 if crop_y:
@@ -394,13 +403,15 @@ class Art:
                 #bg = self.app.ui.selected_bg_color
             self.fg_colors[frame] = expand_array(self.fg_colors[frame], fg, 4)
             self.bg_colors[frame] = expand_array(self.bg_colors[frame], bg, 4)
-            self.uv_mods[frame] = expand_array(self.uv_mods[frame], UV_NORMAL, UV_STRIDE)
+            self.uv_mods[frame] = expand_array(self.uv_mods[frame], uv_types[UV_NORMAL], UV_STRIDE)
+            self.uv_maps[frame] = expand_array(self.uv_maps[frame], UV_NORMAL, 4)
     
     def mark_frame_changed(self, frame):
         "Given frame at given index as changed for next render."
-        for l in [self.char_changed_frames, self.fg_changed_frames,
-                  self.bg_changed_frames, self.uv_changed_frames]:
-            l.append(frame)
+        self.char_changed_frames[frame] = True
+        self.fg_changed_frames[frame] = True
+        self.bg_changed_frames[frame] = True
+        self.uv_changed_frames[frame] = True
     
     def mark_all_frames_changed(self):
         "Mark all frames as changed for next render."
@@ -493,10 +504,8 @@ class Art:
     
     def get_char_transform_at(self, frame, layer, x, y):
         "Return character transform enum for given frame/layer/x,y tile."
-        uvs = self.uv_mods[frame][layer][y][x]
-        # use reverse dict of tuples b/c they're hashable
-        # TODO: this is sadly very slow, see notes on bitbucket issue #46
-        return uv_types_reverse.get(tuple(uvs), UV_NORMAL)
+        # read from mapping, rather than casting raw UV coords for tuple key
+        return self.uv_maps[frame][layer][y][x][0]
     
     def get_tile_at(self, frame, layer, x, y):
         """
@@ -514,8 +523,7 @@ class Art:
         "Set character index for given frame/layer/x,y tile."
         self.chars[frame][layer][y][x] = char_index
         # next update, tell renderables on the changed frame to update buffers
-        if not frame in self.char_changed_frames:
-            self.char_changed_frames.append(frame)
+        self.char_changed_frames[frame] = True
     
     def set_color_at(self, frame, layer, x, y, color_index, fg=True):
         """
@@ -523,15 +531,14 @@ class Art:
         Foreground or background specified with "fg" boolean.
         """
         # modulo to resolve any negative indices
-        color_index %= len(self.palette.colors)
+        if 0 < color_index >= len(self.palette.colors):
+            color_index %= len(self.palette.colors)
         # no functional differences between fg and bg color update,
         # so use the same code path with different parameters
         update_array = self.fg_colors[frame] if fg else self.bg_colors[frame]
         update_array[layer][y][x] = color_index
-        if fg and not frame in self.fg_changed_frames:
-            self.fg_changed_frames.append(frame)
-        elif not fg and not frame in self.bg_changed_frames:
-            self.bg_changed_frames.append(frame)
+        self.fg_changed_frames[frame] = True
+        self.bg_changed_frames[frame] = True
     
     def set_all_non_transparent_colors(self, new_color_index):
         """
@@ -558,15 +565,24 @@ class Art:
         frame/layer/x,y tile.
         """
         self.uv_mods[frame][layer][y][x] = uv_types[transform]
-        if not frame in self.uv_changed_frames:
-            self.uv_changed_frames.append(frame)
+        # keep mapping, used only for quick access, in sync
+        self.uv_maps[frame][layer][y][x] = transform
+        self.uv_changed_frames[frame] = True
     
     def set_tile_at(self, frame, layer, x, y, char_index=None, fg=None, bg=None,
-                    transform=None):
+                    transform=None, set_all=False):
         """
         Convenience function for setting all tile attributes (character index,
         foreground and background color, and transofmr) at once.
         """
+        # speedier path if we know all tile attributes will change,
+        # eg command undo/apply
+        if set_all:
+            self.set_char_index_at(frame, layer, x, y, char_index)
+            self.set_color_at(frame, layer, x, y, fg, True)
+            self.set_color_at(frame, layer, x, y, bg, False)
+            self.set_char_transform_at(frame, layer, x, y, transform)
+            return
         if char_index is not None:
             self.set_char_index_at(frame, layer, x, y, char_index)
         if fg is not None:
@@ -578,7 +594,7 @@ class Art:
     
     def shift(self, frame, layer, amount_x, amount_y):
         "Shift + wrap art on given frame and layer by given amount in X and Y."
-        for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods]:
+        for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
             a[frame][layer] = np.roll(a[frame][layer], amount_x, 1)
             a[frame][layer] = np.roll(a[frame][layer], amount_y, 0)
         self.mark_frame_changed(frame)
@@ -593,10 +609,11 @@ class Art:
         self.camera_x, self.camera_y, self.camera_z = camera.x, camera.y, camera.z
     
     def changed_this_frame(self):
-        return self.geo_changed or len(self.char_changed_frames) > 0 or \
-            len(self.uv_changed_frames) > 0 or \
-            len(self.fg_changed_frames) > 0 or \
-            len(self.bg_changed_frames) > 0
+        return self.geo_changed or \
+            True in self.char_changed_frames.values() or \
+            True in self.fg_changed_frames.values() or \
+            True in self.bg_changed_frames.values() or \
+            True in self.uv_changed_frames.values()
     
     def update(self):
         self.update_scripts()
@@ -610,10 +627,10 @@ class Art:
             if self.geo_changed:
                 r.update_geo_buffers()
                 self.geo_changed = False
-            do_char = r.frame in self.char_changed_frames
-            do_uvs = r.frame in self.uv_changed_frames
-            do_fg = r.frame in self.fg_changed_frames
-            do_bg = r.frame in self.bg_changed_frames
+            do_char = self.char_changed_frames[r.frame]
+            do_uvs = self.uv_changed_frames[r.frame]
+            do_fg = self.fg_changed_frames[r.frame]
+            do_bg = self.bg_changed_frames[r.frame]
             if do_char or do_fg or do_bg or do_uvs:
                 r.update_tile_buffers(do_char, do_uvs, do_fg, do_bg)
         # update instances if we chaned
@@ -621,9 +638,12 @@ class Art:
             for instance in self.instances:
                 if instance.update_when_source_changes:
                     instance.restore_from_source()
-        # empty lists of changed frames
-        self.char_changed_frames, self.uv_changed_frames = [], []
-        self.fg_changed_frames, self.bg_changed_frames = [], []
+        # empty table of changed frames
+        for f in range(self.frames):
+            self.char_changed_frames[f] = False
+            self.fg_changed_frames[f] = False
+            self.bg_changed_frames[f] = False
+            self.uv_changed_frames[f] = False
         self.updated_this_tick = True
     
     def save_to_file(self):
@@ -714,7 +734,7 @@ class Art:
                 layer['chars'] = get_flat_int_list(self.chars[frame_index][layer_index])
                 layer['fgs'] = get_flat_int_list(self.fg_colors[frame_index][layer_index])
                 layer['bgs'] = get_flat_int_list(self.bg_colors[frame_index][layer_index])
-                layer['xforms'] = get_flat_int_list(self.uv_mods[frame_index][layer_index])
+                layer['xforms'] = get_flat_int_list(self.uv_maps[frame_index][layer_index])
                 layers.append(layer)
             frame['layers'] = layers
             frames.append(frame)
@@ -939,6 +959,7 @@ class ArtFromDisk(Art):
             self.frame_delays.append(frame['delay'])
             chars = np.zeros(shape, dtype=np.float32)
             uvs = self.new_uv_layers(self.layers)
+            uv_maps = np.zeros(shape, dtype=np.uint32)
             fg_colors = chars.copy()
             bg_colors = chars.copy()
             for layer_index,layer in enumerate(frame['layers']):
@@ -948,6 +969,7 @@ class ArtFromDisk(Art):
                     fg_colors[layer_index][y][x] = tile['fg']
                     bg_colors[layer_index][y][x] = tile['bg']
                     uvs[layer_index][y][x] = uv_types[tile.get('xform', UV_NORMAL)]
+                    uv_maps[layer_index][y][x] = tile.get('xform', UV_NORMAL)
                     x += 1
                     if x >= self.width:
                         x = 0
@@ -956,6 +978,7 @@ class ArtFromDisk(Art):
             self.fg_colors.append(fg_colors)
             self.bg_colors.append(bg_colors)
             self.uv_mods.append(uvs)
+            self.uv_maps.append(uv_maps)
         # set active frame properly
         active_frame = self.loaded_data.get('active_frame', 0)
         self.set_active_frame(active_frame)
@@ -978,8 +1001,8 @@ class ArtInstance(Art):
         self.filename = '%s_Instance%i' % (source.filename, time.time())
         self.app = source.app
         self.instances = None
-        self.char_changed_frames, self.uv_changed_frames = [], []
-        self.fg_changed_frames, self.bg_changed_frames = [], []
+        self.char_changed_frames, self.uv_changed_frames = {}, {}
+        self.fg_changed_frames, self.bg_changed_frames = {}, {}
         # init lists that should be retained across refreshes
         self.scripts = []
         self.script_rates = []
@@ -1003,11 +1026,14 @@ class ArtInstance(Art):
         self.layer_names = self.source.layer_names[:]
         self.frame_delays = self.source.frame_delays[:]
         # deep copy tile data lists
-        self.chars, self.uv_mods, self.fg_colors, self.bg_colors = [],[],[],[]
+        self.chars, self.fg_colors, self.bg_colors = [], [], []
+        self.uv_mods, self.uv_maps = [], []
         for frame_chars in self.source.chars:
             self.chars.append(frame_chars.copy())
         for frame_uvs in self.source.uv_mods:
             self.uv_mods.append(frame_uvs.copy())
+        for frame_uv_maps in self.source.uv_maps:
+            self.uv_maps.append(frame_uv_maps.copy())
         for frame_fg_colors in self.source.fg_colors:
             self.fg_colors.append(frame_fg_colors.copy())
         for frame_bg_colors in self.source.bg_colors:

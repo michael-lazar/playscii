@@ -114,16 +114,15 @@ class ResizeCommand:
 
 class EditCommandTile:
     
-    serialized_items = ['frame', 'layer', 'x', 'y',
-                        'b_char', 'b_fg', 'b_bg', 'b_xform',
-                        'a_char', 'a_fg', 'a_bg', 'a_xform']
-    
     def __init__(self, art):
         self.art = art
         self.creation_time = self.art.app.get_elapsed_time()
         # initialize everything
-        for item in self.serialized_items:
-            setattr(self, item, None)
+        # previously did 'string list of serialized items' + setattr
+        # which made prettier code but was slower
+        self.frame = self.layer = self.x = self.y = None
+        self.b_char = self.b_fg = self.b_bg = self.b_xform = None
+        self.a_char = self.a_fg = self.a_bg = self.a_xform = None
     
     def __str__(self):
         s = 'F%s L%s %s,%s @ %.2f: ' % (self.frame, self.layer, str(self.x).rjust(2, '0'), str(self.y).rjust(2, '0'), self.creation_time)
@@ -132,18 +131,26 @@ class EditCommandTile:
         return s
     
     def __eq__(self, value):
-        for item in self.serialized_items:
-            if getattr(self, item) != getattr(value, item):
-                return False
-        return True
+        return self.frame == value.frame and self.layer == value.layer and \
+            self.x == value.x and self.y == value.y and \
+            self.b_char == value.b_char and self.b_fg == value.b_fg and \
+            self.b_bg == value.b_bg and self.b_xform == value.b_xform and \
+            self.a_char == value.a_char and self.a_fg == value.a_fg and \
+            self.a_bg == value.a_bg and self.a_xform == value.a_xform
     
     def copy(self):
         "returns a deep copy of this tile command"
         new_ect = EditCommandTile(self.art)
         # TODO: old or new timestamp? does it matter?
-        new_ect.creation_time = self.art.app.get_elapsed_time()
-        for item in self.serialized_items:
-            setattr(new_ect, item, getattr(self, item))
+        #new_ect.creation_time = self.art.app.get_elapsed_time()
+        new_ect.creation_time = self.creation_time
+        # copy all properties
+        new_ect.frame, new_ect.layer = self.frame, self.layer
+        new_ect.x, new_ect.y = self.x, self.y
+        new_ect.b_char, new_ect.b_xform = self.b_char, self.b_xform
+        new_ect.b_fg, new_ect.b_bg = self.b_fg, self.b_bg
+        new_ect.a_char, new_ect.a_xform = self.a_char, self.a_xform
+        new_ect.a_fg, new_ect.a_bg = self.a_fg, self.a_bg
         return new_ect
     
     def set_tile(self, frame, layer, x, y):
@@ -168,11 +175,11 @@ class EditCommandTile:
         if self.x >= self.art.width or self.y >= self.art.height:
             return
         self.art.set_tile_at(self.frame, self.layer, self.x, self.y,
-                             self.b_char, self.b_fg, self.b_bg, self.b_xform)
+                             self.b_char, self.b_fg, self.b_bg, self.b_xform, set_all=True)
     
     def apply(self):
         self.art.set_tile_at(self.frame, self.layer, self.x, self.y,
-                             self.a_char, self.a_fg, self.a_bg, self.a_xform)
+                             self.a_char, self.a_fg, self.a_bg, self.a_xform, set_all=True)
 
 
 class CommandStack:
