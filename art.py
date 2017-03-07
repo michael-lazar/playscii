@@ -530,6 +530,7 @@ class Art:
         Set (fg or bg) color index for given frame/layer/x,y tile.
         Foreground or background specified with "fg" boolean.
         """
+        if color_index is None: return
         # modulo to resolve any negative indices
         if 0 < color_index >= len(self.palette.colors):
             color_index %= len(self.palette.colors)
@@ -680,7 +681,7 @@ class Art:
                         fg = int(self.fg_colors[frame_index][layer_index][y][x][0])
                         bg = int(self.bg_colors[frame_index][layer_index][y][x][0])
                         # use get method for transform, data's not simply an int
-                        xform = self.get_char_transform_at(frame_index, layer_index, x, y)
+                        xform = int(self.get_char_transform_at(frame_index, layer_index, x, y))
                         tiles.append({'char': char, 'fg': fg, 'bg': bg, 'xform': xform})
                 layer['tiles'] = tiles
                 layers.append(layer)
