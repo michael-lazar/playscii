@@ -261,7 +261,7 @@ class ImageFileChooserDialog(BaseFileChooserDialog):
     chooser_item_class = ImageChooserItem
     flip_preview_y = False
     directory_aware = True
-    file_extensions = ['png', 'jpg', 'jpeg', 'bmp']
+    file_extensions = ['png', 'jpg', 'jpeg', 'bmp', 'gif']
 
 class PaletteFromImageChooserDialog(ImageFileChooserDialog):
     

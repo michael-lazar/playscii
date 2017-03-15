@@ -174,12 +174,16 @@ class EditCommandTile:
             return
         if self.x >= self.art.width or self.y >= self.art.height:
             return
+        tool = self.art.app.ui.selected_tool
+        set_all = tool.affects_char and tool.affects_fg_color and tool.affects_fg_color and tool.affects_xform
         self.art.set_tile_at(self.frame, self.layer, self.x, self.y,
-                             self.b_char, self.b_fg, self.b_bg, self.b_xform, set_all=True)
+                             self.b_char, self.b_fg, self.b_bg, self.b_xform, set_all)
     
     def apply(self):
+        tool = self.art.app.ui.selected_tool
+        set_all = tool.affects_char and tool.affects_fg_color and tool.affects_fg_color and tool.affects_xform
         self.art.set_tile_at(self.frame, self.layer, self.x, self.y,
-                             self.a_char, self.a_fg, self.a_bg, self.a_xform, set_all=True)
+                             self.a_char, self.a_fg, self.a_bg, self.a_xform, set_all)
 
 
 class CommandStack:
