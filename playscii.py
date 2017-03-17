@@ -260,6 +260,8 @@ class Application:
         self.last_export_options = {}
         # dict of available importer/exporter modules
         self.converter_modules = {}
+        # last art script run (remember for "run last")
+        self.last_art_script = None
         self.game_mode = False
         self.gw = GameWorld(self)
         # if game dir specified, set it before we try to load any art

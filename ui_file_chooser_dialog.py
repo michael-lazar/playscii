@@ -7,7 +7,7 @@ from texture import Texture
 from ui_chooser_dialog import ChooserDialog, ChooserItem, ChooserItemButton
 from ui_console import OpenCommand, LoadCharSetCommand, LoadPaletteCommand
 from ui_art_dialog import PaletteFromFileDialog, ImportOptionsDialog
-from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR
+from art import ART_DIR, ART_FILE_EXTENSION, THUMBNAIL_CACHE_DIR, SCRIPT_FILE_EXTENSION, ART_SCRIPT_DIR
 from palette import Palette, PALETTE_DIR, PALETTE_EXTENSIONS
 from charset import CharacterSet, CHARSET_DIR, CHARSET_FILE_EXTENSION
 from image_export import write_thumbnail
@@ -350,7 +350,7 @@ class CharsetChooserItem(BaseFileChooserItem):
     
     def load(self, app):
         self.charset = app.load_charset(self.name)
-    
+
 
 class CharSetChooserDialog(BaseFileChooserDialog):
     
@@ -381,3 +381,25 @@ class CharSetChooserDialog(BaseFileChooserDialog):
         item = self.get_selected_item()
         self.ui.active_art.set_charset(item.charset, log=True)
         self.ui.popup.set_active_charset(item.charset)
+
+
+class RunArtScriptDialog(BaseFileChooserDialog):
+    
+    title = 'Choose Artscript'
+    show_preview_image = False
+    
+    def get_filenames(self):
+        filenames = []
+        # search all files in dirs with appropriate extensions
+        for dirname in self.ui.app.get_dirnames(ART_SCRIPT_DIR, False):
+            for filename in os.listdir(dirname):
+                if filename.lower().endswith(SCRIPT_FILE_EXTENSION):
+                    filenames.append(filename[:-len(SCRIPT_FILE_EXTENSION)-1])
+        filenames.sort()
+        return filenames
+    
+    def confirm_pressed(self):
+        item = self.get_selected_item()
+        self.ui.app.last_art_script = item.label
+        self.ui.active_art.run_script(item.label, log=False)
+        self.dismiss()
