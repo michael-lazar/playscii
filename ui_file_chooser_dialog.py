@@ -383,9 +383,36 @@ class CharSetChooserDialog(BaseFileChooserDialog):
         self.ui.popup.set_active_charset(item.charset)
 
 
+class ArtScriptChooserItem(BaseFileChooserItem):
+    
+    def get_label(self):
+        label = os.path.splitext(self.name)[0]
+        return os.path.basename(label)
+    
+    def get_description_lines(self):
+        lines = []
+        # read every comment line until a non-comment line is encountered
+        for line in self.script.readlines():
+            line = line.strip()
+            if not line:
+                continue
+            if not line.startswith('#'):
+                break
+            # snip #
+            line = line[line.index('#')+1:]
+            lines.append(line)
+        return lines
+    
+    def load(self, app):
+        self.script = open(self.name)
+
+
 class RunArtScriptDialog(BaseFileChooserDialog):
     
-    title = 'Choose Artscript'
+    title = 'Run Artscript'
+    tile_width, big_width = 70, 90
+    tile_height, big_height = 15, 25
+    chooser_item_class = ArtScriptChooserItem
     show_preview_image = False
     
     def get_filenames(self):
@@ -394,12 +421,12 @@ class RunArtScriptDialog(BaseFileChooserDialog):
         for dirname in self.ui.app.get_dirnames(ART_SCRIPT_DIR, False):
             for filename in os.listdir(dirname):
                 if filename.lower().endswith(SCRIPT_FILE_EXTENSION):
-                    filenames.append(filename[:-len(SCRIPT_FILE_EXTENSION)-1])
+                    filenames.append(dirname + filename)
         filenames.sort()
         return filenames
     
     def confirm_pressed(self):
         item = self.get_selected_item()
-        self.ui.app.last_art_script = item.label
-        self.ui.active_art.run_script(item.label, log=False)
+        self.ui.app.last_art_script = item.name
+        self.ui.active_art.run_script(item.name, log=False)
         self.dismiss()

@@ -69,6 +69,7 @@ class EditCommand:
 
 
 class ResizeCommand:
+    # TODO: generalize to EntireArtCommand, add layer + frame states
     
     "undo/redo-able representation of an art resize/crop operation"
     
@@ -95,21 +96,25 @@ class ResizeCommand:
             self.after_size = (self.art.width, self.art.height)
     
     def undo(self):
-        x, y = self.before_size
-        self.art.resize(x, y, self.origin_x, self.origin_y)
+        if self.before_size != self.after_size:
+            x, y = self.before_size
+            self.art.resize(x, y, self.origin_x, self.origin_y)
         for atype in self.array_types:
             new_data = getattr(self, 'b_' + atype)
             setattr(self.art, atype, new_data[:])
-        # Art.resize will set geo_changed and mark all frames changed
-        self.art.app.ui.adjust_for_art_resize(self.art)
+        if self.before_size != self.after_size:
+            # Art.resize will set geo_changed and mark all frames changed
+            self.art.app.ui.adjust_for_art_resize(self.art)
     
     def apply(self):
-        x, y = self.after_size
-        self.art.resize(x, y, self.origin_x, self.origin_y)
+        if self.before_size != self.after_size:
+            x, y = self.after_size
+            self.art.resize(x, y, self.origin_x, self.origin_y)
         for atype in self.array_types:
             new_data = getattr(self, 'a_' + atype)
             setattr(self.art, atype, new_data[:])
-        self.art.app.ui.adjust_for_art_resize(self.art)
+        if self.before_size != self.after_size:
+            self.art.app.ui.adjust_for_art_resize(self.art)
 
 
 class EditCommandTile:

@@ -21,9 +21,8 @@ color_map = {
 }
 
 for frame, layer, x, y in TileIter(self):
-    fg = self.get_fg_color_index_at(frame, layer, x, y)
-    fg = color_map[fg]
+    ch, fg, bg, xf = self.get_tile_at(frame, layer, x, y)
+    fg = color_map.get(fg, 0)
+    bg = color_map.get(bg, 0)
     self.set_color_at(frame, layer, x, y, fg, fg=True)
-    bg = self.get_bg_color_index_at(frame, layer, x, y)
-    bg = color_map[bg]
     self.set_color_at(frame, layer, x, y, bg, fg=False)

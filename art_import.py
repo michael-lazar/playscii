@@ -60,13 +60,11 @@ class ArtImporter:
     
     def set_art_charset(self, charset_name):
         "Convenience function for setting charset by name from run_import."
-        charset = self.app.load_charset(charset_name)
-        self.art.set_charset(charset)
+        self.art.set_charset_by_name(charset_name)
     
     def set_art_palette(self, palette_name):
         "Convenience function for setting palette by name from run_import."
-        palette = self.app.load_palette(palette_name)
-        self.art.set_palette(palette)
+        self.art.set_palette_by_name(palette_name)
     
     def resize(self, new_width, new_height):
         "Convenience function for resizing art from run_import"
