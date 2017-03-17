@@ -15,7 +15,7 @@ from ui_object_panel import EditObjectPanel
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
-from edit_command import EditCommand, EditCommandTile, ResizeCommand
+from edit_command import EditCommand, EditCommandTile, EntireArtCommand
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
@@ -458,7 +458,7 @@ class UI:
         w = max_x - min_x + 1
         h = max_y - min_y + 1
         # create command for undo/redo
-        command = ResizeCommand(art, min_x, min_y)
+        command = EntireArtCommand(art, min_x, min_y)
         command.save_tiles(before=True)
         art.resize(w, h, min_x, min_y)
         self.app.log('Resized %s to %s x %s' % (art.filename, w, h))
@@ -484,7 +484,7 @@ class UI:
     
     def resize_art(self, art, new_width, new_height, origin_x, origin_y):
         # create command for undo/redo
-        command = ResizeCommand(art, origin_x, origin_y)
+        command = EntireArtCommand(art, origin_x, origin_y)
         command.save_tiles(before=True)
         # resize
         art.resize(new_width, new_height, origin_x, origin_y)

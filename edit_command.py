@@ -68,10 +68,12 @@ class EditCommand:
                         tile_command.apply()
 
 
-class ResizeCommand:
-    # TODO: generalize to EntireArtCommand, add layer + frame states
+class EntireArtCommand:
     
-    "undo/redo-able representation of an art resize/crop operation"
+    """
+    undo/redo-able representation of a whole-art operation, eg:
+    resize/crop, run art script, add/remove layer, etc
+    """
     
     # art arrays to grab
     array_types = ['chars', 'fg_colors', 'bg_colors', 'uv_mods']
@@ -80,6 +82,8 @@ class ResizeCommand:
         self.art = art
         # remember origin of resize command
         self.origin_x, self.origin_y = origin_x, origin_y
+        self.before_frame = art.active_frame
+        self.before_layer = art.active_layer
         self.start_time = self.finish_time = art.app.get_elapsed_time()
     
     def save_tiles(self, before=True):
@@ -89,13 +93,20 @@ class ResizeCommand:
             # save list as eg "b_chars" for "character data before operation"
             src_data = getattr(self.art, atype)
             var_name = '%s_%s' % (prefix, atype)
-            setattr(self, var_name, src_data[:])
+            # deep copy each frame's data, else before == after
+            new_data = []
+            for frame in src_data:
+                new_data.append(frame.copy())
+            setattr(self, var_name, new_data)
         if before:
             self.before_size = (self.art.width, self.art.height)
         else:
             self.after_size = (self.art.width, self.art.height)
     
     def undo(self):
+        # undo might remove frames/layers that were added
+        self.art.set_active_frame(self.before_frame)
+        self.art.set_active_layer(self.before_layer)
         if self.before_size != self.after_size:
             x, y = self.before_size
             self.art.resize(x, y, self.origin_x, self.origin_y)
@@ -105,6 +116,7 @@ class ResizeCommand:
         if self.before_size != self.after_size:
             # Art.resize will set geo_changed and mark all frames changed
             self.art.app.ui.adjust_for_art_resize(self.art)
+        self.art.mark_all_frames_changed()
     
     def apply(self):
         if self.before_size != self.after_size:
@@ -115,6 +127,7 @@ class ResizeCommand:
             setattr(self.art, atype, new_data[:])
         if self.before_size != self.after_size:
             self.art.app.ui.adjust_for_art_resize(self.art)
+        self.art.mark_all_frames_changed()
 
 
 class EditCommandTile:
