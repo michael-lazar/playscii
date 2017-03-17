@@ -326,6 +326,16 @@ class ArtResizeItem(PulldownMenuItem):
     label = 'Resize…'
     command = 'resize_art'
 
+class ArtRunScriptItem(PulldownMenuItem):
+    label = 'Run Artscript…'
+    command = 'run_art_script'
+    
+class ArtRunLastScriptItem(PulldownMenuItem):
+    label = 'Run last Artscript'
+    command = 'run_art_script_last'
+    def should_dim(app):
+        return app.last_art_script is None
+
 #
 # frame menu
 #
@@ -570,6 +580,7 @@ class ViewMenuData(PulldownMenuData):
 
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeItem, ArtCropToSelectionItem, SeparatorItem,
+             ArtRunScriptItem, ArtRunLastScriptItem, SeparatorItem,
              ArtOpenAllGameAssetsItem, SeparatorItem,
              ArtPreviousItem, ArtNextItem, SeparatorItem]
     

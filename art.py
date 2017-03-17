@@ -1,4 +1,5 @@
-import os.path, json, time
+import os.path, json, time, traceback
+import random # import random only so art scripts don't have to
 import numpy as np
 
 from edit_command import CommandStack
@@ -768,7 +769,7 @@ class Art:
         # (probably better to do this in new art / save as
         self.filename = new_filename
     
-    def run_script(self, script_filename):
+    def run_script(self, script_filename, log=True):
         """
         Run a script on this Art. Scripts contain arbitrary python expressions,
         executed within Art's scope. Don't run art scripts you don't trust!
@@ -776,10 +777,23 @@ class Art:
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
             return
-        exec(open(script_filename).read())
-        # assume script will change art
-        self.unsaved_changes = True
-        self.app.log('Executed %s' % script_filename)
+        # catch and log any exception
+        try:
+            exec(open(script_filename).read())
+            # assume script will change art
+            self.unsaved_changes = True
+            logline = 'Executed %s' % script_filename
+            if log: self.app.log(logline)
+            error = False
+        except Exception as e:
+            error = True
+            logline = 'Error executing %s:' % script_filename
+            self.app.log(logline)
+            # skip first 3 lines of callstack before artscript exec
+            for line in traceback.format_exc().split('\n')[3:]:
+                if line.strip():
+                    self.app.log(line.rstrip())
+        self.app.ui.message_line.post_line(logline, error=error)
     
     def is_script_running(self, script_filename):
         "Return True if script with given filename is currently running."

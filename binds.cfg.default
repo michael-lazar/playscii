@@ -97,6 +97,7 @@ self.edit_bind_src = {
     'f1'       : 'open_help_docs',
     'ctrl k'   : 'crop_to_selection',
     'ctrl r'   : 'resize_art',
+	'ctrl t'   : 'run_art_script_last',
     'ctrl f'   : 'add_frame',
     'ctrl l'   : ('add_layer', 'select_objects'),
     'ctrl h'   : 'choose_charset',
@@ -159,5 +160,6 @@ self.edit_bind_src = {
     '_toggle_debug_objects': 'toggle_debug_objects',
     '_toggle_picker_hold': 'toggle_picker_hold',
     '_set_camera_zoom': 'set_camera_zoom',
-    '_toggle_bg_texture': 'toggle_bg_texture'
+    '_toggle_bg_texture': 'toggle_bg_texture',
+	'_run_art_script': 'run_art_script'
 }
