@@ -1,45 +1,39 @@
 # conway's game of life
 
-from random import choice
-
-# art frame and layer to operate on
-frame, layer = 0, 0
-
 # naive, super slow implementation for proof-of-concept
 # (accessing char array would probably be way faster!)
-for x in range(self.width):
-    for y in range(self.height):
-        dead = self.get_char_index_at(frame, layer, x, y) == 0
-        # N, NE, E, SE, S, SW, W, NW
-        neighbor_offsets = [(0, -1), (1, -1), (1, 0), (1, 1),
-                           (0, 1), (-1, 1), (-1, 0), (-1, -1)]
-        neighbors = 0
-        neighbor_chars = []
-        neighbor_colors = []
-        for offset in neighbor_offsets:
-            check_x, check_y = x + offset[0], y + offset[1]
-            # don't check at edges
-            if not (0 < check_x < self.width and 0 < check_y < self.height):
-                continue
-            neighbor_char = self.get_char_index_at(frame, layer, check_x, check_y)
-            if neighbor_char != 0:
-                neighbors += 1
-                # remember neighbor char in case we come alive
-                neighbor_chars.append(neighbor_char)
-                fg = self.get_fg_color_index_at(frame, layer, check_x, check_y)
-                neighbor_colors.append(fg)
-                bg = self.get_bg_color_index_at(frame, layer, check_x, check_y)
-                neighbor_colors.append(bg)
-        # rule #4: any dead cell with exactly 3 neighbors becomes alive
-        if dead and neighbors == 3:
-            # pick a random neighbord character to be
-            self.set_char_index_at(frame, layer, x, y, choice(neighbor_chars))
-            change_fg = choice([False, True])
-            self.set_color_at(frame, layer, x, y, choice(neighbor_colors), change_fg)
-        # rule #3: any living cell with >3 neighbors dies from overcrowding
-        elif neighbors > 3:
-            self.set_char_index_at(frame, layer, x, y, 0)
-        # rule #1: any living cell with <2 neighbors dies from underpopulation
-        elif neighbors < 2:
-            self.set_char_index_at(frame, layer, x, y, 0)
-        # rule #2: any living cell with 2 or 3 neighbors survives
+for frame, layer, x, y in TileIter(self):
+    dead = self.get_char_index_at(frame, layer, x, y) == 0
+    # N, NE, E, SE, S, SW, W, NW
+    neighbor_offsets = [(0, -1), (1, -1), (1, 0), (1, 1),
+                        (0, 1), (-1, 1), (-1, 0), (-1, -1)]
+    neighbors = 0
+    neighbor_chars = []
+    neighbor_colors = []
+    for offset in neighbor_offsets:
+        check_x, check_y = x + offset[0], y + offset[1]
+        # don't check at edges
+        if not (0 < check_x < self.width and 0 < check_y < self.height):
+            continue
+        neighbor_char = self.get_char_index_at(frame, layer, check_x, check_y)
+        if neighbor_char != 0:
+            neighbors += 1
+            # remember neighbor char in case we come alive
+            neighbor_chars.append(neighbor_char)
+            fg = self.get_fg_color_index_at(frame, layer, check_x, check_y)
+            neighbor_colors.append(fg)
+            bg = self.get_bg_color_index_at(frame, layer, check_x, check_y)
+            neighbor_colors.append(bg)
+    # rule #4: any dead cell with exactly 3 neighbors becomes alive
+    if dead and neighbors == 3:
+        # pick a random neighbord character to be
+        self.set_char_index_at(frame, layer, x, y, random.choice(neighbor_chars))
+        change_fg = random.choice([False, True])
+        self.set_color_at(frame, layer, x, y, random.choice(neighbor_colors), change_fg)
+    # rule #3: any living cell with >3 neighbors dies from overcrowding
+    elif neighbors > 3:
+        self.set_char_index_at(frame, layer, x, y, 0)
+    # rule #1: any living cell with <2 neighbors dies from underpopulation
+    elif neighbors < 2:
+        self.set_char_index_at(frame, layer, x, y, 0)
+    # rule #2: any living cell with 2 or 3 neighbors survives

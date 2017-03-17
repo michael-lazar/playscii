@@ -1,13 +1,21 @@
-# hello1 test art script
-# everything in this file must be a valid python expression.
-# "self" is the Art that's running us, so we have full access to its namespace!
+# hello1 test art generator script
+# every line in this file must be a valid python expression.
+# "self" is the Art that's running us,
+# so we have full access to its namespace!
 
-#
-# sets some test data. assumes: 8x8, 1 layer
-#
+# sets some test data:
+# c64_edscii charset & palette
+# add tiles/layers if not 8x8, 3 layers
 
-self.add_layer(0.25)
-self.add_layer(0.5)
+self.set_charset_by_name('c64_edscii')
+self.set_palette_by_name('c64_edscii')
+
+if self.layers < 3:
+    self.add_layer(0.25)
+    self.add_layer(0.5)
+
+if self.width < 8 or self.height < 8:
+    self.resize(8, 8)
 
 # clear 1st layer to black, 2nd and 3rd to transparent
 self.clear_frame_layer(0, 0, self.palette.darkest_index)

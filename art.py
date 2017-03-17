@@ -2,7 +2,7 @@ import os.path, json, time, traceback
 import random # import random only so art scripts don't have to
 import numpy as np
 
-from edit_command import CommandStack
+from edit_command import CommandStack, ResizeCommand
 from image_export import write_thumbnail
 
 # X, Y, Z
@@ -334,6 +334,11 @@ class Art:
         if log:
             self.app.ui.message_line.post_line('Character set changed to %s' % self.charset.name)
     
+    def set_charset_by_name(self, new_charset_name):
+        charset = self.app.load_charset(new_charset_name)
+        self.set_charset(charset)
+        self.app.ui.popup.set_active_charset(charset)
+    
     def set_palette(self, new_palette, log=False):
         "Set Art to use given color palette (referenced by object, not name)."
         if new_palette is self.palette:
@@ -342,6 +347,11 @@ class Art:
         self.set_unsaved_changes(True)
         if log:
             self.app.ui.message_line.post_line('Color palette changed to %s' % self.palette.name)
+    
+    def set_palette_by_name(self, new_palette_name):
+        palette = self.app.load_palette(new_palette_name)
+        self.set_palette(palette)
+        self.app.ui.popup.set_active_palette(palette)
     
     def set_active_frame(self, new_frame):
         "Set frame at given index for active editing in Art Mode."
@@ -777,10 +787,15 @@ class Art:
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
             return
+        # create a command for undo/redo stack
+        # (disabled til next commit)
+        #command = ResizeCommand(self)
+        #command.save_tiles(before=True)
         # catch and log any exception
         try:
+            # run script
             exec(open(script_filename).read())
-            # assume script will change art
+            # (assume script changed art)
             self.unsaved_changes = True
             logline = 'Executed %s' % script_filename
             if log: self.app.log(logline)
@@ -793,6 +808,9 @@ class Art:
             for line in traceback.format_exc().split('\n')[3:]:
                 if line.strip():
                     self.app.log(line.rstrip())
+        # write "after" state of command and commit
+        #command.save_tiles(before=False)
+        #self.command_stack.commit_commands([command])
         self.app.ui.message_line.post_line(logline, error=error)
     
     def is_script_running(self, script_filename):
@@ -847,6 +865,7 @@ class Art:
             return
         for i,script in enumerate(self.scripts):
             if (self.app.get_elapsed_time() / 1000) > self.scripts_next_exec_time[i]:
+                # execute script directly; don't use formal safeguards of run_script
                 exec(open(script).read())
                 self.unsaved_changes = True
                 self.scripts_next_exec_time[i] += self.script_rates[i]
