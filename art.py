@@ -2,7 +2,7 @@ import os.path, json, time, traceback
 import random # import random only so art scripts don't have to
 import numpy as np
 
-from edit_command import CommandStack, ResizeCommand
+from edit_command import CommandStack, EntireArtCommand
 from image_export import write_thumbnail
 
 # X, Y, Z
@@ -787,10 +787,12 @@ class Art:
         script_filename = self.get_valid_script_filename(script_filename)
         if not script_filename:
             return
+        # remove any cursor-hover changes to art in memory
+        for edit in self.app.cursor.preview_edits:
+            edit.undo()
         # create a command for undo/redo stack
-        # (disabled til next commit)
-        #command = ResizeCommand(self)
-        #command.save_tiles(before=True)
+        command = EntireArtCommand(self)
+        command.save_tiles(before=True)
         # catch and log any exception
         try:
             # run script
@@ -809,8 +811,8 @@ class Art:
                 if line.strip():
                     self.app.log(line.rstrip())
         # write "after" state of command and commit
-        #command.save_tiles(before=False)
-        #self.command_stack.commit_commands([command])
+        command.save_tiles(before=False)
+        self.command_stack.commit_commands([command])
         self.app.ui.message_line.post_line(logline, error=error)
     
     def is_script_running(self, script_filename):

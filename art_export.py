@@ -31,6 +31,9 @@ class ArtExporter:
             out_filename = self.app.documents_dir + ART_DIR + out_filename
         self.success = False
         "Set True on successful export."
+        # remove any cursor-hover changes to art in memory
+        for edit in self.app.cursor.preview_edits:
+            edit.undo()
         try:
             if self.run_export(out_filename, options):
                 self.success = True
