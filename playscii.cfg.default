@@ -22,8 +22,8 @@ Camera.start_zoom = 15
 
 #UIRenderable.grain_strength = 0
 
-# CRT shader starts off
-#Framebuffer.start_crt_enabled = False
+# CRT shader starts on
+#Framebuffer.start_crt_enabled = True
 
 # disable CRT shader entirely
 # use this if playscii starts up really slowly on your video card
