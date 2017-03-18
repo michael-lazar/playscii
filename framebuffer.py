@@ -4,7 +4,7 @@ from OpenGL import GL
 
 class Framebuffer:
     
-    start_crt_enabled = True
+    start_crt_enabled = False
     disable_crt = False
     clear_color = (0, 0, 0, 1)
     
