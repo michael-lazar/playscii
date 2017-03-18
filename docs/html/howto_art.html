@@ -62,7 +62,7 @@
   <li> <a href="#customcharsets">Custom Character Sets</a> </li>
   <li> <a href="#custompalettes">Custom Color Palettes</a> </li>
   <li> <a href="#indices">Technical Note: Indices</a> </li>
-  <li> <a href="#artscripts">Art Scripts: Making Art from Code</a> </li>
+  <li> <a href="#artscripts">Artscripts: Making Art from Code</a> </li>
 </ul>
 
 <br/>
@@ -412,19 +412,22 @@ You can see these indices stored in the JSON of a .PSCI file, and if you're hand
 </p>
 </div>
 
-<a id="artscripts"> <h4>Art Scripts: Making Art from Code</h4> </a>
+<a id="artscripts"> <h4>Artscripts: Making Art from Code</h4> </a>
 <div class="block">
 <p>
-Playscii makes heavy use of Python's dynamic nature, so there are many ways besides the art tools described above to create art. You can peek and poke values at the current active art from the <a href="./howto_game.html#console">developer console</a>, and you can also use something called Art Scripts to run arbitrary Python code on a given Art.
+Playscii makes heavy use of Python's dynamic nature, so there are many ways besides the art tools described above to create art. You can peek and poke values at the current active art from the <a href="./howto_game.html#console">developer console</a>, and you can also use something called Artscripts to run arbitrary Python code on a given Art, opening a broad toolbox of generative effects.</p>
 </p>
 <p>
-You can run an art script from the dev console with the <tt>scr</tt> command, and you can set an art script to run every N seconds with the <tt>screv</tt> command. You can also run them from <a href="./howto_game.html">Game Mode</a> code with an Art's <tt>run_script</tt> and <tt>run_script_every</tt> methods.
+In Art Mode, you can run an artscript on the current active art with "Run Artscript..." from the Art menu. You can quickly run that script subsequent times with <code>Control-T</code>. Artscripts are re-read on each run, so you can refine your code in a text editor and see the results in Playscii with a keystroke.
 </p>
 <p>
-Art scripts are kept in the <tt>artscripts/</tt> subfolder of your Playscii documents folder, and have an <tt>.arsc</tt> file extension. Every line in an art script should be valid Python code - comment lines starting with # are fine.
+You can also run Artscripts from the dev console with the <tt>scr</tt> command, and you can set an art script to run every N seconds with the <tt>screv</tt> command. You can also run them from <a href="./howto_game.html">Game Mode</a> code with an Art's <tt>run_script</tt> and <tt>run_script_every</tt> methods.
 </p>
 <p>
-An art script executes from within the Art's namespace, so referring to <tt>self</tt> from one refers to the Art itself. An <a href="https://wiki.python.org/moin/Iterator">iterator</a> class called TileIter provides an easy way to iterate over all tiles in all frames and layers in an art, like so:
+Artscripts are kept in the <tt>artscripts/</tt> subfolder of your Playscii documents folder, and have an <tt>.arsc</tt> file extension. Every line in an art script must be valid Python code. Comment lines starting with <tt>#</tt> are fine.
+</p>
+<p>
+An Artscript executes from within the Art's namespace, so referring to <tt>self</tt> from one refers to the Art itself. An <a href="https://wiki.python.org/moin/Iterator">iterator</a> class called TileIter provides an easy way to iterate over all tiles in all frames and layers in an art, like so:
 <pre>
 for frame, layer, x, y in TileIter(self):
     self.set_char_index_at(frame, layer, x, y, random.randint(0, 64))
@@ -432,7 +435,10 @@ for frame, layer, x, y in TileIter(self):
 The above code sets every tile in the art to a random (indices 0 through 64) character.
 </p>
 <p>
-There are a few art scripts included in the Playscii application folder. <tt>conway.arsc</tt> runs a variant of <a href="https://en.wikipedia.org/wiki/Conway's_Game_of_Life">Conway's Game of Life</a> on each tile in the art, <tt>dissolve.arsc</tt> does an odd dissolve-like effect, and so on. Some of these scripts were written early in Playscii's development and don't make use of TileIter, but if they did the code would be a bit simpler.
+There are a few example Artscripts included in the Playscii application folder, most of which were written early in its development. <tt>conway.arsc</tt> runs a variant of <a href="https://en.wikipedia.org/wiki/Conway's_Game_of_Life">Conway's Game of Life</a> on each tile in the art, <tt>dissolve.arsc</tt> does an odd dissolve-like effect, and so on.
+</p>
+<p>
+If you write an Artscript that's broadly useful and would be worth including with Playscii, please let us know! A pull request for <a href="https://bitbucket.org/JPLeBreton/playscii">the project's Bitbucket</a> would be easiest to integrate, but <a href="http://vectorpoem.com/contact.html">email</a> works too.
 </p>
 </div>
 
