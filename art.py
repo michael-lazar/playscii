@@ -779,7 +779,7 @@ class Art:
         # (probably better to do this in new art / save as
         self.filename = new_filename
     
-    def run_script(self, script_filename, log=True):
+    def run_script(self, script_filename, log=True, allow_undo=True):
         """
         Run a script on this Art. Scripts contain arbitrary python expressions,
         executed within Art's scope. Don't run art scripts you don't trust!
@@ -791,8 +791,9 @@ class Art:
         for edit in self.app.cursor.preview_edits:
             edit.undo()
         # create a command for undo/redo stack
-        command = EntireArtCommand(self)
-        command.save_tiles(before=True)
+        if allow_undo:
+            command = EntireArtCommand(self)
+            command.save_tiles(before=True)
         # catch and log any exception
         try:
             # run script
@@ -811,8 +812,9 @@ class Art:
                 if line.strip():
                     self.app.log(line.rstrip())
         # write "after" state of command and commit
-        command.save_tiles(before=False)
-        self.command_stack.commit_commands([command])
+        if allow_undo:
+            command.save_tiles(before=False)
+            self.command_stack.commit_commands([command])
         self.app.ui.message_line.post_line(logline, error=error)
     
     def is_script_running(self, script_filename):
