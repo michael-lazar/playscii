@@ -218,10 +218,10 @@ class GenericImportChooserDialog(BaseFileChooserDialog):
     show_preview_image = False
     directory_aware = True
     
-    def __init__(self, ui):
+    def __init__(self, ui, options):
         self.title %= ui.app.importer.format_name
         self.file_extensions = ui.app.importer.allowed_file_extensions
-        BaseFileChooserDialog.__init__(self, ui)
+        BaseFileChooserDialog.__init__(self, ui, options)
     
     def set_initial_dir(self):
         if self.ui.app.last_import_dir:
@@ -238,9 +238,9 @@ class GenericImportChooserDialog(BaseFileChooserDialog):
         self.dismiss()
         # importer might offer a dialog for options
         if self.ui.app.importer.options_dialog_class:
-            self.ui.open_dialog(self.ui.app.importer.options_dialog_class)
-            # stash the filename we chose in a special property in new dialog
-            self.ui.active_dialog.filename = filename
+            options = {'filename': filename}
+            self.ui.open_dialog(self.ui.app.importer.options_dialog_class,
+                                options)
         else:
             ImportOptionsDialog.do_import(self.ui.app, filename, {})
 

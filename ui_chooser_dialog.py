@@ -106,7 +106,7 @@ class ChooserDialog(UIDialog):
     scrollbar_shade_char = 54
     flip_preview_y = True
     
-    def __init__(self, ui):
+    def __init__(self, ui, options):
         self.ui = ui
         # semikludge: track whether user has selected anything in a new dir,
         # so double click behavior is consistent even on initial selections
@@ -139,7 +139,7 @@ class ChooserDialog(UIDialog):
         # marker for preview drawing
         self.description_end_y = 0
         # UIDialog init runs: reset_art, draw_buttons etc
-        UIDialog.__init__(self, ui)
+        UIDialog.__init__(self, ui, options)
         # UIDialog/UIElement initializes self.buttons, create item buttons after
         self.init_buttons()
         self.reset_art(False)

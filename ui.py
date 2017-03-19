@@ -597,10 +597,10 @@ class UI:
     def redo(self):
         self.active_art.command_stack.redo()
     
-    def open_dialog(self, dialog_class):
+    def open_dialog(self, dialog_class, options={}):
         if self.app.game_mode and not dialog_class.game_mode_visible:
             return
-        dialog = dialog_class(self)
+        dialog = dialog_class(self, options)
         self.active_dialog = dialog
         self.keyboard_focus_element = self.active_dialog
         # insert dialog at index 0 so it draws first instead of last

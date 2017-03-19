@@ -73,8 +73,11 @@ class UIDialog(UIElement):
     # if True, field labels will redraw with fields after handling input
     always_redraw_labels = False
     
-    def __init__(self, ui):
+    def __init__(self, ui, options):
         self.ui = ui
+        # apply options, eg passed in from UI.open_dialog
+        for k,v in options.items():
+            setattr(self, k, v)
         self.confirm_button = ConfirmButton(self)
         self.other_button = OtherButton(self)
         self.cancel_button = CancelButton(self)
@@ -423,3 +426,5 @@ class DialogFieldButton(UIButton):
         # toggle if a bool field
         if self.element.fields[self.field_number].type is bool:
             self.element.field_texts[self.field_number] = self.element.get_toggled_bool_field(self.field_number)
+            # redraw fields & labels
+            self.element.draw_fields(self.element.always_redraw_labels)

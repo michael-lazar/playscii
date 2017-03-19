@@ -215,9 +215,10 @@ class ExportFilenameInputDialog(SaveAsDialog):
         self.dismiss()
         # invoke options dialog if exporter has one, else invoke exporter
         if self.ui.app.exporter.options_dialog_class:
-            self.ui.open_dialog(self.ui.app.exporter.options_dialog_class)
-            # stash the filename we input in a special property in new dialog
-            self.ui.active_dialog.filename = filename
+            # pass filename into new dialog
+            options = {'filename': filename}
+            self.ui.open_dialog(self.ui.app.exporter.options_dialog_class,
+                                options)
         else:
             ExportOptionsDialog.do_export(self.ui.app, filename, {})
 
