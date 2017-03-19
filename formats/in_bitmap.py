@@ -28,9 +28,14 @@ class ConvertImageChooserDialog(ImageFileChooserDialog):
         self.dismiss()
         # get dialog box class and invoke it
         dialog_class = self.ui.app.importer.options_dialog_class
-        self.ui.open_dialog(dialog_class)
-        # tell the dialog which image we chose
-        self.ui.active_dialog.set_image(filename)
+        # tell the dialog which image we chose, store its size
+        w, h = Image.open(filename).size
+        options = {
+            'filename': filename,
+            'image_width': w,
+            'image_height': h
+        }
+        self.ui.open_dialog(dialog_class, options)
 
 
 # custom dialog box providing convert options
@@ -131,14 +136,6 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         if float(self.field_texts[8]) <= 0:
             return False, self.invalid_scale_error
         return True, None
-    
-    def set_image(self, image_filename):
-        "sets image from file chooser that invokes us"
-        # (do this once so we don't have to re-read Image to get its size)
-        self.filename = image_filename
-        self.image_width, self.image_height = Image.open(self.filename).size
-        # redraw labels
-        self.draw_fields(True)
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()

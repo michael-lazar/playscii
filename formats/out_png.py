@@ -52,7 +52,7 @@ class PNGExportOptionsDialog(ExportOptionsDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         self.dismiss()
-        # compile options for importer
+        # compile options for exporter
         options = {
             'scale': int(self.field_texts[0]),
             'crt': bool(self.field_texts[1].strip())
