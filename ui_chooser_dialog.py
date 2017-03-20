@@ -330,7 +330,11 @@ class ChooserDialog(UIDialog):
         y = self.item_start_y
         lines = self.get_selected_description_lines()
         for line in lines:
-            self.art.write_string(0, 0, x, y, line, None, None, True)
+            # trim line if it's too long
+            max_width = self.tile_width - self.item_button_width - 7
+            line = line[:max_width]
+            self.art.write_string(0, 0, x, y, line, None, None,
+                                  right_justify=True)
             y += 1
         self.description_end_y = y
     

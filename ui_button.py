@@ -105,6 +105,8 @@ class UIButton:
     def draw_caption(self):
         y = self.y + self.caption_y
         text = self.caption
+        # trim if too long
+        text = text[:self.width]
         if self.caption_justify == TEXT_CENTER:
             text = text.center(self.width)
         elif self.caption_justify == TEXT_RIGHT:

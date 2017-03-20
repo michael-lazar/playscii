@@ -155,6 +155,9 @@ class ConvertChooserItem(ChooserItem):
             return
         element.confirm_pressed()
         element.first_selection_made = False
+    
+    def get_description_lines(self):
+        return self.description.split('\n')
 
 class ConvertFileDialog(ChooserDialog):
     "Common functionality for importer and exporter selection dialogs"
@@ -182,14 +185,7 @@ class ConvertFileDialog(ChooserDialog):
             items.append(item)
             i += 1
         return items
-    
-    def set_preview(self):
-        item = self.get_selected_item()
-        x = self.item_button_width + 4
-        y = 3
-        for line in item.description.split('\n'):
-            self.art.write_string(0, 0, x, y, line)
-            y += 1
+
 
 class ImportFileDialog(ConvertFileDialog):
     title = 'Choose an importer'
