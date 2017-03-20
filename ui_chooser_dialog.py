@@ -410,11 +410,19 @@ class ChooserDialog(UIDialog):
         field_text = self.field_texts[self.active_field]
         if field_text.strip() == '':
             return
+        # seek should be case-insensitive
+        field_text = field_text.lower()
+        # field text may be a full path; only care about the base
+        field_text = os.path.basename(field_text)
         for i,item in enumerate(self.items):
             # match to base item name within dir
-            item_base = os.path.basename(item.name)
+            # (if it's a dir, snip last / for match)
+            item_base = item.name.lower()
+            if item_base.endswith('/'):
+                item_base = item_base[:-1]
+            item_base = os.path.basename(item_base)
             item_base = os.path.splitext(item_base)[0]
-            if item_base.startswith(field_text) or item.name.startswith(field_text):
+            if item_base.startswith(field_text):
                 self.set_selected_item_index(i, set_field_text=False)
                 break
     
