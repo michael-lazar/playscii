@@ -64,17 +64,65 @@ class SaveAsDialog(UIDialog):
     
     title = 'Save art'
     field0_label = 'New filename for art:'
-    field0_width = UIDialog.default_field_width
+    field2_label = 'Save folder:'
+    field3_label = ' %s'
+    tile_width = 60
+    field0_width = 56
+    y_spacing = 0
     fields = [
-        Field(label=field0_label, type=str, width=field0_width, oneline=False)
+        Field(label=field0_label, type=str, width=field0_width, oneline=False),
+        Field(label='', type=None, width=0, oneline=True),
+        Field(label=field2_label, type=None, width=0, oneline=True),
+        Field(label=field3_label, type=None, width=0, oneline=True),
+        Field(label='', type=None, width=0, oneline=True)
     ]
     confirm_caption = 'Save'
     invalid_filename_error = 'Filename is not valid.'
+    filename_exists_error = 'File by that name already exists.'
+    always_redraw_labels = True
+    
+    def get_initial_field_text(self, field_number):
+        if field_number == 0:
+            # special case: if opening playscii/art/new, change
+            # it to documents dir to avoid writing to application dir
+            # (still possible if you open other files)
+            if os.path.dirname(self.ui.active_art.filename) == ART_DIR[:-1]:
+                self.ui.active_art.filename = self.ui.app.documents_dir + self.ui.active_art.filename
+            # TODO: handle other files from app dir as well? not as important
+            filename = os.path.basename(self.ui.active_art.filename)
+            filename = os.path.splitext(filename)[0]
+            return filename
+        return ''
+    
+    def get_file_extension(self):
+        """
+        Return file extension this dialog saves as; other dialogs
+        are based on this class so we don't want to hardcore .psci
+        """
+        return ART_FILE_EXTENSION
+    
+    def get_field_label(self, field_index):
+        label = self.fields[field_index].label
+        # show dir art will be saved into
+        if field_index == 3:
+            label %= os.path.dirname(self.ui.active_art.filename)
+        return label
     
     def is_input_valid(self):
         # filename can't be only whitespace
-        if not self.field_texts[0].strip():
+        filename = self.field_texts[0].strip()
+        if not filename:
             return False, self.invalid_filename_error
+        for forbidden_char in self.ui.app.forbidden_filename_chars:
+            if forbidden_char in filename:
+                return False, self.invalid_filename_error
+        filepath = os.path.dirname(self.ui.active_art.filename)
+        full_filename = filepath
+        full_filename += '/' + filename
+        full_filename += '.' + self.get_file_extension()
+        # if file exists, allow saving but show the warning
+        if os.path.exists(full_filename):
+            return True, self.filename_exists_error
         return True, None
     
     def confirm_pressed(self):
@@ -207,6 +255,9 @@ class ExportFilenameInputDialog(SaveAsDialog):
             out_filename = os.path.basename(out_filename)
             out_filename = os.path.splitext(out_filename)[0]
             return out_filename
+    
+    def get_file_extension(self):
+        return self.ui.app.exporter.file_extension
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()

@@ -188,9 +188,11 @@ class UIDialog(UIElement):
         # first clear any previous warnings
         self.art.clear_line(0, 0, bottom_y)
         self.confirm_button.set_state('normal')
-        if not valid:
+        # some dialogs use reason for warning + valid input
+        if reason:
             fg = self.ui.error_color_index
             self.art.write_string(0, 0, 1, bottom_y, reason, fg)
+        if not valid:
             self.confirm_button.set_state('dimmed')
         UIElement.update(self)
     

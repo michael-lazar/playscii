@@ -12,7 +12,9 @@ FILE_EXTENSION = 'png'
 DEFAULT_SCALE = 1
 DEFAULT_CRT = False
 
-def get_full_filename(in_filename, frame, layer_name, use_frame, use_layer):
+def get_full_filename(in_filename, frame, layer_name,
+                      use_frame, use_layer,
+                      forbidden_chars):
     "Returns properly mutated filename for given frame/layer data"
     # strip out path and extension from filename as we mutate it
     dirname = os.path.dirname(in_filename)
@@ -95,7 +97,8 @@ class PNGSetExportOptionsDialog(ExportOptionsDialog):
             export_layers = bool(self.field_texts[3].strip())
             art = self.ui.active_art
             fn = get_full_filename(self.filename, 0, art.layer_names[0],
-                                   export_frames, export_layers)
+                                   export_frames, export_layers,
+                                   self.ui.app.forbidden_filename_chars)
             fn = os.path.basename(fn)
             label %= fn
         return label
@@ -153,7 +156,8 @@ CRT and scale options from single-frame PNG Image exporter apply.
                 art.set_active_layer(layer)
                 full_filename = get_full_filename(out_filename, frame,
                                                   art.layer_names[layer],
-                                                  export_frames, export_layers)
+                                                  export_frames, export_layers,
+                                                  self.app.forbidden_filename_chars)
                 export_still_image(self.app, art, full_filename,
                            crt=options.get('crt', DEFAULT_CRT),
                            scale=options.get('scale', DEFAULT_SCALE))
