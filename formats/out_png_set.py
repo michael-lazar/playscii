@@ -128,8 +128,7 @@ class PNGSetExportOptionsDialog(ExportOptionsDialog):
 class PNGSetExporter(ArtExporter):
     format_name = 'PNG image set'
     format_description = """
-PNG format (lossless compression) image set for each frame/layer.
-CRT and scale options from single-frame PNG Image exporter apply.
+PNG image set for each frame and/or layer.
     """
     file_extension = FILE_EXTENSION
     options_dialog_class = PNGSetExportOptionsDialog
