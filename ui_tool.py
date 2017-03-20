@@ -1,5 +1,7 @@
 import sdl2
+from PIL import Image
 
+from texture import Texture
 from edit_command import EditCommandTile
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
 from key_shifts import shift_map
@@ -18,6 +20,9 @@ class UITool:
     # affects char/fg/bg/xform masks are relevant to how this tool works
     # (false for eg Selection tool)
     affects_masks = True
+    # filename of icon in UI_ASSET_DIR, shown on cursor
+    # TODO: fill these out for all tools
+    icon_filename = 'icon.png'
     
     def __init__(self, ui):
         self.ui = ui
@@ -25,6 +30,22 @@ class UITool:
         self.affects_fg_color = True
         self.affects_bg_color = True
         self.affects_xform = True
+        # load icon, cursor's sprite renderable will reference this texture
+        icon_filename = self.ui.asset_dir + self.icon_filename
+        self.icon_texture = self.load_icon_texture(icon_filename)
+    
+    def load_icon_texture(self, img_filename):
+        img = Image.open(img_filename)
+        img = img.convert('RGBA')
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        return Texture(img.tobytes(), *img.size)
+    
+    def get_icon_texture(self):
+        """
+        Returns icon texture that should display for tool's current state.
+        (override to eg choose from multiples for mod keys)
+        """
+        return self.icon_texture
     
     def toggle_affects_char(self):
         if not self.affects_masks or self.ui.app.game_mode:
@@ -84,6 +105,7 @@ class PencilTool(UITool):
     name = 'pencil'
     # "Paint" not Pencil so the A mnemonic works :/
     button_caption = 'Paint'
+    icon_filename = 'tool_paint.png'
     
     def get_tile_change(self, b_char, b_fg, b_bg, b_xform):
         """

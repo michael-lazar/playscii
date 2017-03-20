@@ -4,6 +4,7 @@ from OpenGL import GL
 
 import vector
 from edit_command import EditCommand
+from renderable_sprite import ImagePreviewRenderable
 
 """
 reference diagram:
@@ -116,6 +117,8 @@ class Cursor:
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glBindVertexArray(0)
+        # init tool sprite, tool will provide texture when rendered
+        self.tool_sprite = ImagePreviewRenderable(self.app)
     
     def keyboard_move(self, delta_x, delta_y):
         self.x += delta_x
@@ -279,3 +282,21 @@ class Cursor:
         GL.glDisable(GL.GL_BLEND)
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
+        # position and render tool icon
+        ui = self.app.ui
+        self.tool_sprite.texture = ui.selected_tool.get_icon_texture()
+        x, y = self.x, self.y
+        size = ui.selected_tool.brush_size or 1
+        scale = 1.0
+        x += size * ui.active_art.quad_width
+        y -= (size + scale) * ui.active_art.quad_height
+        # TODO: figure out WTF is up with scale
+        #x *= scale
+        #y *= scale
+        self.tool_sprite.x, self.tool_sprite.y = x, y
+        self.tool_sprite.z = self.z# + 0.001 # nudge up
+        #scale /= 16
+        #scale = self.app.camera.z / (self.z or 0.000001) # :/
+        self.tool_sprite.scale_x = self.tool_sprite.scale_y = scale
+        self.tool_sprite.scale_z = scale
+        #self.tool_sprite.render()
