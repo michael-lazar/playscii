@@ -42,7 +42,7 @@ from shader import ShaderLord
 from camera import Camera
 from charset import CharacterSet, CharacterSetLord, CHARSET_DIR
 from palette import Palette, PaletteLord, PALETTE_DIR
-from art import Art, ArtFromDisk, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT
+from art import Art, ArtFromDisk, DEFAULT_CHARSET, DEFAULT_PALETTE, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_ART_FILENAME
 from art_import import ArtImporter
 from art_export import ArtExporter
 from renderable import TileRenderable, OnionTileRenderable
@@ -127,6 +127,8 @@ class Application:
         'Application.show_bg_texture': ['', 'show_bg_texture'],
         'Grid.visible': ['grid', 'visible']
     }
+    # characters that can't appear in filenames (any OS; Windows is least permissive)
+    forbidden_filename_chars = ['/', '\\', '*', ':']
     
     def __init__(self, config_dir, documents_dir, cache_dir, log_lines,
                  art_filename, game_dir_to_load, state_to_load, autoplay_game):
@@ -395,7 +397,7 @@ class Application:
     def new_art(self, filename, width=None, height=None,
                 charset=None, palette=None):
         width, height = width or DEFAULT_WIDTH, height or DEFAULT_HEIGHT
-        filename = filename if filename and filename != '' else 'new'
+        filename = filename if filename and filename != '' else DEFAULT_ART_FILENAME
         charset = self.load_charset(charset or DEFAULT_CHARSET)
         palette = self.load_palette(palette or DEFAULT_PALETTE)
         art = Art(filename, self, charset, palette, width, height)
@@ -1019,8 +1021,8 @@ if __name__ == "__main__":
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
     app = Application(config_dir, documents_dir, cache_dir, log_lines,
-                      file_to_load or 'new', game_dir_to_load, state_to_load,
-                      autoplay_game)
+                      file_to_load or DEFAULT_ART_FILENAME, game_dir_to_load,
+                      state_to_load, autoplay_game)
     error = app.main_loop()
     app.quit()
     sys.exit(error)
