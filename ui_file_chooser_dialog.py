@@ -362,7 +362,7 @@ class CharSetChooserDialog(BaseFileChooserDialog):
         if not self.ui.active_art:
             return 0
         for item in self.items:
-            if item.label is self.ui.active_art.charset:
+            if item.label == self.ui.active_art.charset.name:
                 return item.index
         #print("couldn't find initial selection for %s, returning 0" % self.__class__.__name__)
         return 0
