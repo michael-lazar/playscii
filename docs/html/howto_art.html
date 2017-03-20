@@ -57,7 +57,7 @@
   <li> <a href="#charsets">Character Set Selector</a> </li>
   <li> <a href="#palettes">Color Palette Selector</a> </li>
   <li> <a href="#importandexport">Importing and Exporting</a> </li>
-  <li> <a href="#export">Image and Animation Export</a> </li>
+  <li> <a href="#exportimage">Image and Animation Export</a> </li>
   <li> <a href="#imageconversion">Bitmap Image Conversion</a> </li>
   <li> <a href="#customcharsets">Custom Character Sets</a> </li>
   <li> <a href="#custompalettes">Custom Color Palettes</a> </li>
@@ -307,8 +307,10 @@ You can also see a list of all open documents at the bottom of the Art menu.
   Playscii documents use a custom file format with a .PSCI extension which saves things like tile and layer data, but you may want to export your art as a conventional bitmap image. You can export the current active frame of the current document to a PNG format image with "Export" in the File menu and then selecting "PNG image". You'll then see an options screen allowing you to set the pixel dimensions of the output, and whether or not it uses the CRT filter.
 </p>
 <p>
-  You can also export animated documents in animated GIF format with "Export animated GIF" in the File menu. GIF image animation uses the same "frame hold time" concept that Playscii uses, so the resulting GIF should look the same as it does in Playscii.
+  You can also export animated documents in animated GIF format with "Animated GIF image" in the exporter chooser. GIF image animation uses the same "frame hold time" concept that Playscii uses, so the resulting GIF should look the same as it does in Playscii.
 </p>
+<p>
+  If you're making a game in another engine and just using Playscii to paint sprites, you might want to do something like export a series of images for each layer in an Art, or each frame in an animation. The "PNG image set" exporter will take care of this for you. It provides the same options as the single image PNG exporter, plus the option to export frames and/or layers, and gives you a preview of what the exported filenames will look like. The <code>Control-E</code> shortcut for "run last exporter on current Art" can be especially useful here if you have multiple pieces of art open.
 </div>
 
 <a id="imageconversion"> <h4>Bitmap Image Conversion</h4> </a>

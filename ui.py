@@ -32,6 +32,8 @@ class UI:
     error_color_index = 3
     # low-contrast background texture that distinguishes UI from flat color
     grain_texture_path = UI_ASSET_DIR + 'bgnoise_alpha.png'
+    # expose to classes that don't want to import this module
+    asset_dir = UI_ASSET_DIR
     visible = True
     logg = False
     popup_hold_to_show = True
