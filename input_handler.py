@@ -649,6 +649,8 @@ class InputLord:
         self.app.camera.zoom_proportional(-1)
     
     def BIND_toggle_zoom_extents(self):
+        if self.app.game_mode:
+            return
         self.app.camera.toggle_zoom_extents()
         self.ui.menu_bar.refresh_active_menu()
     
