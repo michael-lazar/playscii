@@ -17,9 +17,9 @@ class PagedInfoDialog(UIDialog):
     other_button_visible = True
     extra_lines = 1
     
-    def __init__(self, ui):
+    def __init__(self, ui, options):
         self.page = 0
-        UIDialog.__init__(self, ui)
+        UIDialog.__init__(self, ui, options)
         self.reset_art()
     
     def update(self):
@@ -128,20 +128,6 @@ class AboutDialog(PagedInfoDialog):
     message = about_message
     game_mode_visible = True
     all_modes_visible = True
-    def __init__(self, ui):
+    def __init__(self, ui, options):
         self.title += ' %s' % ui.app.version
-        PagedInfoDialog.__init__(self, ui)
-
-
-# TODO: proper help content
-help_message = [
-"""
-Help is on the way!
-:/
-"""
-]
-
-class HelpScreenDialog(AboutDialog):
-    message = help_message
-    game_mode_visible = True
-    all_modes_visible = True
+        PagedInfoDialog.__init__(self, ui, options)
