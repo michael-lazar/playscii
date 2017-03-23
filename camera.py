@@ -64,58 +64,28 @@ class Camera:
     
     def calc_view_matrix(self):
         eye = vector.Vec3(self.x, self.y, self.z)
-        target = eye.copy()
-        target.z = 0
-        target.x += self.x_tilt
-        target.y += self.y_tilt # camera pitch mode7 radness
         up = vector.Vec3(0, 1, 0)
-        #self.view_matrix = matrix.look_at(loc, target, up)
-        # http://stackoverflow.com/questions/21830340/understanding-glmlookat
-        look_z = eye - target
-        look_z = look_z.normalize()
-        look_y = up
-        look_x = look_y.cross(look_z)
-        # recalc Y vector
-        look_y = look_z.cross(look_x)
-        # normalize all
-        look_x = look_x.normalize()
-        look_y = look_y.normalize()
-        # turn into a matrix
-        m = np.eye(4, 4, dtype=np.float32)
-        m[0][0] = look_x.x
-        m[1][0] = look_x.y
-        m[2][0] = look_x.z
-        m[3][0] = -look_x.dot(eye)
-        m[0][1] = look_y.x
-        m[1][1] = look_y.y
-        m[2][1] = look_y.z
-        m[3][1] = -look_y.dot(eye)
-        m[0][2] = look_z.x
-        m[1][2] = look_z.y
-        m[2][2] = look_z.z
-        m[3][2] = -look_z.dot(eye)
-        m[0][3] = 0
-        m[1][3] = 0
-        m[2][3] = 0
-        m[3][3] = 1
-        self.look_x, self.look_y, self.look_z = look_x, look_y, look_z
-        self.view_matrix = m
+        target = vector.Vec3(eye.x + self.x_tilt, eye.y + self.y_tilt, 0)
+        # view axes
+        forward = (target - eye).normalize()
+        side = forward.cross(up).normalize()
+        upward = side.cross(forward)
+        m = [[side.x, upward.x, -forward.x, 0],
+             [side.y, upward.y, -forward.y, 0],
+             [side.z, upward.z, -forward.z, 0],
+             [-eye.dot(side), -eye.dot(upward), eye.dot(forward), 1]]
+        self.view_matrix = np.array(m, dtype=np.float32)
     
     def get_perspective_matrix(self):
-        # https://github.com/g-truc/glm/blob/master/glm/gtc/matrix_transform.inl
+        zmul = (-2 * self.near_z * self.far_z) / (self.far_z - self.near_z)
+        ymul = 1 / math.tan(self.fov * math.pi / 360)
         aspect = self.app.window_width / self.app.window_height
-        assert(aspect != 0)
-        assert(self.far_z != self.near_z)
-        rad = math.radians(self.fov)
-        tan_half_fov = math.tan(rad / 2)
-        m = np.eye(4, 4, dtype=np.float32)
-        m[0][0] = 1 / (aspect * tan_half_fov)
-        m[1][1] = 1 / tan_half_fov
-        m[2][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
-        m[2][3] = -1
-        m[3][2] = -(2 * self.far_z * self.near_z) / (self.far_z - self.near_z)
-        m[3][3] = 0
-        return m
+        xmul = ymul / aspect
+        m = [[xmul,    0,    0,  0],
+             [   0, ymul,    0,  0],
+             [   0,    0,   -1, -1],
+             [   0,    0, zmul,  0]]
+        return np.array(m, dtype=np.float32)
     
     def get_ortho_matrix(self, width=None, height=None):
         width, height = width or self.app.window_width, height or self.app.window_height
@@ -123,13 +93,17 @@ class Camera:
         left, bottom = 0, 0
         right, top = width, height
         far_z, near_z = -1, 1
-        m[0][0] = 2 / (right - left)
-        m[1][1] = 2 / (top - bottom)
-        m[2][2] = -2 / (self.far_z - self.near_z)
-        m[3][0] = -(right + left) / (right - left)
-        m[3][1] = -(top + bottom) / (top - bottom)
-        m[3][2] = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
-        return m
+        x = 2 / (right - left)
+        y = 2 / (top - bottom)
+        z = -2 / (self.far_z - self.near_z)
+        wx = -(right + left) / (right - left)
+        wy = -(top + bottom) / (top - bottom)
+        wz = -(self.far_z + self.near_z) / (self.far_z - self.near_z)
+        m = [[ x,  0,  0, 0],
+             [ 0,  y,  0, 0],
+             [ 0,  0,  z, 0],
+             [wx, wy, wz, 0]]
+        return np.array(m, dtype=np.float32)
     
     def pan(self, dx, dy, keyboard=False):
         # modify pan speed based on zoom according to a factor
