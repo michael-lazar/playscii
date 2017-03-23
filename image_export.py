@@ -93,7 +93,9 @@ def export_still_image(app, art, out_filename, crt=True, scale=1):
     # respect "disable CRT entirely" setting for slow GPUs
     crt = False if app.fb.disable_crt else crt
     # just write RGBA if palette has more than one color with <1 alpha
-    if crt or not art.palette.all_colors_opaque():
+    # TODO: add PNG/PNGset export option for palettized;
+    # for now always export 32bit
+    if crt or not art.palette.all_colors_opaque() or True:
         src_img = get_frame_image(app, art, art.active_frame, True, scale)
         src_img.save(out_filename, 'PNG')
         output_format = '32-bit w/ alpha'
