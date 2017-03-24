@@ -68,7 +68,7 @@ class Cursor:
     vert_shader_source = 'cursor_v.glsl'
     frag_shader_source = 'cursor_f.glsl'
     alpha = 1
-    icon_scale_factor = 3.5
+    icon_scale_factor = 7 # 3.5 = 1:1
     logg = False
     
     def __init__(self, app):
@@ -288,7 +288,11 @@ class Cursor:
         GL.glUseProgram(0)
         # position and render tool icon
         ui = self.app.ui
-        self.tool_sprite.texture = ui.selected_tool.get_icon_texture()
+        # special handling for quick grab
+        if self.app.right_mouse:
+            self.tool_sprite.texture = ui.grab_tool.get_icon_texture()
+        else:
+            self.tool_sprite.texture = ui.selected_tool.get_icon_texture()
         # top left of icon at bottom right of cursor
         size = ui.selected_tool.brush_size or 1
         # scale same regardless of screen resolution

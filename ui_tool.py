@@ -21,7 +21,6 @@ class UITool:
     # (false for eg Selection tool)
     affects_masks = True
     # filename of icon in UI_ASSET_DIR, shown on cursor
-    # TODO: fill these out for all tools
     icon_filename = 'icon.png'
     
     def __init__(self, ui):
@@ -151,6 +150,7 @@ class EraseTool(PencilTool):
     
     name = 'erase'
     button_caption = 'Erase'
+    icon_filename = 'tool_erase.png'
     
     def get_tile_change(self, b_char, b_fg, b_bg, b_xform):
         char = 0 if self.affects_char else None
@@ -171,6 +171,7 @@ class RotateTool(PencilTool):
         UV_ROTATE180: UV_ROTATE270,
         UV_ROTATE270: UV_NORMAL
     }
+    icon_filename = 'tool_rotate.png'
     
     def get_tile_change(self, b_char, b_fg, b_bg, b_xform):
         return b_char, b_fg, b_bg, self.rotation_shifts[b_xform]
@@ -182,6 +183,7 @@ class GrabTool(UITool):
     button_caption = 'Grab'
     brush_size = None
     show_preview = False
+    icon_filename = 'tool_grab.png'
     
     def grab(self):
         x, y = self.ui.app.cursor.get_tile()
@@ -211,6 +213,7 @@ class TextTool(UITool):
     button_caption = 'Text'
     brush_size = None
     show_preview = False
+    icon_filename = 'tool_text.png'
     
     def __init__(self, ui):
         UITool.__init__(self, ui)
@@ -320,6 +323,9 @@ class SelectTool(UITool):
     brush_size = None
     affects_masks = False
     show_preview = False
+    icon_filename_normal = 'tool_select.png'
+    icon_filename_add = 'tool_select_add.png'
+    icon_filename_sub = 'tool_select_sub.png'
     
     def __init__(self, ui):
         UITool.__init__(self, ui)
@@ -333,6 +339,21 @@ class SelectTool(UITool):
         # create selected tiles and current drag LineRenderables
         self.select_renderable = SelectionRenderable(self.ui.app, self.ui.active_art)
         self.drag_renderable = SelectionRenderable(self.ui.app, self.ui.active_art)
+        icon = self.ui.asset_dir + self.icon_filename_normal
+        self.icon_texture = self.load_icon_texture(icon)
+        icon = self.ui.asset_dir + self.icon_filename_add
+        self.icon_texture_add = self.load_icon_texture(icon)
+        icon = self.ui.asset_dir + self.icon_filename_sub
+        self.icon_texture_sub = self.load_icon_texture(icon)
+    
+    def get_icon_texture(self):
+        # show different icons based on mod key status
+        if self.ui.app.il.shift_pressed:
+            return self.icon_texture_add
+        elif self.ui.app.il.ctrl_pressed:
+            return self.icon_texture_sub
+        else:
+            return self.icon_texture
     
     def start_select(self):
         self.selection_in_progress = True
@@ -399,6 +420,7 @@ class PasteTool(UITool):
     name = 'paste'
     button_caption = 'Paste'
     brush_size = None
+    icon_filename = 'tool_paste.png'
     
     # TODO!: dragging large pastes around seems heck of slow, investigate
     # why this function might be to blame and see if there's a fix!
