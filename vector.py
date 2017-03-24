@@ -84,6 +84,7 @@ def screen_to_world(app, screen_x, screen_y):
     Return 3D (float) world space coordinates for given 2D (int) screen space
     coordinates.
     """
+    # thanks http://www.bfilipek.com/2012/06/select-mouse-opengl.html
     # get world space ray from view space mouse loc
     screen_y = app.window_height - screen_y
     z1, z2 = 0, 0.99999
