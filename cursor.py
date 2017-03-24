@@ -214,9 +214,12 @@ class Cursor:
         if mouse_moved or (not self.app.keyboard_editing and self.app.camera.moved_this_frame):
             # don't let mouse move cursor if text tool input is happening
             if not self.app.ui.text_tool.input_active:
-                self.x, self.y, self.z = vector.screen_to_world(self.app,
-                                                                self.app.mouse_x,
-                                                                self.app.mouse_y)
+                self.x, self.y, _ = vector.screen_to_world(self.app,
+                                                           self.app.mouse_x,
+                                                           self.app.mouse_y)
+                # cursor always at depth of active layer
+                art = self.app.ui.active_art
+                self.z = art.layers_z[art.active_layer] if art else 0
                 self.moved = True
         if not self.moved and not self.app.ui.tool_settings_changed:
             return

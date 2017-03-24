@@ -75,6 +75,7 @@ class Camera:
              [side.z, upward.z, -forward.z, 0],
              [-eye.dot(side), -eye.dot(upward), eye.dot(forward), 1]]
         self.view_matrix = np.array(m, dtype=np.float32)
+        self.look_x, self.look_y, self.look_z = side, upward, forward
     
     def get_perspective_matrix(self):
         zmul = (-2 * self.near_z * self.far_z) / (self.far_z - self.near_z)

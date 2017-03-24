@@ -118,7 +118,7 @@ class UI:
                           self.art_menu_bar, self.game_menu_bar,
                           self.edit_list_panel, self.edit_object_panel]
         thingy = Thingy(self)
-        #self.elements += [thingy]
+        self.elements += [thingy]
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture

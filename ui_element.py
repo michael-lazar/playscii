@@ -2,6 +2,7 @@ import time
 import numpy as np
 from math import ceil
 
+import vector
 from art import Art
 from renderable import TileRenderable
 from renderable_line import LineRenderable
@@ -381,14 +382,14 @@ class DebugTextUI(UIElement):
 
 
 class Thingy(UIElement):
-    tile_width, tile_height = 10, 1
+    tile_width, tile_height = 30, 1
     game_mode_visible = True
     
     def update(self):
-        # TODO: remove when Cursor.world_to_screen is fixed
-        return
         if len(self.ui.app.gw.selected_objects) == 0:
             return
         obj = self.ui.app.gw.selected_objects[0]
-        self.x, self.y = self.ui.app.cursor.world_to_screen(obj.x, obj.y, obj.z)
-        self.art.write_string(0, 0, 0, 0, obj.name[:self.tile_width-1], -1)
+        self.art.clear_line(0, 0, 0, 2, -1)
+        self.art.write_string(0, 0, 0, 0, obj.name[:self.tile_width-1])
+        self.x, self.y = vector.world_to_screen_normalized(self.ui.app, obj.x, obj.y, obj.z)
+        self.reset_loc()
