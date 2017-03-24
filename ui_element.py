@@ -384,6 +384,7 @@ class DebugTextUI(UIElement):
 class Thingy(UIElement):
     tile_width, tile_height = 30, 1
     game_mode_visible = True
+    visible = False # TODO: turn this into a proper game mode UI concept
     
     def update(self):
         if len(self.ui.app.gw.selected_objects) == 0:
