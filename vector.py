@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+from OpenGL import GL, GLU
+
 class Vec3:
     
     "Basic 3D vector class. Not used very much currently."
@@ -189,7 +191,7 @@ def _screen_to_world_OLD(app, screen_x, screen_y):
     # layer and camera - close but still inaccurate as cursor gets further
     # from world origin
     #y += self.app.camera.look_y.y
-    y += app.camera.y_tilt
+    #y += app.camera.y_tilt
     # DEBUG
     #print('%s, %s, %s' % (app.camera.x, app.camera.y, app.camera.z))
     #colors = [(1, 0, 0, 1), (0, 0, 1, 1), (0, 1, 0, 1), (1, 1, 0, 1)]
@@ -197,9 +199,105 @@ def _screen_to_world_OLD(app, screen_x, screen_y):
     #    [(0, 0, 0), (x, y, z), (x, y, 0), (app.camera.x, app.camera.y, app.camera.z)],
     return x, y, z
 
+def ray_plane_intersection(plane_x, plane_y, plane_z,
+                           plane_dir_x, plane_dir_y, plane_dir_z,
+                           ray_x, ray_y, ray_z,
+                           ray_dir_x, ray_dir_y, ray_dir_z):
+    # from http://stackoverflow.com/a/39424162
+    plane = np.array([plane_x, plane_y, plane_z])
+    plane_dir = np.array([plane_dir_x, plane_dir_y, plane_dir_z])
+    ray = np.array([ray_x, ray_y, ray_z])
+    ray_dir = np.array([ray_dir_x, ray_dir_y, ray_dir_z])
+    ndotu = plane_dir.dot(ray_dir)
+    if abs(ndotu) < 0.000001:
+        #print ("no intersection or line is within plane")
+        return 0, 0, 0
+    w = ray - plane
+    si = -plane_dir.dot(w) / ndotu
+    psi = w + si * ray_dir + plane
+    return psi[0], psi[1], psi[2]
+
+def _screen_to_world_NEW3(app, screen_x, screen_y):
+    # get world space ray from view space mouse loc
+    screen_y = app.window_height - screen_y
+    z1, z2 = 0, 0.99999
+    pjm = np.matrix(app.camera.projection_matrix, dtype=np.float64)
+    vm = np.matrix(app.camera.view_matrix, dtype=np.float64)
+    start_x, start_y, start_z = GLU.gluUnProject(screen_x, screen_y, z1, vm, pjm)
+    end_x, end_y, end_z = GLU.gluUnProject(screen_x, screen_y, z2, vm, pjm)
+    dir_x, dir_y, dir_z = end_x - start_x, end_y - start_y, end_z - start_z
+    # define Z of plane to test against
+    # TODO: what Z is appropriate for game mode picking? test multiple planes?
+    art = app.ui.active_art
+    plane_z = art.layers_z[art.active_layer] if art and not app.game_mode else 0
+    """
+    # leftover debug junk
+    colors = [(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1)]
+    app.debug_line_renderable.set_lines([(start_x, start_y, start_z),
+                                         (end_x, end_y, end_z),
+                                         (end_x, end_y, 0)],
+                                        colors)
+    """
+    x, y, z = ray_plane_intersection(0, 0, plane_z, # plane loc
+                                     0, 0, 1, # plane dir
+                                     end_x, end_y, end_z, # ray loc
+                                     dir_x, dir_y, dir_z) # ray dir
+    return x, y, z
+
+def _screen_to_world_NEW4(app, screen_x, screen_y):
+    screen_x = (2 * screen_x) / app.window_width - 1
+    screen_y = (-2 * screen_y) / app.window_height + 1
+    ray_clip = np.array([screen_x, screen_y, -1, 1])
+    ipjm = np.matrix(app.camera.projection_matrix, dtype=np.float32).getI()
+    ivm = np.matrix(app.camera.view_matrix, dtype=np.float32).getI()
+    ray_eye = ipjm.dot(ray_clip)
+    ray_eye = ray_eye.getA().flatten()
+    ray_eye[2] = -1
+    ray_eye[3] = 0
+    ray_wor = ivm.dot(ray_eye)
+    ray_wor = ray_wor.getA().flatten()[:3]
+    norm = np.linalg.norm(ray_wor)
+    if norm != 0:
+        ray_wor[0] /= norm
+        ray_wor[1] /= norm
+        ray_wor[2] /= norm
+    #print(ray_wor)
+    ray_eye += np.array([app.camera.x, app.camera.y, app.camera.z, 0])
+    end_x = ray_eye[0] + ray_wor[0] * 100
+    end_y = ray_eye[1] + ray_wor[1] * 100
+    end_z = ray_eye[2] + ray_wor[2] * 100
+    colors = [(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 0, 1)]
+    app.debug_line_renderable.set_lines([(ray_eye[0], ray_eye[1], ray_eye[2]),
+                                         (end_x, end_y, end_z)],
+                                        colors)
+    return 0, 0, 0
+
 def screen_to_world(app, screen_x, screen_y):
     """
     Return 3D (float) world space coordinates for given 2D (int) screen space
     coordinates.
     """
-    return _screen_to_world_OLD(app, screen_x, screen_y)
+    return _screen_to_world_NEW3(app, screen_x, screen_y)
+
+def world_to_screen(app, world_x, world_y, world_z):
+    """
+    Return 2D screen pixel space coordinates for given 3D (float) world space
+    coordinates.
+    """
+    pjm = np.matrix(app.camera.projection_matrix, dtype=np.float64)
+    vm = np.matrix(app.camera.view_matrix, dtype=np.float64)
+    # viewport tuple order should be same as glGetFloatv(GL_VIEWPORT)
+    viewport = (0, 0, app.window_width, app.window_height)
+    x, y, z = GLU.gluProject(world_x, world_y, world_z, vm, pjm, viewport)
+    # does Z mean anything here?
+    return x, y
+
+def world_to_screen_normalized(app, world_x, world_y, world_z):
+    """
+    Return normalized (-1 to 1) 2D screen space coordinates for given 3D
+    world space coordinates.
+    """
+    x, y = world_to_screen(app, world_x, world_y, world_z)
+    x = (2 * x) / app.window_width - 1
+    y = (-2 * y) / app.window_height + 1
+    return x, -y

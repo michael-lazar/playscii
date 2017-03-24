@@ -14,6 +14,9 @@ from image_export import export_still_image, export_animation
 from renderable_sprite import ImagePreviewRenderable
 from PIL import Image
 
+# imports for console execution namespace - be careful!
+from OpenGL import GL
+
 
 CONSOLE_HISTORY_FILENAME = 'console_history'
 
