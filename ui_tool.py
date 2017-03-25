@@ -1,3 +1,4 @@
+import math
 import sdl2
 from PIL import Image
 
@@ -378,7 +379,7 @@ class SelectTool(UITool):
             for tile in self.current_drag:
                 self.selected_tiles.pop(tile, None)
         self.current_drag = {}
-        x, y = self.ui.app.cursor.x, int(-self.ui.app.cursor.y)
+        #x, y = self.ui.app.cursor.x, int(-self.ui.app.cursor.y)
         #print('finished select drag at %s,%s' % (x, y))
     
     def update(self):
@@ -386,14 +387,17 @@ class SelectTool(UITool):
             return
         # update drag based on cursor
         # context: cursor has already updated, UI.update calls this
-        if self.selection_in_progress and self.ui.app.cursor.moved_this_frame():
+        if self.selection_in_progress:
             self.current_drag = {}
-            start_x, end_x = int(self.drag_start_x), int(self.ui.app.cursor.x)
-            start_y, end_y = int(self.drag_start_y), int(-self.ui.app.cursor.y)
+            start_x, start_y = int(self.drag_start_x), int(self.drag_start_y)
+            end_x, end_y = int(self.ui.app.cursor.x), int(-self.ui.app.cursor.y)
             if start_x > end_x:
                 start_x, end_x, = end_x, start_x
             if start_y > end_y:
                 start_y, end_y, = end_y, start_y
+            # always grow to include cursor's tile
+            end_x += 1
+            end_y += 1
             w, h = self.ui.active_art.width, self.ui.active_art.height
             for y in range(start_y, end_y):
                 for x in range(start_x, end_x):
