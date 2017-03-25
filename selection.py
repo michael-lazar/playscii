@@ -31,8 +31,6 @@ class SelectionRenderable(LineRenderable):
             below = self.get_adjacent_tile(tiles, x, y, 0, 1)
             left = self.get_adjacent_tile(tiles, x, y, -1, 0)
             right = self.get_adjacent_tile(tiles, x, y, 1, 0)
-            if not above and not below and not left and not right:
-                continue
             top_left =     (  x,   -y)
             top_right =    (x+1,   -y)
             bottom_right = (x+1, -y-1)
