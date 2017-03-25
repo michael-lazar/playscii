@@ -96,7 +96,7 @@ def export_still_image(app, art, out_filename, crt=True, scale=1):
     # TODO: add PNG/PNGset export option for palettized;
     # for now always export 32bit
     if crt or not art.palette.all_colors_opaque() or True:
-        src_img = get_frame_image(app, art, art.active_frame, True, scale)
+        src_img = get_frame_image(app, art, art.active_frame, crt, scale)
         src_img.save(out_filename, 'PNG')
         output_format = '32-bit w/ alpha'
     else:
