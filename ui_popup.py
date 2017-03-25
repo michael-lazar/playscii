@@ -603,6 +603,7 @@ class ToolPopup(UIElement):
                 self.ui.selected_fg_color = self.cursor_color
             elif mouse_button == 3:
                 self.ui.selected_bg_color = self.cursor_color
+        return True
     
     def render(self):
         if not self.visible:
