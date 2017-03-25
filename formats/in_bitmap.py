@@ -51,6 +51,7 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
     field6_label = 'Best fit to current size (%s)'
     field7_label = '%% of source image: (%s)'
     field8_label = '  '
+    field10_label = 'Smooth (bicubic) scale source image'
     radio_groups = [(1, 2), (6, 7)]
     field_width = UIDialog.default_short_field_width
     # to get the layout we want, we must specify 0 padding lines and
@@ -66,6 +67,8 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         Field(label=field6_label, type=bool, width=0, oneline=True),
         Field(label=field7_label, type=bool, width=0, oneline=True),
         Field(label=field8_label, type=float, width=field_width, oneline=True),
+        Field(label='', type=None, width=0, oneline=True),
+        Field(label=field10_label, type=bool, width=0, oneline=True),
         Field(label='', type=None, width=0, oneline=True)
     ]
     invalid_color_error = 'Palettes must be between 2 and 256 colors.'
@@ -84,6 +87,8 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         elif field_number == 8:
             # % of source image size
             return '50.0'
+        elif field_number == 10:
+            return ' '
         return ''
     
     def get_field_label(self, field_index):
@@ -161,6 +166,7 @@ class ConvertImageOptionsDialog(ImportOptionsDialog):
         else:
             # art dimensions = scale% of image dimensions, in tiles
             options['art_width'], options['art_height'] = self.get_tile_scale()
+        options['bicubic_scale'] = bool(self.field_texts[10].strip())
         ImportOptionsDialog.do_import(self.ui.app, self.filename, options)
 
 
@@ -178,7 +184,8 @@ Bitmap image in PNG, JPEG, or BMP format.
         self.art.set_palette(palette)
         width, height = options['art_width'], options['art_height']
         self.art.resize(width, height) # Importer.init will adjust UI
+        bicubic_scale = options['bicubic_scale']
         # let ImageConverter do the actual heavy lifting
-        ImageConverter(self.app, in_filename, self.art)
+        ImageConverter(self.app, in_filename, self.art, bicubic_scale)
         self.app.update_window_title()
         return True
