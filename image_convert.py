@@ -31,7 +31,7 @@ class ImageConverter:
     # lets eg UI catch up to BitmapImageImporter changes to Art.
     start_delay = 1.0
     
-    def __init__(self, app, image_filename, art):
+    def __init__(self, app, image_filename, art, bicubic_scale=False):
         image_filename = app.find_filename_path(image_filename)
         if not image_filename or not os.path.exists(image_filename):
             app.log("ImageConverter: Couldn't find image %s" % image_filename)
@@ -49,7 +49,8 @@ class ImageConverter:
         ratio = min(art_pixel_h / h, art_pixel_w / w)
         w = math.floor((w * ratio) / self.char_w) * self.char_w
         h = math.floor((h * ratio) / self.char_h) * self.char_h
-        self.src_img = self.src_img.resize((w, h), resample=Image.NEAREST)
+        scale_method = Image.BICUBIC if bicubic_scale else Image.NEAREST
+        self.src_img = self.src_img.resize((w, h), resample=scale_method)
         # convert source image to art's palette
         self.src_img = self.art.palette.get_palettized_image(self.src_img)
         # build table of color diffs
