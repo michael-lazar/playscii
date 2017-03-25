@@ -293,17 +293,24 @@ class Cursor:
             self.tool_sprite.texture = ui.grab_tool.get_icon_texture()
         else:
             self.tool_sprite.texture = ui.selected_tool.get_icon_texture()
+        # scale same regardless of screen resolution
+        aspect = self.app.window_height / self.app.window_width
+        scale_x = self.tool_sprite.texture.width / self.app.window_width
+        scale_x *= aspect * self.icon_scale_factor * self.app.ui.scale
+        self.tool_sprite.scale_x = scale_x
+        scale_y = self.tool_sprite.texture.height / self.app.window_height
+        scale_y *= aspect * self.icon_scale_factor * self.app.ui.scale
+        self.tool_sprite.scale_y = scale_y
         # top left of icon at bottom right of cursor
         size = ui.selected_tool.brush_size or 1
-        # scale same regardless of screen resolution
-        scale = self.tool_sprite.texture.width / self.app.window_width
-        scale *= self.icon_scale_factor * self.app.ui.scale
-        self.tool_sprite.scale_x = self.tool_sprite.scale_y = scale
-        self.tool_sprite.scale_x *= self.app.window_height / self.app.window_width
         x, y = self.x, self.y
         x += size * ui.active_art.quad_width
-        y -= size * ui.active_art.quad_height
+        # non-square charsets a bit tricky to properly account for
+        char_aspect = ui.active_art.quad_height / ui.active_art.quad_width
+        y -= (size / char_aspect) * ui.active_art.quad_height
+        y *= char_aspect
         sx, sy = vector.world_to_screen_normalized(self.app, x, y, self.z)
-        sy -= scale
+        # screen-space offset by icon's height
+        sy -= scale_y
         self.tool_sprite.x, self.tool_sprite.y = sx, sy
         self.tool_sprite.render()
