@@ -222,6 +222,9 @@ class TextTool(UITool):
     
     def start_entry(self):
         self.cursor = self.ui.app.cursor
+        # popup gobbles keyboard input, so always dismiss it if it's up
+        if self.ui.popup.visible:
+            self.ui.popup.hide()
         if self.cursor.x < 0 or self.cursor.x > self.ui.active_art.width or \
            -self.cursor.y < 0 or -self.cursor.y > self.ui.active_art.height:
             return
