@@ -19,6 +19,10 @@ class PulldownMenuItem:
     always_active = False
     # if True, pulldown will close when this item is selected
     close_on_select = False
+    # item is allowed in Art Mode
+    art_mode_allowed = True
+    # item is allowed in Game Mode
+    game_mode_allowed = True
     def should_dim(app):
         "returns True if this item should be dimmed based on current application state"
         # so many commands are inapplicable with no active art, default to dimming an
@@ -32,117 +36,122 @@ class SeparatorItem(PulldownMenuItem):
     "menu separator, non-interactive and handled specially by menu drawing"
     pass
 
+class ArtModePulldownMenuItem(PulldownMenuItem):
+    # unless overridden, art mode items not allowed in game mode
+    game_mode_allowed = False
+
 #
 # file menu
 #
-class FileNewItem(PulldownMenuItem):
+class FileNewItem(ArtModePulldownMenuItem):
     label = 'New…'
     command = 'new_art'
     always_active = True
 
-class FileOpenItem(PulldownMenuItem):
+class FileOpenItem(ArtModePulldownMenuItem):
     label = 'Open…'
     command = 'open_art'
     always_active = True
 
-class FileSaveItem(PulldownMenuItem):
+class FileSaveItem(ArtModePulldownMenuItem):
     label = 'Save'
     command = 'save_current'
     def should_dim(app):
         return not app.ui.active_art or not app.ui.active_art.unsaved_changes
 
-class FileSaveAsItem(PulldownMenuItem):
+class FileSaveAsItem(ArtModePulldownMenuItem):
     label = 'Save As…'
     command = 'save_art_as'
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileCloseItem(PulldownMenuItem):
+class FileCloseItem(ArtModePulldownMenuItem):
     label = 'Close'
     command = 'close_art'
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileRevertItem(PulldownMenuItem):
+class FileRevertItem(ArtModePulldownMenuItem):
     label = 'Revert'
     command = 'revert_art'
     def should_dim(app):
         return app.ui.active_art is None or not app.ui.active_art.unsaved_changes
 
-class FileImportItem(PulldownMenuItem):
+class FileImportItem(ArtModePulldownMenuItem):
     label = 'Import…'
     command = 'import_file'
     always_active = True
 
-class FileExportItem(PulldownMenuItem):
+class FileExportItem(ArtModePulldownMenuItem):
     label = 'Export…'
     command = 'export_file'
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileExportLastItem(PulldownMenuItem):
+class FileExportLastItem(ArtModePulldownMenuItem):
     label = 'Export last'
     command = 'export_file_last'
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileConvertImageItem(PulldownMenuItem):
+class FileConvertImageItem(ArtModePulldownMenuItem):
     label = 'Convert Image…'
     command = 'convert_image'
     def should_dim(app):
         return app.ui.active_art is None
 
-class FileQuitItem(PulldownMenuItem):
+class FileQuitItem(ArtModePulldownMenuItem):
     label = 'Quit'
     command = 'quit'
     always_active = True
+    game_mode_allowed = True
 
 #
 # edit menu
 #
-class EditUndoItem(PulldownMenuItem):
+class EditUndoItem(ArtModePulldownMenuItem):
     label = 'Undo'
     command = 'undo'
     def should_dim(app):
         return not app.ui.active_art or len(app.ui.active_art.command_stack.undo_commands) == 0
 
-class EditRedoItem(PulldownMenuItem):
+class EditRedoItem(ArtModePulldownMenuItem):
     label = 'Redo'
     command = 'redo'
     def should_dim(app):
         return not app.ui.active_art or len(app.ui.active_art.command_stack.redo_commands) == 0
 
-class EditCutItem(PulldownMenuItem):
+class EditCutItem(ArtModePulldownMenuItem):
     label = 'Cut'
     command = 'cut_selection'
     def should_dim(app):
         return len(app.ui.select_tool.selected_tiles) == 0
 
-class EditCopyItem(PulldownMenuItem):
+class EditCopyItem(ArtModePulldownMenuItem):
     label = 'Copy'
     command = 'copy_selection'
     def should_dim(app):
         return len(app.ui.select_tool.selected_tiles) == 0
 
-class EditPasteItem(PulldownMenuItem):
+class EditPasteItem(ArtModePulldownMenuItem):
     label = 'Paste'
     command = 'select_paste_tool'
     def should_dim(app):
         return len(app.ui.clipboard) == 0
 
-class EditDeleteItem(PulldownMenuItem):
+class EditDeleteItem(ArtModePulldownMenuItem):
     label = 'Clear'
     command = 'erase_selection_or_art'
 
-class EditSelectAllItem(PulldownMenuItem):
+class EditSelectAllItem(ArtModePulldownMenuItem):
     label = 'Select All'
     command = 'select_all'
 
-class EditSelectNoneItem(PulldownMenuItem):
+class EditSelectNoneItem(ArtModePulldownMenuItem):
     label = 'Select None'
     command = 'select_none'
 
-class EditSelectInvertItem(PulldownMenuItem):
+class EditSelectInvertItem(ArtModePulldownMenuItem):
     label = 'Invert Selection'
     command = 'select_invert'
 
@@ -150,47 +159,47 @@ class EditSelectInvertItem(PulldownMenuItem):
 # tool menu
 #
 
-class ToolTogglePickerItem(PulldownMenuItem):
+class ToolTogglePickerItem(ArtModePulldownMenuItem):
     # two spaces in front of each label to leave room for mark
     label = 'Show char/color picker'
     command = 'toggle_picker'
 
-class ToolTogglePickerHoldItem(PulldownMenuItem):
+class ToolTogglePickerHoldItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'toggle_picker_hold'
     def get_label(app):
         return 'Picker toggle key: %s' % ['press', 'hold'][app.ui.popup_hold_to_show]
 
-class ToolPaintItem(PulldownMenuItem):
+class ToolPaintItem(ArtModePulldownMenuItem):
     # two spaces in front of each label to leave room for mark
     label = '  %s' % PencilTool.button_caption
     command = 'select_pencil_tool'
 
-class ToolEraseItem(PulldownMenuItem):
+class ToolEraseItem(ArtModePulldownMenuItem):
     label = '  %s' % EraseTool.button_caption
     command = 'select_erase_tool'
 
-class ToolRotateItem(PulldownMenuItem):
+class ToolRotateItem(ArtModePulldownMenuItem):
     label = '  %s' % RotateTool.button_caption
     command = 'select_rotate_tool'
 
-class ToolGrabItem(PulldownMenuItem):
+class ToolGrabItem(ArtModePulldownMenuItem):
     label = '  %s' % GrabTool.button_caption
     command = 'select_grab_tool'
 
-class ToolTextItem(PulldownMenuItem):
+class ToolTextItem(ArtModePulldownMenuItem):
     label = '  %s' % TextTool.button_caption
     command = 'select_text_tool'
 
-class ToolSelectItem(PulldownMenuItem):
+class ToolSelectItem(ArtModePulldownMenuItem):
     label = '  %s' % SelectTool.button_caption
     command = 'select_select_tool'
 
-class ToolPasteItem(PulldownMenuItem):
+class ToolPasteItem(ArtModePulldownMenuItem):
     label = '  %s' % PasteTool.button_caption
     command = 'select_paste_tool'
 
-class ToolIncreaseBrushSizeItem(PulldownMenuItem):
+class ToolIncreaseBrushSizeItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'increase_brush_size'
     def should_dim(app):
@@ -203,7 +212,7 @@ class ToolIncreaseBrushSizeItem(PulldownMenuItem):
         size = app.ui.selected_tool.brush_size + 1
         return 'Increase brush size to %s' % size
 
-class ToolDecreaseBrushSizeItem(PulldownMenuItem):
+class ToolDecreaseBrushSizeItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'decrease_brush_size'
     def should_dim(app):
@@ -216,7 +225,7 @@ class ToolDecreaseBrushSizeItem(PulldownMenuItem):
         size = app.ui.selected_tool.brush_size - 1
         return 'Decrease brush size to %s' % size
 
-class ToolSettingsItem(PulldownMenuItem):
+class ToolSettingsItem(ArtModePulldownMenuItem):
     # base class for tool settings toggle items
     def should_dim(app):
         # blacklist specific tools
@@ -249,88 +258,90 @@ class ToolToggleAffectsXformItem(ToolSettingsItem):
 #
 # view  menu
 #
-class ViewToggleCRTItem(PulldownMenuItem):
+class ViewToggleCRTItem(ArtModePulldownMenuItem):
     label = '  CRT filter'
     command = 'toggle_crt'
+    game_mode_allowed = True
     def should_dim(app):
         return app.fb.disable_crt
     def should_mark(ui):
         return ui.app.fb.crt
 
-class ViewToggleGridItem(PulldownMenuItem):
+class ViewToggleGridItem(ArtModePulldownMenuItem):
     label = '  Grid'
     command = 'toggle_grid_visibility'
     def should_mark(ui):
         return ui.app.grid.visible
 
-class ViewBGTextureItem(PulldownMenuItem):
+class ViewBGTextureItem(ArtModePulldownMenuItem):
     label = '  Textured background'
     command = 'toggle_bg_texture'
     always_active = True
     def should_mark(ui):
         return ui.app.show_bg_texture
 
-class ViewToggleZoomExtentsItem(PulldownMenuItem):
+class ViewToggleZoomExtentsItem(ArtModePulldownMenuItem):
     label = '  Zoom to Art extents'
     command = 'toggle_zoom_extents'
     def should_mark(ui):
         return ui.app.camera.zoomed_extents
 
-class ViewZoomInItem(PulldownMenuItem):
+class ViewZoomInItem(ArtModePulldownMenuItem):
     label = 'Zoom in'
     command = 'camera_zoom_in_proportional'
 
-class ViewZoomOutItem(PulldownMenuItem):
+class ViewZoomOutItem(ArtModePulldownMenuItem):
     label = 'Zoom out'
     command = 'camera_zoom_out_proportional'
 
-class ViewSetZoomItem(PulldownMenuItem):
+class ViewSetZoomItem(ArtModePulldownMenuItem):
     label = 'Set camera zoom…'
     command = 'set_camera_zoom'
 
-class ViewToggleCameraTiltItem(PulldownMenuItem):
+class ViewToggleCameraTiltItem(ArtModePulldownMenuItem):
     label = '  Camera tilt'
     command = 'toggle_camera_tilt'
     always_active = True
+    game_mode_allowed = True
     def should_mark(ui):
         return ui.app.camera.y_tilt != 0
 
 #
 # art menu
 #
-class ArtOpenAllGameAssetsItem(PulldownMenuItem):
+class ArtOpenAllGameAssetsItem(ArtModePulldownMenuItem):
     label = 'Open all Game Mode assets'
     command = 'open_all_game_assets'
     def should_dim(app):
         return len(app.gw.objects) == 0
 
-class ArtPreviousItem(PulldownMenuItem):
+class ArtPreviousItem(ArtModePulldownMenuItem):
     label = 'Previous Art'
     command = 'previous_art'
     def should_dim(app):
         return len(app.art_loaded_for_edit) < 2
 
-class ArtNextItem(PulldownMenuItem):
+class ArtNextItem(ArtModePulldownMenuItem):
     label = 'Next Art'
     command = 'next_art'
     def should_dim(app):
         return len(app.art_loaded_for_edit) < 2
 
-class ArtCropToSelectionItem(PulldownMenuItem):
+class ArtCropToSelectionItem(ArtModePulldownMenuItem):
     label = 'Crop to selection'
     command = 'crop_to_selection'
     def should_dim(app):
         return len(app.ui.select_tool.selected_tiles) == 0
 
-class ArtResizeItem(PulldownMenuItem):
+class ArtResizeItem(ArtModePulldownMenuItem):
     label = 'Resize…'
     command = 'resize_art'
 
-class ArtRunScriptItem(PulldownMenuItem):
+class ArtRunScriptItem(ArtModePulldownMenuItem):
     label = 'Run Artscript…'
     command = 'run_art_script'
     
-class ArtRunLastScriptItem(PulldownMenuItem):
+class ArtRunLastScriptItem(ArtModePulldownMenuItem):
     label = 'Run last Artscript'
     command = 'run_art_script_last'
     def should_dim(app):
@@ -339,19 +350,19 @@ class ArtRunLastScriptItem(PulldownMenuItem):
 #
 # frame menu
 #
-class FramePreviousItem(PulldownMenuItem):
+class FramePreviousItem(ArtModePulldownMenuItem):
     label = 'Previous frame'
     command = 'previous_frame'
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
-class FrameNextItem(PulldownMenuItem):
+class FrameNextItem(ArtModePulldownMenuItem):
     label = 'Next frame'
     command = 'next_frame'
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.frames < 2
 
-class FrameTogglePlaybackItem(PulldownMenuItem):
+class FrameTogglePlaybackItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'toggle_anim_playback'
     def should_dim(app):
@@ -362,7 +373,7 @@ class FrameTogglePlaybackItem(PulldownMenuItem):
         animating = app.ui.active_art.renderables[0].animating
         return ['Start', 'Stop'][animating] + ' animation playback'
 
-class FrameToggleOnionItem(PulldownMenuItem):
+class FrameToggleOnionItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'toggle_onion_visibility'
     def should_dim(app):
@@ -371,7 +382,7 @@ class FrameToggleOnionItem(PulldownMenuItem):
         l = '%s onion skin frames' % ['Show', 'Hide'][app.onion_frames_visible]
         return l
 
-class FrameCycleOnionFramesItem(PulldownMenuItem):
+class FrameCycleOnionFramesItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'cycle_onion_frames'
     def should_dim(app):
@@ -379,7 +390,7 @@ class FrameCycleOnionFramesItem(PulldownMenuItem):
     def get_label(app):
         return 'Number of onion frames: %s' % app.onion_show_frames
 
-class FrameCycleOnionDisplayItem(PulldownMenuItem):
+class FrameCycleOnionDisplayItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'cycle_onion_ahead_behind'
     def should_dim(app):
@@ -393,27 +404,27 @@ class FrameCycleOnionDisplayItem(PulldownMenuItem):
             display = 'Next'
         return 'Onion frames show: %s' % display
 
-class FrameAddFrameItem(PulldownMenuItem):
+class FrameAddFrameItem(ArtModePulldownMenuItem):
     label = 'Add frame…'
     command = 'add_frame'
 
-class FrameDuplicateFrameItem(PulldownMenuItem):
+class FrameDuplicateFrameItem(ArtModePulldownMenuItem):
     label = 'Duplicate this frame…'
     command = 'duplicate_frame'
 
-class FrameChangeDelayItem(PulldownMenuItem):
+class FrameChangeDelayItem(ArtModePulldownMenuItem):
     label = "Change this frame's hold time…"
     command = 'change_frame_delay'
 
-class FrameChangeDelayAllItem(PulldownMenuItem):
+class FrameChangeDelayAllItem(ArtModePulldownMenuItem):
     label = "Change all frames' hold times…"
     command = 'change_frame_delay_all'
 
-class FrameChangeIndexItem(PulldownMenuItem):
+class FrameChangeIndexItem(ArtModePulldownMenuItem):
     label = "Change this frame's index…"
     command = 'change_frame_index'
 
-class FrameDeleteFrameItem(PulldownMenuItem):
+class FrameDeleteFrameItem(ArtModePulldownMenuItem):
     label = 'Delete this frame'
     command = 'delete_frame'
     def should_dim(app):
@@ -423,23 +434,23 @@ class FrameDeleteFrameItem(PulldownMenuItem):
 #
 # layer menu
 #
-class LayerAddItem(PulldownMenuItem):
+class LayerAddItem(ArtModePulldownMenuItem):
     label = "Add layer…"
     command = 'add_layer'
 
-class LayerDuplicateItem(PulldownMenuItem):
+class LayerDuplicateItem(ArtModePulldownMenuItem):
     label = "Duplicate this layer…"
     command = 'duplicate_layer'
 
-class LayerSetNameItem(PulldownMenuItem):
+class LayerSetNameItem(ArtModePulldownMenuItem):
     label = "Change this layer's name…"
     command = 'change_layer_name'
 
-class LayerSetZItem(PulldownMenuItem):
+class LayerSetZItem(ArtModePulldownMenuItem):
     label = "Change this layer's Z-depth…"
     command = 'change_layer_z'
 
-class LayerToggleVisibleItem(PulldownMenuItem):
+class LayerToggleVisibleItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'toggle_layer_visibility'
     def get_label(app):
@@ -448,13 +459,13 @@ class LayerToggleVisibleItem(PulldownMenuItem):
         visible = app.ui.active_art.layers_visibility[app.ui.active_art.active_layer]
         return ['Show', 'Hide'][visible] + ' this layer (Game Mode)'
 
-class LayerDeleteItem(PulldownMenuItem):
+class LayerDeleteItem(ArtModePulldownMenuItem):
     label = "Delete this layer"
     command = 'delete_layer'
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.layers < 2
 
-class LayerSetInactiveVizItem(PulldownMenuItem):
+class LayerSetInactiveVizItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'cycle_inactive_layer_visibility'
     def should_dim(app):
@@ -468,7 +479,7 @@ class LayerSetInactiveVizItem(PulldownMenuItem):
         elif app.inactive_layer_visibility == LAYER_VIS_NONE:
             return l + 'Invisible'
 
-class LayerShowHiddenItem(PulldownMenuItem):
+class LayerShowHiddenItem(ArtModePulldownMenuItem):
     label = 'blah'
     command = 'toggle_hidden_layers_visible'
     def get_label(app):
@@ -476,13 +487,13 @@ class LayerShowHiddenItem(PulldownMenuItem):
         l += ['Hidden', 'Visible'][app.show_hidden_layers]
         return l
 
-class LayerPreviousItem(PulldownMenuItem):
+class LayerPreviousItem(ArtModePulldownMenuItem):
     label = 'Previous layer'
     command = 'previous_layer'
     def should_dim(app):
         return not app.ui.active_art or app.ui.active_art.layers < 2
 
-class LayerNextItem(PulldownMenuItem):
+class LayerNextItem(ArtModePulldownMenuItem):
     label = 'Next layer'
     command = 'next_layer'
     def should_dim(app):
@@ -491,15 +502,15 @@ class LayerNextItem(PulldownMenuItem):
 #
 # char/color menu
 #
-class ChooseCharSetItem(PulldownMenuItem):
+class ChooseCharSetItem(ArtModePulldownMenuItem):
     label = 'Choose character set…'
     command = 'choose_charset'
 
-class ChoosePaletteItem(PulldownMenuItem):
+class ChoosePaletteItem(ArtModePulldownMenuItem):
     label = 'Choose palette…'
     command = 'choose_palette'
 
-class PaletteFromImageItem(PulldownMenuItem):
+class PaletteFromImageItem(ArtModePulldownMenuItem):
     label = 'Palette from image…'
     command = 'palette_from_file'
     always_active = True
@@ -507,19 +518,20 @@ class PaletteFromImageItem(PulldownMenuItem):
 #
 # help menu
 #
-class HelpDocsItem(PulldownMenuItem):
+class HelpDocsItem(ArtModePulldownMenuItem):
     label = 'Help (in browser)'
     command = 'open_help_docs'
     always_active = True
     close_on_select = True
+    game_mode_allowed = True
 
-class HelpGenerateDocsItem(PulldownMenuItem):
+class HelpGenerateDocsItem(ArtModePulldownMenuItem):
     label = 'Generate documentation'
     command = 'generate_docs'
     always_active = True
     close_on_select = True
 
-class HelpWebsiteItem(PulldownMenuItem):
+class HelpWebsiteItem(ArtModePulldownMenuItem):
     label = 'Playscii website'
     command = 'open_website'
     always_active = True
@@ -593,7 +605,7 @@ class ArtMenuData(PulldownMenuData):
         items = []
         for art in app.art_loaded_for_edit:
             # class just being used to store data, no need to spawn it
-            class TempMenuItemClass(PulldownMenuItem): pass
+            class TempMenuItemClass(ArtModePulldownMenuItem): pass
             item = TempMenuItemClass
             # leave spaces for mark
             item.label = '  %s' % art.filename
@@ -647,7 +659,7 @@ class LayerMenuData(PulldownMenuData):
         # cap at max allowed line length
         longest_line = min(longest_line, 50)
         for i,layer_name in enumerate(app.ui.active_art.layer_names):
-            class TempMenuItemClass(PulldownMenuItem): pass
+            class TempMenuItemClass(ArtModePulldownMenuItem): pass
             item = TempMenuItemClass
             # leave spaces for mark
             item.label = '  %s' % layer_name

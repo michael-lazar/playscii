@@ -27,7 +27,7 @@ self.edit_bind_src = {
     'b'        : 'toggle_affects_bg',
     # bind can also be a tuple of function names
     'x'        : ('toggle_affects_xform', 'game_frob'),
-    'z'        : 'game_grab',
+    'z'        : ('toggle_zoom_extents', 'game_grab'),
     'shift r'  : 'toggle_crt',
     'a'        : 'select_pencil_tool',
     'e'        : 'select_erase_tool',
@@ -66,7 +66,6 @@ self.edit_bind_src = {
     'shift t'  : 'toggle_camera_tilt',
     '='        : 'camera_zoom_in_proportional',
     '-'        : 'camera_zoom_out_proportional',
-    'z'        : 'toggle_zoom_extents',
     'return'   : 'select_or_paint',
     'shift return': 'add_to_list_selection',
     'ctrl return': 'remove_from_list_selection',
@@ -110,6 +109,7 @@ self.edit_bind_src = {
     'f9'       : 'toggle_fps_counter',
     'f3'       : 'toggle_collision_on_selected',
     'tab'      : 'switch_edit_panel_focus',
+    'shift tab': 'switch_edit_panel_focus_reverse',
     # commands that don't have a shortcut still need to be declared
     # bind strings preceded by a _ will not be displayed
     '_saveas'       : 'save_art_as',

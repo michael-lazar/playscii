@@ -13,7 +13,7 @@ Application.capslock_is_ctrl = True
 
 Art.DEFAULT_CHARSET = 'c64_petscii'
 Art.DEFAULT_PALETTE = 'c64_original'
-Art.DEFAULT_WIDTH, Art.DEFAULT_HEIGHT = 40, 25
+#Art.DEFAULT_WIDTH, Art.DEFAULT_HEIGHT = 40, 25
 
 Camera.start_x, Camera.start_y = 20, -12
 Camera.start_zoom = 15

@@ -309,6 +309,8 @@ class Application:
         self.il = InputLord(self)
         self.init_success = True
         self.log('init done.')
+        if self.can_edit:
+            self.restore_session()
         if (game_dir_to_load or autoplay_game) and self.gw.game_dir:
             # set initial game state
             if state_to_load:
@@ -327,8 +329,6 @@ class Application:
             self.gw.draw_debug_objects = False
         elif self.gw.game_dir and self.always_launch_art_mode:
             self.exit_game_mode()
-        if self.can_edit:
-            self.restore_session()
     
     def get_desktop_resolution(self):
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED

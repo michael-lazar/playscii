@@ -209,9 +209,13 @@ class MenuBar(UIElement):
         self.playscii_sprite.y = 1 - self.art.quad_height
     
     def open_about(self):
+        if self.ui.active_dialog:
+            return
         self.ui.open_dialog(AboutDialog)
     
     def toggle_game_mode(self):
+        if self.ui.active_dialog:
+            return
         if not self.ui.app.game_mode:
             self.ui.app.enter_game_mode()
         else:
