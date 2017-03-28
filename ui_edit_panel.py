@@ -57,7 +57,10 @@ class GamePanel(UIElement):
         button.can_hover = True
     
     def draw_titlebar(self):
-        self.art.clear_line(0, 0, 0, self.titlebar_fg, self.titlebar_bg)
+        # only shade titlebar if panel has keyboard focus
+        fg = self.titlebar_fg if self is self.ui.keyboard_focus_element else self.fg_color
+        bg = self.titlebar_bg if self is self.ui.keyboard_focus_element else self.bg_color
+        self.art.clear_line(0, 0, 0, fg, bg)
         label = self.get_label()
         if len(label) > self.tile_width:
             label = label[:self.tile_width]

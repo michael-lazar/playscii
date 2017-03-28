@@ -1,4 +1,4 @@
-import math, ctypes
+import os, math, ctypes
 import numpy as np
 from OpenGL import GL
 from art import VERT_LENGTH
@@ -28,7 +28,7 @@ class TileRenderable:
     "Alpha (0 to 1) for entire Renderable."
     bg_alpha = 1.
     "Alpha (0 to 1) *only* for tile background colors."
-    move_rate = 1.
+    default_move_rate = 1
     use_art_offset = True
     "Use game object's art_off_pct values."
     
@@ -61,7 +61,9 @@ class TileRenderable:
         self.reset_size()
         # TODO: object rotation matrix, if needed
         self.goal_x, self.goal_y, self.goal_z = 0, 0, 0
-        self.moving = False
+        self.move_rate = self.default_move_rate
+        # marked True when UI is interpolating it
+        self.ui_moving = False
         self.camera = self.app.camera
         # bind VAO etc before doing shaders etc
         self.vao = GL.glGenVertexArrays(1)
@@ -93,7 +95,7 @@ class TileRenderable:
         for i,r in enumerate(self.art.renderables):
             if r is self:
                 break
-        return '%s %s %s' % (self.art.filename, self.__class__.__name__, i)
+        return '%s %s %s' % (self.art.get_simple_name(), self.__class__.__name__, i)
     
     def create_buffers(self):
         # vertex positions and elements
@@ -217,10 +219,17 @@ class TileRenderable:
             dz = z - self.z
             dist = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
             self.move_rate = dist / frames
-        self.moving = True
+        else:
+            self.move_rate = self.default_move_rate
+        self.ui_moving = True
         self.goal_x, self.goal_y, self.goal_z = x, y, z
         if self.log_animation:
             self.app.log('%s will move to %s,%s' % (self.art.filename, self.goal_x, self.goal_y))
+    
+    def snap_to(self, x, y, z):
+        self.x, self.y, self.z = x, y, z
+        self.goal_x, self.goal_y, self.goal_z = x, y, z
+        self.ui_moving = False
     
     def update_transform_from_object(self, obj):
         "Update our position & scale based on that of given game object."
@@ -251,7 +260,7 @@ class TileRenderable:
             self.x = self.goal_x
             self.y = self.goal_y
             self.z = self.goal_z
-            self.moving = False
+            self.ui_moving = False
             return
         # normalize
         inv_dist = 1 / dist
@@ -266,8 +275,7 @@ class TileRenderable:
     def update(self):
         if self.go:
             self.update_transform_from_object(self.go)
-        # TODO: rename "moving" to make it clearer it's art mode only
-        elif self.moving:
+        if self.ui_moving:
             self.update_loc()
         if not self.animating:
             return

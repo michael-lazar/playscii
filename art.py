@@ -17,7 +17,7 @@ UV_STRIDE = 2 * 4
 # starting document defaults
 DEFAULT_CHARSET = 'c64_petscii'
 DEFAULT_PALETTE = 'c64_original'
-DEFAULT_WIDTH, DEFAULT_HEIGHT = 20, 15
+DEFAULT_WIDTH, DEFAULT_HEIGHT = 40, 25
 DEFAULT_ART_FILENAME = 'new'
 
 DEFAULT_FRAME_DELAY = 0.1
@@ -929,6 +929,9 @@ class Art:
     def get_nonblank_tiles(self, frame, layer):
         "Return a list of (x,y) tile coords whose character is NOT blank (0)."
         return self.get_filtered_tiles(frame, layer, 0, invert_filter=True)
+    
+    def get_simple_name(self):
+        return os.path.splitext(os.path.basename(self.filename))[0]
 
 
 class ArtFromDisk(Art):

@@ -104,7 +104,7 @@ class InputLord:
         "returns a list of methods for the given event + mods if one exists"
         keystr = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode().lower()
         key_data = (keystr, shift, alt, ctrl)
-        return self.edit_binds.get(key_data, None)
+        return self.edit_binds.get(key_data, [])
     
     def get_command_shortcut(self, command_function):
         for bind in self.edit_bind_src:
@@ -112,17 +112,32 @@ class InputLord:
                 return bind
         return ''
     
-    def is_command_function_dimmed(self, function):
-        "returns True if given function's menu bar item is currently dimmed"
-        buttons = self.ui.game_menu_bar.menu_buttons if self.app.game_mode else self.ui.art_menu_bar.menu_buttons
+    def get_menu_items_for_command_function(self, function):
+        # search both menus for items; command checks
+        buttons = self.ui.art_menu_bar.menu_buttons + self.ui.game_menu_bar.menu_buttons
+        items = []
         for button in buttons:
             # skip eg playscii button
             if not hasattr(button, 'menu_data'):
                 continue
             for item in button.menu_data.items:
                 if function.__name__ == 'BIND_%s' % item.command:
-                    if not item.always_active and item.should_dim(self.app):
-                        return True
+                    items.append(item)
+        return items
+    
+    def is_command_function_allowed(self, function):
+        "returns True if given function's menu bar item is available"
+        items = self.get_menu_items_for_command_function(function)
+        if not items:
+            return True
+        # return True if ANY items are active
+        for item in items:
+            if not item.always_active and item.should_dim(self.app):
+                continue
+            if item.art_mode_allowed and not self.app.game_mode:
+                return True
+            if item.game_mode_allowed and self.app.game_mode:
+                return True
         return False
     
     def handle_input(self):
@@ -193,11 +208,10 @@ class InputLord:
                 # see if there's a function for this bind and run it
                 else:
                     flist = self.get_bind_functions(event, *mods)
-                    if flist:
-                        for f in flist:
-                            # don't run any command whose menu bar item's dimmed
-                            if not self.is_command_function_dimmed(f):
-                                f()
+                    for f in flist:
+                        # don't run any command whose menu bar item's dimmed / not allowed (ie wrong mode)
+                        if self.is_command_function_allowed(f):
+                            f()
                     # if game mode active, pass to world as well as any binds
                     if self.app.game_mode:
                         self.app.gw.handle_input(event, *mods)
@@ -628,12 +642,10 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_undo(self):
-        if not self.app.game_mode:
-            self.ui.undo()
+        self.ui.undo()
     
     def BIND_redo(self):
-        if not self.app.game_mode:
-            self.ui.redo()
+        self.ui.redo()
     
     def BIND_quick_grab(self):
         self.app.keyboard_editing = True
@@ -649,8 +661,6 @@ class InputLord:
         self.app.camera.zoom_proportional(-1)
     
     def BIND_toggle_zoom_extents(self):
-        if self.app.game_mode:
-            return
         self.app.camera.toggle_zoom_extents()
         self.ui.menu_bar.refresh_active_menu()
     
@@ -867,8 +877,7 @@ class InputLord:
         self.ui.open_dialog(FrameIndexDialog)
     
     def BIND_add_layer(self):
-        if not self.app.game_mode:
-            self.ui.open_dialog(AddLayerDialog)
+        self.ui.open_dialog(AddLayerDialog)
     
     def BIND_duplicate_layer(self):
         self.ui.open_dialog(DuplicateLayerDialog)
@@ -902,8 +911,7 @@ class InputLord:
         self.ui.open_dialog(CharSetChooserDialog)
     
     def BIND_choose_palette(self):
-        if not self.app.game_mode:
-            self.ui.open_dialog(PaletteChooserDialog)
+        self.ui.open_dialog(PaletteChooserDialog)
     
     def BIND_palette_from_file(self):
         self.ui.open_dialog(PaletteFromImageChooserDialog)
@@ -949,19 +957,16 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_collision_viz(self):
-        if self.app.game_mode:
-            self.app.gw.toggle_all_collision_viz()
-            self.ui.menu_bar.refresh_active_menu()
+        self.app.gw.toggle_all_collision_viz()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_bounds_viz(self):
-        if self.app.game_mode:
-            self.app.gw.toggle_all_bounds_viz()
-            self.ui.menu_bar.refresh_active_menu()
+        self.app.gw.toggle_all_bounds_viz()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_all_origin_viz(self):
-        if self.app.game_mode:
-            self.app.gw.toggle_all_origin_viz()
-            self.ui.menu_bar.refresh_active_menu()
+        self.app.gw.toggle_all_origin_viz()
+        self.ui.menu_bar.refresh_active_menu()
     
     def BIND_toggle_collision_on_selected(self):
         for obj in self.app.gw.selected_objects:
@@ -1067,6 +1072,9 @@ class InputLord:
     
     def BIND_switch_edit_panel_focus(self):
         self.ui.switch_edit_panel_focus()
+    
+    def BIND_switch_edit_panel_focus_reverse(self):
+        self.ui.switch_edit_panel_focus(reverse=True)
     
     def BIND_set_room_edge_warps(self):
         # bring up dialog before setting list so list knows about it

@@ -40,6 +40,8 @@ class EditObjectPropertyDialog(UIDialog):
         for obj in self.ui.app.gw.selected_objects:
             obj.set_object_property(self.item.prop_name, new_value)
         self.dismiss()
+        # restore keyboard focus to edit panel
+        self.ui.keyboard_focus_element = self.ui.edit_object_panel
 
 
 class EditObjectPropertyButton(UIButton):

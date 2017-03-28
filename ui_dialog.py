@@ -316,12 +316,15 @@ class UIDialog(UIElement):
         if keystr == '`' and not shift_pressed:
             self.ui.console.toggle()
             return
-        if keystr == 'Return':
+        # if list panel is up don't let user tab away
+        if keystr == 'Tab' and self.ui.edit_list_panel.is_visible():
+            return
+        elif keystr == 'Return':
             self.confirm_pressed()
         elif keystr == 'Escape':
             self.cancel_pressed()
         # cycle through fields with up/down
-        elif keystr == 'Up':
+        elif keystr == 'Up' or (keystr == 'Tab' and shift_pressed):
             if len(self.fields) > 1:
                 self.active_field -= 1
                 self.active_field %= len(self.fields)
@@ -330,18 +333,13 @@ class UIDialog(UIElement):
                     self.active_field -= 1
                     self.active_field %= len(self.fields)
             return
-        elif keystr == 'Down':
+        elif keystr == 'Down' or keystr == 'Tab':
             if len(self.fields) > 1:
                 self.active_field += 1
                 self.active_field %= len(self.fields)
                 while self.fields[self.active_field].type is None:
                     self.active_field += 1
                     self.active_field %= len(self.fields)
-            return
-        elif keystr == 'Tab':
-            # if list panel is visible, switch keyboard focus
-            if self.ui.edit_list_panel.is_visible():
-                self.ui.keyboard_focus_element = self.ui.edit_list_panel
             return
         elif keystr == 'Backspace':
             if len(field_text) == 0:

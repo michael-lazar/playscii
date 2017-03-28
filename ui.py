@@ -187,18 +187,7 @@ class UI:
             self.popup.reset_art()
             self.popup.reset_loc()
         self.reset_onion_frames()
-        # reposition all art renderables and change their opacity
-        x, y, margin = 0, 0, self.app.grid.art_margin
-        for r in self.app.edit_renderables:
-            # always put active art at 0,0
-            if r in self.active_art.renderables:
-                r.alpha = 1
-                r.move_to(0, 0, 0, 0.2)
-            else:
-                r.alpha = 0.5
-                r.move_to(x, y, -1, 0.2)
-            x += (r.art.width + margin) * r.art.quad_width
-            y -= (r.art.height + margin) * r.art.quad_height
+        self.reset_edit_renderables()
         # now that renderables are moved, rescale/reposition grid
         self.app.grid.reset()
         # tell select tool renderables
@@ -472,17 +461,41 @@ class UI:
         command.save_tiles(before=False)
         art.command_stack.commit_commands([command])
     
+    def reset_edit_renderables(self):
+        # reposition all art renderables and change their opacity
+        x, y, margin = 0, 0, self.app.grid.art_margin
+        for i,r in enumerate(self.app.edit_renderables):
+            # always put active art at 0,0
+            if r in self.active_art.renderables:
+                r.alpha = 1
+                # if game mode, don't lerp
+                if self.app.game_mode:
+                    r.snap_to(0, 0, 0)
+                else:
+                    r.move_to(0, 0, 0, 0.2)
+            else:
+                r.alpha = 0.5
+                if self.app.game_mode:
+                    # shift arts progressively further back
+                    r.snap_to(x, y, -i)
+                else:
+                    r.move_to(x, y, -i, 0.2)
+            x += (r.art.width + margin) * r.art.quad_width
+            y -= (r.art.height + margin) * r.art.quad_height
+    
     def adjust_for_art_resize(self, art):
+        if art is not self.active_art:
+            return
         # update grid, camera, cursor
-        if art is self.active_art:
-            self.app.camera.set_for_art(art)
-            self.app.camera.toggle_zoom_extents(override=True)
-            self.app.grid.reset()
-            if self.app.cursor.x > art.width:
-               self.app.cursor.x = art.width
-            if self.app.cursor.y > art.height:
-               self.app.cursor.y = art.height
-            self.app.cursor.moved = True
+        self.app.camera.set_for_art(art)
+        self.app.camera.toggle_zoom_extents(override=True)
+        self.reset_edit_renderables()
+        self.app.grid.reset()
+        if self.app.cursor.x > art.width:
+            self.app.cursor.x = art.width
+        if self.app.cursor.y > art.height:
+            self.app.cursor.y = art.height
+        self.app.cursor.moved = True
     
     def resize_art(self, art, new_width, new_height, origin_x, origin_y):
         # create command for undo/redo
@@ -606,7 +619,10 @@ class UI:
         self.active_dialog = dialog
         self.keyboard_focus_element = self.active_dialog
         # insert dialog at index 0 so it draws first instead of last
-        self.elements.insert(0, dialog)
+        #self.elements.insert(0, dialog)
+        self.elements.remove(self.console)
+        self.elements.append(dialog)
+        self.elements.append(self.console)
     
     def set_game_edit_ui_visibility(self, visible, show_message=True):
         self.game_menu_bar.visible = visible
@@ -625,14 +641,26 @@ class UI:
             self.keyboard_focus_element = None
         self.refocus_keyboard()
     
-    def switch_edit_panel_focus(self):
-        if self.active_dialog and self.edit_list_panel.is_visible():
-            self.keyboard_focus_element = self.edit_list_panel
-        if self.keyboard_focus_element is self.edit_list_panel:
-            # prefer to switch to dialog if there is one
-            self.keyboard_focus_element = self.active_dialog or self.edit_object_panel
-        elif self.keyboard_focus_element is self.edit_object_panel:
-            self.keyboard_focus_element = self.edit_list_panel
+    def switch_edit_panel_focus(self, reverse=False):
+        # never allow tabbing away from active dialog, eg property input
+        if self.active_dialog:
+            return
+        # cycle keyboard focus between possible panels
+        focus_elements = [None]
+        if self.edit_list_panel.is_visible():
+            focus_elements.append(self.edit_list_panel)
+        if self.edit_object_panel.is_visible():
+            focus_elements.append(self.edit_object_panel)
+        if len(focus_elements) == 1:
+            return
+        focus_elements.append(None)
+        # handle shift-tab
+        if reverse:
+            focus_elements.reverse()
+        for i,element in enumerate(focus_elements[:-1]):
+            if self.keyboard_focus_element is element:
+                self.keyboard_focus_element = focus_elements[i+1]
+                break
         # update keyboard hover for both
         self.edit_object_panel.update_keyboard_hover()
         self.edit_list_panel.update_keyboard_hover()

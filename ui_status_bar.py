@@ -164,36 +164,44 @@ class StatusBarUI(UIElement):
     # button callbacks
     
     def char_toggle_button_pressed(self):
+        if self.ui.active_dialog: return
         self.ui.selected_tool.toggle_affects_char()
     
     def char_cycle_button_pressed(self, mouse_button):
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.select_char(self.ui.selected_char + 1)
         elif mouse_button == 3:
             self.ui.select_char(self.ui.selected_char - 1)
     
     def fg_toggle_button_pressed(self):
+        if self.ui.active_dialog: return
         self.ui.selected_tool.toggle_affects_fg()
     
     def fg_cycle_button_pressed(self, mouse_button):
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.select_fg(self.ui.selected_fg_color + 1)
         elif mouse_button == 3:
             self.ui.select_fg(self.ui.selected_fg_color - 1)
     
     def bg_toggle_button_pressed(self):
+        if self.ui.active_dialog: return
         self.ui.selected_tool.toggle_affects_bg()
     
     def bg_cycle_button_pressed(self, mouse_button):
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.select_bg(self.ui.selected_bg_color + 1)
         elif mouse_button == 3:
             self.ui.select_bg(self.ui.selected_bg_color - 1)
     
     def xform_toggle_button_pressed(self):
+        if self.ui.active_dialog: return
         self.ui.selected_tool.toggle_affects_xform()
     
     def xform_cycle_button_pressed(self, mouse_button):
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.cycle_selected_xform()
         elif mouse_button == 3:
@@ -202,6 +210,7 @@ class StatusBarUI(UIElement):
         self.xform_cycle_button.caption = uv_names[self.ui.selected_xform]
     
     def tool_cycle_button_pressed(self, mouse_button):
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.cycle_selected_tool()
         elif mouse_button == 3:
@@ -210,6 +219,7 @@ class StatusBarUI(UIElement):
     
     def file_cycle_button_pressed(self, mouse_button):
         if not self.ui.active_art: return
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.next_active_art()
         elif mouse_button == 3:
@@ -217,6 +227,7 @@ class StatusBarUI(UIElement):
     
     def layer_cycle_button_pressed(self, mouse_button):
         if not self.ui.active_art: return
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.set_active_layer(self.ui.active_art.active_layer + 1)
         elif mouse_button == 3:
@@ -224,6 +235,7 @@ class StatusBarUI(UIElement):
     
     def frame_cycle_button_pressed(self, mouse_button):
         if not self.ui.active_art: return
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.set_active_frame(self.ui.active_art.active_frame + 1)
         elif mouse_button == 3:
@@ -231,6 +243,7 @@ class StatusBarUI(UIElement):
     
     def zoom_set_button_pressed(self, mouse_button):
         if not self.ui.active_art: return
+        if self.ui.active_dialog: return
         if mouse_button == 1:
             self.ui.app.camera.zoom_proportional(1)
         elif mouse_button == 3:
