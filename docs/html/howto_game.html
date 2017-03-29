@@ -396,7 +396,7 @@ Music is controlled globally with <a href="./generated/game_world.html#game_worl
 <a id="inputhandling"> <h4>Handling Input</h4> </a>
 <div class="block">
 <p>
-  Playscii's InputLord class handles application input and takes care of basic things like player movement, but you may want to have objects (the player, most commonly) handle input directly. In these cases, set the class's <tt>handle_input_events</tt> property to True, and override GameObject's <tt>handle_key_down</tt> and/or <tt>handle_key_up</tt> functions. InputLord passes in the key as a string and modifier key statues as booleans, so you don't need to worry about decoding from SDL2 keycodes or anything.
+  Playscii's InputLord class handles application input and takes care of basic things like player movement, but you may want to have objects (the player, most commonly) handle input directly. In these cases, set the class's <tt>handle_key_events</tt> and/or <tt>handle_mouse_events</tt> properties to True, and override GameObject's <tt>handle_key_down</tt>/<tt>handle_key_up</tt> and/or <tt>clicked</tt>/<tt>unclicked</tt> functions. InputLord passes in the key as a string and modifier key statues as booleans, so you don't need to worry about decoding from SDL2 keycodes or anything. Mouse events are passed in as button numbers and give the world coordinates of the click (X and Y axes).
 </p>
 </div>
 

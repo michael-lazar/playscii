@@ -184,8 +184,10 @@ class GameObject:
     If True, object's update function will run even if it's
     outside the world's current room
     """
-    handle_input_events = False
-    "If True, handle input events passed in from world / input handler"
+    handle_key_events = False
+    "If True, handle key input events passed in from world / input handler"
+    handle_mouse_events = False
+    "If True, handle mouse click events passed in from world / input handler"
     def __init__(self, world, obj_data=None):
         """
         Create new GameObject in world, from serialized data if provided.
@@ -850,14 +852,30 @@ class GameObject:
     def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         """
         Handle "key pressed" event, with keyboard mods passed in.
-        GO subclasses can do stuff here if their handle_input_events=True
+        GO subclasses can do stuff here if their handle_key_events=True
         """
         pass
     
     def handle_key_up(self, key, shift_pressed, alt_pressed, ctrl_pressed):
         """
         Handle "key released" event, with keyboard mods passed in.
-        GO subclasses can do stuff here if their handle_input_events=True
+        GO subclasses can do stuff here if their handle_key_events=True
+        """
+        pass
+    
+    def clicked(self, button, mouse_x, mouse_y):
+        """
+        Handle mouse button down event, with button # and
+        click location (in world coordinates) passed in.
+        GO subclasses can do stuff here if their handle_mouse_events=True
+        """
+        pass
+    
+    def unclicked(self, button, mouse_x, mouse_y):
+        """
+        Handle mouse button up event, with button # and
+        click location (in world coordinates) passed in.
+        GO subclasses can do stuff here if their handle_mouse_events=True
         """
         pass
     

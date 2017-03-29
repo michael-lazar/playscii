@@ -20,7 +20,7 @@ class Board(GameObject):
     art_width, art_height = BOARD_WIDTH, BOARD_HEIGHT
     art_charset = 'jpetscii'
     art_palette = 'c64_original'
-    handle_input_events = True
+    handle_key_events = True
     
     def __init__(self, world, obj_data):
         GameObject.__init__(self, world, obj_data)

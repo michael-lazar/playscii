@@ -171,7 +171,7 @@ class GameWorld:
                 objects.append(obj)
         return objects
     
-    def clicked(self, button):
+    def select_click(self):
         x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
                                          self.app.mouse_y)
         if self.classname_to_spawn:
@@ -184,7 +184,21 @@ class GameWorld:
         for obj in self.selected_objects:
             self.drag_objects[obj.name] = (obj.x - x, obj.y - y, obj.z - z)
     
-    def unclicked(self, button):
+    def clicked(self, button):
+        # if edit UI is up, select stuff
+        if self.app.ui.is_game_edit_ui_visible():
+            if button == sdl2.SDL_BUTTON_LEFT:
+                self.select_click()
+        # else pass clicks to any objects under mouse
+        else:
+            x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                             self.app.mouse_y)
+            objects = self.get_objects_at(x, y)
+            for obj in objects:
+                if obj.handle_mouse_events:
+                    obj.clicked(button, x, y)
+    
+    def select_unclick(self):
         # clicks on UI are consumed and flag world to not accept unclicks
         # (keeps unclicks after dialog dismiss from deselecting objects)
         if self.last_click_on_ui:
@@ -224,6 +238,18 @@ class GameWorld:
         if not self.app.il.shift_pressed:
             self.deselect_all()
         self.select_object(next_obj)
+    
+    def unclicked(self, button):
+        if self.app.ui.is_game_edit_ui_visible():
+            if button == sdl2.SDL_BUTTON_LEFT:
+                self.select_unclick()
+        else:
+            x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                             self.app.mouse_y)
+            objects = self.get_objects_at(x, y)
+            for obj in objects:
+                if obj.handle_mouse_events:
+                    obj.unclicked(button, x, y)
     
     def mouse_moved(self, dx, dy):
         if self.app.ui.active_dialog:
@@ -506,7 +532,7 @@ class GameWorld:
         key = key.lower()
         args = (key, shift_pressed, alt_pressed, ctrl_pressed)
         for obj in self.objects.values():
-            if obj.handle_input_events:
+            if obj.handle_key_events:
                 if event.type == sdl2.SDL_KEYDOWN:
                     self.try_object_method(obj, obj.handle_key_down, args)
                 elif event.type == sdl2.SDL_KEYUP:

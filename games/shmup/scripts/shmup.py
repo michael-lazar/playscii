@@ -8,7 +8,7 @@ class ShmupPlayer(Player):
     state_changes_art = False
     move_state = 'stand'
     art_src = 'player'
-    handle_input_events = True
+    handle_key_events = True
     invincible = False # DEBUG
     serialized = Player.serialized + ['invincible']
     respawn_delay = 3
