@@ -17,7 +17,7 @@ class PlatformPlayer(Player):
     #collision_shape_type = CST_AABB
     col_width = 2
     col_height = 3
-    handle_input_events = True
+    handle_key_events = True
     fast_move_steps = 1
     col_radius = 1.75
     move_accel_x = 400

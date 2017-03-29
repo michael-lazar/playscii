@@ -627,6 +627,9 @@ class UI:
         self.elements.append(dialog)
         self.elements.append(self.console)
     
+    def is_game_edit_ui_visible(self):
+        return self.game_menu_bar.visible
+    
     def set_game_edit_ui_visibility(self, visible, show_message=True):
         self.game_menu_bar.visible = visible
         self.edit_list_panel.visible = visible
@@ -690,7 +693,7 @@ class UI:
             return
         elif not self.app.game_mode:
             return
-        self.set_game_edit_ui_visibility(not self.edit_list_panel.visible)
+        self.set_game_edit_ui_visibility(not self.game_menu_bar.visible)
     
     def destroy(self):
         for e in self.elements:

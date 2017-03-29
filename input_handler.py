@@ -256,12 +256,11 @@ class InputLord:
                 if ui_unclicked:
                     sdl2.SDL_PumpEvents()
                     return
+                if self.app.game_mode:
+                    self.app.gw.unclicked(event.button.button)
                 # LMB up: finish paint for most tools, end select drag
                 if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    # in game mode, select stuff
-                    if self.app.game_mode:
-                        self.app.gw.unclicked(event.button.button)
-                    elif self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
+                    if self.ui.selected_tool is self.ui.select_tool and self.ui.select_tool.selection_in_progress:
                         self.ui.select_tool.finish_select(self.shift_pressed, self.ctrl_pressed)
                     elif not self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         app.cursor.finish_paint()
@@ -270,13 +269,16 @@ class InputLord:
                 # don't register edit commands if a menu is up
                 if ui_clicked or self.ui.menu_bar.active_menu_name or self.ui.active_dialog:
                     sdl2.SDL_PumpEvents()
-                    self.app.gw.last_click_on_ui = True
+                    if self.app.game_mode:
+                        self.app.gw.last_click_on_ui = True
                     return
-                # LMB down: start text entry, start select drag, or paint
-                if event.button.button == sdl2.SDL_BUTTON_LEFT:
-                    if self.app.game_mode and not ui_clicked:
+                # pass clicks through to game world
+                if self.app.game_mode:
+                    if not ui_clicked:
                         self.app.gw.clicked(event.button.button)
-                    elif not self.ui.active_art:
+                # LMB down: start text entry, start select drag, or paint
+                elif event.button.button == sdl2.SDL_BUTTON_LEFT:
+                    if not self.ui.active_art:
                         return
                     elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
                         self.ui.text_tool.start_entry()
