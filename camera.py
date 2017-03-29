@@ -168,19 +168,44 @@ class Camera:
         # kill all Z velocity for camera so we don't drift out of 1:1
         self.vel_z = 0
     
+    def find_closest_zoom_extents(self):
+        def corners_on_screen():
+            art = self.app.ui.active_art
+            z = art.layers_z[-1]
+            x1, y1 = art.renderables[0].x, art.renderables[0].y
+            left, top = vector.world_to_screen_normalized(self.app, x1, y1, z)
+            x2 = x1 + art.width * art.quad_width
+            y2 = y1 - art.height * art.quad_height
+            right, bot = vector.world_to_screen_normalized(self.app, x2, y2, z)
+            #print('(%.3f, %.3f) -> (%.3f, %.3f)' % (left, top, right, bot))
+            # add 1 tile of UI chars to top and bottom margins
+            top_margin = 1 - self.app.ui.menu_bar.art.quad_height
+            bot_margin = -1 + self.app.ui.status_bar.art.quad_height
+            return left >= -1 and top <= top_margin and \
+                right <= 1 and bot >= bot_margin
+        # zoom out from minimum until all corners are visible
+        self.z = self.min_zoom
+        tries = 0
+        while not corners_on_screen() and tries < 30:
+            self.zoom_proportional(-1)
+            # recalc view matrix each time so projection is correct
+            self.calc_view_matrix()
+            tries += 1
+    
     def toggle_zoom_extents(self, override=None):
         if override is not None:
             self.zoomed_extents = not override
         if self.zoomed_extents:
             self.x, self.y, self.z = self.saved_x, self.saved_y, self.saved_z
+            self.app.ui.message_line.post_line('Zoomed to previous')
         else:
             self.saved_x, self.saved_y, self.saved_z = self.x, self.y, self.z
-            # TODO: more involved zoom-extents that picks the best zoom level
-            self.set_to_base_zoom()
             # center camera on art
             art = self.app.ui.active_art
             self.x = (art.width * art.quad_width) / 2
             self.y = -(art.height * art.quad_height) / 2
+            self.find_closest_zoom_extents()
+            self.app.ui.message_line.post_line('Zoomed to extents')
         # kill all camera velocity when snapping
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         self.zoomed_extents = not self.zoomed_extents

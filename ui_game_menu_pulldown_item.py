@@ -39,6 +39,7 @@ class OpenConsoleItem(GameModePulldownMenuItem):
     command = 'toggle_console'
     close_on_select = True
     always_active = True
+    art_mode_allowed = True
 
 #
 # state menu
