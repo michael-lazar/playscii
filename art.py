@@ -103,13 +103,18 @@ class Art:
         self.command_stack = CommandStack(self)
         self.unsaved_changes = False
         self.width, self.height = width, height
+        # selected char/fg/bg/xform
+        self.selected_char = self.charset.get_char_index('A') or 2
+        self.selected_fg_color = self.palette.lightest_index
+        self.selected_bg_color = self.palette.darkest_index
+        self.selected_xform = UV_NORMAL
         # camera position - updated in Art.update, saved in .psci
         self.update_saved_camera(self.app.camera)
         # set True when camera "zoom extents" toggles on
         self.camera_zoomed_extents = False
-        # cached camera position from before zoom extents
-        self.extents_camera_x = self.extents_camera_y = 0
-        self.extents_camera_z = self.app.camera.start_zoom
+        # cached camera position from before "zoom extents" invoked
+        self.non_extents_camera_x = self.non_extents_camera_y = 0
+        self.non_extents_camera_z = self.app.camera.start_zoom
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.fg_colors, self.bg_colors = [], [], []
         # char transforms: UV coords, plus map (unused by renderer) for fast access
@@ -626,6 +631,12 @@ class Art:
     def update_saved_camera(self, camera):
         self.camera_x, self.camera_y, self.camera_z = camera.x, camera.y, camera.z
     
+    def update_selected_tile_attributes(self):
+        self.selected_char = self.app.ui.selected_char
+        self.selected_fg_color = self.app.ui.selected_fg_color
+        self.selected_bg_color = self.app.ui.selected_bg_color
+        self.selected_xform = self.app.ui.selected_xform
+    
     def changed_this_frame(self):
         return self.geo_changed or \
             True in self.char_changed_frames.values() or \
@@ -638,6 +649,7 @@ class Art:
         # update our camera if we're active
         if not self.app.game_mode and self.app.ui and self.app.ui.active_art is self:
             self.update_saved_camera(self.app.camera)
+            self.update_selected_tile_attributes()
         # update our renderables if they're on a frame whose char/colors changed
         if self.geo_changed:
             self.build_geo()
@@ -677,7 +689,11 @@ class Art:
              'charset': self.charset.name, 'palette': self.palette.name,
              'active_frame': self.active_frame,
              'active_layer': self.active_layer,
-             'camera': (self.camera_x, self.camera_y, self.camera_z)
+             'camera': (self.camera_x, self.camera_y, self.camera_z),
+             'selected_char': self.app.ui.selected_char,
+             'selected_fg_color': self.app.ui.selected_fg_color,
+             'selected_bg_color': self.app.ui.selected_bg_color,
+             'selected_xform': self.app.ui.selected_xform
         }
         # preferred character set and palette, default used if not found
         # remember camera location
@@ -969,6 +985,15 @@ class ArtFromDisk(Art):
             self.camera_x, self.camera_y, self.camera_z = cam[0], cam[1], cam[2]
         else:
             self.update_saved_camera(self.app.camera)
+        # read saved tile attributes, which won't exist in pre-0.9.6 PSCI files
+        if 'selected_char' in d:
+            self.selected_char = d['selected_char']
+        if 'selected_fg_color' in d:
+            self.selected_fg_color = d['selected_fg_color']
+        if 'selected_bg_color' in d:
+            self.selected_bg_color = d['selected_bg_color']
+        if 'selected_xform' in d:
+            self.selected_xform = d['selected_xform']
         # update renderables with new data
         self.update()
         # signify to app that this file loaded successfully
