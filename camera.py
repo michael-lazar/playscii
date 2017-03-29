@@ -193,9 +193,10 @@ class Camera:
         if override is not None:
             art.camera_zoomed_extents = not override
         if art.camera_zoomed_extents:
-            self.x, self.y, self.z = art.extents_camera_x, art.extents_camera_y, art.extents_camera_z
+            # restore cached position
+            self.x, self.y, self.z = art.non_extents_camera_x, art.non_extents_camera_y, art.non_extents_camera_z
         else:
-            art.extents_camera_x, art.extents_camera_y, art.extents_camera_z = self.x, self.y, self.z
+            art.non_extents_camera_x, art.non_extents_camera_y, art.non_extents_camera_z = self.x, self.y, self.z
             # center camera on art
             self.x = (art.width * art.quad_width) / 2
             self.y = -(art.height * art.quad_height) / 2

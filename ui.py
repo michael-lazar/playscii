@@ -69,13 +69,11 @@ class UI:
         self.view_matrix = np.eye(4, 4, dtype=np.float32)
         self.charset = self.app.load_charset(self.charset_name, False)
         self.palette = self.app.load_palette(self.palette_name, False)
-        # currently selected char, fg color, bg color
-        art_char = self.active_art.charset
-        art_pal = self.active_art.palette
-        self.selected_char = art_char.get_char_index('A') or 2
-        self.selected_fg_color = art_pal.lightest_index
-        self.selected_bg_color = art_pal.darkest_index
-        self.selected_xform = UV_NORMAL
+        # currently selected char, fg color, bg color, xform - from art
+        self.selected_char = self.active_art.selected_char
+        self.selected_fg_color = self.active_art.selected_fg_color
+        self.selected_bg_color = self.active_art.selected_bg_color
+        self.selected_xform = self.active_art.selected_xform
         self.selected_tool, self.previous_tool = None, None
         # set True when tool settings change, cleared after update, used by
         # cursor to determine if cursor update needed
@@ -186,6 +184,11 @@ class UI:
         if self.popup.visible:
             self.popup.reset_art()
             self.popup.reset_loc()
+        # set to art's selected tile attributes
+        self.selected_char = self.active_art.selected_char
+        self.selected_fg_color = self.active_art.selected_fg_color
+        self.selected_bg_color = self.active_art.selected_bg_color
+        self.selected_xform = self.active_art.selected_xform
         self.reset_onion_frames()
         self.reset_edit_renderables()
         # now that renderables are moved, rescale/reposition grid
