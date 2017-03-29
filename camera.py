@@ -194,14 +194,12 @@ class Camera:
             art.camera_zoomed_extents = not override
         if art.camera_zoomed_extents:
             self.x, self.y, self.z = art.extents_camera_x, art.extents_camera_y, art.extents_camera_z
-            self.app.ui.message_line.post_line('Zoomed to previous')
         else:
             art.extents_camera_x, art.extents_camera_y, art.extents_camera_z = self.x, self.y, self.z
             # center camera on art
             self.x = (art.width * art.quad_width) / 2
             self.y = -(art.height * art.quad_height) / 2
             self.find_closest_zoom_extents()
-            self.app.ui.message_line.post_line('Zoomed to extents')
         # kill all camera velocity when snapping
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
         art.camera_zoomed_extents = not art.camera_zoomed_extents
