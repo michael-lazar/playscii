@@ -44,6 +44,10 @@ class Shader:
     
     log_compile = False
     "If True, log shader compilation"
+    # per-platform shader versions, declared here for easier CFG fiddling
+    shader_version_windows = 130
+    shader_version_linux = 130
+    shader_version_macos = 150
     
     def __init__(self, shader_lord, vert_source_file, frag_source_file):
         self.sl = shader_lord
@@ -71,7 +75,12 @@ class Shader:
     def get_shader_source(self, source_file):
         src = open(SHADER_PATH + source_file, 'rb').read()
         # prepend shader version for different platforms
-        shader_version = 130 if platform.system() != 'Darwin' else 150
+        if platform.system() == 'Windows':
+            shader_version = self.shader_version_windows
+        elif platform.system() == 'Darwin':
+            shader_version = self.shader_version_macos
+        elif platform.system() == 'Linux':
+            shader_version = self.shader_version_linux
         version_string = '#version %s\n' % shader_version
         src = bytes(version_string, 'utf-8') + src
         return src

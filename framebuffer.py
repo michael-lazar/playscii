@@ -7,6 +7,8 @@ class Framebuffer:
     start_crt_enabled = False
     disable_crt = False
     clear_color = (0, 0, 0, 1)
+    # declared as an option here in case people want to sub their own via CFG
+    crt_fragment_shader_filename = 'framebuffer_f_crt.glsl'
     
     def __init__(self, app, width=None, height=None):
         self.app = app
@@ -27,7 +29,7 @@ class Framebuffer:
         # shaders
         self.plain_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f.glsl')
         if not self.disable_crt:
-            self.crt_shader = self.app.sl.new_shader('framebuffer_v.glsl', 'framebuffer_f_crt.glsl')
+            self.crt_shader = self.app.sl.new_shader('framebuffer_v.glsl', self.crt_fragment_shader_filename)
         self.crt = self.get_crt_enabled()
         # shader uniforms and attributes
         self.plain_tex_uniform = self.plain_shader.get_uniform_location('fbo_texture')
