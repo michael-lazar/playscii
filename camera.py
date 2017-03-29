@@ -43,9 +43,6 @@ class Camera:
         self.app = app
         self.reset()
         self.max_pan_speed = self.base_max_pan_speed
-        # set True when "zoom extents" toggles on
-        self.zoomed_extents = False
-        self.saved_x, self.saved_y, self.saved_z = 0, 0, self.start_zoom
     
     def reset(self):
         self.x, self.y = self.start_x, self.start_y
@@ -140,7 +137,7 @@ class Camera:
         "zooms in or out via increments of 1:1 pixel scales for active art"
         if not self.app.ui.active_art:
             return
-        self.zoomed_extents = False
+        self.app.ui.active_art.camera_zoomed_extents = False
         base_zoom = self.get_base_zoom()
         # build span of all 1:1 zoom increments
         zooms = []
@@ -193,22 +190,22 @@ class Camera:
             tries += 1
     
     def toggle_zoom_extents(self, override=None):
+        art = self.app.ui.active_art
         if override is not None:
-            self.zoomed_extents = not override
-        if self.zoomed_extents:
-            self.x, self.y, self.z = self.saved_x, self.saved_y, self.saved_z
+            art.camera_zoomed_extents = not override
+        if art.camera_zoomed_extents:
+            self.x, self.y, self.z = art.extents_camera_x, art.extents_camera_y, art.extents_camera_z
             self.app.ui.message_line.post_line('Zoomed to previous')
         else:
-            self.saved_x, self.saved_y, self.saved_z = self.x, self.y, self.z
+            art.extents_camera_x, art.extents_camera_y, art.extents_camera_z = self.x, self.y, self.z
             # center camera on art
-            art = self.app.ui.active_art
             self.x = (art.width * art.quad_width) / 2
             self.y = -(art.height * art.quad_height) / 2
             self.find_closest_zoom_extents()
             self.app.ui.message_line.post_line('Zoomed to extents')
         # kill all camera velocity when snapping
         self.vel_x, self.vel_y, self.vel_z = 0, 0, 0
-        self.zoomed_extents = not self.zoomed_extents
+        art.camera_zoomed_extents = not art.camera_zoomed_extents
     
     def window_resized(self):
         self.calc_projection_matrix()
@@ -275,8 +272,8 @@ class Camera:
             if abs(self.vel_y) < self.min_velocity:
                 self.vel_y = 0
             # if camera moves, we're not in zoom-extents state anymore
-            if self.vel_x or self.vel_y:
-                self.zoomed_extents = False
+            if self.app.ui.active_art and (self.vel_x or self.vel_y):
+                self.app.ui.active_art.camera_zoomed_extents = False
             # move
             self.x += self.vel_x
             self.y += self.vel_y
@@ -286,8 +283,8 @@ class Camera:
         if abs(self.vel_z) < self.min_velocity:
             self.vel_z = 0
         # as bove, if zooming turn off zoom-extents state
-        if self.vel_z:
-            self.zoomed_extents = False
+        if self.vel_z and self.app.ui.active_art:
+            self.app.ui.active_art.camera_zoomed_extents = False
         self.z += self.vel_z
         # keep within bounds
         if self.use_bounds:
