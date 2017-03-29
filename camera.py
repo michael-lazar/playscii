@@ -7,8 +7,6 @@ def clamp(val, lowest, highest):
 
 class Camera:
     
-    # debug log camera values
-    logg = False
     # good starting values
     start_x,start_y = 0,0
     start_zoom = 2.5
@@ -182,10 +180,11 @@ class Camera:
                 right <= 1 and bot >= bot_margin
         # zoom out from minimum until all corners are visible
         self.z = self.min_zoom
+        # recalc view matrix each move so projection stays correct
+        self.calc_view_matrix()
         tries = 0
         while not corners_on_screen() and tries < 30:
             self.zoom_proportional(-1)
-            # recalc view matrix each time so projection is correct
             self.calc_view_matrix()
             tries += 1
     
@@ -293,7 +292,8 @@ class Camera:
             self.z = clamp(self.z, self.min_zoom, self.max_zoom)
         # set view matrix from xyz
         self.calc_view_matrix()
-        if self.logg:
-            self.app.log('camera x=%s, y=%s, z=%s' % (self.x, self.y, self.z))
         self.moved_this_frame = self.mouse_panned or self.x != self.last_x or self.y != self.last_y or self.z != self.last_z
         self.mouse_panned = False
+    
+    def log_loc(self):
+        self.app.log('camera x=%s, y=%s, z=%s' % (self.x, self.y, self.z))
