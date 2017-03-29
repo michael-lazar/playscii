@@ -8,42 +8,94 @@ from art import ART_DIR, ART_FILE_EXTENSION, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFA
 from palette import PaletteFromFile
 
 
-class NewArtDialog(UIDialog):
+class BaseFileDialog(UIDialog):
+    
+    invalid_filename_error = 'Filename is not valid.'
+    filename_exists_error = 'File by that name already exists.'
+    
+    def get_file_extension(self):
+        return ''
+    
+    def get_dir(self):
+        return ''
+    
+    def get_full_filename(self, filename, dir=None):
+        for forbidden_char in self.ui.app.forbidden_filename_chars:
+            if forbidden_char in filename:
+                return
+        full_filename = self.get_dir() + '/' + filename
+        full_filename += '.' + self.get_file_extension()
+        return full_filename
+    
+    def is_filename_valid(self, field_number):
+        filename = self.field_texts[field_number].strip()
+        # filename can't be only whitespace
+        if not filename:
+            return False, self.invalid_filename_error
+        full_filename = self.get_full_filename(filename)
+        if not full_filename:
+            return False, self.invalid_filename_error
+        # if file exists, allow saving but show the warning
+        if os.path.exists(full_filename):
+            return True, self.filename_exists_error
+        return True, None
+
+class NewArtDialog(BaseFileDialog):
     
     title = 'New art'
     field0_label = 'Filename of new art:'
-    field1_label = 'Width:'
-    field2_label = 'Height:'
-    field0_width = UIDialog.default_field_width
+    field2_label = 'Width:'
+    field4_label = 'Height:'
+    field6_label = 'Save folder:'
+    field7_label = ' %s'
+    tile_width = 60
+    field0_width = 56
+    y_spacing = 0
     field1_width = field2_width = UIDialog.default_short_field_width
     fields = [
         Field(label=field0_label, type=str, width=field0_width, oneline=False),
-        Field(label=field1_label, type=int, width=field1_width, oneline=True),
-        Field(label=field2_label, type=int, width=field2_width, oneline=True)
+        Field(label='', type=None, width=0, oneline=True),
+        Field(label=field2_label, type=int, width=field1_width, oneline=True),
+        Field(label='', type=None, width=0, oneline=True),
+        Field(label=field4_label, type=int, width=field2_width, oneline=True),
+        Field(label='', type=None, width=0, oneline=True),
+        Field(label=field6_label, type=None, width=0, oneline=True),
+        Field(label=field7_label, type=None, width=0, oneline=True),
+        Field(label='', type=None, width=0, oneline=True)
     ]
     confirm_caption = 'Create'
-    file_exists_error = 'File by that name already exists.'
     invalid_width_error = 'Invalid width.'
     invalid_height_error = 'Invalid height.'
     
     def get_initial_field_text(self, field_number):
         if field_number == 0:
             return 'new%s' % len(self.ui.app.art_loaded_for_edit)
-        elif field_number == 1:
-            return str(DEFAULT_WIDTH)
         elif field_number == 2:
+            return str(DEFAULT_WIDTH)
+        elif field_number == 4:
             return str(DEFAULT_HEIGHT)
         return ''
     
+    def get_field_label(self, field_index):
+        label = self.fields[field_index].label
+        # show dir art will be saved into
+        if field_index == 7:
+            label %= self.get_dir()
+        return label
+    
+    def get_file_extension(self):
+        return ART_FILE_EXTENSION
+    
+    def get_dir(self):
+        return self.ui.app.documents_dir + ART_DIR
+    
     def is_input_valid(self):
-        "file can't already exist, dimensions must be >0 and <= max"
-        if os.path.exists('%s%s.%s' % (ART_DIR, self.field_texts[0], ART_FILE_EXTENSION)):
-            return False, self.file_exists_error
-        if not self.is_valid_dimension(self.field_texts[1], self.ui.app.max_art_width):
+        "warn if file already exists, dimensions must be >0 and <= max"
+        if not self.is_valid_dimension(self.field_texts[2], self.ui.app.max_art_width):
             return False, self.invalid_width_error
-        if not self.is_valid_dimension(self.field_texts[2], self.ui.app.max_art_height):
+        if not self.is_valid_dimension(self.field_texts[4], self.ui.app.max_art_height):
             return False, self.invalid_height_error
-        return True, None
+        return self.is_filename_valid(0)
     
     def is_valid_dimension(self, dimension, max_dimension):
         try: dimension = int(dimension)
@@ -54,13 +106,13 @@ class NewArtDialog(UIDialog):
         valid, reason = self.is_input_valid()
         if not valid: return
         name = self.field_texts[0]
-        w, h = int(self.field_texts[1]), int(self.field_texts[2])
+        w, h = int(self.field_texts[2]), int(self.field_texts[4])
         self.ui.app.new_art_for_edit(name, w, h)
         self.ui.app.log('Created %s.psci with size %s x %s' % (name, w, h))
         self.dismiss()
 
 
-class SaveAsDialog(UIDialog):
+class SaveAsDialog(BaseFileDialog):
     
     title = 'Save art'
     field0_label = 'New filename for art:'
@@ -77,8 +129,6 @@ class SaveAsDialog(UIDialog):
         Field(label='', type=None, width=0, oneline=True)
     ]
     confirm_caption = 'Save'
-    invalid_filename_error = 'Filename is not valid.'
-    filename_exists_error = 'File by that name already exists.'
     always_redraw_labels = True
     
     def get_initial_field_text(self, field_number):
@@ -101,29 +151,18 @@ class SaveAsDialog(UIDialog):
         """
         return ART_FILE_EXTENSION
     
+    def get_dir(self):
+        return os.path.dirname(self.ui.active_art.filename)
+    
     def get_field_label(self, field_index):
         label = self.fields[field_index].label
         # show dir art will be saved into
         if field_index == 3:
-            label %= os.path.dirname(self.ui.active_art.filename)
+            label %= self.get_dir()
         return label
     
     def is_input_valid(self):
-        # filename can't be only whitespace
-        filename = self.field_texts[0].strip()
-        if not filename:
-            return False, self.invalid_filename_error
-        for forbidden_char in self.ui.app.forbidden_filename_chars:
-            if forbidden_char in filename:
-                return False, self.invalid_filename_error
-        filepath = os.path.dirname(self.ui.active_art.filename)
-        full_filename = filepath
-        full_filename += '/' + filename
-        full_filename += '.' + self.get_file_extension()
-        # if file exists, allow saving but show the warning
-        if os.path.exists(full_filename):
-            return True, self.filename_exists_error
-        return True, None
+        return self.is_filename_valid(0)
     
     def confirm_pressed(self):
         valid, reason = self.is_input_valid()
