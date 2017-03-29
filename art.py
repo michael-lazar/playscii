@@ -105,6 +105,11 @@ class Art:
         self.width, self.height = width, height
         # camera position - updated in Art.update, saved in .psci
         self.update_saved_camera(self.app.camera)
+        # set True when camera "zoom extents" toggles on
+        self.camera_zoomed_extents = False
+        # cached camera position from before zoom extents
+        self.extents_camera_x = self.extents_camera_y = 0
+        self.extents_camera_z = self.app.camera.start_zoom
         # list of char/fg/bg arrays, one for each frame
         self.chars, self.fg_colors, self.bg_colors = [], [], []
         # char transforms: UV coords, plus map (unused by renderer) for fast access

@@ -443,6 +443,7 @@ class Application:
         renderable = TileRenderable(self, art)
         self.edit_renderables.insert(0, renderable)
         self.ui.set_active_art(art)
+        self.camera.toggle_zoom_extents()
         art.set_unsaved_changes(True)
     
     def load_art_for_edit(self, filename):
