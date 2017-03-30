@@ -394,7 +394,7 @@ class ConsoleUI(UIElement):
         log_index = -1
         for y in range(self.height - 3, -1, -1):
             try:
-                line = self.ui.app.log_lines[log_index]
+                line = self.ui.app.logger.lines[log_index]
             except IndexError:
                 break
             # trim line to width of console
@@ -411,9 +411,9 @@ class ConsoleUI(UIElement):
         # check for various early out scenarios, updating all chars every frame
         # gets expensive
         user_input_changed = self.last_user_line != self.current_line
-        log_changed = self.last_lines != self.ui.app.log_lines
+        log_changed = self.last_lines != self.ui.app.logger.lines
         # remember log & user lines, bail early next update if no change
-        self.last_lines = self.ui.app.log_lines[:]
+        self.last_lines = self.ui.app.logger.lines[:]
         self.last_user_line = self.current_line
         if not user_input_changed and not log_changed:
             return
