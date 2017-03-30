@@ -466,7 +466,7 @@ class UI:
     
     def reset_edit_renderables(self):
         # reposition all art renderables and change their opacity
-        x, y, margin = 0, 0, self.app.grid.art_margin
+        x, y = 0, 0
         for i,r in enumerate(self.app.edit_renderables):
             # always put active art at 0,0
             if r in self.active_art.renderables:
@@ -483,8 +483,8 @@ class UI:
                     r.snap_to(x, y, -i)
                 else:
                     r.move_to(x, y, -i, 0.2)
-            x += (r.art.width + margin) * r.art.quad_width
-            y -= (r.art.height + margin) * r.art.quad_height
+            x += r.art.width * r.art.quad_width
+            y -= r.art.height * r.art.quad_height
     
     def adjust_for_art_resize(self, art):
         if art is not self.active_art:

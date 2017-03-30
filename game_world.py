@@ -6,6 +6,7 @@ import sdl2
 import game_object, game_util_objects, game_hud, game_room
 import collision, vector
 from camera import Camera
+from grid import GameGrid
 from art import ART_DIR
 from charset import CHARSET_DIR
 from palette import PALETTE_DIR
@@ -104,6 +105,8 @@ class GameWorld:
         self.globals = None
         "Our WorldGlobalsObject - not required"
         self.camera = GameCamera(self.app)
+        self.grid = GameGrid(self.app)
+        self.grid.visible = False
         self.player = None
         self.paused = False
         self._pause_time = 0
@@ -776,6 +779,7 @@ class GameWorld:
                 draw_order.append(item)
         for item in draw_order:
             item.obj.render(item.layer)
+        self.grid.render()
         #
         # draw debug stuff: collision tiles, origins/boxes, debug lines
         #

@@ -18,7 +18,7 @@ class LineRenderable():
     use_art_offset = True
     visible = True
     
-    def __init__(self, app, quad_size_ref, game_object=None):
+    def __init__(self, app, quad_size_ref=None, game_object=None):
         self.app = app
         # we may be attached to a game object
         self.go = game_object
@@ -127,7 +127,10 @@ class LineRenderable():
         return 1, 1
     
     def get_quad_size(self):
-        return self.quad_size_ref.quad_width, self.quad_size_ref.quad_height
+        if self.quad_size_ref:
+            return self.quad_size_ref.quad_width, self.quad_size_ref.quad_height
+        else:
+            return 1, 1
     
     def get_color(self):
         return (1, 1, 1, 1)

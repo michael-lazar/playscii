@@ -270,6 +270,7 @@ class ViewToggleCRTItem(ArtModePulldownMenuItem):
 class ViewToggleGridItem(ArtModePulldownMenuItem):
     label = '  Grid'
     command = 'toggle_grid_visibility'
+    game_mode_allowed = True
     def should_mark(ui):
         return ui.app.grid.visible
 
