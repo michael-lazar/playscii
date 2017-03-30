@@ -130,7 +130,7 @@ class Application:
     # characters that can't appear in filenames (any OS; Windows is least permissive)
     forbidden_filename_chars = ['/', '\\', '*', ':']
     
-    def __init__(self, config_dir, documents_dir, cache_dir, log_lines,
+    def __init__(self, config_dir, documents_dir, cache_dir, logger,
                  art_filename, game_dir_to_load, state_to_load, autoplay_game):
         self.init_success = False
         self.config_dir = config_dir
@@ -144,11 +144,8 @@ class Application:
         self.last_import_dir = None
         # class to use for temp thumbnail renderable
         self.thumbnail_renderable_class = TileRenderable
-        # log fed in from __main__, might already have stuff in it
-        self.log_lines = log_lines
-        self.log_file = open(self.config_dir + LOG_FILENAME, 'w')
-        for line in self.log_lines:
-            self.log_file.write('%s\n' % line)
+        # logger fed in from __main__
+        self.logger = logger
         self.last_time = 0
         self.this_frame_start, self.last_frame_end = 0, 0
         # number of updates (world, etc) and rendered frames this session
@@ -189,18 +186,22 @@ class Application:
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
                                   video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
+        self.log('Detecting hardware...')
         # report OS, version, CPU
-        self.log('OS: %s' % platform.platform())
+        self.log('  OS: %s' % platform.platform())
         cpu = platform.processor()
-        self.log('CPU: %s' % (cpu if cpu != '' else "[couldn't detect CPU]"))
-        self.log('Python: %s' % ' '.join(sys.version.split('\n')))
-        self.log('Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
+        self.log('  CPU: %s' % (cpu if cpu != '' else "[couldn't detect CPU]"))
+        py_version = ' '.join(sys.version.split('\n'))
+        # report 32 vs 64 bit as it's not clear from sys.version or OS
+        bitness = platform.architecture()[0]
+        self.log('  Python: %s (%s)' % (py_version, bitness))
+        self.log('  Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
         try: gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
         except: gpu_vendor = "[couldn't detect vendor]"
         try: gpu_renderer = GL.glGetString(GL.GL_RENDERER).decode('utf-8')
         except: gpu_renderer = "[couldn't detect renderer]"
-        self.log('GPU: %s - %s' % (gpu_vendor, gpu_renderer))
+        self.log('  GPU: %s - %s' % (gpu_vendor, gpu_renderer))
         try:
             # try single-argument GL2.0 version first
             gl_ver = GL.glGetString(GL.GL_VERSION)
@@ -209,7 +210,7 @@ class Application:
             gl_ver = gl_ver.decode('utf-8')
         except:
             gl_ver = "[couldn't detect GL version]"
-        self.log('OpenGL detected: %s' % gl_ver)
+        self.log('  OpenGL detected: %s' % gl_ver)
         # GL 1.1 doesn't even habla shaders, quit if we fail GLSL version check
         try:
             glsl_ver = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
@@ -220,14 +221,14 @@ class Application:
             self.should_quit = True
             return
         glsl_ver = glsl_ver.decode('utf-8')
-        self.log('GLSL detected: %s' % glsl_ver)
+        self.log('  GLSL detected: %s' % glsl_ver)
         # verify that we got at least a 2.1 context
         majorv, minorv = ctypes.c_int(0), ctypes.c_int(0)
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, majorv)
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, minorv)
         context_version = majorv.value + (minorv.value * 0.1)
         vao_support = bool(GL.glGenVertexArrays)
-        self.log('Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
+        self.log('  Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
         # enforce VAO / GL version requirement
         if not vao_support or context_version < 2.1 or gl_ver.startswith('2.0'):
             self.log("Couldn't create a compatible OpenGL context, " + self.compat_fail_message)
@@ -371,11 +372,9 @@ class Application:
     
     def log(self, new_line, error=False):
         "write to log file, stdout, and in-app console log"
-        self.log_file.write('%s\n' % new_line)
-        self.log_lines.append(new_line)
-        print(new_line)
+        self.logger.log(new_line)
         if self.ui:
-            self.ui.message_line.post_line(new_line, None, error)
+            self.ui.message_line.post_line(new_line, hold_time=None, error=error)
     
     def dev_log(self, new_line):
         if self.show_dev_log:
@@ -879,7 +878,6 @@ class Application:
         if self.init_success:
             self.save_persistent_config()
             self.save_session()
-            self.log('Thank you for using Playscii!  <3')
             for r in self.edit_renderables:
                 r.destroy()
             self.gw.destroy()
@@ -899,7 +897,7 @@ class Application:
         cfg_file = open(self.config_dir + CONFIG_FILENAME, 'w')
         cfg_file.writelines(self.config_lines)
         cfg_file.close()
-        self.log_file.close()
+        self.log('Thank you for using Playscii!  <3')
     
     def open_local_url(self, url):
         "opens given local (this file system) URL in a cross-platform way"
@@ -982,35 +980,74 @@ def get_paths():
 def get_version():
     return open(VERSION_FILENAME).readlines()[0].strip()
 
+
+class Logger:
+    """
+    Minimal object for logging, starts very early so we can write to it even
+    before Application has initialized.
+    """
+    def __init__(self, config_dir):
+        self.lines = []
+        config_dir, docs_dir, cache_dir = get_paths()
+        self.log_file = open(config_dir + LOG_FILENAME, 'w')
+    
+    def log(self, new_line):
+        self.log_file.write('%s\n' % new_line)
+        self.lines.append(new_line)
+        print(new_line)
+    
+    def close(self):
+        self.log_file.close()
+
+
 if __name__ == "__main__":
-    # start log even before Application has initialized so we can write to it
+    # get paths for config file, later to be passed into Application
+    config_dir, documents_dir, cache_dir = get_paths()
+    # start logger even before Application has initialized so we can write to it
     # startup message: application and version #
-    line = '%s v%s' % (APP_NAME, get_version())
-    log_lines = [line]
-    print(line)
+    logger = Logger(config_dir)
+    logger.log('%s v%s' % (APP_NAME, get_version()))
     # see if "autoplay this game" file exists and has anything in it
     autoplay_game = None
     if os.path.exists(AUTOPLAY_GAME_FILENAME):
         autoplay_game = open(AUTOPLAY_GAME_FILENAME).readlines()[0].strip()
-    # get paths for config file, later to be passed into Application
-    config_dir, documents_dir, cache_dir = get_paths()
     # load in config - may change above values and submodule class defaults
-    if os.path.exists(config_dir + CONFIG_FILENAME):
-        exec(open(config_dir + CONFIG_FILENAME).read())
-        line = 'Loaded config from %s' % config_dir + CONFIG_FILENAME
-        log_lines.append(line)
-        print(line)
+    cfg_filename = config_dir + CONFIG_FILENAME
+    if os.path.exists(cfg_filename):
+        logger.log('Loading config from %s...' % cfg_filename)
+        # execute cfg line by line so we can continue past lines with errors.
+        # this does mean that commenting out blocks with triple-quotes fails,
+        # but that's not a good practice anyway.
+        cfg_lines = open(cfg_filename).readlines()
+        # compile a new cfg with any error lines stripped out
+        new_cfg_lines = []
+        for i,cfg_line in enumerate(cfg_lines):
+            cfg_line = cfg_line.strip()
+            try:
+                exec(cfg_line)
+                new_cfg_lines.append(cfg_line + '\n')
+            except:
+                # find line with "Error", ie the exception name, log that
+                error_lines = traceback.format_exc().split('\n')
+                error = '[an unknown error]'
+                for el in error_lines:
+                    if 'Error' in el:
+                        error = el
+                        break
+                logger.log('  Removing line %s with %s' % (i, error))
+        new_cfg = open(cfg_filename, 'w')
+        new_cfg.writelines(new_cfg_lines)
+        new_cfg.close()
+        logger.log('Config loaded.')
     # if cfg file doesn't exist, copy a new one from playscii.cfg.default
     else:
         # snip first "this is a template" line
         default_data = open(CONFIG_TEMPLATE_FILENAME).readlines()[1:]
-        new_cfg = open(config_dir + CONFIG_FILENAME, 'w')
+        new_cfg = open(cfg_filename, 'w')
         new_cfg.writelines(default_data)
         new_cfg.close()
         exec(''.join(default_data))
-        line = 'Created new config file %s' % config_dir + CONFIG_FILENAME
-        log_lines.append(line)
-        print(line)
+        logger.log('Created new config file %s' % cfg_filename)
     file_to_load, game_dir_to_load, state_to_load = None, None, None
     # usage:
     # playscii.py [artfile] | [-game gamedir [-state statefile | artfile]]
@@ -1026,9 +1063,10 @@ if __name__ == "__main__":
         else:
             # else assume first arg is an art file to load in art mode
             file_to_load = sys.argv[1]
-    app = Application(config_dir, documents_dir, cache_dir, log_lines,
+    app = Application(config_dir, documents_dir, cache_dir, logger,
                       file_to_load or DEFAULT_ART_FILENAME, game_dir_to_load,
                       state_to_load, autoplay_game)
     error = app.main_loop()
     app.quit()
+    logger.close()
     sys.exit(error)
