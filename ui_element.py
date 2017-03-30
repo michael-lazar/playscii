@@ -18,6 +18,10 @@ class UIElement:
     # location in screen (GL) coords
     x, y = 0, 0
     visible = True
+    # UI calls our update() even when we're invisible
+    update_when_invisible = False
+    # cheapo drop shadow effect, draws renderable dark at a small offset
+    drop_shadow = False
     renderables = None
     can_hover = True
     # always return True for clicked/unclicked, "consuming" the input
@@ -232,7 +236,15 @@ class UIElement:
         self.art.update()
     
     def render(self):
-        # "is visible" check happens in UI.render, calls our is_visible
+        # ("is visible" check happens in UI.render, calls our is_visible)
+        # render drop shadow first
+        if self.drop_shadow:
+            # offset in X and Y, render then restore position
+            orig_x, orig_y = self.renderable.x, self.renderable.y
+            self.renderable.x += UIArt.quad_width / 10
+            self.renderable.y -= UIArt.quad_height / 10
+            self.renderable.render(brightness=0.1)
+            self.renderable.x, self.renderable.y = orig_x, orig_y
         self.renderable.render()
     
     def destroy(self):
@@ -273,9 +285,9 @@ class FPSCounterUI(UIElement):
         color = self.ui.colors.white
         # yellow or red if framerate dips
         if self.ui.app.fps < 30:
-            color = 8
+            color = self.ui.colors.yellow
         if self.ui.app.fps < 10:
-            color = 3
+            color = self.ui.colors.red
         text = '%.1f fps' % self.ui.app.fps
         x = self.tile_width - 1
         self.art.write_string(0, 0, x, 0, text, color, None, True)
@@ -381,16 +393,34 @@ class DebugTextUI(UIElement):
             #self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
 
 
-class Thingy(UIElement):
-    tile_width, tile_height = 30, 1
+class GameSelectionLabel(UIElement):
+    tile_width, tile_height = 50, 1
     game_mode_visible = True
-    visible = False # TODO: turn this into a proper game mode UI concept
+    update_when_invisible = True
+    drop_shadow = True
+    multi_select_label = '[%s selected]'
     
     def update(self):
         if len(self.ui.app.gw.selected_objects) == 0:
+            self.visible = False
             return
-        obj = self.ui.app.gw.selected_objects[0]
-        self.art.clear_line(0, 0, 0, 2, -1)
-        self.art.write_string(0, 0, 0, 0, obj.name[:self.tile_width-1])
-        self.x, self.y = vector.world_to_screen_normalized(self.ui.app, obj.x, obj.y, obj.z)
+        self.visible = True
+        if len(self.ui.app.gw.selected_objects) == 1:
+            obj = self.ui.app.gw.selected_objects[0]
+            text = obj.name[:self.tile_width-1]
+            x, y, z = obj.x, obj.y, obj.z
+        else:
+            # draw "[N selected]" at avg of selected object locations
+            text = self.multi_select_label % len(self.ui.app.gw.selected_objects)
+            x, y, z = 0, 0, 0
+            for obj in self.ui.app.gw.selected_objects:
+                x += obj.x
+                y += obj.y
+                z += obj.z
+            x /= len(self.ui.app.gw.selected_objects)
+            y /= len(self.ui.app.gw.selected_objects)
+            z /= len(self.ui.app.gw.selected_objects)
+        self.art.clear_line(0, 0, 0, self.ui.colors.white, -1)
+        self.art.write_string(0, 0, 0, 0, text)
+        self.x, self.y = vector.world_to_screen_normalized(self.ui.app, x, y, z)
         self.reset_loc()

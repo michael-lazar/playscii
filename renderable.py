@@ -83,6 +83,7 @@ class TileRenderable:
         self.palette_width_uniform = self.shader.get_uniform_location('palTextureWidth')
         self.grain_strength_uniform = self.shader.get_uniform_location('grainStrength')
         self.alpha_uniform = self.shader.get_uniform_location('alpha')
+        self.brightness_uniform = self.shader.get_uniform_location('brightness')
         self.bg_alpha_uniform = self.shader.get_uniform_location('bgColorAlpha')
         self.create_buffers()
         # finish
@@ -337,7 +338,7 @@ class TileRenderable:
         self.render()
         self.exporting = False
     
-    def render(self, layers=None, z_override=None):
+    def render(self, layers=None, z_override=None, brightness=1.0):
         """
         Render given list of layers at given Z depth.
         If layers is None, render all layers.
@@ -375,6 +376,7 @@ class TileRenderable:
         # ie you could set those then render all VAOs changing only the below
         # uniforms
         GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
+        GL.glUniform1f(self.brightness_uniform, brightness)
         GL.glUniform3f(self.scale_uniform, *self.get_scale())
         GL.glBindVertexArray(self.vao)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)

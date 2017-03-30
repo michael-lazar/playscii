@@ -8,6 +8,7 @@ uniform float palTextureWidth;
 uniform float grainStrength;
 uniform float bgColorAlpha;
 uniform float alpha;
+uniform float brightness;
 
 in vec2 texCoords;
 in float theFgColorIndex;
@@ -42,6 +43,7 @@ void main()
         // any totally transparent pixels in source get the BG color
         outColor = mix(bgColor, outColor, outColor.a);
     }
+	outColor.rgb *= brightness;
     // apply "grain" for eg UI elements
     vec4 grainColor = texture(grain, gl_FragCoord.xy * grainSize);
     outColor.rgb += (0.5 - grainColor.rgb) * grainStrength;
