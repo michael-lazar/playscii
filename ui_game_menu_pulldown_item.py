@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem, ViewToggleCRTItem, ViewToggleCameraTiltItem, ViewSetZoomItem
+from ui_menu_pulldown_item import PulldownMenuItem, SeparatorItem, PulldownMenuData, FileQuitItem, ViewToggleCRTItem, ViewToggleCameraTiltItem, ViewSetZoomItem, ViewToggleGridItem
 
 class GameModePulldownMenuItem(PulldownMenuItem):
     # unless overridden, game mode items not allowed in art mode
@@ -276,8 +276,8 @@ class GameStateMenuData(PulldownMenuData):
     items = [ResetStateItem, LoadStateItem, SaveStateItem, SaveNewStateItem]
 
 class GameViewMenuData(PulldownMenuData):
-    items = [ViewToggleCRTItem, ViewSetZoomItem, ViewToggleCameraTiltItem,
-             SeparatorItem,
+    items = [ViewToggleCRTItem, ViewToggleGridItem, SeparatorItem,
+             ViewSetZoomItem, ViewToggleCameraTiltItem, SeparatorItem,
              ObjectsToCameraItem, CameraToObjectsItem, ToggleDebugObjectsItem,
              ToggleOriginVizItem, ToggleBoundsVizItem, ToggleCollisionVizItem]
     

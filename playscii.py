@@ -52,7 +52,7 @@ from framebuffer import Framebuffer
 from art import ART_DIR, ART_FILE_EXTENSION, ART_SCRIPT_DIR
 from ui import UI
 from cursor import Cursor
-from grid import Grid
+from grid import ArtGrid
 from input_handler import InputLord
 from ui_file_chooser_dialog import THUMBNAIL_CACHE_DIR
 # some classes are imported only so the cfg file can modify their defaults
@@ -125,7 +125,7 @@ class Application:
         'UI.popup_hold_to_show': ['ui', 'popup_hold_to_show'],
         'Framebuffer.start_crt_enabled': ['fb', 'crt'],
         'Application.show_bg_texture': ['', 'show_bg_texture'],
-        'Grid.visible': ['grid', 'visible']
+        'ArtGrid.visible': ['art_grid', 'visible']
     }
     # characters that can't appear in filenames (any OS; Windows is least permissive)
     forbidden_filename_chars = ['/', '\\', '*', ':']
@@ -249,8 +249,8 @@ class Application:
         # SHADERLORD rules shader init/destroy, hot reload
         self.sl = ShaderLord(self)
         # separate cameras for edit vs game mode
-        self.edit_camera = Camera(self)
-        self.camera = self.edit_camera
+        self.art_camera = Camera(self)
+        self.camera = self.art_camera
         self.art_loaded_for_edit, self.edit_renderables = [], []
         # raster images (debug)
         self.img_renderables = []
@@ -286,6 +286,8 @@ class Application:
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
         self.cursor, self.grid = None, None
+        # separate grids for art vs game mode
+        self.art_grid = None
         # forward-declare inputlord in case UI looks for it
         self.il = None
         # initialize UI with first art loaded active
@@ -303,7 +305,8 @@ class Application:
         self.camera.set_for_art(self.ui.active_art)
         self.update_window_title()
         self.cursor = Cursor(self)
-        self.grid = Grid(self, self.ui.active_art)
+        self.art_grid = ArtGrid(self, self.ui.active_art)
+        self.grid = self.art_grid
         self.ui.set_active_layer(self.ui.active_art.active_layer)
         # INPUTLORD rules input handling and keybinds
         self.il = InputLord(self)
@@ -672,6 +675,7 @@ class Application:
     def enter_game_mode(self):
         self.game_mode = True
         self.camera = self.gw.camera
+        self.grid = self.gw.grid
         # cursor might be hovering an object's art, undo preview viz
         self.cursor.undo_preview_edits()
         # display message on how to toggle game mode
@@ -685,7 +689,8 @@ class Application:
     
     def exit_game_mode(self):
         self.game_mode = False
-        self.camera = self.edit_camera
+        self.camera = self.art_camera
+        self.grid = self.art_grid
         if self.ui.active_art:
             self.camera.set_for_art(self.ui.active_art)
         self.ui.message_line.post_line('', 1)
@@ -811,7 +816,7 @@ class Application:
                         self.onion_renderables_next[i].render()
                     i += 1
             # draw selection grid, then selection, then cursor
-            if self.grid.visible and self.ui.active_art:
+            if self.ui.active_art:
                 self.grid.render()
             self.ui.select_tool.render_selections()
             if self.ui.active_art and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
