@@ -4,7 +4,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, Thingy
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, GameSelectionLabel
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -111,12 +111,12 @@ class UI:
         self.menu_bar = self.art_menu_bar
         self.edit_list_panel = EditListPanel(self)
         self.edit_object_panel = EditObjectPanel(self)
+        self.game_selection_label = GameSelectionLabel(self)
         self.elements += [self.fps_counter, self.status_bar, self.popup,
                           self.message_line, self.debug_text, self.pulldown,
                           self.art_menu_bar, self.game_menu_bar,
-                          self.edit_list_panel, self.edit_object_panel]
-        thingy = Thingy(self)
-        self.elements += [thingy]
+                          self.edit_list_panel, self.edit_object_panel,
+                          self.game_selection_label]
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
@@ -553,7 +553,7 @@ class UI:
         # update all elements, regardless of whether they're being hovered etc
         for e in self.elements:
             # don't update invisible items
-            if e.is_visible():
+            if e.is_visible() or e.update_when_invisible:
                 e.update()
                 # art update: tell renderables to refresh buffers
                 e.art.update()

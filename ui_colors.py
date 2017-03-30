@@ -6,3 +6,5 @@ class UIColors:
     medgrey = 13
     darkgrey = 12
     black = 1
+    yellow = 8
+    red = 3
