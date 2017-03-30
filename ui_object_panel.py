@@ -221,6 +221,7 @@ class EditObjectPanel(GamePanel):
             self.draw_titlebar()
             self.refresh_items()
             GamePanel.update(self)
+        self.renderable.alpha = 1 if self is self.ui.keyboard_focus_element else 0.5
     
     def is_visible(self):
         return GamePanel.is_visible(self) and len(self.world.selected_objects) > 0
