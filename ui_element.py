@@ -393,11 +393,15 @@ class DebugTextUI(UIElement):
             #self.art.clear_frame_layer(0, 0, 0, self.ui.colors.white)
 
 
-class GameSelectionLabel(UIElement):
+class GameLabel(UIElement):
     tile_width, tile_height = 50, 1
     game_mode_visible = True
-    update_when_invisible = True
     drop_shadow = True
+    update_when_invisible = True
+
+
+class GameSelectionLabel(GameLabel):
+    
     multi_select_label = '[%s selected]'
     
     def update(self):
@@ -424,3 +428,21 @@ class GameSelectionLabel(UIElement):
         self.art.write_string(0, 0, 0, 0, text)
         self.x, self.y = vector.world_to_screen_normalized(self.ui.app, x, y, z)
         self.reset_loc()
+
+class GameHoverLabel(GameLabel):
+    
+    alpha = 0.75
+    
+    def update(self):
+        if not self.ui.app.gw.hovered_focus_object:
+            self.visible = False
+            return
+        self.visible = True
+        obj = self.ui.app.gw.hovered_focus_object
+        text = obj.name[:self.tile_width-1]
+        x, y, z = obj.x, obj.y, obj.z
+        self.art.clear_line(0, 0, 0, self.ui.colors.white, -1)
+        self.art.write_string(0, 0, 0, 0, text)
+        self.x, self.y = vector.world_to_screen_normalized(self.ui.app, x, y, z)
+        self.reset_loc()
+        self.renderable.alpha = self.alpha

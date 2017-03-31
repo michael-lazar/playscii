@@ -99,6 +99,9 @@ class GameWorld:
         self.game_name = None
         "Game's internal name, based on its directory."
         self.selected_objects = []
+        self.hovered_objects = []
+        self.hovered_focus_object = None
+        "Set by check_hovers(), to the object that will be selected if edit mode user clicks"
         self.last_click_on_ui = False
         self.properties = None
         "Our WorldPropertiesObject"
@@ -151,17 +154,15 @@ class GameWorld:
         if len(objects) == 1 and objects[0].selectable and \
            not objects[0] in self.selected_objects:
                 return objects[0]
+        # sort objects in Z, highest first
+        objects.sort(key=lambda obj: obj.z, reverse=True)
         # cycle through objects at point til an unselected one is found
-        use_next = False
         for obj in objects:
             if not obj.selectable:
                 continue
-            if len(self.selected_objects) == 0:
-                return obj
-            elif use_next:
-                return obj
-            elif obj in self.selected_objects:
-                use_next = True
+            if obj in self.selected_objects:
+                continue
+            return obj
         return None
     
     def get_objects_at(self, x, y):
@@ -254,12 +255,36 @@ class GameWorld:
                 if obj.handle_mouse_events:
                     obj.unclicked(button, x, y)
     
+    def check_hovers(self):
+        "Update objects on their mouse hover status"
+        x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                         self.app.mouse_y)
+        new_hovers = self.get_objects_at(x, y)
+        # if this object will be selected on left click; draw bounds & label
+        if self.app.ui.is_game_edit_ui_visible():
+            next_obj = self.pick_next_object_at(x, y)
+            self.hovered_focus_object = next_obj
+        # if in play mode, notify objects who have begun to be hovered
+        else:
+            for obj in new_hovers:
+                if obj.handle_mouse_events and not obj in self.hovered_objects:
+                    obj.hovered(x, y)
+            # check for objects un-hovered by this move
+            for obj in self.hovered_objects:
+                if obj.handle_mouse_events and not obj in new_hovers:
+                    obj.unhovered(x, y)
+        self.hovered_objects = new_hovers
+    
     def mouse_moved(self, dx, dy):
         if self.app.ui.active_dialog:
+            return
+        # bail if mouse didn't move last input
+        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0:
             return
         # if last onclick was a UI element, don't drag
         if self.last_click_on_ui:
             return
+        self.check_hovers()
         # not dragging anything?
         if len(self.selected_objects) == 0:
             return
@@ -898,7 +923,7 @@ class GameWorld:
         self.objects.update(self.new_objects)
         for other_obj in self.objects.values():
             if not other_obj is self and other_obj.name == new_name:
-                print("Can't rename %s to %s, name already in use" % (obj.name, new_name))
+                self.app.ui.message_line.post_line("Can't rename %s to %s, name already in use" % (obj.name, new_name))
                 return
         self.objects.pop(obj.name)
         old_name = obj.name

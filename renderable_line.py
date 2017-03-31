@@ -135,6 +135,9 @@ class LineRenderable():
     def get_color(self):
         return (1, 1, 1, 1)
     
+    def get_line_width(self):
+        return self.line_width
+    
     def destroy(self):
         GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(3, [self.vert_buffer, self.elem_buffer, self.color_buffer])
@@ -157,7 +160,7 @@ class LineRenderable():
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         if platform.system() != 'Darwin':
-            GL.glLineWidth(self.line_width)
+            GL.glLineWidth(self.get_line_width())
         GL.glDrawElements(GL.GL_LINES, self.vert_count,
                           GL.GL_UNSIGNED_INT, None)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
@@ -335,6 +338,8 @@ class OriginIndicatorRenderable(WorldLineRenderable):
 
 class BoundsIndicatorRenderable(WorldLineRenderable):
     color = (1, 1, 1, 0.5)
+    line_width_active = 2
+    line_width_inactive = 1
     
     def __init__(self, app, game_object):
         self.art = game_object.renderable.art
@@ -357,6 +362,9 @@ class BoundsIndicatorRenderable(WorldLineRenderable):
             return (color, color, color, 1)
         else:
             return (1, 1, 1, 1)
+    
+    def get_line_width(self):
+        return self.line_width_active if self.go in self.app.gw.selected_objects else self.line_width_inactive
     
     def get_quad_size(self):
         if not self.go:

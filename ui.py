@@ -4,7 +4,7 @@ from PIL import Image
 from OpenGL import GL
 
 from texture import Texture
-from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, GameSelectionLabel
+from ui_element import UIArt, FPSCounterUI, MessageLineUI, DebugTextUI, GameSelectionLabel, GameHoverLabel
 from ui_console import ConsoleUI
 from ui_status_bar import StatusBarUI
 from ui_popup import ToolPopup
@@ -112,11 +112,12 @@ class UI:
         self.edit_list_panel = EditListPanel(self)
         self.edit_object_panel = EditObjectPanel(self)
         self.game_selection_label = GameSelectionLabel(self)
+        self.game_hover_label = GameHoverLabel(self)
         self.elements += [self.fps_counter, self.status_bar, self.popup,
                           self.message_line, self.debug_text, self.pulldown,
                           self.art_menu_bar, self.game_menu_bar,
                           self.edit_list_panel, self.edit_object_panel,
-                          self.game_selection_label]
+                          self.game_hover_label, self.game_selection_label]
         # add console last so it draws last
         self.elements.append(self.console)
         # grain texture
