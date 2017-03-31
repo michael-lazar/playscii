@@ -283,6 +283,7 @@ class Application:
         self.charsets, self.palettes = [], []
         self.csl = CharacterSetLord(self)
         self.pl = PaletteLord(self)
+        # set/create an active art
         self.load_art_for_edit(art_filename)
         self.fb = Framebuffer(self)
         # setting cursor None now makes for easier check in status bar drawing
@@ -315,6 +316,9 @@ class Application:
         self.log('init done.')
         if self.can_edit:
             self.restore_session()
+        # if art file was given in arguments, set it active
+        if art_filename:
+            self.ui.set_active_art_by_filename(art_filename)
         if (game_dir_to_load or autoplay_game) and self.gw.game_dir:
             # set initial game state
             if state_to_load:
@@ -1048,7 +1052,7 @@ if __name__ == "__main__":
         new_cfg.close()
         exec(''.join(default_data))
         logger.log('Created new config file %s' % cfg_filename)
-    file_to_load, game_dir_to_load, state_to_load = None, None, None
+    art_to_load, game_dir_to_load, state_to_load = None, None, None
     # usage:
     # playscii.py [artfile] | [-game gamedir [-state statefile | artfile]]
     if len(sys.argv) > 1:
@@ -1059,12 +1063,12 @@ if __name__ == "__main__":
             if len(sys.argv) > 4 and sys.argv[3] == '-state':
                 state_to_load = sys.argv[4]
             elif len(sys.argv) > 3:
-                file_to_load = sys.argv[3]
+                art_to_load = sys.argv[3]
         else:
             # else assume first arg is an art file to load in art mode
-            file_to_load = sys.argv[1]
+            art_to_load = sys.argv[1]
     app = Application(config_dir, documents_dir, cache_dir, logger,
-                      file_to_load or DEFAULT_ART_FILENAME, game_dir_to_load,
+                      art_to_load or DEFAULT_ART_FILENAME, game_dir_to_load,
                       state_to_load, autoplay_game)
     error = app.main_loop()
     app.quit()
