@@ -690,10 +690,10 @@ class Art:
              'active_frame': self.active_frame,
              'active_layer': self.active_layer,
              'camera': (self.camera_x, self.camera_y, self.camera_z),
-             'selected_char': self.app.ui.selected_char,
-             'selected_fg_color': self.app.ui.selected_fg_color,
-             'selected_bg_color': self.app.ui.selected_bg_color,
-             'selected_xform': self.app.ui.selected_xform
+             'selected_char': int(self.selected_char),
+             'selected_fg_color': int(self.selected_fg_color),
+             'selected_bg_color': int(self.selected_bg_color),
+             'selected_xform': int(self.selected_xform)
         }
         # preferred character set and palette, default used if not found
         # remember camera location
