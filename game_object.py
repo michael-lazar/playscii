@@ -879,6 +879,20 @@ class GameObject:
         """
         pass
     
+    def hovered(self, mouse_x, mouse_y):
+        """
+        Handle mouse hover (fires when object -starts- being hovered).
+        GO subclasses can do stuff here if their handle_mouse_events=True
+        """
+        pass
+    
+    def unhovered(self, mouse_x, mouse_y):
+        """
+        Handle mouse unhover.
+        GO subclasses can do stuff here if their handle_mouse_events=True
+        """
+        pass
+    
     def set_timer_function(self, timer_name, timer_function, delay_min,
                            delay_max=0, repeats=-1, slot=TIMER_PRE_UPDATE):
         """
@@ -1031,7 +1045,8 @@ class GameObject:
         # even if debug viz are off, update once on init to set correct state
         if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.update()
-        if self.show_bounds or self in self.world.selected_objects:
+        if self.show_bounds or self in self.world.selected_objects or \
+           (self is self.world.hovered_focus_object and self.selectable):
             self.bounds_renderable.update()
         if self.show_collision and self.is_dynamic():
             self.collision.update_renderables()
@@ -1073,7 +1088,8 @@ class GameObject:
         "Render debug lines, eg origin/bounds/collision."
         if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.render()
-        if self.show_bounds or self in self.world.selected_objects:
+        if self.show_bounds or self in self.world.selected_objects or \
+           (self.selectable and self is self.world.hovered_focus_object):
             self.bounds_renderable.render()
         if self.show_collision and self.collision_type != CT_NONE:
             self.collision.render()
