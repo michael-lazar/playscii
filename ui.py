@@ -29,7 +29,7 @@ class UI:
     charset_name = 'ui'
     palette_name = 'c64_original'
     # red color for warnings
-    error_color_index = 3
+    error_color_index = UIColors.brightred
     # low-contrast background texture that distinguishes UI from flat color
     grain_texture_path = UI_ASSET_DIR + 'bgnoise_alpha.png'
     # expose to classes that don't want to import this module

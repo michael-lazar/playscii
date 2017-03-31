@@ -173,6 +173,15 @@ class ChooserDialog(UIDialog):
         self.current_dir = '.'
     
     def change_current_dir(self, new_dir):
+        # check permissions:
+        # os.access(new_dir, os.R_OK) seems to always return True,
+        # so try/catch listdir instead
+        try:
+            l = os.listdir(new_dir)
+        except PermissionError as e:
+            line = 'No permission to access %s!' % os.path.abspath(new_dir)
+            self.ui.message_line.post_line(line, error=True)
+            return False
         self.current_dir = new_dir
         if not self.current_dir.endswith('/'):
             self.current_dir += '/'
@@ -182,6 +191,7 @@ class ChooserDialog(UIDialog):
         self.field_texts[self.active_field] = self.current_dir
         self.items = self.get_items()
         self.reset_art(False)
+        return True
     
     def set_selected_item_index(self, new_index, set_field_text=True,
                                 update_view=True):
@@ -451,21 +461,19 @@ class ChooserDialog(UIDialog):
         # special case for parent dir ..
         if self.directory_aware and field_text == self.current_dir and selected_item.name == '..':
             self.first_selection_made = True
-            self.change_current_dir('..')
-            return True
+            return self.change_current_dir('..')
         if self.directory_aware and os.path.isdir(field_text):
             self.first_selection_made = True
-            self.change_current_dir(field_text)
-            return True
+            return self.change_current_dir(field_text)
         if os.path.isfile(field_text):
             file_dir_name = os.path.dirname(field_text)
             # if a file, change to its dir and select it
             if self.directory_aware and file_dir_name != self.current_dir:
-                self.change_current_dir(file_dir_name)
-            for i,item in enumerate(self.items):
-                if item.name == field_text:
-                    self.set_selected_item_index(i)
-                    item.picked(self)
+                if self.change_current_dir(file_dir_name):
+                    for i,item in enumerate(self.items):
+                        if item.name == field_text:
+                            self.set_selected_item_index(i)
+                            item.picked(self)
                     return True
         return False
     

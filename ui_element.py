@@ -313,6 +313,7 @@ class MessageLineUI(UIElement):
     fade_rate = 0.025
     game_mode_visible = True
     all_modes_visible = True
+    drop_shadow = True
     
     def __init__(self, ui):
         UIElement.__init__(self, ui)

@@ -8,3 +8,4 @@ class UIColors:
     black = 1
     yellow = 8
     red = 3
+    brightred = 11
