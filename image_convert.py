@@ -32,16 +32,21 @@ class ImageConverter:
     start_delay = 1.0
     
     def __init__(self, app, image_filename, art, bicubic_scale=False):
+        self.init_success = False
         image_filename = app.find_filename_path(image_filename)
         if not image_filename or not os.path.exists(image_filename):
             app.log("ImageConverter: Couldn't find image %s" % image_filename)
+            app.converter = None
             return
         self.app = app
-        self.app.converter = self
+        self.start_time = time.time()
         self.image_filename = image_filename
         self.art = art
-        self.src_img = Image.open(self.image_filename).convert('RGB')
-        self.start_time = time.time()
+        try:
+            self.src_img = Image.open(self.image_filename).convert('RGB')
+        except:
+            return
+        self.app.converter = self
         # preserve aspect
         self.char_w, self.char_h = art.charset.char_width, art.charset.char_height
         art_pixel_w, art_pixel_h = self.char_w * art.width, self.char_h * art.height
@@ -105,6 +110,7 @@ class ImageConverter:
                 # characters might end mid-row, bail if so
                 if len(self.char_blocks) > self.art.charset.last_index:
                     break
+        self.init_success = True
     
     def get_rgb_color_diff(self, color1, color2):
         r = abs(color1[0] - color2[0])

@@ -251,7 +251,11 @@ class ImageChooserItem(BaseFileChooserItem):
         if os.path.isdir(self.name):
             return
         img = Image.open(self.name)
-        img = img.convert('RGBA')
+        try:
+            img = img.convert('RGBA')
+        except:
+            # (probably) PIL bug: some images just crash! return None
+            return
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         return Texture(img.tobytes(), *img.size)
 

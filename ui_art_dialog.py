@@ -260,7 +260,7 @@ class ExportOptionsDialog(UIDialog):
         # if importer needs no options, run it
         exporter = app.exporter(app, filename, options)
         if exporter.success:
-            app.log('Exported %s successfully.' % filename)
+            app.log('Exported %s successfully.' % exporter.out_filename)
 
 class ExportFileDialog(ConvertFileDialog):
     title = 'Choose an exporter'

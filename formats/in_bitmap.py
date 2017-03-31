@@ -186,6 +186,9 @@ Bitmap image in PNG, JPEG, or BMP format.
         self.art.resize(width, height) # Importer.init will adjust UI
         bicubic_scale = options['bicubic_scale']
         # let ImageConverter do the actual heavy lifting
-        ImageConverter(self.app, in_filename, self.art, bicubic_scale)
+        ic = ImageConverter(self.app, in_filename, self.art, bicubic_scale)
+        # early failures: file no longer exists, PIL fails to load and convert image
+        if not ic.init_success:
+            return False
         self.app.update_window_title()
         return True

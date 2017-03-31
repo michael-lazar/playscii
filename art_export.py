@@ -31,6 +31,8 @@ class ArtExporter:
             out_filename = self.app.documents_dir + ART_DIR + out_filename
         self.success = False
         "Set True on successful export."
+        # store final filename for log messages
+        self.out_filename = out_filename
         # remove any cursor-hover changes to art in memory
         for edit in self.app.cursor.preview_edits:
             edit.undo()
@@ -38,8 +40,9 @@ class ArtExporter:
             if self.run_export(out_filename, options):
                 self.success = True
             else:
-                classname = self.__class__.__name__
-                self.app.log('%s failed to export %s' % (classname, out_filename))
+                line = '%s failed to export %s' % (self.__class__.__name__, out_filename)
+                self.app.log(line)
+                self.app.ui.message_line.post_line(line, error=True)
         except:
             for line in traceback.format_exc().split('\n'):
                 self.app.log(line)

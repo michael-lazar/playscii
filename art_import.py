@@ -47,8 +47,12 @@ class ArtImporter:
             for line in traceback.format_exc().split('\n'):
                 self.app.log(line)
         if not self.success:
-            classname = self.__class__.__name__
-            self.app.log(self.generic_error % (classname, in_filename))
+            line = self.generic_error % (self.__class__.__name__, in_filename)
+            self.app.log(line)
+            self.app.close_art(self.art)
+            # post message now after close_art sets active art back
+            self.app.ui.message_line.post_line(line, error=True)
+            return
         # tidy final result, whether or not it was successful
         # TODO: GROSS! figure out why this works but
         # art.geo_changed=True and art.mark_all_frames_changed() don't!
