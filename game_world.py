@@ -1,4 +1,4 @@
-import os, sys, time, importlib, json
+import os, sys, math, time, importlib, json
 from collections import namedtuple
 
 import sdl2
@@ -103,6 +103,7 @@ class GameWorld:
         self.hovered_focus_object = None
         "Set by check_hovers(), to the object that will be selected if edit mode user clicks"
         self.last_click_on_ui = False
+        self.last_mouse_click_x, self.last_mouse_click_y = 0, 0
         self.properties = None
         "Our WorldPropertiesObject"
         self.globals = None
@@ -150,6 +151,9 @@ class GameWorld:
     def pick_next_object_at(self, x, y):
         "Return next unselected object at given point."
         objects = self.get_objects_at(x, y)
+        # early out
+        if len(objects) == 0:
+            return None
         # don't bother cycling if only one object found
         if len(objects) == 1 and objects[0].selectable and \
            not objects[0] in self.selected_objects:
@@ -178,12 +182,32 @@ class GameWorld:
     def select_click(self):
         x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
                                          self.app.mouse_y)
+        # remember last place we clicked
+        self.last_mouse_click_x, self.last_mouse_click_y = x, y
         if self.classname_to_spawn:
             new_obj = self.spawn_object_of_class(self.classname_to_spawn, x, y)
             if self.current_room:
                 self.current_room.add_object(new_obj)
             self.app.ui.message_line.post_line('Spawned %s' % new_obj.name)
             return
+        objects = self.get_objects_at(x, y)
+        next_obj = self.pick_next_object_at(x, y)
+        if len(objects) == 0:
+            self.deselect_all()
+        # ctrl: unselect first selected object found under mouse
+        elif self.app.il.ctrl_pressed:
+            for obj in self.selected_objects:
+                if obj in objects:
+                    self.deselect_object(obj)
+                    break
+        # shift: add to current selection
+        elif self.app.il.shift_pressed:
+            self.select_object(next_obj)
+        # no mod keys: select only object under cursor, deselect all if none
+        elif not next_obj and len(objects) == 0:
+            self.deselect_all()
+        else:
+            self.select_object(next_obj)
         # remember object offsets from cursor for dragging
         for obj in self.selected_objects:
             self.drag_objects[obj.name] = (obj.x - x, obj.y - y, obj.z - z)
@@ -213,35 +237,27 @@ class GameWorld:
             return
         x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
                                          self.app.mouse_y)
-        # forget drag object offsets
+        # remember selected objects now, they might be deselected but still
+        # need to have their collision turned back on.
+        selected_objects = self.selected_objects[:]
+        if len(self.selected_objects) > 0 and not self.app.il.shift_pressed:
+            # if mouse has traveled much since click, deselect all objects
+            # except one mouse is over.
+            dx = self.last_mouse_click_x - x
+            dy = self.last_mouse_click_y - y
+            if math.sqrt(dx ** 2 + dy ** 2) < 1.5:
+                for obj in self.get_objects_at(x, y):
+                    if obj in self.selected_objects:
+                        self.deselect_all()
+                        self.select_object(obj)
+                        break
+        # end drag, forget drag object offsets
         self.drag_objects.clear()
-        for obj in self.selected_objects:
+        for obj in selected_objects:
             obj.enable_collision()
             if obj.collision_shape_type == collision.CST_TILE:
                 obj.collision.create_shapes()
             obj.collision.update()
-        # no mod keys: select only object under cursor, deselect all if none
-        if not self.app.il.ctrl_pressed and not self.app.il.shift_pressed:
-            objects = self.get_objects_at(x, y)
-            if len(objects) == 0:
-                self.deselect_all()
-                return
-        # ctrl: remove object under cursor from selection
-        if self.app.il.ctrl_pressed:
-            # unselect first selected object found under mouse
-            objects = self.get_objects_at(x, y)
-            if len(objects) > 0:
-                self.deselect_object(objects[0])
-            return
-        next_obj = self.pick_next_object_at(x, y)
-        # clicked on nothing?
-        if not next_obj:
-            self.deselect_all()
-            return
-        # shift: add to current selection
-        if not self.app.il.shift_pressed:
-            self.deselect_all()
-        self.select_object(next_obj)
     
     def unclicked(self, button):
         if self.app.ui.is_game_edit_ui_visible():
@@ -278,8 +294,9 @@ class GameWorld:
     def mouse_moved(self, dx, dy):
         if self.app.ui.active_dialog:
             return
-        # bail if mouse didn't move last input
-        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0:
+        # bail if mouse didn't move (in world space - include camera) last input
+        if self.app.mouse_dx == 0 and self.app.mouse_dy == 0 and \
+           not self.camera.moved_this_frame:
             return
         # if last onclick was a UI element, don't drag
         if self.last_click_on_ui:
