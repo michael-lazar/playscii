@@ -636,10 +636,13 @@ class UI:
         self.game_menu_bar.visible = visible
         self.edit_list_panel.visible = visible
         self.edit_object_panel.visible = visible
-        if not visible and show_message and self.app.il:
-            bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
-            bind = bind.title()
-            self.message_line.post_line(self.show_edit_ui_log % bind, 10)
+        if not visible:
+            # relinquish keyboard focus in play mode
+            self.keyboard_focus_element = None
+            if show_message and self.app.il:
+                bind = self.app.il.get_command_shortcut('toggle_game_edit_ui')
+                bind = bind.title()
+                self.message_line.post_line(self.show_edit_ui_log % bind, 10)
         else:
             self.message_line.post_line('')
         self.app.update_window_title()

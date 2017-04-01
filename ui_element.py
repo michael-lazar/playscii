@@ -407,7 +407,7 @@ class GameSelectionLabel(GameLabel):
     
     def update(self):
         self.visible = False
-        if self.ui.pulldown.visible:
+        if self.ui.pulldown.visible or not self.ui.is_game_edit_ui_visible():
             return
         if len(self.ui.app.gw.selected_objects) == 0:
             return
@@ -438,7 +438,7 @@ class GameHoverLabel(GameLabel):
     
     def update(self):
         self.visible = False
-        if self.ui.pulldown.visible:
+        if self.ui.pulldown.visible or not self.ui.is_game_edit_ui_visible():
             return
         if not self.ui.app.gw.hovered_focus_object:
             return

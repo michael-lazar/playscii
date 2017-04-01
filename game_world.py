@@ -158,8 +158,6 @@ class GameWorld:
         if len(objects) == 1 and objects[0].selectable and \
            not objects[0] in self.selected_objects:
                 return objects[0]
-        # sort objects in Z, highest first
-        objects.sort(key=lambda obj: obj.z, reverse=True)
         # cycle through objects at point til an unselected one is found
         for obj in objects:
             if not obj.selectable:
@@ -177,6 +175,8 @@ class GameWorld:
             # (can still be selected via list panel)
             if obj.visible and not obj.locked and obj.is_point_inside(x, y):
                 objects.append(obj)
+        # sort objects in Z, highest first
+        objects.sort(key=lambda obj: obj.z, reverse=True)
         return objects
     
     def select_click(self):
@@ -206,6 +206,10 @@ class GameWorld:
         # no mod keys: select only object under cursor, deselect all if none
         elif not next_obj and len(objects) == 0:
             self.deselect_all()
+        # special case: must use shift-click for objects
+        # beneath (lower Z) topmost
+        elif next_obj is not objects[0]:
+            pass
         else:
             self.select_object(next_obj)
         # remember object offsets from cursor for dragging

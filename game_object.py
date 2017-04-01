@@ -1086,6 +1086,9 @@ class GameObject:
     
     def render_debug(self):
         "Render debug lines, eg origin/bounds/collision."
+        # only show debug stuff if in edit mode
+        if not self.world.app.ui.is_game_edit_ui_visible():
+            return
         if self.show_origin or self in self.world.selected_objects:
             self.origin_renderable.render()
         if self.show_bounds or self in self.world.selected_objects or \
