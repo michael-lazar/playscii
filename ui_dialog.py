@@ -134,8 +134,14 @@ class UIDialog(UIElement):
         # draw window
         self.art.clear_frame_layer(0, 0, self.bg_color, self.fg_color)
         s = ' ' + self.title.ljust(self.tile_width - 1)
-        # invert titlebar
-        self.art.write_string(0, 0, 0, 0, s, self.titlebar_fg_color, self.titlebar_bg_color)
+        # invert titlebar (if kb focus)
+        fg = self.titlebar_fg_color
+        bg = self.titlebar_bg_color
+        if not self is self.ui.keyboard_focus_element and \
+           self is self.ui.active_dialog:
+            fg = self.fg_color
+            bg = self.bg_color
+        self.art.write_string(0, 0, 0, 0, s, fg, bg)
         # message
         if self.message:
             y = 2
@@ -176,6 +182,13 @@ class UIDialog(UIElement):
         self.x += (mouse_dx / win_w) * 2
         self.y -= (mouse_dy / win_h) * 2
         self.renderable.x, self.renderable.y = self.x, self.y
+    
+    def hovered(self):
+        # mouse hover on focus
+        if (self.ui.app.mouse_dx or self.ui.app.mouse_dy) and \
+           not self is self.ui.keyboard_focus_element:
+            self.ui.keyboard_focus_element = self
+        self.reset_art()
     
     def update(self):
         # redraw fields every update for cursor blink
@@ -257,8 +270,8 @@ class UIDialog(UIElement):
             if not field.type in [bool, None]:
                 fg, bg = self.get_field_colors(i)
                 text = self.field_texts[i]
-                # caret for active field
-                if i == self.active_field:
+                # caret for active field (if kb focus)
+                if i == self.active_field and self is self.ui.keyboard_focus_element:
                     blink_on = int(self.ui.app.get_elapsed_time() / 250) % 2
                     if blink_on:
                         text += '_'
@@ -317,7 +330,11 @@ class UIDialog(UIElement):
             self.ui.console.toggle()
             return
         # if list panel is up don't let user tab away
-        if keystr == 'Tab' and self.ui.edit_list_panel.is_visible():
+        lp = self.ui.edit_list_panel
+        # only allow tab to focus shift IF list panel accepts it
+        if keystr == 'Tab' and lp.is_visible() and \
+           lp.list_operation in lp.list_operations_allow_kb_focus:
+            self.ui.keyboard_focus_element = self.ui.edit_list_panel
             return
         elif keystr == 'Return':
             self.confirm_pressed()
