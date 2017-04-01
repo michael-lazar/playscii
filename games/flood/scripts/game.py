@@ -122,7 +122,8 @@ class TurnsBar(GameObject):
             new_text = 'won!!'
         elif self.board.game_state == GS_LOST:
             new_text = 'lost :('
-        self.art.write_string(0, 0, 0, 0, new_text, -1)
+        color = TILE_COLORS[self.board.turns % len(TILE_COLORS)]
+        self.art.write_string(0, 0, 0, 0, new_text, color, 0)
     
     def update(self):
         GameObject.update(self)
