@@ -76,11 +76,17 @@ class GamePanel(UIElement):
         UIElement.reset_art(self)
     
     def clicked(self, mouse_button):
-        if self.ui.active_dialog:
-            return False
         # always handle input, even if we didn't hit a button
         UIElement.clicked(self, mouse_button)
         return True
+    
+    def hovered(self):
+        # mouse hover on focus
+        if self.ui.app.mouse_dx or self.ui.app.mouse_dy and \
+           not self is self.ui.keyboard_focus_element:
+            self.ui.keyboard_focus_element = self
+            if self.ui.active_dialog:
+                self.ui.active_dialog.reset_art()
 
 
 class ListButton(UIButton):
@@ -123,6 +129,11 @@ class EditListPanel(GamePanel):
         LO_SET_ROOM_EDGE_OBJ: 'Set edge bounds object:',
         LO_SET_ROOM_CAMERA: 'Set room camera marker:'
     }
+    list_operations_allow_kb_focus = [
+        LO_SET_ROOM_EDGE_WARP,
+        LO_SET_ROOM_EDGE_OBJ,
+        LO_SET_ROOM_CAMERA
+    ]
     
     class ListItem:
         def __init__(self, name, obj): self.name, self.obj = name, obj
@@ -466,12 +477,15 @@ class EditListPanel(GamePanel):
     
     def set_room_edge_warp(self, item):
         dialog = self.ui.active_dialog
-        dialog.set_field_text(dialog.active_field, item.obj.name)
+        dialog.field_texts[dialog.active_field] = item.obj.name
+        self.ui.keyboard_focus_element = dialog
     
     def set_room_bounds_obj(self, item):
         dialog = self.ui.active_dialog
-        dialog.set_field_text(dialog.active_field, item.obj.name)
+        dialog.field_texts[dialog.active_field] = item.obj.name
+        self.ui.keyboard_focus_element = dialog
     
     def set_room_camera(self, item):
         dialog = self.ui.active_dialog
-        dialog.set_field_text(dialog.active_field, item.obj.name)
+        dialog.field_texts[dialog.active_field] = item.obj.name
+        self.ui.keyboard_focus_element = dialog

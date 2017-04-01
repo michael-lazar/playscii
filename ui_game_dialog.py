@@ -94,6 +94,7 @@ class AddRoomDialog(UIDialog):
 
 class SetRoomCamDialog(UIDialog):
     title = 'Set room camera marker'
+    tile_width = 48
     field0_label = 'Name of location marker object for this room:'
     field_width = UIDialog.default_field_width
     fields = [
@@ -101,6 +102,10 @@ class SetRoomCamDialog(UIDialog):
     ]
     confirm_caption = 'Set'
     game_mode_visible = True
+    
+    def dismiss(self):
+        self.ui.edit_list_panel.set_list_operation(LO_NONE)
+        UIDialog.dismiss(self)
     
     def confirm_pressed(self):
         self.ui.app.gw.current_room.set_camera_marker_name(self.field_texts[0])

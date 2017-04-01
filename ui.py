@@ -649,7 +649,13 @@ class UI:
         self.refocus_keyboard()
     
     def switch_edit_panel_focus(self, reverse=False):
-        # never allow tabbing away from active dialog, eg property input
+        # only allow tabbing away if list panel is in allowed mode
+        lp = self.edit_list_panel
+        if self.keyboard_focus_element is lp and \
+           lp.list_operation in lp.list_operations_allow_kb_focus and \
+           self.active_dialog:
+            self.keyboard_focus_element = self.active_dialog
+        # prevent any other tabbing away from active dialog
         if self.active_dialog:
             return
         # cycle keyboard focus between possible panels
@@ -674,6 +680,8 @@ class UI:
     
     def refocus_keyboard(self):
         "called when an element closes, sets new keyboard_focus_element"
+        if self.active_dialog:
+            self.keyboard_focus_element = self.active_dialog
         if self.keyboard_focus_element:
             return
         if self.popup.visible:

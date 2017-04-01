@@ -406,8 +406,10 @@ class GameSelectionLabel(GameLabel):
     multi_select_label = '[%s selected]'
     
     def update(self):
+        self.visible = False
+        if self.ui.pulldown.visible:
+            return
         if len(self.ui.app.gw.selected_objects) == 0:
-            self.visible = False
             return
         self.visible = True
         if len(self.ui.app.gw.selected_objects) == 1:
@@ -435,8 +437,10 @@ class GameHoverLabel(GameLabel):
     alpha = 0.75
     
     def update(self):
+        self.visible = False
+        if self.ui.pulldown.visible:
+            return
         if not self.ui.app.gw.hovered_focus_object:
-            self.visible = False
             return
         self.visible = True
         obj = self.ui.app.gw.hovered_focus_object
