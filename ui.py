@@ -275,6 +275,7 @@ class UI:
         self.message_line.post_line(line)
     
     def cycle_selected_xform(self, back=False):
+        if self.app.game_mode: return
         xform = self.selected_xform
         if back:
             xform -= 1
