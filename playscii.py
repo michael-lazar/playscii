@@ -25,7 +25,8 @@ import webbrowser
 import sdl2
 import sdl2.ext
 import appdirs
-from sdl2 import video
+import PIL, OpenGL, numpy # just for version checks
+from sdl2 import video, sdlmixer
 from OpenGL import GL
 from PIL import Image
 # import pdoc here so pyinstaller recognizes it's a dependency,
@@ -188,13 +189,27 @@ class Application:
         self.context = sdl2.SDL_GL_CreateContext(self.window)
         self.log('Detecting hardware...')
         # report OS, version, CPU
-        self.log('  OS: %s' % platform.platform())
         cpu = platform.processor()
         self.log('  CPU: %s' % (cpu if cpu != '' else "[couldn't detect CPU]"))
+        self.log('  OS: %s' % platform.platform())
         py_version = ' '.join(sys.version.split('\n'))
         # report 32 vs 64 bit as it's not clear from sys.version or OS
         bitness = platform.architecture()[0]
         self.log('  Python: %s (%s)' % (py_version, bitness))
+        module_versions = 'PySDL2: %s, ' % sdl2.__version__
+        module_versions += 'numpy: %s, ' % numpy.__version__
+        module_versions += 'PyOpenGL: %s, ' % OpenGL.__version__
+        module_versions += 'appdirs: %s, ' % appdirs.__version__
+        module_versions += 'PIL: %s' % PIL.__version__
+        self.log('  Modules: %s' % module_versions)
+        sdl_version = '%s.%s.%s ' % (sdl2.version.SDL_MAJOR_VERSION,
+                                     sdl2.version.SDL_MINOR_VERSION,
+                                     sdl2.version.SDL_PATCHLEVEL)
+        sdl_version += sdl2.version.SDL_GetRevision().decode('utf-8')
+        sdl_version += ', SDLmixer: %s.%s.%s' % (sdlmixer.SDL_MIXER_MAJOR_VERSION,
+                                                 sdlmixer.SDL_MIXER_MINOR_VERSION,
+                                                 sdlmixer.SDL_MIXER_PATCHLEVEL)
+        self.log('  SDL: %s' % sdl_version)
         self.log('  Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
         try: gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
