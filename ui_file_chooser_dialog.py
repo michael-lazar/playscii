@@ -94,7 +94,7 @@ class BaseFileChooserDialog(ChooserDialog):
                 if os.path.isdir(full_filename):
                     dirs += [full_filename + '/']
                     break
-                elif filename.endswith(ext):
+                elif filename.lower().endswith(ext.lower()):
                     files += [full_filename]
                     break
         dirs.sort()
@@ -327,7 +327,7 @@ class PaletteChooserDialog(BaseFileChooserDialog):
         for dirname in self.ui.app.get_dirnames(PALETTE_DIR, False):
             for filename in os.listdir(dirname):
                 for ext in PALETTE_EXTENSIONS:
-                    if filename.lower().endswith(ext):
+                    if filename.lower().endswith(ext.lower()):
                         filenames.append(filename)
         filenames.sort()
         return filenames
@@ -376,7 +376,7 @@ class CharSetChooserDialog(BaseFileChooserDialog):
         # search all files in dirs with appropriate extensions
         for dirname in self.ui.app.get_dirnames(CHARSET_DIR, False):
             for filename in os.listdir(dirname):
-                if filename.lower().endswith(CHARSET_FILE_EXTENSION):
+                if filename.lower().endswith(CHARSET_FILE_EXTENSION.lower()):
                     filenames.append(filename)
         filenames.sort()
         return filenames
@@ -424,7 +424,7 @@ class RunArtScriptDialog(BaseFileChooserDialog):
         # search all files in dirs with appropriate extensions
         for dirname in self.ui.app.get_dirnames(ART_SCRIPT_DIR, False):
             for filename in os.listdir(dirname):
-                if filename.lower().endswith(SCRIPT_FILE_EXTENSION):
+                if filename.lower().endswith(SCRIPT_FILE_EXTENSION.lower()):
                     filenames.append(dirname + filename)
         filenames.sort()
         return filenames
