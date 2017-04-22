@@ -443,8 +443,6 @@ class DialogFieldButton(UIButton):
         self.element.active_field = self.field_number
         # toggle if a bool field
         if self.element.fields[self.field_number].type is bool:
-            # FIXME: somehow this is getting called twice for checkboxes,
-            # giving appearance of doing nothing
             self.element.field_texts[self.field_number] = self.element.get_toggled_bool_field(self.field_number)
             # redraw fields & labels
             self.element.draw_fields(self.element.always_redraw_labels)
