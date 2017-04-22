@@ -121,7 +121,7 @@ class UIDialog(UIElement):
         h += self.extra_lines
         return h
     
-    def reset_art(self, resize=True):
+    def reset_art(self, resize=True, clear_buttons=True):
         # get_message splits into >1 line if too long
         msg_lines = self.get_message() if self.message else []
         if resize:
@@ -160,6 +160,8 @@ class UIDialog(UIElement):
         self.cancel_button.x = 2
         self.cancel_button.y = self.tile_height - 2
         # create field buttons so you can click em
+        if clear_buttons:
+            self.buttons = [self.confirm_button, self.other_button, self.cancel_button]
         for i,field in enumerate(self.fields):
             # None-type field = just a label
             if field.type is None:
@@ -172,7 +174,6 @@ class UIDialog(UIElement):
             field_button.y = self.get_field_y(i)
             if not field.oneline:
                 field_button.y += 1
-            field_button.never_draw = True
             self.buttons.append(field_button)
         # draw buttons
         UIElement.reset_art(self)
@@ -290,7 +291,7 @@ class UIDialog(UIElement):
             if self.fields[i].oneline or self.fields[i].type in [bool, None]:
                 y += self.y_spacing + 1
             else:
-                y += 3
+                y += self.y_spacing + 2
         return y
     
     def get_toggled_bool_field(self, field_index):
@@ -433,7 +434,7 @@ class DialogFieldButton(UIButton):
     "invisible button that provides clickability for input fields"
     
     caption = ''
-    # set by dialog constructor
+    # re-set by dialog constructor
     field_number = 0
     never_draw = True
     
@@ -442,6 +443,8 @@ class DialogFieldButton(UIButton):
         self.element.active_field = self.field_number
         # toggle if a bool field
         if self.element.fields[self.field_number].type is bool:
+            # FIXME: somehow this is getting called twice for checkboxes,
+            # giving appearance of doing nothing
             self.element.field_texts[self.field_number] = self.element.get_toggled_bool_field(self.field_number)
             # redraw fields & labels
             self.element.draw_fields(self.element.always_redraw_labels)

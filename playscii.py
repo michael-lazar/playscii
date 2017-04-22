@@ -1008,7 +1008,9 @@ class Logger:
     def __init__(self, config_dir):
         self.lines = []
         config_dir, docs_dir, cache_dir = get_paths()
-        self.log_file = open(config_dir + LOG_FILENAME, 'w')
+        # use line buffering (last lines should appear even in case of crash)
+        bufsize = 1
+        self.log_file = open(config_dir + LOG_FILENAME, 'w', bufsize)
     
     def log(self, new_line):
         self.log_file.write('%s\n' % new_line)
