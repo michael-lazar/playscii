@@ -200,7 +200,7 @@ class ConvertChooserItem(ChooserItem):
 
 class ConvertFileDialog(ChooserDialog):
     "Common functionality for importer and exporter selection dialogs"
-    tile_width, big_width = 70, 90
+    tile_width, big_width = 85, 90
     tile_height, big_height = 15, 25
     confirm_caption = 'Choose'
     show_preview_image = False
