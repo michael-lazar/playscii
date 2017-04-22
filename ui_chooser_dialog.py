@@ -352,7 +352,7 @@ class ChooserDialog(UIDialog):
         self.reset_buttons()
         # UIDialog does: clear window, draw titlebar and confirm/cancel buttons
         # doesn't: draw message or fields
-        UIDialog.reset_art(self, resize)
+        UIDialog.reset_art(self, resize, clear_buttons=False)
         # init_buttons hasn't run yet on first call to reset_art
         if not self.up_arrow_button:
             return
