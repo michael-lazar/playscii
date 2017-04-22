@@ -214,7 +214,7 @@ class ConvertFileDialog(ChooserDialog):
         items = []
         converters = self.get_converters()
         # sort alphabetically
-        converters.sort(key=lambda item: item.format_name)
+        converters.sort(key=lambda item: item.format_name.lower())
         i = 0
         for converter in converters:
             item = self.chooser_item_class(i, converter.__name__)

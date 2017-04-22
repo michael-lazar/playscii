@@ -97,8 +97,8 @@ class BaseFileChooserDialog(ChooserDialog):
                 elif filename.lower().endswith(ext.lower()):
                     files += [full_filename]
                     break
-        dirs.sort()
-        files.sort()
+        dirs.sort(key=lambda x: x.lower())
+        files.sort(key=lambda x: x.lower())
         return parent + dirs + files
     
     def get_items(self):
@@ -329,7 +329,7 @@ class PaletteChooserDialog(BaseFileChooserDialog):
                 for ext in PALETTE_EXTENSIONS:
                     if filename.lower().endswith(ext.lower()):
                         filenames.append(filename)
-        filenames.sort()
+        filenames.sort(key=lambda x: x.lower())
         return filenames
     
     def confirm_pressed(self):
@@ -378,7 +378,7 @@ class CharSetChooserDialog(BaseFileChooserDialog):
             for filename in os.listdir(dirname):
                 if filename.lower().endswith(CHARSET_FILE_EXTENSION.lower()):
                     filenames.append(filename)
-        filenames.sort()
+        filenames.sort(key=lambda x: x.lower())
         return filenames
     
     def confirm_pressed(self):
@@ -426,7 +426,7 @@ class RunArtScriptDialog(BaseFileChooserDialog):
             for filename in os.listdir(dirname):
                 if filename.lower().endswith(SCRIPT_FILE_EXTENSION.lower()):
                     filenames.append(dirname + filename)
-        filenames.sort()
+        filenames.sort(key=lambda x: x.lower())
         return filenames
     
     def confirm_pressed(self):
