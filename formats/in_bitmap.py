@@ -22,7 +22,7 @@ class ConvertImageChooserDialog(ImageFileChooserDialog):
     
     def confirm_pressed(self):
         filename = self.field_texts[0]
-        if not os.path.exists(filename):
+        if not os.path.exists(filename) or not os.path.isfile(filename):
             return
         self.ui.app.last_import_dir = self.current_dir
         self.dismiss()
