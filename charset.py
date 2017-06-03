@@ -84,14 +84,11 @@ class CharacterSet:
         # second line = character set dimensions
         second_line = char_data.pop(0).strip().split(',')
         self.map_width, self.map_height = int(second_line[0]), int(second_line[1])
-        # strip newlines from mapping
-        for row in range(self.map_height):
-            char_data[row] = char_data[row].strip('\r\n')
-        # char mapping: a dict
         self.char_mapping = {}
         index = 0
         for line in char_data:
-            for char in line:
+            # strip newlines from mapping
+            for char in line.strip('\r\n'):
                 if not char in self.char_mapping:
                     self.char_mapping[char] = index
                 index += 1
@@ -117,7 +114,7 @@ class CharacterSet:
                     continue
                 self.char_mapping[char] = self.char_mapping[char.lower()]
         # last valid index a character can be
-        self.last_index = index
+        self.last_index = self.map_width * self.map_height
         # load image
         self.load_image_data()
         self.set_char_dimensions()
