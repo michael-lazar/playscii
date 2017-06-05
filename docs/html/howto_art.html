@@ -354,15 +354,15 @@ You can also see a list of all open documents at the bottom of the Art menu.
   This image should contain every character you want in the set, arranged in a uniform grid - variable-width fonts are not supported. The topmost, leftmost character should always be blank - Playscii always assumes this <a href="#indices">index zero</a> is the blank character.
 </p>
 <p>
-  Any pixel in the source image that is pure black (RGB 0, 0, 0) will be considered transparent, ie a tile's background color will show through to this. Any pixel that isn't this color will be taken as part of the character and "tinted" by the foregorund color, with pure white showing the tile pixels exactly as they appear in the source image. As of Playscii 0.8.2, tiles can contain multiple colors, and the Ultima IV tile set is provided as an example of this.
+  Any pixel in the source image that is pure black (RGB 0, 0, 0) will be considered transparent, ie a tile's background color will show through to this. Any pixel that isn't this color will be taken as part of the character and "tinted" by the foregorund color, with pure white showing the tile pixels exactly as they appear in the source image. As of Playscii 0.8.2 tiles can contain multiple colors, and the Ultima IV tile set is provided as an example of this.
 </p>
 <p>
-  Technically the source image can be in any format Playscii supports (PNG, GIF, JPEG, BMP) but PNG is preferred - using a <a href="https://en.wikipedia.org/wiki/Lossy_compression">lossy file format</a> like JPEG will cause problems, because it produces unintended non-pure-black pixels. This can also result from using any form of smooth scaling in an image editing program - using "nearest neighbor" scaling in even multiples of the original pixel size if you don't want your characters to be distorted.
+  Technically the source image can be in any format Playscii supports (PNG, GIF, JPEG, BMP) but PNG is preferred - using a <a href="https://en.wikipedia.org/wiki/Lossy_compression">lossy file format</a> like JPEG will cause problems, because it produces unintended non-pure-black pixels. This can also result from using any form of smooth scaling in an image editing program - use "nearest neighbor" scaling in even multiples of the original pixel size if you don't want your characters to be distorted.
 </p>
 
   <h4>Character Set Data File</h4>
 <p>
-  This text-based file defines three things: the filename of the source image to use, the width and height <i>in tiles</i> of the source image, and the mapping of characters to blocks in the source image. In this file all lines that start with // (the double slash) are ignored so you can add comments as you like.
+  You can create or edit this file in any text editor. It defines three things: the filename of the source image to use, the width and height <i>in tiles</i> of the source image, and the mapping of characters to blocks in the source image. In this file all lines that start with // (the double slash) are ignored so you can add comments as you like.
 </p>
 <p>
   The first line of this file names the image file with the bitmap character data - if it's left blank, Playscii will look for the same filename but with a <tt>.png</tt> extension.
