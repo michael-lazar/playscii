@@ -346,7 +346,23 @@ You can also see a list of all open documents at the bottom of the Art menu.
   Playscii includes several classic character sets from old computer systems, which you can preview and select in the <a href="#charsets">Character Set Selector</a>. You can also define custom character sets.
 </p>
 <p>
-  Character set data for Playscii consists of two files, placed together in the <tt>charsets/</tt> subfolder in your Playscii documents folder: a PNG image file with the bitmap data of each character, and a text-based file with a <tt>.char</tt> extension that determines the mapping of characters to blocks in the image file. In this file, all lines that start with //, the double slash, are ignored so you can add comments as you like.
+  Character set data for Playscii consists of two files, placed together in the <tt>charsets/</tt> subfolder in your Playscii documents folder: an image file with the bitmap data of each character, and a text-based file with a <tt>.char</tt> extension:
+</p>
+<div class="block">
+  <h4>Character Set Source Image</h4>
+<p>
+  This image should contain every character you want in the set, arranged in a uniform grid - variable-width fonts are not supported. The topmost, leftmost character should always be blank - Playscii always assumes this <a href="#indices">index zero</a> is the blank character.
+</p>
+<p>
+  Any pixel in the source image that is pure black (RGB 0, 0, 0) will be considered transparent, ie a tile's background color will show through to this. Any pixel that isn't this color will be taken as part of the character and "tinted" by the foregorund color, with pure white showing the tile pixels exactly as they appear in the source image. As of Playscii 0.8.2, tiles can contain multiple colors, and the Ultima IV tile set is provided as an example of this.
+</p>
+<p>
+  Technically the source image can be in any format Playscii supports (PNG, GIF, JPEG, BMP) but PNG is preferred - using a <a href="https://en.wikipedia.org/wiki/Lossy_compression">lossy file format</a> like JPEG will cause problems, because it produces unintended non-pure-black pixels. This can also result from using any form of smooth scaling in an image editing program - using "nearest neighbor" scaling in even multiples of the original pixel size if you don't want your characters to be distorted.
+</p>
+
+  <h4>Character Set Data File</h4>
+<p>
+  This text-based file defines three things: the filename of the source image to use, the width and height <i>in tiles</i> of the source image, and the mapping of characters to blocks in the source image. In this file all lines that start with // (the double slash) are ignored so you can add comments as you like.
 </p>
 <p>
   The first line of this file names the image file with the bitmap character data - if it's left blank, Playscii will look for the same filename but with a <tt>.png</tt> extension.
@@ -355,11 +371,10 @@ You can also see a list of all open documents at the bottom of the Art menu.
   The second line of the file is the width and height of the character grid in the bitmap file, as integer numbers separated by a comma. Playscii needs this data to know how many pixels are in a tile for this character set.
 </p>
 <p>
-  All subsequent lines are "mapping" data, a 1:1 correspondance between the characters on each line and the blocks in the bitmap. If a block doesn't have a representative character you can type on a keyboard, just leave it a blank space, but keep track of the number of blank spaces.
+  All subsequent lines are "mapping" data, a 1:1 correspondance between the characters on each line and the blocks in the bitmap. If a block doesn't have a representative character you can type on a keyboard, just leave it a blank space, but keep track of the number of blank spaces. You can even omit this data entirely, mostly it just means that the <a href="#tools">Text Tool</a> won't know how to map the keys you press onto a character in your set.
 </p>
-<p>
-As of Playscii 0.8.2, tiles can contain multiple colors, and the Ultima IV tile set is provided as an example of this. All pure black (RGB 0, 0, 0) pixels are treated as transparent, everything else is "tinted" by the foreground color, with pure white showing the tile pixels as-is.
-</p>
+</div>
+
 <p>
   If you have issues getting a custom character set to work, the character sets already included with Playscii are a useful reference. You can find them in the <tt>charsets/</tt> subfolder of the folder you're running Playscii from. Here's the ZX Spectrum character set data as an example:
 </p>
