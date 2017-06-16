@@ -210,7 +210,7 @@ class Application:
                                                  sdlmixer.SDL_MIXER_MINOR_VERSION,
                                                  sdlmixer.SDL_MIXER_PATCHLEVEL)
         self.log('  SDL: %s' % sdl_version)
-        self.log('  Detected screen resolution: %.0f x %.0f, using: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
+        self.log('  Detected screen resolution: %.0f x %.0f, window: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
         try: gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
         except: gpu_vendor = "[couldn't detect vendor]"
@@ -356,7 +356,7 @@ class Application:
     def get_desktop_resolution(self):
         winpos = sdl2.SDL_WINDOWPOS_UNDEFINED
         # SDL2 win/mac behavior differs, won't create window at desktop res :[
-        create_test_window = platform.system() in ['Linux']
+        create_test_window = platform.system() not in ['Windows', 'Darwin']
         if not create_test_window:
             desktop = sdl2.video.SDL_DisplayMode()
             sdl2.SDL_GetDesktopDisplayMode(0, desktop)
@@ -981,7 +981,8 @@ def get_paths():
             os.mkdir(documents_dir)
     elif platform.system() == 'Darwin':
         documents_dir = os.path.expanduser('~') + DOCUMENTS_SUBDIR
-    elif platform.system() == 'Linux':
+    # assume anything that isn't Win/Mac is a UNIX
+    else:
         # XDG spec doesn't cover any concept of a documents folder :[
         # if ~/Documents exists use that, else just use ~/Playscii
         documents_dir = os.path.expanduser('~')
