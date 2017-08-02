@@ -1,0 +1,99 @@
+
+import os
+
+import image_convert
+import formats.in_bitmap as bm
+
+class ImageSequenceConverter:
+    
+    def __init__(self, app, image_filenames, art, bicubic_scale):
+        self.init_success = False
+        self.app = app
+        self.image_filenames = image_filenames
+        # App.update_window_title uses image_filename for titlebar
+        self.image_filename = self.image_filenames[0]
+        self.art = art
+        self.bicubic_scale = bicubic_scale
+        # create converter, pass ourselves in as last arg
+        try:
+            self.current_frame_converter = image_convert.ImageConverter(self.app,
+                                                      self.image_filenames[0],
+                                                      self.art,
+                                                      bicubic_scale, self)
+        except:
+            return
+        self.preview_sprite = self.current_frame_converter.preview_sprite
+        self.init_success = True
+    
+    def next_image(self):
+        self.image_filenames.pop(0)
+        # done?
+        if len(self.image_filenames) == 0:
+            self.finished()
+            return
+        # next frame
+        self.art.set_active_frame(self.art.active_frame + 1)
+        self.current_frame_converter = image_convert.ImageConverter(self.app,
+                                                      self.image_filenames[0],
+                                                      self.art,
+                                                      bicubic_scale, self)
+        self.image_filename = self.image_filenames[0]
+        self.preview_sprite = self.current_frame_converter.preview_sprite
+        self.app.update_window_title()
+    
+    def update(self):
+        # create converter for new frame if current one is done,
+        # else update current one
+        if self.current_frame_converter.finished:
+            self.next_image()
+        else:
+            self.current_frame_converter
+    
+    def finished(self):
+        self.app.converter = None
+        self.app.update_window_title()
+
+
+class ConvertImageSequenceChooserDialog(bm.ConvertImageChooserDialog):
+    title = 'Convert folder'
+    confirm_caption = 'Choose First Image'
+    # TODO: options dialog with frame delay time?
+
+
+class BitmapImageSequenceImporter(bm.BitmapImageImporter):
+    format_name = 'Bitmap image folder'
+    format_description = """
+Converts a folder of Bitmap images (PNG, JPEG, or BMP)
+into an animation. Dimensions will be based on first
+image chosen.
+    """
+    file_chooser_dialog_class = ConvertImageSequenceChooserDialog
+    options_dialog_class = bm.ConvertImageOptionsDialog
+    
+    def run_import(self, in_filename, options={}):
+        palette = self.app.load_palette(options['palette'])
+        self.art.set_palette(palette)
+        width, height = options['art_width'], options['art_height']
+        self.art.resize(width, height) # Importer.init will adjust UI
+        bicubic_scale = options['bicubic_scale']
+        # get dir listing with full pathname
+        in_dir = os.path.dirname(in_filename)
+        in_files = ['%s/%s' % (in_dir, f) for f in os.listdir(in_dir)]
+        in_files.sort()
+        # assume numeric sequence starts from chosen file
+        in_files = in_files[in_files.index(in_filename):]
+        # remove files from end of list if they don't end in a number
+        while not os.path.splitext(in_files[-1])[0][-1].isdecimal() and \
+              len(in_files) > 0:
+            in_files.pop()
+        # add frames to art as needed
+        while self.art.frames < len(in_files):
+            self.art.add_frame_to_end(log=False)
+        # create converter
+        isc = ImageSequenceConverter(self.app, in_files, self.art, bicubic_scale)
+        # early failures: file no longer exists, PIL fails to load and convert image
+        if not isc.init_success:
+            return False
+        self.app.converter = isc
+        self.app.update_window_title()
+        return True
