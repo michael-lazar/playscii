@@ -250,7 +250,11 @@ class ImageChooserItem(BaseFileChooserItem):
     def get_preview_texture(self, app):
         if os.path.isdir(self.name):
             return
-        img = Image.open(self.name)
+        # may not be a valid image file
+        try:
+            img = Image.open(self.name)
+        except:
+            return
         try:
             img = img.convert('RGBA')
         except:
