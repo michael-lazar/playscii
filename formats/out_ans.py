@@ -1,7 +1,10 @@
-
+ 
 from art_export import ArtExporter
 
 WIDTH = 80
+ENCODING = 'cp1252' # old default
+ENCODING = 'us-ascii' # DEBUG
+ENCODING = 'latin_1' # DEBUG - seems to handle >128 chars ok?
 
 class ANSExporter(ArtExporter):
     format_name = 'ANSI'
@@ -28,7 +31,7 @@ Exports active layer of active frame.
         return s
     
     def write(self, data):
-        self.outfile.write(data.encode('cp1252'))
+        self.outfile.write(data.encode(ENCODING))
     
     def run_export(self, out_filename, options):
         # binary file; encoding into ANSI bytes happens just before write
@@ -48,7 +51,11 @@ Exports active layer of active frame.
                 # works fine, though it's a larger file - any real downside to this?
                 self.write(self.get_display_command(fg, bg))
                 # write the character for this tile
-                self.write(chr(char))
+                if char > 31:
+                    self.write(chr(char))
+                else:
+                    # special (top row) chars won't display in terminal anyway
+                    self.write(chr(0))
             # carriage return + line feed
             self.outfile.write(b'\r\n')
         self.outfile.close()
