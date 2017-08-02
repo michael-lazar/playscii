@@ -31,7 +31,7 @@ class ImageConverter:
     # lets eg UI catch up to BitmapImageImporter changes to Art.
     start_delay = 1.0
     
-    def __init__(self, app, image_filename, art, bicubic_scale=False):
+    def __init__(self, app, image_filename, art, bicubic_scale=False, sequence_converter=None):
         self.init_success = False
         image_filename = app.find_filename_path(image_filename)
         if not image_filename or not os.path.exists(image_filename):
@@ -42,11 +42,16 @@ class ImageConverter:
         self.start_time = time.time()
         self.image_filename = image_filename
         self.art = art
+        self.finished = False
+        # if an ImageSequenceConverter created us, keep a handle to it
+        self.sequence_converter = sequence_converter
         try:
             self.src_img = Image.open(self.image_filename).convert('RGB')
         except:
             return
-        self.app.converter = self
+        # if we're part of a sequence, app doesn't need handle directly to us
+        if not self.sequence_converter:
+            self.app.converter = self
         # preserve aspect
         self.char_w, self.char_h = art.charset.char_width, art.charset.char_height
         art_pixel_w, art_pixel_h = self.char_w * art.width, self.char_h * art.height
@@ -221,9 +226,11 @@ class ImageConverter:
         return self.color_diffs[block1, block2].sum()
     
     def finished(self, cancelled=False):
-        time_taken = time.time() - self.start_time
-        verb = 'cancelled' if cancelled else 'finished'
-        self.app.log('Conversion of image %s %s after %.3f seconds' % (self.image_filename, verb, time_taken))
-        self.app.converter = None
+        self.finished = True
+        if not self.sequence_converter:
+            time_taken = time.time() - self.start_time
+            verb = 'cancelled' if cancelled else 'finished'
+            self.app.log('Conversion of image %s %s after %.3f seconds' % (self.image_filename, verb, time_taken))
+            self.app.converter = None
         self.preview_sprite = None
         self.app.update_window_title()
