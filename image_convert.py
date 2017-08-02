@@ -157,7 +157,7 @@ class ImageConverter:
                 self.x = 0
                 self.y += 1
                 if self.y >= self.art.height:
-                    self.finished()
+                    self.finish()
                     break
     
     def get_best_tile_for_block(self, src_block):
@@ -225,7 +225,7 @@ class ImageConverter:
         # build array of difference values w/ fancy numpy indexing, sum() it
         return self.color_diffs[block1, block2].sum()
     
-    def finished(self, cancelled=False):
+    def finish(self, cancelled=False):
         self.finished = True
         if not self.sequence_converter:
             time_taken = time.time() - self.start_time

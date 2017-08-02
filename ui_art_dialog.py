@@ -249,7 +249,8 @@ class ImportOptionsDialog(UIDialog):
         # if importer needs no options, run it
         importer = app.importer(app, filename, options)
         if importer.success:
-            app.log('Imported %s successfully.' % filename)
+            if app.importer.completes_instantly:
+                app.log('Imported %s successfully.' % filename)
             app.importer = None
 
 class ExportOptionsDialog(UIDialog):

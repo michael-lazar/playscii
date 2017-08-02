@@ -177,6 +177,7 @@ Bitmap image in PNG, JPEG, or BMP format.
     """
     file_chooser_dialog_class = ConvertImageChooserDialog
     options_dialog_class = ConvertImageOptionsDialog
+    completes_instantly = False
     
     def run_import(self, in_filename, options={}):
         # modify self.app.ui.active_art based on options
