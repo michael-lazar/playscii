@@ -26,6 +26,9 @@ class ArtImporter:
     options_dialog_class = None
     "UIDialog subclass exposing import options to user."
     generic_error = '%s failed to import %s'
+    # if False (eg bitmap conversion), "Imported successfully" message
+    # won't show on successful creation
+    completes_instantly = True
     
     def __init__(self, app, in_filename, options={}):
         self.app = app

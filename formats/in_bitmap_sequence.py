@@ -19,7 +19,7 @@ class ImageSequenceConverter:
             self.current_frame_converter = image_convert.ImageConverter(self.app,
                                                       self.image_filenames[0],
                                                       self.art,
-                                                      bicubic_scale, self)
+                                                      self.bicubic_scale, self)
         except:
             return
         self.preview_sprite = self.current_frame_converter.preview_sprite
@@ -29,14 +29,14 @@ class ImageSequenceConverter:
         self.image_filenames.pop(0)
         # done?
         if len(self.image_filenames) == 0:
-            self.finished()
+            self.finish()
             return
         # next frame
         self.art.set_active_frame(self.art.active_frame + 1)
         self.current_frame_converter = image_convert.ImageConverter(self.app,
                                                       self.image_filenames[0],
                                                       self.art,
-                                                      bicubic_scale, self)
+                                                      self.bicubic_scale, self)
         self.image_filename = self.image_filenames[0]
         self.preview_sprite = self.current_frame_converter.preview_sprite
         self.app.update_window_title()
@@ -47,9 +47,9 @@ class ImageSequenceConverter:
         if self.current_frame_converter.finished:
             self.next_image()
         else:
-            self.current_frame_converter
+            self.current_frame_converter.update()
     
-    def finished(self):
+    def finish(self):
         self.app.converter = None
         self.app.update_window_title()
 
@@ -57,7 +57,6 @@ class ImageSequenceConverter:
 class ConvertImageSequenceChooserDialog(bm.ConvertImageChooserDialog):
     title = 'Convert folder'
     confirm_caption = 'Choose First Image'
-    # TODO: options dialog with frame delay time?
 
 
 class BitmapImageSequenceImporter(bm.BitmapImageImporter):
@@ -68,7 +67,7 @@ into an animation. Dimensions will be based on first
 image chosen.
     """
     file_chooser_dialog_class = ConvertImageSequenceChooserDialog
-    options_dialog_class = bm.ConvertImageOptionsDialog
+    #options_dialog_class = bm.ConvertImageOptionsDialog
     
     def run_import(self, in_filename, options={}):
         palette = self.app.load_palette(options['palette'])
@@ -89,9 +88,11 @@ image chosen.
         # add frames to art as needed
         while self.art.frames < len(in_files):
             self.art.add_frame_to_end(log=False)
+        self.art.set_active_frame(0)
         # create converter
-        isc = ImageSequenceConverter(self.app, in_files, self.art, bicubic_scale)
-        # early failures: file no longer exists, PIL fails to load and convert image
+        isc = ImageSequenceConverter(self.app, in_files, self.art,
+                                     bicubic_scale)
+        # bail on early failure
         if not isc.init_success:
             return False
         self.app.converter = isc
