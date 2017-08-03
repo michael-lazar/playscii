@@ -1,5 +1,5 @@
 
-import os
+import os, time
 
 import image_convert
 import formats.in_bitmap as bm
@@ -9,9 +9,12 @@ class ImageSequenceConverter:
     def __init__(self, app, image_filenames, art, bicubic_scale):
         self.init_success = False
         self.app = app
+        self.start_time = time.time()
         self.image_filenames = image_filenames
         # App.update_window_title uses image_filename for titlebar
         self.image_filename = self.image_filenames[0]
+        # common name of sequence
+        self.image_name = os.path.splitext(self.image_filename)[0]
         self.art = art
         self.bicubic_scale = bicubic_scale
         # create converter, pass ourselves in as last arg
@@ -49,7 +52,10 @@ class ImageSequenceConverter:
         else:
             self.current_frame_converter.update()
     
-    def finish(self):
+    def finish(self, cancelled=False):
+        time_taken = time.time() - self.start_time
+        verb = 'cancelled' if cancelled else 'finished'
+        self.app.log('Conversion of image sequence %s %s after %.3f seconds' % (self.image_name, verb, time_taken))
         self.app.converter = None
         self.app.update_window_title()
 

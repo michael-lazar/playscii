@@ -507,7 +507,7 @@ class InputLord:
         # menu bar active: bail out of current menu
         # either way: bail on image conversion if it's happening
         if self.app.converter:
-            self.app.converter.finished(True)
+            self.app.converter.finish(True)
         if self.ui.menu_bar.active_menu_name:
             self.ui.menu_bar.close_active_menu()
         elif self.app.game_mode:
