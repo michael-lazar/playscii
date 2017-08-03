@@ -1,4 +1,8 @@
 
+# "convert folder of images to animation"
+# heavy lifting still done by ImageConverter, this mainly coordinates
+# conversion of multiple frames
+
 import os, time
 
 import image_convert
@@ -12,37 +16,43 @@ class ImageSequenceConverter:
         self.start_time = time.time()
         self.image_filenames = image_filenames
         # App.update_window_title uses image_filename for titlebar
-        self.image_filename = self.image_filenames[0]
+        self.image_filename = ''
         # common name of sequence
         self.image_name = os.path.splitext(self.image_filename)[0]
         self.art = art
         self.bicubic_scale = bicubic_scale
-        # create converter, pass ourselves in as last arg
-        try:
-            self.current_frame_converter = image_convert.ImageConverter(self.app,
-                                                      self.image_filenames[0],
-                                                      self.art,
-                                                      self.bicubic_scale, self)
-        except:
-            return
-        self.preview_sprite = self.current_frame_converter.preview_sprite
+        # queue up first frame
+        self.next_image(first=True)
         self.init_success = True
     
-    def next_image(self):
-        self.image_filenames.pop(0)
+    def next_image(self, first=False):
+        # pop last image off stack
+        if not first:
+            self.image_filenames.pop(0)
         # done?
         if len(self.image_filenames) == 0:
             self.finish()
             return
         # next frame
         self.art.set_active_frame(self.art.active_frame + 1)
-        self.current_frame_converter = image_convert.ImageConverter(self.app,
+        try:
+            self.current_frame_converter = image_convert.ImageConverter(self.app,
                                                       self.image_filenames[0],
                                                       self.art,
                                                       self.bicubic_scale, self)
+        except:
+            self.fail()
+            return
+        if not self.current_frame_converter.init_success:
+            self.fail()
+            return
         self.image_filename = self.image_filenames[0]
         self.preview_sprite = self.current_frame_converter.preview_sprite
         self.app.update_window_title()
+    
+    def fail(self):
+        self.app.log('Bad frame %s' % self.image_filenames[0], error=True)
+        self.finish(True)
     
     def update(self):
         # create converter for new frame if current one is done,
@@ -54,8 +64,8 @@ class ImageSequenceConverter:
     
     def finish(self, cancelled=False):
         time_taken = time.time() - self.start_time
-        verb = 'cancelled' if cancelled else 'finished'
-        self.app.log('Conversion of image sequence %s %s after %.3f seconds' % (self.image_name, verb, time_taken))
+        (verb, error) = ('cancelled', True) if cancelled else ('finished', False)
+        self.app.log('Conversion of image sequence %s %s after %.3f seconds' % (self.image_name, verb, time_taken), error)
         self.app.converter = None
         self.app.update_window_title()
 
