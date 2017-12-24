@@ -846,6 +846,14 @@ class InputLord:
     def BIND_resize_art(self):
         self.ui.open_dialog(ResizeArtDialog)
     
+    def BIND_art_flip_horizontal(self):
+        self.ui.active_art.flip_horizontal(self.ui.active_art.active_frame,
+                                           self.ui.active_art.active_layer)
+    
+    def BIND_art_flip_vertical(self):
+        self.ui.active_art.flip_vertical(self.ui.active_art.active_frame,
+                                         self.ui.active_art.active_layer)
+    
     def BIND_run_art_script(self):
         self.ui.open_dialog(RunArtScriptDialog)
     

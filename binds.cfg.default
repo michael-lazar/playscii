@@ -161,5 +161,7 @@ self.edit_bind_src = {
     '_toggle_picker_hold': 'toggle_picker_hold',
     '_set_camera_zoom': 'set_camera_zoom',
     '_toggle_bg_texture': 'toggle_bg_texture',
-	'_run_art_script': 'run_art_script'
+	'_run_art_script': 'run_art_script',
+	'_art_flip_horizontal': 'art_flip_horizontal',
+	'_art_flip_vertical': 'art_flip_vertical'
 }

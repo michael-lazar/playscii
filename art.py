@@ -615,6 +615,18 @@ class Art:
         if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
+    def flip_horizontal(self, frame, layer):
+        "Mirrors Art left-to-right."
+        for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
+            a[frame][layer] = np.fliplr(a[frame][layer])
+        self.mark_frame_changed(frame)
+    
+    def flip_vertical(self, frame, layer):
+        "Flips Art upside down."
+        for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
+            a[frame][layer] = np.flipud(a[frame][layer])
+        self.mark_frame_changed(frame)
+    
     def shift(self, frame, layer, amount_x, amount_y):
         "Shift + wrap art on given frame and layer by given amount in X and Y."
         for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
