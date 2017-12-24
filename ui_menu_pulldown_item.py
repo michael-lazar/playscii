@@ -338,6 +338,14 @@ class ArtResizeItem(ArtModePulldownMenuItem):
     label = 'Resize…'
     command = 'resize_art'
 
+class ArtFlipHorizontal(ArtModePulldownMenuItem):
+    label = 'Flip horizontally'
+    command = 'art_flip_horizontal'
+
+class ArtFlipVertical(ArtModePulldownMenuItem):
+    label = 'Flip vertically'
+    command = 'art_flip_vertical'
+
 class ArtRunScriptItem(ArtModePulldownMenuItem):
     label = 'Run Artscript…'
     command = 'run_art_script'
@@ -592,7 +600,9 @@ class ViewMenuData(PulldownMenuData):
         return False
 
 class ArtMenuData(PulldownMenuData):
-    items = [ArtResizeItem, ArtCropToSelectionItem, SeparatorItem,
+    items = [ArtResizeItem, ArtCropToSelectionItem,
+             ArtFlipHorizontal, ArtFlipVertical,
+             SeparatorItem,
              ArtRunScriptItem, ArtRunLastScriptItem, SeparatorItem,
              ArtOpenAllGameAssetsItem, SeparatorItem,
              ArtPreviousItem, ArtNextItem, SeparatorItem]

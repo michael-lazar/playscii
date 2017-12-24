@@ -1,4 +1,5 @@
-import os, sys, math, time, importlib, json
+
+import os, sys, math, time, importlib, json, traceback
 from collections import namedtuple
 
 import sdl2
