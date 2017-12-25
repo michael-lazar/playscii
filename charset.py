@@ -140,7 +140,8 @@ class CharacterSet:
                     # MAYBE-TODO: does keeping non-alpha color improve sampling?
                     img.putpixel((x, y), (color[0], color[1], color[2], 0))
         self.texture = Texture(img.tobytes(), self.image_width, self.image_height)
-        # save image data for later, eg image conversion
+        # flip image data back and save it for later, eg image conversion
+        img = img.transpose(Image.FLIP_TOP_BOTTOM)
         self.image_data = img
     
     def set_char_dimensions(self):
@@ -158,9 +159,6 @@ class CharacterSet:
     
     def has_updated(self):
         "return True if source image file has changed since last check"
-        
-        # TODO: work out how to handle case where image_filename is now
-        
         # tolerate bad filenames in data, don't check stamps on nonexistent ones
         if not self.image_filename or not os.path.exists(self.filename) or \
            not os.path.exists(self.image_filename):
@@ -175,3 +173,19 @@ class CharacterSet:
     
     def get_char_index(self, char):
         return self.char_mapping.get(char, 0)
+    
+    def get_solid_pixels_in_char(self, char_index):
+        "Returns # of solid pixels in character at given index"
+        tile_x = int(char_index % self.map_width)
+        tile_y = int(char_index / self.map_width)
+        x_start = self.char_width * tile_x
+        x_end = x_start + self.char_width
+        y_start = self.char_height * tile_y
+        y_end = y_start + self.char_height
+        pixels = 0
+        for x in range(x_start, x_end):
+            for y in range(y_start, y_end):
+                color = self.image_data.getpixel((x, y))
+                if color[3] > 0:
+                    pixels += 1
+        return pixels

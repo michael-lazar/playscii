@@ -285,6 +285,9 @@ class Application:
         # if game dir specified, set it before we try to load any art
         if game_dir_to_load or autoplay_game:
             self.gw.set_game_dir(game_dir_to_load or autoplay_game, False)
+        # autoplay = distribution mode, no editing
+        if autoplay_game and not game_dir_to_load and self.gw.game_dir:
+            self.can_edit = False
         # debug line renderable
         self.debug_line_renderable = DebugLineRenderable(self, None)
         # onion skin renderables
@@ -344,8 +347,6 @@ class Application:
             #self.ui.message_line.post_line(self.welcome_message, 10)
             pass
         # if "autoplay_this_game" used and game is valid, lock out edit mode
-        if autoplay_game and not game_dir_to_load and self.gw.game_dir:
-            self.can_edit = False
         if not self.can_edit:
             self.enter_game_mode()
             self.ui.set_game_edit_ui_visibility(False, False)
@@ -392,7 +393,7 @@ class Application:
     def log(self, new_line, error=False):
         "write to log file, stdout, and in-app console log"
         self.logger.log(new_line)
-        if self.ui:
+        if self.ui and self.can_edit:
             self.ui.message_line.post_line(new_line, hold_time=None, error=error)
     
     def dev_log(self, new_line):

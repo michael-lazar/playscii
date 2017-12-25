@@ -200,7 +200,8 @@ class UI:
             r.quad_size_ref = new_art
             r.rebuild_geo(self.select_tool.selected_tiles)
         self.app.update_window_title()
-        self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
+        if self.app.can_edit:
+            self.message_line.post_line('%s %s' % (self.art_selected_log, self.active_art.filename))
     
     def set_active_art_by_filename(self, art_filename):
         for i,art in enumerate(self.app.art_loaded_for_edit):
@@ -324,7 +325,8 @@ class UI:
         self.tool_settings_changed = True
         frame = self.active_art.active_frame
         delay = self.active_art.frame_delays[frame]
-        self.message_line.post_line(self.frame_selected_log % (frame + 1, delay))
+        if self.app.can_edit:
+            self.message_line.post_line(self.frame_selected_log % (frame + 1, delay))
     
     def set_active_layer(self, new_layer):
         self.active_art.set_active_layer(new_layer)
@@ -336,7 +338,8 @@ class UI:
         self.app.update_window_title()
         self.tool_settings_changed = True
         layer_name = self.active_art.layer_names[self.active_art.active_layer]
-        self.message_line.post_line(self.layer_selected_log % layer_name)
+        if self.app.can_edit:
+            self.message_line.post_line(self.layer_selected_log % layer_name)
     
     def select_char(self, new_char_index):
         if not self.active_art:

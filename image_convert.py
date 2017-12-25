@@ -79,7 +79,6 @@ class ImageConverter:
         # convert charmap to 1-bit color for fast value swaps during
         # block comparison
         self.char_img = self.art.charset.image_data.copy().convert('RGB')
-        self.char_img = self.char_img.transpose(Image.FLIP_TOP_BOTTOM)
         bw_pal_img = Image.new('P', (1, 1))
         bw_pal = [0, 0, 0, 255, 255, 255]
         while len(bw_pal) < 256 * 3:

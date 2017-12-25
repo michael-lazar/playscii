@@ -338,7 +338,8 @@ class ConsoleUI(UIElement):
     def hide(self):
         self.target_alpha = 0
         self.target_y = 2
-        self.ui.menu_bar.visible = True
+        if self.ui.app.can_edit:
+            self.ui.menu_bar.visible = True
     
     def update_loc(self):
         # TODO: this lerp is super awful, simpler way based on dt?
