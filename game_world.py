@@ -141,6 +141,12 @@ class GameWorld:
         self.app.al.set_music(music_filename)
         self.app.al.start_music(music_filename)
     
+    def pause_music(self):
+        self.app.al.pause_music()
+    
+    def resume_music(self):
+        self.app.al.resume_music()
+    
     def stop_music(self):
         "Stop any currently playing music."
         self.app.al.stop_all_music()
@@ -1075,7 +1081,7 @@ class GameWorld:
         hud_class = self.classes[d.get('hud_class', self.hud_class_name)]
         self.hud = hud_class(self)
         self.hud_class_name = hud_class.__name__
-        if not errors:
+        if not errors and self.app.init_success:
             self.app.log('Loaded game state from %s' % filename)
         self.last_state_loaded = filename
         self.set_for_all_objects('show_collision', self.show_collision_all)

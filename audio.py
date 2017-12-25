@@ -115,6 +115,10 @@ class AudioLord:
         if self.current_music:
             sdlmixer.Mix_PauseMusic()
     
+    def resume_music(self):
+        if self.current_music:
+            sdlmixer.Mix_ResumeMusic()
+    
     def stop_music(self, music_filename):
         # TODO: fade out support
         sdlmixer.Mix_HaltMusic()
