@@ -236,8 +236,8 @@ class Application:
             self.should_quit = True
             return
 	
-        glsl_ver = glsl_ver.decode('utf-8') if glsl_ver != None else '[unknown]'
-        self.log('  GLSL detected: %s' % glsl_ver)
+        glsl_ver = glsl_ver.decode('utf-8') if glsl_ver != None else None
+        self.log('  GLSL detected: %s' % glsl_ver or '[unknown]')
         # verify that we got at least a 2.1 context
         majorv, minorv = ctypes.c_int(0), ctypes.c_int(0)
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, majorv)
