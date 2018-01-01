@@ -57,8 +57,8 @@ class Shader:
         vert_source = self.get_shader_source(self.vert_source_file)
         if self.log_compile:
             self.sl.app.log('Compiling vertex shader %s...' % self.vert_source_file)
-        self.vert_shader = shaders.compileShader(vert_source, GL.GL_VERTEX_SHADER)
-        if self.log_compile:
+        self.vert_shader = self.try_compile_shader(vert_source, GL.GL_VERTEX_SHADER, self.vert_source_file)
+        if self.log_compile and self.vert_shader:
             self.sl.app.log('Compiled vertex shader %s in %.6f seconds' % (self.vert_source_file, time.time() - self.last_vert_change))
         # fragment shader
         self.frag_source_file = frag_source_file
@@ -66,11 +66,12 @@ class Shader:
         frag_source = self.get_shader_source(self.frag_source_file)
         if self.log_compile:
             self.sl.app.log('Compiling fragment shader %s...' % self.frag_source_file)
-        self.frag_shader = shaders.compileShader(frag_source, GL.GL_FRAGMENT_SHADER)
-        if self.log_compile:
+        self.frag_shader = self.try_compile_shader(frag_source, GL.GL_FRAGMENT_SHADER, self.frag_source_file)
+        if self.log_compile and self.frag_shader:
             self.sl.app.log('Compiled fragment shader %s in %.6f seconds' % (self.frag_source_file, time.time() - self.last_frag_change))
         # shader program
-        self.program = shaders.compileProgram(self.vert_shader, self.frag_shader)
+        if self.vert_shader and self.frag_shader:
+            self.program = shaders.compileProgram(self.vert_shader, self.frag_shader)
     
     def get_shader_source(self, source_file):
         src = open(SHADER_PATH + source_file, 'rb').read()
@@ -84,6 +85,19 @@ class Shader:
         version_string = '#version %s\n' % shader_version
         src = bytes(version_string, 'utf-8') + src
         return src
+      
+    def try_compile_shader(self, source, shader_type, source_filename):
+        "Catch and print shader compilation exceptions"
+        try:
+            shader = shaders.compileShader(source, shader_type)
+        except Exception as e:
+            self.sl.app.log('%s: ' % source_filename)
+            lines = e.args[0].split('\\n')
+            pre = lines.pop(0).split('b"')
+            for line in pre + lines[:-1]:
+                self.sl.app.log('  ' + line)
+            return
+        return shader
     
     def has_updated(self):
         vert_mod_time = os.path.getmtime(SHADER_PATH + self.vert_source_file)
