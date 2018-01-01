@@ -31,8 +31,9 @@ class LineRenderable():
         self.build_geo()
         self.width, self.height = self.get_size()
         self.reset_loc()
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
+        if self.app.use_vao:
+            self.vao = GL.glGenVertexArrays(1)
+            GL.glBindVertexArray(self.vao)
         if self.vert_items == 3:
             self.vert_shader_source = self.vert_shader_source_3d
         self.shader = self.app.sl.new_shader(self.vert_shader_source, self.frag_shader_source)
@@ -139,7 +140,8 @@ class LineRenderable():
         return self.line_width
     
     def destroy(self):
-        GL.glDeleteVertexArrays(1, [self.vao])
+        if self.app.use_vao:
+            GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(3, [self.vert_buffer, self.elem_buffer, self.color_buffer])
         if self.log_create_destroy:
             self.app.log('destroyed: %s' % self)
@@ -154,7 +156,22 @@ class LineRenderable():
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform2f(self.quad_size_uniform, *self.get_quad_size())
         GL.glUniform4f(self.color_uniform, *self.get_color())
-        GL.glBindVertexArray(self.vao)
+        # VAO vs non-VAO paths
+        if self.app.use_vao:
+            GL.glBindVertexArray(self.vao)
+        else:
+            offset = ctypes.c_void_p(0)
+            # attribs:
+            # pos
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
+            GL.glVertexAttribPointer(self.pos_attrib, self.vert_items,
+                                 GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+            GL.glEnableVertexAttribArray(self.pos_attrib)
+            # color
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.color_buffer)
+            GL.glVertexAttribPointer(self.color_attrib, 4,
+                                 GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
+            GL.glEnableVertexAttribArray(self.color_attrib)
         # bind elem array - see similar behavior in Cursor.render
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         GL.glEnable(GL.GL_BLEND)
@@ -165,7 +182,8 @@ class LineRenderable():
                           GL.GL_UNSIGNED_INT, None)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_BLEND)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         GL.glUseProgram(0)
 
 

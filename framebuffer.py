@@ -14,8 +14,9 @@ class Framebuffer:
         self.app = app
         self.width, self.height = width or self.app.window_width, height or self.app.window_height
         # bind vao before compiling shaders
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
+        if self.app.use_vao:
+            self.vao = GL.glGenVertexArrays(1)
+            GL.glBindVertexArray(self.vao)
         self.vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
         fb_verts = np.array([-1, -1, 1, -1, -1, 1, 1, 1], dtype=np.float32)
@@ -41,7 +42,8 @@ class Framebuffer:
             self.crt_time_uniform = self.crt_shader.get_uniform_location('elapsed_time')
             self.crt_res_uniform = self.crt_shader.get_uniform_location('resolution')
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
     
     def get_crt_enabled(self):
         return self.disable_crt or self.start_crt_enabled
@@ -78,6 +80,8 @@ class Framebuffer:
         self.crt = not self.crt
     
     def destroy(self):
+        if self.app.use_vao:
+            GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(1, [self.vbo])
         GL.glDeleteRenderbuffers(1, [self.depth_buffer])
         GL.glDeleteTextures([self.texture])
@@ -95,9 +99,16 @@ class Framebuffer:
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.texture)
         GL.glClearColor(*self.clear_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        GL.glBindVertexArray(self.vao)
+        # VAO vs non-VAO paths
+        if self.app.use_vao:
+            GL.glBindVertexArray(self.vao)
+        else:
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
+            GL.glVertexAttribPointer(self.plain_attrib, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
+            GL.glEnableVertexAttribArray(self.plain_attrib)
         GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         GL.glUseProgram(0)
 
 

@@ -24,8 +24,9 @@ class SpriteRenderable:
         self.unique_name = '%s_%s' % (int(time.time()), self.__class__.__name__)
         self.x, self.y, self.z = self.get_initial_position()
         self.scale_x, self.scale_y, self.scale_z = self.get_initial_scale()
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
+        if self.app.use_vao:
+            self.vao = GL.glGenVertexArrays(1)
+            GL.glBindVertexArray(self.vao)
         # support loading texture from file or from provided data
         if not image_data:
             image_data = Image.open(texture_filename or self.texture_filename)
@@ -53,7 +54,8 @@ class SpriteRenderable:
         GL.glVertexAttribPointer(self.pos_attrib, 2,
                                  GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         self.texture.set_wrap(self.tex_wrap)
     
     def get_initial_position(self):
@@ -72,7 +74,8 @@ class SpriteRenderable:
         return self.tex_scale_x, self.tex_scale_y
     
     def destroy(self):
-        GL.glDeleteVertexArrays(1, [self.vao])
+        if self.app.use_vao:
+            GL.glDeleteVertexArrays(1, [self.vao])
         GL.glDeleteBuffers(1, [self.vert_buffer])
     
     def render(self):
@@ -86,14 +89,21 @@ class SpriteRenderable:
         GL.glUniform3f(self.position_uniform, self.x, self.y, self.z)
         GL.glUniform3f(self.scale_uniform, self.scale_x, self.scale_y, self.scale_z)
         GL.glUniform1f(self.alpha_uniform, self.alpha)
-        GL.glBindVertexArray(self.vao)
+        if self.app.use_vao:
+            GL.glBindVertexArray(self.vao)
+        else:
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
+            GL.glVertexAttribPointer(self.pos_attrib, 2,
+                                 GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+            GL.glEnableVertexAttribArray(self.pos_attrib)
         if self.blend:
             GL.glEnable(GL.GL_BLEND)
             GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, self.vert_count)
         if self.blend:
             GL.glDisable(GL.GL_BLEND)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         GL.glUseProgram(0)
 
 
