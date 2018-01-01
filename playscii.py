@@ -243,10 +243,11 @@ class Application:
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, majorv)
         video.SDL_GL_GetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, minorv)
         context_version = majorv.value + (minorv.value * 0.1)
-        vao_support = bool(GL.glGenVertexArrays)
-        self.log('  Vertex Array Object support %sfound.' % ['NOT ', ''][vao_support])
+        self.use_vao = bool(GL.glGenVertexArrays)
+        self.log('  Vertex Array Object support %sfound.' % ['NOT ', ''][self.use_vao])
+        self.use_vao = False ##### DEBUG
         # enforce VAO / GL version requirement
-        if not vao_support or context_version < 2.1 or gl_ver.startswith('2.0'):
+        if context_version < 2.1 or gl_ver.startswith('2.0'):
             self.log("Couldn't create a compatible OpenGL context, " + self.compat_fail_message)
             if not self.run_if_opengl_incompatible:
                 self.should_quit = True
