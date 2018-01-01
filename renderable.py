@@ -341,111 +341,6 @@ class TileRenderable:
         self.render()
         self.exporting = False
     
-    def renderY(self, layers=None, z_override=None, brightness=1.0):
-        GL.glUseProgram(self.shader.program)
-        # bind textures - character set, palette, UI grain
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glUniform1i(self.charset_tex_uniform, 0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.charset.texture.gltex)
-        GL.glActiveTexture(GL.GL_TEXTURE1)
-        GL.glUniform1i(self.palette_tex_uniform, 1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.palette.texture.gltex)
-        GL.glActiveTexture(GL.GL_TEXTURE2)
-        GL.glUniform1i(self.grain_tex_uniform, 2)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.ui.grain_texture.gltex)
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glUniform1i(self.charset_width_uniform, self.art.charset.map_width)
-        GL.glUniform1i(self.charset_height_uniform, self.art.charset.map_height)
-        GL.glUniform1f(self.char_uv_width_uniform, self.art.charset.u_width)
-        GL.glUniform1f(self.char_uv_height_uniform, self.art.charset.v_height)
-        GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
-        GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
-        # camera uniforms
-        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE,
-                              self.get_projection_matrix())
-        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE,
-                              self.get_view_matrix())
-        GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
-        GL.glUniform1f(self.brightness_uniform, brightness)
-        GL.glUniform3f(self.scale_uniform, *self.get_scale())
-        GL.glBindVertexArray(self.vao)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        GL.glUniform1f(self.alpha_uniform, self.alpha)
-        x, y, z = self.get_loc()
-        GL.glUniform3f(self.position_uniform, x, y, z)
-        GL.glDrawElements(GL.GL_TRIANGLES, len(self.art.elem_array), GL.GL_UNSIGNED_INT,
-                          ctypes.c_void_p(0))
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        GL.glDisable(GL.GL_BLEND)
-        GL.glBindVertexArray(0)
-        GL.glUseProgram(0)
-
-    def renderX(self, layers=None, z_override=None, brightness=1.0):
-        GL.glUseProgram(self.shader.program)
-        # bind textures - character set, palette, UI grain
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glUniform1i(self.charset_tex_uniform, 0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.charset.texture.gltex)
-        GL.glActiveTexture(GL.GL_TEXTURE1)
-        GL.glUniform1i(self.palette_tex_uniform, 1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.art.palette.texture.gltex)
-        GL.glActiveTexture(GL.GL_TEXTURE2)
-        GL.glUniform1i(self.grain_tex_uniform, 2)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.app.ui.grain_texture.gltex)
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glUniform1i(self.charset_width_uniform, self.art.charset.map_width)
-        GL.glUniform1i(self.charset_height_uniform, self.art.charset.map_height)
-        GL.glUniform1f(self.char_uv_width_uniform, self.art.charset.u_width)
-        GL.glUniform1f(self.char_uv_height_uniform, self.art.charset.v_height)
-        GL.glUniform1f(self.palette_width_uniform, MAX_COLORS)
-        GL.glUniform1f(self.grain_strength_uniform, self.grain_strength)
-        # camera uniforms
-        GL.glUniformMatrix4fv(self.proj_matrix_uniform, 1, GL.GL_FALSE,
-                              self.get_projection_matrix())
-        GL.glUniformMatrix4fv(self.view_matrix_uniform, 1, GL.GL_FALSE,
-                              self.get_view_matrix())
-        GL.glUniform1f(self.bg_alpha_uniform, self.bg_alpha)
-        GL.glUniform1f(self.brightness_uniform, brightness)
-        GL.glUniform3f(self.scale_uniform, *self.get_scale())
-        ###### 
-        attrib = self.shader.get_attrib_location
-        vp = ctypes.c_void_p(0)
-        # bind each buffer and set its attrib
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
-        GL.glVertexAttribPointer(attrib('vertPosition'), VERT_LENGTH, GL.GL_FLOAT, GL.GL_FALSE, 0, vp)
-        GL.glEnableVertexAttribArray(attrib('vertPosition'))
-        
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.char_buffer)
-        GL.glVertexAttribPointer(attrib('charIndex'), 1, GL.GL_FLOAT, GL.GL_FALSE, 0, vp)
-        GL.glEnableVertexAttribArray(attrib('charIndex'))
-
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.uv_buffer)
-        GL.glVertexAttribPointer(attrib('uvMod'), 2, GL.GL_FLOAT, GL.GL_FALSE, 0, vp)
-        GL.glEnableVertexAttribArray(attrib('uvMod'))
-
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.fg_buffer)
-        GL.glVertexAttribPointer(attrib('fgColorIndex'), 1, GL.GL_FLOAT, GL.GL_FALSE, 0, vp)
-        GL.glEnableVertexAttribArray(attrib('fgColorIndex'))
-
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.bg_buffer)
-        GL.glVertexAttribPointer(attrib('bgColorIndex'), 1, GL.GL_FLOAT, GL.GL_FALSE, 0, vp)
-        GL.glEnableVertexAttribArray(attrib('bgColorIndex'))
-        ######
-        # bind element buffer last
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
-        GL.glEnable(GL.GL_BLEND)
-        GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-        GL.glUniform1f(self.alpha_uniform, self.alpha)
-        x, y, z = self.get_loc()
-        GL.glUniform3f(self.position_uniform, x, y, z)
-        GL.glDrawElements(GL.GL_TRIANGLES, len(self.art.elem_array), GL.GL_UNSIGNED_INT,
-                          ctypes.c_void_p(0))
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        GL.glDisable(GL.GL_BLEND)
-        GL.glUseProgram(0)
-    
     def render(self, layers=None, z_override=None, brightness=1.0):
         """
         Render given list of layers at given Z depth.
@@ -487,9 +382,8 @@ class TileRenderable:
         # VAO vs non-VAO paths
         if self.app.use_vao:
             GL.glBindVertexArray(self.vao)
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         else:
-            attrib = self.shader.get_attrib_location # just cuz it's shorter
+            attrib = self.shader.get_attrib_location # for brevity
             vp = ctypes.c_void_p(0)
             # bind each buffer and set its attrib:
             # verts
@@ -512,8 +406,8 @@ class TileRenderable:
             GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.bg_buffer)
             GL.glVertexAttribPointer(attrib('bgColorIndex'), 1, GL.GL_FLOAT, GL.GL_FALSE, 0, vp)
             GL.glEnableVertexAttribArray(attrib('bgColorIndex'))
-            # finally, bind element buffer
-            GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
+        # finally, bind element buffer
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.elem_buffer)
         GL.glEnable(GL.GL_BLEND)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         # draw all specified layers if no list given

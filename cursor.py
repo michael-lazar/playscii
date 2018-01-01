@@ -84,8 +84,9 @@ class Cursor:
         self.moved = False
         self.color = np.array(BASE_COLOR, dtype=np.float32)
         # GL objects
-        self.vao = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.vao)
+        if self.app.use_vao:
+            self.vao = GL.glGenVertexArrays(1)
+            GL.glBindVertexArray(self.vao)
         self.vert_buffer, self.elem_buffer = GL.glGenBuffers(2)
         self.vert_array = np.array(corner_verts, dtype=np.float32)
         self.elem_array = np.array(corner_elems, dtype=np.uint32)
@@ -117,7 +118,8 @@ class Cursor:
         # finish
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         # init tool sprite, tool will provide texture when rendered
         self.tool_sprite = UISpriteRenderable(self.app)
     
@@ -267,7 +269,15 @@ class Cursor:
         GL.glUniform4fv(self.color_uniform, 1, self.color)
         GL.glUniform2f(self.quad_size_uniform, self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height)
         GL.glUniform1f(self.alpha_uniform, self.alpha)
-        GL.glBindVertexArray(self.vao)
+        # VAO vs non-VAO paths
+        if self.app.use_vao:
+            GL.glBindVertexArray(self.vao)
+        else:
+            attrib = self.shader.get_attrib_location # for brevity
+            GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vert_buffer)
+            GL.glVertexAttribPointer(attrib('vertPosition'), 2, GL.GL_FLOAT, GL.GL_FALSE, 0,
+                                     ctypes.c_void_p(0))
+            GL.glEnableVertexAttribArray(attrib('vertPosition'))
         # bind elem array instead of passing it to glDrawElements - latter
         # sends pyopengl a new array, which is deprecated and breaks on Mac.
         # thanks Erin Congden!
@@ -284,7 +294,8 @@ class Cursor:
                               GL.GL_UNSIGNED_INT, None)
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
         GL.glDisable(GL.GL_BLEND)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         GL.glUseProgram(0)
         # position and render tool icon
         ui = self.app.ui
