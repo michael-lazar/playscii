@@ -70,7 +70,8 @@ class LineRenderable():
         GL.glVertexAttribPointer(self.color_attrib, 4,
                                  GL.GL_FLOAT, GL.GL_FALSE, 0, offset)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-        GL.glBindVertexArray(0)
+        if self.app.use_vao:
+            GL.glBindVertexArray(0)
         if self.log_create_destroy:
             self.app.log('created: %s' % self)
     
