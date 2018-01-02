@@ -187,6 +187,15 @@ class Application:
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
                                   video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
+        # if creating a core profile context fails, try GL ES
+        if not self.context:
+            # save ES status for later use by eg Shaders
+            self.context_es = True
+            video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
+                                      video.SDL_GL_CONTEXT_PROFILE_ES)
+            self.context = sdl2.SDL_GL_CreateContext(self.window)
+        else:
+            self.context_es = False
         self.log('Detecting hardware...')
         # report OS, version, CPU
         cpu = platform.processor()
@@ -254,12 +263,17 @@ class Application:
                 self.should_quit = True
                 return
         # enforce GLSL version requirement
-        if bool(glsl_ver) and float(glsl_ver.split()[0]) <= 1.2:
-            self.log("GLSL 1.30 or higher is required, " + self.compat_fail_message)
-            if not self.run_if_opengl_incompatible:
-                self.should_quit = True
-                return
-        # draw black screen while doing other init
+        try:
+            gv = float(glsl_ver.split()[0])
+            if bool(glsl_ver) and gv <= 1.2:
+                self.log("GLSL 1.30 or higher is required, " + self.compat_fail_message)
+                if not self.run_if_opengl_incompatible:
+                    self.should_quit = True
+                    return
+        except:
+            # can't get a firm number out of reported GLSL version string :/
+            pass
+       # draw black screen while doing other init
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         # initialize audio
