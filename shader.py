@@ -93,6 +93,7 @@ class Shader:
         except Exception as e:
             self.sl.app.log('%s: ' % source_filename)
             lines = e.args[0].split('\\n')
+            # salvage block after "shader compile failure" enclosed in b""
             pre = lines.pop(0).split('b"')
             for line in pre + lines[:-1]:
                 self.sl.app.log('  ' + line)
