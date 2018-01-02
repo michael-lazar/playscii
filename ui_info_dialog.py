@@ -70,7 +70,7 @@ class PagedInfoDialog(UIDialog):
 about_message = [
 # max line width 50 characters!
 """
-          by JP LeBreton (c) 2014-2017              |
+          by JP LeBreton (c) 2014-2018              |
 
 Playscii was made with the support of many nice
 people.
