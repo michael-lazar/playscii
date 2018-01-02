@@ -100,8 +100,6 @@ class Application:
     update_rate = 30
     # force to run even if we can't get an OpenGL 2.1 context
     run_if_opengl_incompatible = False
-    # require a Core profile OpenGL context
-    require_opengl_core_profile = True
     # arbitrary size cap, but something bigger = probably a bad idea
     max_art_width, max_art_height = 9999, 9999
     # use capslock as another ctrl key - SDL2 doesn't seem to respect OS setting
@@ -186,10 +184,18 @@ class Application:
         # force GL2.1 'core' before creating context
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, 2)
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, 1)
-        if self.require_opengl_core_profile:
-            video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
-                                      video.SDL_GL_CONTEXT_PROFILE_CORE)
+        video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
+                                  video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
+        # if creating a core profile context fails, try GL ES
+        if not self.context:
+            # save ES status for later use by eg Shaders
+            self.context_es = True
+            video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
+                                      video.SDL_GL_CONTEXT_PROFILE_ES)
+            self.context = sdl2.SDL_GL_CreateContext(self.window)
+        else:
+            self.context_es = False
         self.log('Detecting hardware...')
         # report OS, version, CPU
         cpu = platform.processor() or platform.machine()
@@ -257,12 +263,17 @@ class Application:
                 self.should_quit = True
                 return
         # enforce GLSL version requirement
-        if not self.run_if_opengl_incompatible and bool(glsl_ver) and float(glsl_ver.split()[0]) <= 1.2:
-            self.log("GLSL 1.30 or higher is required, " + self.compat_fail_message)
-            if not self.run_if_opengl_incompatible:
-                self.should_quit = True
-                return
-        # draw black screen while doing other init
+        try:
+            gv = float(glsl_ver.split()[0])
+            if bool(glsl_ver) and gv <= 1.2:
+                self.log("GLSL 1.30 or higher is required, " + self.compat_fail_message)
+                if not self.run_if_opengl_incompatible:
+                    self.should_quit = True
+                    return
+        except:
+            # can't get a firm number out of reported GLSL version string :/
+            pass
+       # draw black screen while doing other init
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         # initialize audio
