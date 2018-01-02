@@ -48,6 +48,7 @@ class Shader:
     glsl_version_windows = 130
     glsl_version_unix = 130
     glsl_version_macos = 150
+    glsl_version_es = 100
     
     def __init__(self, shader_lord, vert_source_file, frag_source_file):
         self.sl = shader_lord
@@ -75,7 +76,9 @@ class Shader:
     def get_shader_source(self, source_file):
         src = open(SHADER_PATH + source_file, 'rb').read()
         # prepend shader version for different platforms
-        if platform.system() == 'Windows':
+        if self.sl.app.context_es:
+            shader_version = self.glsl_version_es
+        elif platform.system() == 'Windows':
             shader_version = self.glsl_version_windows
         elif platform.system() == 'Darwin':
             shader_version = self.glsl_version_macos
