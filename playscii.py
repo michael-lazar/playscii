@@ -1050,7 +1050,9 @@ if __name__ == "__main__":
     # see if "autoplay this game" file exists and has anything in it
     autoplay_game = None
     if os.path.exists(AUTOPLAY_GAME_FILENAME):
-        autoplay_game = open(AUTOPLAY_GAME_FILENAME).readlines()[0].strip()
+        ap = open(AUTOPLAY_GAME_FILENAME).readlines()
+        if len(ap) > 0:
+            autoplay_game = ap[0].strip()
     # load in config - may change above values and submodule class defaults
     cfg_filename = config_dir + CONFIG_FILENAME
     if os.path.exists(cfg_filename):
