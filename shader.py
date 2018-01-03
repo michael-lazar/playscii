@@ -123,6 +123,7 @@ class Shader:
         new_shader_source = self.get_shader_source(file_to_reload)
         try:
             new_shader = shaders.compileShader(new_shader_source, shader_type)
+            # TODO: use try_compile_shader instead here, make sure exception passes thru ok
             self.sl.app.log('ShaderLord: success reloading %s' % file_to_reload)
         except:
             self.sl.app.log('ShaderLord: failed reloading %s' % file_to_reload)
