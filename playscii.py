@@ -26,6 +26,8 @@ import sdl2
 import sdl2.ext
 import appdirs
 import PIL, OpenGL, numpy # just for version checks
+# DEBUG: GL context checking, must be set before other imports and calls
+#OpenGL.CONTEXT_CHECKING = True
 from sdl2 import video, sdlmixer
 from OpenGL import GL
 from PIL import Image
@@ -187,13 +189,15 @@ class Application:
         video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
                                   video.SDL_GL_CONTEXT_PROFILE_CORE)
         self.context = sdl2.SDL_GL_CreateContext(self.window)
-        # if creating a core profile context fails, try GL ES
+        # if creating a core profile context fails, try GL ES 2.0
         if not self.context:
-            # save ES status for later use by eg Shaders
-            self.context_es = True
+            video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MAJOR_VERSION, 2)
+            video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_MINOR_VERSION, 0)
             video.SDL_GL_SetAttribute(video.SDL_GL_CONTEXT_PROFILE_MASK,
                                       video.SDL_GL_CONTEXT_PROFILE_ES)
             self.context = sdl2.SDL_GL_CreateContext(self.window)
+            # save ES status for later use by eg Shaders
+            self.context_es = True
         else:
             self.context_es = False
         self.log('Detecting hardware...')
