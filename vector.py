@@ -112,7 +112,11 @@ def world_to_screen(app, world_x, world_y, world_z):
     vm = np.matrix(app.camera.view_matrix, dtype=np.float64)
     # viewport tuple order should be same as glGetFloatv(GL_VIEWPORT)
     viewport = (0, 0, app.window_width, app.window_height)
-    x, y, z = GLU.gluProject(world_x, world_y, world_z, vm, pjm, viewport)
+    try:
+        x, y, z = GLU.gluProject(world_x, world_y, world_z, vm, pjm, viewport)
+    except:
+        x, y, z = 0, 0, 0
+        app.log('GLU.gluProject failed!')
     # does Z mean anything here?
     return x, y
 

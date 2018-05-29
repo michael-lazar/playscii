@@ -72,6 +72,8 @@ class GameWorld:
     object_grid_snap = True
     # editable properties
     draw_hud = True
+    allow_pause = True
+    "If False, user cannot pause game sim"
     collision_enabled = True
     "If False, CollisionLord won't bother thinking about collision at all."
     # toggles for "show all" debug viz modes
@@ -301,6 +303,14 @@ class GameWorld:
                 if obj.handle_mouse_events and not obj in new_hovers:
                     obj.unhovered(x, y)
         self.hovered_objects = new_hovers
+    
+    def mouse_wheeled(self, wheel_y):
+        x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
+                                         self.app.mouse_y)
+        objects = self.get_objects_at(x, y)
+        for obj in objects:
+            if obj.handle_mouse_events:
+                obj.mouse_wheeled(wheel_y)
     
     def mouse_moved(self, dx, dy):
         if self.app.ui.active_dialog:
@@ -550,6 +560,8 @@ class GameWorld:
     
     def toggle_pause(self):
         "Toggles game pause state."
+        if not self.allow_pause:
+            return
         self.paused = not self.paused
         s = 'Game %spaused.' % ['un', ''][self.paused]
         self.app.ui.message_line.post_line(s)
