@@ -893,6 +893,13 @@ class GameObject:
         """
         pass
     
+    def mouse_wheeled(self, wheel_y):
+        """
+        Handle mouse wheel movement.
+        GO subclasses can do stuff here if their handle_mouse_events=True
+        """
+        pass
+    
     def set_timer_function(self, timer_name, timer_function, delay_min,
                            delay_max=0, repeats=-1, slot=TIMER_PRE_UPDATE):
         """

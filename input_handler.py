@@ -245,11 +245,14 @@ class InputLord:
             #
             elif event.type == sdl2.SDL_MOUSEWHEEL:
                 ui_wheeled = self.ui.wheel_moved(event.wheel.y)
-                if not ui_wheeled and self.app.can_edit:
-                    if event.wheel.y > 0:
-                        app.camera.zoom(-3)
-                    elif event.wheel.y < 0:
-                        app.camera.zoom(3)
+                if not ui_wheeled:
+                    if self.app.can_edit:
+                        if event.wheel.y > 0:
+                            app.camera.zoom(-3)
+                        elif event.wheel.y < 0:
+                            app.camera.zoom(3)
+                    else:
+                        self.app.gw.mouse_wheeled(event.wheel.y)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
                 # "consume" input if UI handled it
                 ui_unclicked = self.ui.unclicked(event.button.button)

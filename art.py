@@ -938,9 +938,9 @@ class Art:
         for char in text:
             idx = self.charset.get_char_index(char)
             self.set_char_index_at(frame, layer, x+x_offset, y, idx)
-            if fg_color_index:
+            if fg_color_index is not None:
                 self.set_color_at(frame, layer, x+x_offset, y, fg_color_index, True)
-            if bg_color_index:
+            if bg_color_index is not None:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
     
