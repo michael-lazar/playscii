@@ -182,6 +182,9 @@ class Cursor:
     def start_paint(self):
         if self.app.ui.console.visible or self.app.ui.popup in self.app.ui.hovered_elements:
             return
+        if self.app.ui.selected_tool is self.app.ui.grab_tool:
+            self.app.ui.grab_tool.grab()
+            return
         # start a new command group, commit and clear any preview edits
         self.current_command = EditCommand(self.app.ui.active_art)
         self.current_command.add_command_tiles(self.preview_edits)
