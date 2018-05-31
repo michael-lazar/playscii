@@ -283,12 +283,18 @@ class InputLord:
                 elif event.button.button == sdl2.SDL_BUTTON_LEFT:
                     if not self.ui.active_art:
                         return
-                    elif self.ui.selected_tool is self.ui.text_tool and not self.ui.text_tool.input_active:
-                        self.ui.text_tool.start_entry()
+                    elif self.ui.selected_tool is self.ui.text_tool:
+                        # text tool: only start entry if click is outside popup
+                        if not self.ui.text_tool.input_active and \
+                         not self.ui.popup in self.ui.hovered_elements:
+                            self.ui.text_tool.start_entry()
                     elif self.ui.selected_tool is self.ui.select_tool:
+                        # select tool: accept clicks if they're outside the popup
                         if not self.ui.select_tool.selection_in_progress and \
-                           not self.ui.keyboard_focus_element:
-                            self.ui.select_tool.start_select()
+                            (not self.ui.keyboard_focus_element or \
+                               (self.ui.keyboard_focus_element is self.ui.popup and \
+                                not self.ui.popup in self.ui.hovered_elements)):
+                                self.ui.select_tool.start_select()
                     else:
                         app.cursor.start_paint()
                 elif event.button.button == sdl2.SDL_BUTTON_RIGHT:
