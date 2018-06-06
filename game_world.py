@@ -242,6 +242,8 @@ class GameWorld:
                 if obj.handle_mouse_events and \
                    (not obj.locked or not self.app.can_edit):
                     obj.clicked(button, x, y)
+                    if obj.consume_mouse_events:
+                        break
     
     def select_unclick(self):
         # clicks on UI are consumed and flag world to not accept unclicks
@@ -316,6 +318,8 @@ class GameWorld:
             if obj.handle_mouse_events and \
                (not obj.locked or not self.app.can_edit):
                 obj.mouse_wheeled(wheel_y)
+                if obj.consume_mouse_events:
+                    break
     
     def mouse_moved(self, dx, dy):
         if self.app.ui.active_dialog:
