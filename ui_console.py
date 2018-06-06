@@ -11,7 +11,7 @@ from palette import PaletteFromFile
 
 from image_export import export_still_image, export_animation
 
-from renderable_sprite import ImagePreviewRenderable
+from renderable_sprite import SpriteRenderable
 from PIL import Image
 
 # imports for console execution namespace - be careful!
@@ -109,9 +109,11 @@ class ShowImageCommand(ConsoleCommand):
         if len(args) == 0:
             return 'Usage: img [image filename]'
         image_filename = ' '.join(args)
+        if not os.path.exists(image_filename):
+            return 'Image %s not found!' % image_filename
         img = Image.open(image_filename).convert('RGB')
         w, h = img.size
-        r = ImagePreviewRenderable(console.ui.app, None, img)
+        r = SpriteRenderable(console.ui.app, None, img)
         console.ui.app.img_renderables.append(r)
         r.scale_x, r.scale_y = w / 8, h / 8
 

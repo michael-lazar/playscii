@@ -3,7 +3,7 @@
 import os
 import sdl2
 
-from renderable_sprite import SpriteRenderable
+from renderable_sprite import UISpriteRenderable
 from ui_dialog import UIDialog, Field
 from ui_button import UIButton
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
@@ -144,7 +144,7 @@ class ChooserDialog(UIDialog):
         self.init_buttons()
         self.reset_art(False)
         # preview SpriteRenderable (loaded on item change?)
-        self.preview_renderable = SpriteRenderable(ui.app)
+        self.preview_renderable = UISpriteRenderable(ui.app)
         # don't blend preview images, eg charsets
         self.preview_renderable.blend = False
         # offset into items list view provided by buttons starts from

@@ -176,13 +176,15 @@ class GameWorld:
             return obj
         return None
     
-    def get_objects_at(self, x, y):
+    def get_objects_at(self, x, y, allow_locked=False):
         "Return list of all objects whose bounds fall within given point."
         objects = []
         for obj in self.objects.values():
+            if obj.locked and not allow_locked:
+                continue
             # only allow selecting of visible objects
             # (can still be selected via list panel)
-            if obj.visible and not obj.locked and obj.is_point_inside(x, y):
+            if obj.visible and obj.is_point_inside(x, y):
                 objects.append(obj)
         # sort objects in Z, highest first
         objects.sort(key=lambda obj: obj.z, reverse=True)
@@ -234,9 +236,11 @@ class GameWorld:
         else:
             x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
                                              self.app.mouse_y)
-            objects = self.get_objects_at(x, y)
+            # 'locked" only relevant to edit mode, ignore it if in play mode
+            objects = self.get_objects_at(x, y, allow_locked=True)
             for obj in objects:
-                if obj.handle_mouse_events:
+                if obj.handle_mouse_events and \
+                   (not obj.locked or not self.app.can_edit):
                     obj.clicked(button, x, y)
     
     def select_unclick(self):
@@ -307,9 +311,10 @@ class GameWorld:
     def mouse_wheeled(self, wheel_y):
         x, y, z = vector.screen_to_world(self.app, self.app.mouse_x,
                                          self.app.mouse_y)
-        objects = self.get_objects_at(x, y)
+        objects = self.get_objects_at(x, y, allow_locked=True)
         for obj in objects:
-            if obj.handle_mouse_events:
+            if obj.handle_mouse_events and \
+               (not obj.locked or not self.app.can_edit):
                 obj.mouse_wheeled(wheel_y)
     
     def mouse_moved(self, dx, dy):
