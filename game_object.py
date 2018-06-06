@@ -351,8 +351,8 @@ class GameObject:
     
     def get_edges(self):
         "Return coords of our bounds (left, top, right, bottom)"
-        left = self.x - (self.renderable.width * (1 - self.art_off_pct_x))
-        right = self.x + (self.renderable.width * self.art_off_pct_x)
+        left = self.x - (self.renderable.width * self.art_off_pct_x)
+        right = self.x + (self.renderable.width * (1 - self.art_off_pct_x))
         top = self.y + (self.renderable.height * self.art_off_pct_y)
         bottom = self.y - (self.renderable.height * (1 - self.art_off_pct_y))
         return left, top, right, bottom

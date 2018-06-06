@@ -4,7 +4,7 @@ import numpy as np
 
 from PIL import Image, ImageChops, ImageStat
 
-from renderable_sprite import ImagePreviewRenderable
+from renderable_sprite import SpriteRenderable
 from lab_color import rgb_to_lab, lab_color_diff
 
 """
@@ -93,7 +93,7 @@ class ImageConverter:
         # TODO: https://github.com/python-pillow/Pillow/issues/1377
         if 'transparency' in preview_img.info:
             preview_img.info.pop('transparency')
-        self.preview_sprite = ImagePreviewRenderable(self.app, None, preview_img)
+        self.preview_sprite = SpriteRenderable(self.app, None, preview_img)
         # preview image scale takes into account character aspect
         self.preview_sprite.scale_x = w / (self.char_w / self.art.quad_width)
         self.preview_sprite.scale_y = h / (self.char_h / self.art.quad_height)

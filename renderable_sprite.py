@@ -65,10 +65,10 @@ class SpriteRenderable:
         return 1, 1, 1
     
     def get_projection_matrix(self):
-        return np.eye(4, 4)
+        return self.app.camera.projection_matrix
     
     def get_view_matrix(self):
-        return np.eye(4, 4)
+        return self.app.camera.view_matrix
     
     def get_texture_scale(self):
         return self.tex_scale_x, self.tex_scale_y
@@ -114,15 +114,6 @@ class UISpriteRenderable(SpriteRenderable):
     
     def get_view_matrix(self):
         return self.app.ui.view_matrix
-
-
-class ImagePreviewRenderable(SpriteRenderable):
-    
-    def get_projection_matrix(self):
-        return self.app.camera.projection_matrix
-    
-    def get_view_matrix(self):
-        return self.app.camera.view_matrix
 
 
 class UIBGTextureRenderable(UISpriteRenderable):
