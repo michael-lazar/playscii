@@ -187,7 +187,9 @@ class GameObject:
     handle_key_events = False
     "If True, handle key input events passed in from world / input handler"
     handle_mouse_events = False
-    "If True, handle mouse click events passed in from world / input handler"
+    "If True, handle mouse click/wheel events passed in from world / input handler"
+    consume_mouse_events = False
+    "If True, prevent any other mouse click/wheel events from being processed"
     def __init__(self, world, obj_data=None):
         """
         Create new GameObject in world, from serialized data if provided.
