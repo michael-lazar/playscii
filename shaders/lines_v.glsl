@@ -4,10 +4,10 @@ uniform vec3 objectPosition;
 uniform vec3 objectScale;
 uniform vec2 quadSize;
 
-attribute vec2 vertPosition;
-attribute vec4 vertColor;
+in vec2 vertPosition;
+in vec4 vertColor;
 
-varying vec4 theColor;
+out vec4 theColor;
 
 mat4 scale(float x, float y, float z)
 {
