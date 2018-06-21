@@ -2,9 +2,10 @@ precision mediump float;
 
 uniform vec4 objectColor;
 
-varying vec4 theColor;
+in vec4 theColor;
+out vec4 outColor;
 
 void main()
 {
-	gl_FragColor = theColor * objectColor;
+	outColor = theColor * objectColor;
 }
