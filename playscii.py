@@ -277,7 +277,13 @@ class Application:
         except:
             # can't get a firm number out of reported GLSL version string :/
             pass
-       # draw black screen while doing other init
+        # detect max texture size
+        mts = ctypes.c_int(0)
+        GL.glGetIntegerv(GL.GL_MAX_TEXTURE_SIZE, mts)
+        self.max_texture_size = mts.value
+        self.log('  Maximum supported texture size: %s x %s' % (self.max_texture_size, self.max_texture_size))
+        #GL.getParameter(GL.MAX_TEXTURE_SIZE)
+        # draw black screen while doing other init
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         # initialize audio
