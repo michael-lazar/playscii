@@ -151,7 +151,31 @@ class Cursor:
         self.y = round(-art.height / 2) * art.quad_height
         self.moved = True
     
-    def get_tiles_under_brush(self, base_zero=False):
+    # !!TODO!! finish this, work in progress
+    def get_tiles_under_drag(self):
+        """
+        returns list of tuple coordinates of all tiles under cursor's current
+        position AND tiles it's moved over since last update
+        """
+        
+        # TODO: get vector of last to current position, for each tile under
+        # current brush, do line trace along grid towards last point
+        
+        # TODO: this works in two out of four diagonals,
+        # swap current and last positions to determine delta?
+        
+        if self.last_x <= self.x:
+            x0, y0 = self.last_x, -self.last_y
+            x1, y1 = self.x, -self.y
+        else:
+            x0, y0 = self.x, -self.y
+            x1, y1 = self.last_x, -self.last_y
+        tiles = vector.get_tiles_along_line(x0, y0, x1, y1)
+        print('drag from %s,%s to %s,%s:' % (x0, y0, x1, y1))
+        print(tiles)
+        return tiles
+    
+    def get_tiles_under_brush(self):
         """
         returns list of tuple coordinates of all tiles under the cursor @ its
         current brush size
@@ -159,8 +183,6 @@ class Cursor:
         size = self.app.ui.selected_tool.brush_size
         tiles = []
         x_start, y_start = int(self.x), int(-self.y)
-        if base_zero:
-            x_start, y_start = 0, 0
         for y in range(y_start, y_start + size):
             for x in range(x_start, x_start + size):
                 tiles.append((x, y))

@@ -51,6 +51,32 @@ class Vec3:
         "Return a copy of this vector."
         return Vec3(self.x, self.y, self.z)
 
+def get_tiles_along_line(x0, y0, x1, y1):
+    """
+    Return list of (x,y) tuples for all tiles crossing given line points
+    """
+    tiles = []
+    dx, dy = x1 - x0, y1 - y0
+    if dx == 0 and dy == 0:
+        return [(x0, y0)]
+    elif dx == 0:
+        for y in range(y0, y1):
+            tiles.append((x0, y))
+        return tiles
+    # Bresenham's line algorithm
+    delta_error = abs(float(dy) / dx)
+    error = 0.
+    y = y0
+    for x in range(x0, x1):
+        tiles.append((x, y))
+        error += delta_error
+        while error >= 0.5:
+            y += 1 if dy >= 0 else -1
+            error -= 1.0
+    # include end point tile, algo stops short of it
+    tiles.append((x1, y1))
+    return tiles
+
 def cut_xyz(x, y, z, threshold):
     """
     Return input x,y,z with each axis clamped to 0 if it's close enough to

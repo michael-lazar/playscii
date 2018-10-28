@@ -124,7 +124,14 @@ class PencilTool(UITool):
         art = self.ui.active_art
         frame = art.active_frame
         layer = art.active_layer
-        tiles = self.ui.app.cursor.get_tiles_under_brush()
+        cur = self.ui.app.cursor
+        # handle dragging while painting (cursor does the heavy lifting here)
+        # !!TODO!! finish this, work in progress
+        if cur.moved_this_frame() and cur.current_command and False: #DEBUG
+            #print('%s: cursor moved' % self.ui.app.get_elapsed_time()) #DEBUG
+            tiles = cur.get_tiles_under_drag()
+        else:
+            tiles = cur.get_tiles_under_brush()
         for tile in tiles:
             # don't allow painting out of bounds
             if not art.is_tile_inside(*tile):
