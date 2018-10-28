@@ -146,6 +146,7 @@ PNG image set for each frame and/or layer.
         self.app.onion_frames_visible = False
         # if multi-player, only show active layer
         self.app.inactive_layer_visibility = LAYER_VIS_NONE if export_layers else LAYER_VIS_FULL
+        success = True
         for frame in range(art.frames):
             # if exporting layers but not frames, only export active frame
             if not export_frames and frame != art.active_frame:
@@ -157,12 +158,13 @@ PNG image set for each frame and/or layer.
                                                   art.layer_names[layer],
                                                   export_frames, export_layers,
                                                   self.app.forbidden_filename_chars)
-                export_still_image(self.app, art, full_filename,
+                if not export_still_image(self.app, art, full_filename,
                            crt=options.get('crt', DEFAULT_CRT),
-                           scale=options.get('scale', DEFAULT_SCALE))
+                           scale=options.get('scale', DEFAULT_SCALE)):
+                    success = False
         # put everything back how user left it
         art.set_active_frame(start_frame)
         art.set_active_layer(start_layer)
         self.app.onion_frames_visible = start_onion
         self.app.inactive_layer_visibility = start_layer_viz
-        return True
+        return success

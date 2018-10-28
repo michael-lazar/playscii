@@ -5,12 +5,17 @@ from PIL import Image, ImageChops, GifImagePlugin
 from framebuffer import ExportFramebuffer, ExportFramebufferNoCRT
 
 def get_frame_image(app, art, frame, allow_crt=True, scale=1, bg_color=(0, 0, 0, 0)):
-    "returns a PIL image of given frame of given art"
+    "returns a PIL image of given frame of given art, None on failure"
     post_fb_class = ExportFramebuffer if allow_crt else ExportFramebufferNoCRT
     # determine art's native size in pixels
     w = art.charset.char_width * art.width
     h = art.charset.char_height * art.height
     w, h = int(w * scale), int(h * scale)
+    # error out if over max texture size
+    if w > app.max_texture_size or h > app.max_texture_size:
+        app.log("ERROR: Image output size (%s x %s) exceeds your hardware's max supported texture size (%s x %s)!" % (w, h, app.max_texture_size, app.max_texture_size), error=True)
+        app.log('  Please export at a smaller scale or chop up your artwork :[', error=True)
+        return None
     # create CRT framebuffer
     post_fb = post_fb_class(app, w, h)
     # create render target and target framebuffer that will become image
@@ -97,6 +102,8 @@ def export_still_image(app, art, out_filename, crt=True, scale=1):
     # for now always export 32bit
     if crt or not art.palette.all_colors_opaque() or True:
         src_img = get_frame_image(app, art, art.active_frame, crt, scale)
+        if not src_img:
+            return False
         src_img.save(out_filename, 'PNG')
         output_format = '32-bit w/ alpha'
     else:
@@ -105,10 +112,13 @@ def export_still_image(app, art, out_filename, crt=True, scale=1):
         i_transp = art.palette.get_random_non_palette_color()
         f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
         src_img = get_frame_image(app, art, art.active_frame, False, scale, f_transp)
+        if not src_img:
+            return False
         output_img = art.palette.get_palettized_image(src_img, i_transp[:3])
         output_img.save(out_filename, 'PNG', transparency=0)
         output_format = '8-bit palettized w/ transparency'
     #app.log('%s exported (%s)' % (out_filename, output_format))
+    return True
 
 
 def write_thumbnail(app, art_filename, thumb_filename):
@@ -119,6 +129,7 @@ def write_thumbnail(app, art_filename, thumb_filename):
         renderable = app.thumbnail_renderable_class(app, art)
         art.renderables.append(renderable)
     img = get_frame_image(app, art, 0, allow_crt=False)
-    img.save(thumb_filename, 'PNG')
+    if img:
+        img.save(thumb_filename, 'PNG')
     if renderable:
         renderable.destroy()
