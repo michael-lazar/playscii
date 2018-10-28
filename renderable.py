@@ -333,12 +333,16 @@ class TileRenderable:
     def render_frame_for_export(self, frame):
         self.exporting = True
         self.set_frame(frame)
+        # cache "inactive layer visibility", restore after render
+        ilv = self.art.app.inactive_layer_visibility
+        self.art.app.inactive_layer_visibility = LAYER_VIS_FULL
         # cursor might be hovering, undo any preview changes
         for edit in self.art.app.cursor.preview_edits:
             edit.undo()
         # update art to commit changes to the renderable
         self.art.update()
         self.render()
+        self.art.app.inactive_layer_visibility = ilv
         self.exporting = False
     
     def render(self, layers=None, z_override=None, brightness=1.0):
@@ -433,8 +437,10 @@ class TileRenderable:
             # use position offset instead of baked-in Z for layers - this
             # way a layer's Z can change w/o rebuilding its vert array
             x, y, z = self.get_loc()
-            z += self.art.layers_z[i]
-            z = z_override if z_override else z
+            # for export, render all layers at same Z
+            if not self.exporting:
+                z += self.art.layers_z[i]
+                z = z_override if z_override else z
             GL.glUniform3f(self.position_uniform, x, y, z)
             GL.glDrawElements(GL.GL_TRIANGLES, layer_size, GL.GL_UNSIGNED_INT,
                 ctypes.c_void_p(layer_start * ctypes.sizeof(ctypes.c_uint)))
