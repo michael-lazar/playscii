@@ -75,7 +75,7 @@ If CRT filter is enabled, image will always be 32-bit.
     
     def run_export(self, out_filename, options):
         # heavy lifting done by image_export module
-        export_still_image(self.app, self.app.ui.active_art, out_filename,
+        return export_still_image(self.app, self.app.ui.active_art,
+                           out_filename,
                            crt=options.get('crt', DEFAULT_CRT),
                            scale=options.get('scale', DEFAULT_SCALE))
-        return True

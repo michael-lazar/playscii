@@ -40,9 +40,9 @@ class ArtExporter:
             if self.run_export(out_filename, options):
                 self.success = True
             else:
-                line = '%s failed to export %s' % (self.__class__.__name__, out_filename)
+                line = '%s failed to export %s, see console for errors' % (self.__class__.__name__, out_filename)
                 self.app.log(line)
-                self.app.ui.message_line.post_line(line, error=True)
+                self.app.ui.message_line.post_line(line, hold_time=10, error=True)
         except:
             for line in traceback.format_exc().split('\n'):
                 self.app.log(line)
