@@ -10,7 +10,8 @@ any extended characters you want translated.
     """
     file_extension = 'txt'
     def run_export(self, out_filename, options):
-        outfile = open(out_filename, 'w')
+        # utf-8 is safest encoding to use here, but non-default on Windows
+        outfile = open(out_filename, 'w', encoding='utf-8')
         for y in range(self.art.height):
             for x in range(self.art.width):
                 char = self.art.get_char_index_at(0, 0, x, y)

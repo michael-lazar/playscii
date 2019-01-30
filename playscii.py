@@ -1021,8 +1021,11 @@ def get_paths():
     # create Playscii dir AND subdirs for user art, charsets etc if not present
     for subdir in ['', ART_DIR, CHARSET_DIR, PALETTE_DIR, FORMATS_DIR,
                    ART_SCRIPT_DIR, SCREENSHOT_DIR, TOP_GAME_DIR]:
-        if not os.path.exists(documents_dir + subdir):
-            os.mkdir(documents_dir + subdir)
+        new_dir = os.path.abspath(documents_dir + subdir)
+        # os.path.exists can fail in Windows b/c case insensitivity,
+        # so just try and fail :[
+        try: os.mkdir(new_dir)
+        except: pass
     return config_dir, documents_dir, cache_dir
 
 def get_version():
