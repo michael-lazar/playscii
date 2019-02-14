@@ -25,9 +25,9 @@ include_files = [
 ]
 
 include_bins = [
-    ('./*.dll', '.'),
+    ('./*.dll', '.')
     # https://github.com/pyinstaller/pyinstaller/issues/1998
-    (ExpandEnvironmentStrings('%WINDIR%') + '\\system32\\version.dll', '.')
+    #(ExpandEnvironmentStrings('%WINDIR%') + '\\system32\\version.dll', '.')
 ]
 
 a = Analysis(['playscii.py'],
@@ -37,7 +37,7 @@ a = Analysis(['playscii.py'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
-             excludes=None,
+             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter'],
              win_no_prefer_redirects=None,
              win_private_assemblies=None,
              cipher=block_cipher)
