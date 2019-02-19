@@ -944,6 +944,35 @@ class Art:
                 self.set_color_at(frame, layer, x+x_offset, y, bg_color_index, False)
             x_offset += 1
     
+    def composite_to(self, src_frame, src_layer, src_x, src_y, width, height,
+                     dest_art, dest_frame, dest_layer, dest_x, dest_y):
+        # TODO: check source + dest bounds?
+        # if this is only called from game code, just let it throw the error
+        for y in range(src_y, src_y + height):
+            for x in range(src_x, src_x + width):
+                # only consider non-blank characters
+                if self.get_char_index_at(src_frame, src_layer, x, y) == 0:
+                    continue
+                # skip tiles with transparent FG
+                # TODO: decide if there's a reasonable behavior here
+                if self.get_fg_color_index_at(src_frame, src_layer, x, y) == 0:
+                    continue
+                ch, fg, bg, xform = self.get_tile_at(src_frame, src_layer, x, y)
+                # get coords in dest art space
+                dx = dest_x + (x - src_x)
+                dy = dest_y + (y - src_y)
+                # transparent bg -> keep dest bg, else use entire src tile
+                if self.get_bg_color_index_at(src_frame, src_layer, x, y) == 0:
+                    bg = dest_art.get_bg_color_index_at(dest_frame, dest_layer,
+                                                        dx, dy)
+                dest_art.set_tile_at(dest_frame, dest_layer, dx, dy,
+                                     ch, fg, bg, xform)
+    
+    def composite_from(self, src_art, src_frame, src_layer, src_x, src_y,
+                       width, height, dest_frame, dest_layer, dest_x, dest_y):
+        src_art.composite_to(src_frame, src_layer, src_x, src_y, width, height,
+                             self, dest_frame, dest_layer, dest_x, dest_y)
+    
     def get_filtered_tiles(self, frame, layer, char_value, invert_filter=False):
         "Return list of (x,y) tile coords that match (or don't) a char value."
         tiles = []
