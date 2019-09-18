@@ -28,8 +28,11 @@ class SpriteRenderable:
             self.vao = GL.glGenVertexArrays(1)
             GL.glBindVertexArray(self.vao)
         # support loading texture from file or from provided data
+        # (remember the filename for later use)
+        if texture_filename:
+            self.texture_filename = texture_filename
         if not image_data:
-            image_data = Image.open(texture_filename or self.texture_filename)
+            image_data = Image.open(self.texture_filename)
         image_data = image_data.convert('RGBA')
         if self.flip_y:
             image_data = image_data.transpose(Image.FLIP_TOP_BOTTOM)
