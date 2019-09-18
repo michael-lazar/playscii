@@ -50,3 +50,6 @@ class MazePlayer(Player):
         Player.update(self)
         if type(self.world.current_room) is OutsideRoom:
             self.z = 5 + math.sin(self.world.get_elapsed_time() / 300) * 2
+        else:
+            # slightly above blob shadow
+            self.z = 0.01
