@@ -149,6 +149,9 @@ These libraries are all pretty easy to install using PIP, the package manager th
 In Windows the pip executable is in the <tt>Scripts\</tt> subfolder of your Python install folder, eg <tt>c:\Python34</tt>.  On some Unix-like systems (Linux and OSX) the pip binary to run may be called <tt>pip3</tt> to distinguish it from any Python 2 installations.  On Unix-like systems you may also need to run pip as super user to let it install system libraries, eg by pre-pending <tt>sudo</tt> to the command above.
 </p>
 <p>
+On most systems, <a href="https://www.libsdl.org/projects/SDL_mixer/">SDL2_mixer</a> - which Playscii's Game Mode uses for sound playback - is a separate library from SDL2 core, so you'll also need to install that, by providing SDL2_mixer.dll and all its dependency DLLs in Windows, or as a system library (eg from a package manager) on *NIX-based operating systems.
+</p>
+<p>
 Once you have the dependencies installed, you can run Playscii from source like so:
 </p>
 <p>
