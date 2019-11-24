@@ -615,17 +615,46 @@ class Art:
         if transform is not None:
             self.set_char_transform_at(frame, layer, x, y, transform)
     
+    def flip_all_xforms(self, flip_dict):
+        # kinda ugly brute force approach: individually set all tiles in all
+        # layers in all frames :/
+        for frame in range(self.frames):
+            for layer in range(self.layers):
+                for y in range(self.height):
+                    for x in range(self.width):
+                        self.set_char_transform_at(frame, layer, x, y, flip_dict[self.get_char_transform_at(frame, layer, x, y)])
+    
     def flip_horizontal(self, frame, layer):
         "Mirrors Art left-to-right."
         for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
             a[frame][layer] = np.fliplr(a[frame][layer])
+        if self.app.ui.flip_affects_xforms:
+            flips = {
+                UV_NORMAL: UV_FLIPX,
+                UV_FLIPX: UV_NORMAL,
+                UV_FLIPY: UV_ROTATE180,
+                UV_ROTATE180: UV_FLIPY
+                # TODO: no matches for UV_ROTATE90 and UV_ROTATE270!
+            }
+            self.flip_all_xforms(flips)
         self.mark_frame_changed(frame)
+        self.set_unsaved_changes(True)
     
     def flip_vertical(self, frame, layer):
         "Flips Art upside down."
         for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
             a[frame][layer] = np.flipud(a[frame][layer])
+        if self.app.ui.flip_affects_xforms:
+            flips = {
+                UV_NORMAL: UV_FLIPY,
+                UV_FLIPY: UV_NORMAL,
+                UV_FLIPX: UV_ROTATE180,
+                UV_ROTATE180: UV_FLIPX
+                # TODO: no matches for UV_ROTATE90 and UV_ROTATE270!
+            }
+            self.flip_all_xforms(flips)
         self.mark_frame_changed(frame)
+        self.set_unsaved_changes(True)
     
     def shift(self, frame, layer, amount_x, amount_y):
         "Shift + wrap art on given frame and layer by given amount in X and Y."

@@ -868,6 +868,10 @@ class InputLord:
         self.ui.active_art.flip_vertical(self.ui.active_art.active_frame,
                                          self.ui.active_art.active_layer)
     
+    def BIND_art_toggle_flip_affects_xforms(self):
+        self.ui.flip_affects_xforms = not self.ui.flip_affects_xforms
+        self.ui.menu_bar.refresh_active_menu()
+    
     def BIND_run_art_script(self):
         self.ui.open_dialog(RunArtScriptDialog)
     
