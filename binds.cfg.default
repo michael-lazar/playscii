@@ -43,6 +43,7 @@ self.edit_bind_src = {
     'ctrl a'   : 'select_all',
     'ctrl i'   : 'select_invert',
     'delete'   : 'erase_selection_or_art',
+    'backspace': 'erase_selection_or_art',
     'g'        : 'toggle_game_mode',
     'shift e'  : 'toggle_game_edit_ui',
     'ctrl shift g': 'set_game_dir',

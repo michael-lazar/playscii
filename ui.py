@@ -515,6 +515,7 @@ class UI:
         # commit command
         command.save_tiles(before=False)
         art.command_stack.commit_commands([command])
+        art.set_unsaved_changes(True)
     
     def select_none(self):
         self.select_tool.selected_tiles = {}

@@ -1,4 +1,4 @@
-import ctypes, os
+import ctypes, os, platform
 import sdl2
 
 from sys import exit
@@ -168,6 +168,9 @@ class InputLord:
         if ks[sdl2.SDL_SCANCODE_LALT] or ks[sdl2.SDL_SCANCODE_RALT]:
             self.alt_pressed = True
         if ks[sdl2.SDL_SCANCODE_LCTRL] or ks[sdl2.SDL_SCANCODE_RCTRL]:
+            self.ctrl_pressed = True
+        # macOS: treat command as interchangeable with control, is this kosher?
+        if platform.system() == 'Darwin' and (ks[sdl2.SDL_SCANCODE_LGUI] or ks[sdl2.SDL_SCANCODE_RGUI]):
             self.ctrl_pressed = True
         if app.capslock_is_ctrl and ks[sdl2.SDL_SCANCODE_CAPSLOCK]:
             self.ctrl_pressed = True
