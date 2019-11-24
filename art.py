@@ -39,7 +39,10 @@ UV_ROTATE180 = 2
 UV_ROTATE270 = 3
 UV_FLIPX = 4
 UV_FLIPY = 5
-# flip X & Y is identical to rotate 180
+# (flip X & Y is identical to rotate 180)
+# not sure what to call these, but - results for X and Y flip of rotated chars:
+UV_FLIP90 = 6
+UV_FLIP270 = 7
 
 uv_names = {
     UV_NORMAL: 'Normal',
@@ -48,6 +51,8 @@ uv_names = {
     UV_ROTATE270: 'Rotate 270',
     UV_FLIPX: 'Flip X',
     UV_FLIPY: 'Flip Y',
+    UV_FLIP90: 'Flipped90',
+    UV_FLIP270: 'Flipped270'
 }
 
 uv_types = {
@@ -56,7 +61,9 @@ uv_types = {
     UV_ROTATE180: (1, 1, 0, 1, 1, 0, 0, 0),
     UV_ROTATE270: (1, 0, 1, 1, 0, 0, 0, 1),
     UV_FLIPX:     (1, 0, 0, 0, 1, 1, 0, 1),
-    UV_FLIPY:     (0, 1, 1, 1, 0, 0, 1, 0)
+    UV_FLIPY:     (0, 1, 1, 1, 0, 0, 1, 0),
+    UV_FLIP90:  (0, 0, 0, 1, 1, 0, 1, 1),
+    UV_FLIP270:  (1, 1, 1, 0, 0, 1, 0, 0)
 }
 
 # reverse dict for easy (+ fast?) lookup in eg get_char_transform_at
@@ -66,7 +73,9 @@ uv_types_reverse = {
     uv_types[UV_ROTATE180]: UV_ROTATE180,
     uv_types[UV_ROTATE270]: UV_ROTATE270,
     uv_types[UV_FLIPX]: UV_FLIPX,
-    uv_types[UV_FLIPY]: UV_FLIPY
+    uv_types[UV_FLIPY]: UV_FLIPY,
+    uv_types[UV_FLIP90]: UV_FLIP90,
+    uv_types[UV_FLIP270]: UV_FLIP270
 }
 
 
@@ -633,8 +642,11 @@ class Art:
                 UV_NORMAL: UV_FLIPX,
                 UV_FLIPX: UV_NORMAL,
                 UV_FLIPY: UV_ROTATE180,
-                UV_ROTATE180: UV_FLIPY
-                # TODO: no matches for UV_ROTATE90 and UV_ROTATE270!
+                UV_ROTATE180: UV_FLIPY,
+                UV_ROTATE90: UV_FLIP90,
+                UV_FLIP90: UV_ROTATE90,
+                UV_ROTATE270: UV_FLIP270,
+                UV_FLIP270: UV_ROTATE270
             }
             self.flip_all_xforms(flips)
         self.mark_frame_changed(frame)
@@ -649,8 +661,12 @@ class Art:
                 UV_NORMAL: UV_FLIPY,
                 UV_FLIPY: UV_NORMAL,
                 UV_FLIPX: UV_ROTATE180,
-                UV_ROTATE180: UV_FLIPX
-                # TODO: no matches for UV_ROTATE90 and UV_ROTATE270!
+                UV_ROTATE180: UV_FLIPX,
+                # vertical flip of rotated characters: use inverted (180) "flip"
+                UV_ROTATE90: UV_FLIP270,
+                UV_FLIP270: UV_ROTATE90,
+                UV_ROTATE270: UV_FLIP90,
+                UV_FLIP90: UV_ROTATE270
             }
             self.flip_all_xforms(flips)
         self.mark_frame_changed(frame)

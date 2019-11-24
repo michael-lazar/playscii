@@ -14,7 +14,7 @@ from ui_edit_panel import EditListPanel
 from ui_object_panel import EditObjectPanel
 from ui_colors import UIColors
 from ui_tool import PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool
-from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, uv_names
+from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, UV_FLIP90, UV_FLIP270, uv_names
 from edit_command import EditCommand, EditCommandTile, EntireArtCommand
 
 UI_ASSET_DIR = 'ui/'
@@ -283,7 +283,7 @@ class UI:
             xform -= 1
         else:
             xform += 1
-        xform %= UV_FLIPY + 1
+        xform %= UV_FLIP270 + 1
         self.set_selected_xform(xform)
     
     def reset_onion_frames(self, new_art=None):
