@@ -662,6 +662,8 @@ class InputLord:
         self.ui.redo()
     
     def BIND_quick_grab(self):
+        if not self.ui.active_art:
+            return
         self.app.keyboard_editing = True
         self.ui.quick_grab()
     
