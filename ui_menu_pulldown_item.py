@@ -346,6 +346,12 @@ class ArtFlipVertical(ArtModePulldownMenuItem):
     label = 'Flip vertically'
     command = 'art_flip_vertical'
 
+class ArtToggleFlipAffectsXforms(ArtModePulldownMenuItem):
+    label = '  Flip affects xforms'
+    command = 'art_toggle_flip_affects_xforms'
+    def should_mark(ui):
+        return ui.flip_affects_xforms
+
 class ArtRunScriptItem(ArtModePulldownMenuItem):
     label = 'Run Artscript…'
     command = 'run_art_script'
@@ -601,7 +607,7 @@ class ViewMenuData(PulldownMenuData):
 
 class ArtMenuData(PulldownMenuData):
     items = [ArtResizeItem, ArtCropToSelectionItem,
-             ArtFlipHorizontal, ArtFlipVertical,
+             ArtFlipHorizontal, ArtFlipVertical, ArtToggleFlipAffectsXforms,
              SeparatorItem,
              ArtRunScriptItem, ArtRunLastScriptItem, SeparatorItem,
              ArtOpenAllGameAssetsItem, SeparatorItem,
@@ -609,6 +615,8 @@ class ArtMenuData(PulldownMenuData):
     
     def should_mark_item(item, ui):
         "show checkmark for active art"
+        if hasattr(item, 'should_mark'):
+            return item.should_mark(ui)
         return ui.active_art and ui.active_art.filename == item.cb_arg
     
     def get_items(app):
