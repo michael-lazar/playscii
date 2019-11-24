@@ -4,7 +4,7 @@ from PIL import Image
 
 from texture import Texture
 from edit_command import EditCommandTile
-from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY
+from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, UV_FLIP90, UV_FLIP270
 from key_shifts import shift_map
 from selection import SelectionRenderable
 
@@ -181,7 +181,12 @@ class RotateTool(PencilTool):
         UV_NORMAL: UV_ROTATE90,
         UV_ROTATE90: UV_ROTATE180,
         UV_ROTATE180: UV_ROTATE270,
-        UV_ROTATE270: UV_NORMAL
+        UV_ROTATE270: UV_NORMAL,
+        # support flipped characters! counter-intuitive results though?
+        UV_FLIPX: UV_FLIP270,
+        UV_FLIP270: UV_FLIPY,
+        UV_FLIPY: UV_ROTATE270,
+        UV_FLIP90: UV_FLIPX
     }
     icon_filename = 'tool_rotate.png'
     
