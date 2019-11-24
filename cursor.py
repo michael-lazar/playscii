@@ -224,6 +224,9 @@ class Cursor:
         self.current_command.finish_time = self.app.get_elapsed_time()
         self.app.ui.active_art.command_stack.commit_commands([self.current_command])
         self.current_command = None
+        # tools like rotate produce a different change each time, so update again
+        if self.app.ui.selected_tool.update_preview_after_paint:
+            self.update_cursor_preview()
         #print(self.app.ui.active_art.command_stack)
     
     def moved_this_frame(self):

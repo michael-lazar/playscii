@@ -17,6 +17,9 @@ class UITool:
     paint_while_dragging = True
     # show preview of paint result under cursor
     show_preview = True
+    # if True, refresh paint preview immediately after Cursor.finish_paint
+    # set this for anything that produces a different change each paint
+    update_preview_after_paint = False
     brush_size = 1
     # affects char/fg/bg/xform masks are relevant to how this tool works
     # (false for eg Selection tool)
@@ -173,6 +176,7 @@ class RotateTool(PencilTool):
     
     name = 'rotate'
     button_caption = 'Rotate'
+    update_preview_after_paint = True
     rotation_shifts = {
         UV_NORMAL: UV_ROTATE90,
         UV_ROTATE90: UV_ROTATE180,
