@@ -285,7 +285,7 @@ class ViewToggleZoomExtentsItem(ArtModePulldownMenuItem):
     label = '  Zoom to Art extents'
     command = 'toggle_zoom_extents'
     def should_mark(ui):
-        return ui.active_art.camera_zoomed_extents
+        return ui.active_art and ui.active_art.camera_zoomed_extents
 
 class ViewZoomInItem(ArtModePulldownMenuItem):
     label = 'Zoom in'

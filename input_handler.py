@@ -589,7 +589,8 @@ class InputLord:
         self.ui.menu_bar.refresh_active_menu()
     
     def BIND_swap_fg_bg_colors(self):
-        self.ui.swap_fg_bg_colors()
+        if self.ui.active_art:
+            self.ui.swap_fg_bg_colors()
     
     def BIND_save_current(self):
         # save current game state in game mode, else save current art

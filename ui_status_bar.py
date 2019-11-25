@@ -324,6 +324,8 @@ class StatusBarUI(UIElement):
         self.zoom_set_button.caption = zoom[:5] # maintain size
     
     def update(self):
+        if not self.ui.active_art:
+            return
         # update buttons
         UIElement.update(self)
         # set color swatches
@@ -403,6 +405,8 @@ class StatusBarUI(UIElement):
         self.art.write_string(0, 0, x, 0, self.frame_label, dark, light, True)
     
     def render(self):
+        if not self.ui.active_art:
+            return
         UIElement.render(self)
         # draw wireframe red X /behind/ char if BG transparent
         if self.ui.selected_bg_color == 0:
