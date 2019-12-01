@@ -5,7 +5,7 @@ from PIL import Image
 from texture import Texture
 from edit_command import EditCommandTile
 from art import UV_NORMAL, UV_ROTATE90, UV_ROTATE180, UV_ROTATE270, UV_FLIPX, UV_FLIPY, UV_FLIP90, UV_FLIP270
-from key_shifts import shift_map
+from key_shifts import SHIFT_MAP
 from selection import SelectionRenderable
 
 class UITool:
@@ -309,7 +309,7 @@ class TextTool(UITool):
         if keystr.isalpha() and not shift_pressed:
             keystr = keystr.lower()
         elif not keystr.isalpha() and shift_pressed:
-            keystr = shift_map.get(keystr, ' ')
+            keystr = SHIFT_MAP.get(keystr, ' ')
         # if cursor got out of bounds, don't input
         if 0 > x or x >= art.width or 0 > y or y >= art.height:
             return

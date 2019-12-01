@@ -12,9 +12,11 @@ from ui_file_chooser_dialog import ArtChooserDialog, CharSetChooserDialog, Palet
 from ui_list_operations import LO_NONE, LO_SELECT_OBJECTS, LO_SET_SPAWN_CLASS, LO_LOAD_STATE, LO_SET_ROOM, LO_SET_ROOM_OBJECTS, LO_SET_OBJECT_ROOMS, LO_OPEN_GAME_DIR, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_WARP, LO_SET_ROOM_EDGE_OBJ, LO_SET_ROOM_CAMERA
 from collision import CT_NONE
 from art import ART_DIR, ART_FILE_EXTENSION
+from key_shifts import NUMLOCK_ON_MAP, NUMLOCK_OFF_MAP
 
 BINDS_FILENAME = 'binds.cfg'
 BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
+
 
 class InputLord:
     
@@ -100,11 +102,22 @@ class InputLord:
                 key = i
         return (key, shift, alt, ctrl)
     
-    def get_bind_functions(self, event, shift, alt, ctrl):
-        "returns a list of methods for the given event + mods if one exists"
-        keystr = sdl2.SDL_GetKeyName(event.key.keysym.sym).decode().lower()
+    def get_bind_functions(self, keysym, shift, alt, ctrl):
+        "returns a list of methods for the given key + mods if one exists"
+        keystr = sdl2.SDL_GetKeyName(keysym).decode().lower()
         key_data = (keystr, shift, alt, ctrl)
         return self.edit_binds.get(key_data, [])
+    
+    def get_keysym(self, event):
+        "get SDL2 keysym from event; right now only used to check numlock variants"
+        numlock_on = bool(event.key.keysym.mod & sdl2.KMOD_NUM)
+        keysym = event.key.keysym.sym
+        # if numlock is on, treat numpad keys like numbers
+        if numlock_on and keysym in NUMLOCK_ON_MAP:
+            return NUMLOCK_ON_MAP[keysym]
+        elif not numlock_on and keysym in NUMLOCK_OFF_MAP:
+            return NUMLOCK_OFF_MAP[keysym]
+        return keysym
     
     def get_command_shortcut(self, command_function):
         for bind in self.edit_bind_src:
@@ -196,21 +209,22 @@ class InputLord:
                 if not app.gw.paused and app.gw.player:
                     self.app.gw.player.button_unpressed(event.jbutton.button)
             elif event.type == sdl2.SDL_KEYDOWN:
+                keysym = self.get_keysym(event)
                 # if console is up, pass input to it
                 if self.ui.console.visible:
-                    self.ui.console.handle_input(event.key.keysym.sym, *mods)
+                    self.ui.console.handle_input(keysym, *mods)
                 # same with dialog box
                 elif self.ui.active_dialog and self.ui.active_dialog is self.ui.keyboard_focus_element:
-                    self.ui.active_dialog.handle_input(event.key.keysym.sym, *mods)
+                    self.ui.active_dialog.handle_input(keysym, *mods)
                     # bail, process no further input
                     #sdl2.SDL_PumpEvents()
                     #return
                 # handle text input if text tool is active
                 elif self.ui.selected_tool is self.ui.text_tool and self.ui.text_tool.input_active:
-                    self.ui.text_tool.handle_keyboard_input(event.key.keysym.sym, *mods)
+                    self.ui.text_tool.handle_keyboard_input(keysym, *mods)
                 # see if there's a function for this bind and run it
                 else:
-                    flist = self.get_bind_functions(event, *mods)
+                    flist = self.get_bind_functions(keysym, *mods)
                     for f in flist:
                         # don't run any command whose menu bar item's dimmed / not allowed (ie wrong mode)
                         if self.is_command_function_allowed(f):
@@ -222,10 +236,11 @@ class InputLord:
             # TODO: once there are enough key up events, figure out a more
             # elegant way than this
             elif event.type == sdl2.SDL_KEYUP:
+                keysym = self.get_keysym(event)
                 if self.app.game_mode:
                     self.app.gw.handle_input(event, *mods)
                 # dismiss selector popup
-                flist = self.get_bind_functions(event, *mods)
+                flist = self.get_bind_functions(keysym, *mods)
                 if not flist:
                     pass
                 elif self.ui.active_dialog:
@@ -311,13 +326,13 @@ class InputLord:
         # TODO: these are hard-coded for the moment, think of a good way
         # to expose this functionality to the key bind system
         def pressing_up(ks):
-            return ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP]
+            return ks[sdl2.SDL_SCANCODE_W] or ks[sdl2.SDL_SCANCODE_UP] or ks[sdl2.SDL_SCANCODE_KP_8]
         def pressing_down(ks):
-            return ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN]
+            return ks[sdl2.SDL_SCANCODE_S] or ks[sdl2.SDL_SCANCODE_DOWN] or ks[sdl2.SDL_SCANCODE_KP_2]
         def pressing_left(ks):
-            return ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT]
+            return ks[sdl2.SDL_SCANCODE_A] or ks[sdl2.SDL_SCANCODE_LEFT] or ks[sdl2.SDL_SCANCODE_KP_4]
         def pressing_right(ks):
-            return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT]
+            return ks[sdl2.SDL_SCANCODE_D] or ks[sdl2.SDL_SCANCODE_RIGHT] or ks[sdl2.SDL_SCANCODE_KP_6]
         # prevent camera move if: console is up, text input is active, editing
         # is not allowed
         if self.shift_pressed and not self.alt_pressed and not self.ctrl_pressed and not self.ui.console.visible and not self.ui.text_tool.input_active and self.app.can_edit and self.ui.keyboard_focus_element is None:
