@@ -4,7 +4,7 @@ from math import ceil
 
 from ui_element import UIElement
 from art import UV_FLIPY
-from key_shifts import shift_map
+from key_shifts import SHIFT_MAP
 
 from image_convert import ImageConverter
 from palette import PaletteFromFile
@@ -491,7 +491,7 @@ class ConsoleUI(UIElement):
         if keystr.isalpha() and not shift_pressed:
             keystr = keystr.lower()
         elif not keystr.isalpha() and shift_pressed:
-            keystr = shift_map.get(keystr, '')
+            keystr = SHIFT_MAP.get(keystr, '')
         if len(self.current_line) < self.max_line_length:
             self.current_line += keystr
     

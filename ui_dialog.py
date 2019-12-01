@@ -6,7 +6,7 @@ from ui_element import UIElement
 from ui_button import UIButton, TEXT_LEFT, TEXT_CENTER, TEXT_RIGHT
 from ui_colors import UIColors
 
-from key_shifts import shift_map
+from key_shifts import SHIFT_MAP
 
 
 Field = namedtuple('Field', ['label', # text label for field
@@ -394,7 +394,7 @@ class UIDialog(UIElement):
                 if not shift_pressed:
                     keystr = keystr.lower()
                 if not keystr.isalpha() and shift_pressed:
-                    keystr = shift_map.get(keystr, '')
+                    keystr = SHIFT_MAP.get(keystr, '')
             elif field.type is int and not keystr.isdigit() and keystr != '-':
                 return
             # this doesn't guard against things like 0.00.001
