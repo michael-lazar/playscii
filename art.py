@@ -635,6 +635,8 @@ class Art:
     
     def flip_horizontal(self, frame, layer):
         "Mirrors Art left-to-right."
+        command = EntireArtCommand(self)
+        command.save_tiles(before=True)
         for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
             a[frame][layer] = np.fliplr(a[frame][layer])
         if self.app.ui.flip_affects_xforms:
@@ -651,9 +653,13 @@ class Art:
             self.flip_all_xforms(flips)
         self.mark_frame_changed(frame)
         self.set_unsaved_changes(True)
+        command.save_tiles(before=False)
+        self.command_stack.commit_commands([command])
     
     def flip_vertical(self, frame, layer):
         "Flips Art upside down."
+        command = EntireArtCommand(self)
+        command.save_tiles(before=True)
         for a in [self.chars, self.fg_colors, self.bg_colors, self.uv_mods, self.uv_maps]:
             a[frame][layer] = np.flipud(a[frame][layer])
         if self.app.ui.flip_affects_xforms:
@@ -671,6 +677,8 @@ class Art:
             self.flip_all_xforms(flips)
         self.mark_frame_changed(frame)
         self.set_unsaved_changes(True)
+        command.save_tiles(before=False)
+        self.command_stack.commit_commands([command])
     
     def shift(self, frame, layer, amount_x, amount_y):
         "Shift + wrap art on given frame and layer by given amount in X and Y."
