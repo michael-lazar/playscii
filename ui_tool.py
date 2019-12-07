@@ -117,7 +117,9 @@ class PencilTool(UITool):
         """
         a_char = self.ui.selected_char if self.affects_char else None
         # don't paint fg color for blank characters
-        a_fg = self.ui.selected_fg_color if self.affects_fg_color and a_char != 0 else None
+        # (disabled, see BB issue #86)
+        #a_fg = self.ui.selected_fg_color if self.affects_fg_color and a_char != 0 else None
+        a_fg = self.ui.selected_fg_color if self.affects_fg_color else None
         a_bg = self.ui.selected_bg_color if self.affects_bg_color else None
         a_xform = self.ui.selected_xform if self.affects_xform else None
         return a_char, a_fg, a_bg, a_xform
