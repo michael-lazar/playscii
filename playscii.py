@@ -201,29 +201,8 @@ class Application:
         else:
             self.context_es = False
         self.log('Detecting hardware...')
-        # report OS, version, CPU
         cpu = platform.processor() or platform.machine()
         self.log('  CPU: %s' % (cpu if cpu != '' else "[couldn't detect CPU]"))
-        self.log('  OS: %s' % platform.platform())
-        py_version = ' '.join(sys.version.split('\n'))
-        # report 32 vs 64 bit as it's not clear from sys.version or OS
-        bitness = platform.architecture()[0]
-        self.log('  Python: %s (%s)' % (py_version, bitness))
-        module_versions = 'PySDL2: %s, ' % sdl2.__version__
-        module_versions += 'numpy: %s, ' % numpy.__version__
-        module_versions += 'PyOpenGL: %s, ' % OpenGL.__version__
-        module_versions += 'appdirs: %s, ' % appdirs.__version__
-        module_versions += 'PIL: %s' % PIL.__version__
-        self.log('  Modules: %s' % module_versions)
-        sdl_version = '%s.%s.%s ' % (sdl2.version.SDL_MAJOR_VERSION,
-                                     sdl2.version.SDL_MINOR_VERSION,
-                                     sdl2.version.SDL_PATCHLEVEL)
-        sdl_version += sdl2.version.SDL_GetRevision().decode('utf-8')
-        sdl_version += ', SDLmixer: %s.%s.%s' % (sdlmixer.SDL_MIXER_MAJOR_VERSION,
-                                                 sdlmixer.SDL_MIXER_MINOR_VERSION,
-                                                 sdlmixer.SDL_MIXER_PATCHLEVEL)
-        self.log('  SDL: %s' % sdl_version)
-        self.log('  Detected screen resolution: %.0f x %.0f, window: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
         # report GL vendor, version, GLSL version etc
         try: gpu_vendor = GL.glGetString(GL.GL_VENDOR).decode('utf-8')
         except: gpu_vendor = "[couldn't detect vendor]"
@@ -248,7 +227,6 @@ class Application:
             self.log('GLSL support not detected, ' + self.compat_fail_message)
             self.should_quit = True
             return
-	
         glsl_ver = glsl_ver.decode('utf-8') if glsl_ver != None else None
         self.log('  GLSL detected: %s' % glsl_ver or '[unknown]')
         # verify that we got at least a 2.1 context
@@ -260,7 +238,7 @@ class Application:
         self.log('  Vertex Array Object support %sfound.' % ['NOT ', ''][self.use_vao])
         if not self.context:
             self.log("No OpenGL context found!")
-        # enforce VAO / GL version requirement
+        # enforce GL version requirement
         if not self.context or context_version < 2.1 or gl_ver.startswith('2.0'):
             self.log("Couldn't create a compatible OpenGL context, " + self.compat_fail_message)
             if not self.run_if_opengl_incompatible:
@@ -282,7 +260,27 @@ class Application:
         GL.glGetIntegerv(GL.GL_MAX_TEXTURE_SIZE, mts)
         self.max_texture_size = mts.value
         self.log('  Maximum supported texture size: %s x %s' % (self.max_texture_size, self.max_texture_size))
-        #GL.getParameter(GL.MAX_TEXTURE_SIZE)
+        self.log('  Detected screen resolution: %.0f x %.0f, window: %s x %s' % (screen_width, screen_height, self.window_width, self.window_height))
+        self.log('Detecting software environment...')
+        self.log('  OS: %s' % platform.platform())
+        py_version = ' '.join(sys.version.split('\n'))
+        # report 32 vs 64 bit as it's not clear from sys.version or OS
+        bitness = platform.architecture()[0]
+        self.log('  Python: %s (%s)' % (py_version, bitness))
+        module_versions = 'PySDL2 %s, ' % sdl2.__version__
+        module_versions += 'numpy %s, ' % numpy.__version__
+        module_versions += 'PyOpenGL %s, ' % OpenGL.__version__
+        module_versions += 'appdirs %s, ' % appdirs.__version__
+        module_versions += 'PIL %s' % PIL.__version__
+        self.log('  Modules: %s' % module_versions)
+        sdl_version = '%s.%s.%s ' % (sdl2.version.SDL_MAJOR_VERSION,
+                                     sdl2.version.SDL_MINOR_VERSION,
+                                     sdl2.version.SDL_PATCHLEVEL)
+        sdl_version += sdl2.version.SDL_GetRevision().decode('utf-8')
+        sdl_version += ', SDLmixer: %s.%s.%s' % (sdlmixer.SDL_MIXER_MAJOR_VERSION,
+                                                 sdlmixer.SDL_MIXER_MINOR_VERSION,
+                                                 sdlmixer.SDL_MIXER_PATCHLEVEL)
+        self.log('  SDL: %s' % sdl_version)
         # draw black screen while doing other init
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
