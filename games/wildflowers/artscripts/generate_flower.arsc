@@ -1,0 +1,82 @@
+
+import random
+
+WIDTH, HEIGHT = 16, 16
+
+frond_chars = [
+    # thick and skinny \
+    151, 166,
+    # thick and skinny /
+    150, 167,
+    # thick and skinny X
+    183, 182,
+    # solid inward wedges, NW NE SE SW
+    148, 149, 164, 165
+]
+
+# grow up and to left
+grow_dirs = [
+    (-1, -1),
+    (-1, 0),
+    (0, -1)
+]
+
+# palette ramps:
+# (-1 = one to left a la dpaint2, +16 = 1 down a la atari)
+palette_ramps = {
+    'dpaint': [
+        # start index, length, stride
+        (),
+        ()
+    ],
+    'doom': [
+        (),
+        ()
+    ],
+    'quake': [
+        (),
+        ()
+    ]
+}
+
+#random.seed(20191221)
+
+self.set_charset_by_name('jpetscii')
+palette = random.choice(list(palette_ramps.keys()))
+self.set_palette_by_name(palette)
+
+self.resize(WIDTH, HEIGHT)
+self.app.ui.adjust_for_art_resize(self) # grid etc
+self.clear_frame_layer(0, 0)
+
+temp_fg_colors = [97, 129, 182]
+
+frond_count = random.randint(1, 5)
+
+for frond in range(frond_count):
+    frond_life = random.randint(2, 8)
+    # start at center
+    x, y = int(WIDTH / 2) - 1, int(HEIGHT / 2) - 1
+    fg = random.choice(temp_fg_colors)
+    char = random.choice(frond_chars)
+    while frond_life > 0:
+        grow_dir = random.choice(grow_dirs)
+        # TODO: shift color?
+        # top left
+        self.set_tile_at(0, 0, x, y, char, fg)
+        # top right
+        self.set_tile_at(0, 0, WIDTH-1 - x, y, char, fg, transform=UV_FLIPX)
+        # bottom left
+        self.set_tile_at(0, 0, x, HEIGHT-1 - y, char, fg, transform=UV_FLIPY)
+        # bottom right
+        self.set_tile_at(0, 0, WIDTH-1 - x, HEIGHT-1 - y, char, fg,
+                         transform=UV_ROTATE180)
+        frond_life -= 1
+        x += grow_dir[0]
+        y += grow_dir[1]
+
+#for frame, layer, x, y in TileIter(self):
+#if not self.get_char_index_at(frame, layer, x, y) == 0:
+#self.set_char_index_at(frame, layer, x, y, 252)
+#    fg = self.get_fg_color_index_at(frame, layer, x, y)
+#    self.set_color_at(frame, layer, x, y, fg, fg=True)
