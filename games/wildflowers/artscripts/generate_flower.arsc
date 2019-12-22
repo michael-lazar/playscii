@@ -3,6 +3,10 @@ import random
 
 WIDTH, HEIGHT = 16, 16
 
+# overall approach:
+# grow multiple  "fronds" from center of top left quadrant,
+# mirror these in the other three quadrants
+
 frond_chars = [
     # thick and skinny \
     151, 166,
@@ -14,7 +18,7 @@ frond_chars = [
     148, 149, 164, 165
 ]
 
-# grow up and to left
+# draw in top left quadrant; grow up and to left
 grow_dirs = [
     (-1, -1),
     (-1, 0),
@@ -39,6 +43,7 @@ palette_ramps = {
     ]
 }
 
+# TODO: set random seed based on date, a different flower each day
 #random.seed(20191221)
 
 self.set_charset_by_name('jpetscii')
@@ -74,9 +79,3 @@ for frond in range(frond_count):
         frond_life -= 1
         x += grow_dir[0]
         y += grow_dir[1]
-
-#for frame, layer, x, y in TileIter(self):
-#if not self.get_char_index_at(frame, layer, x, y) == 0:
-#self.set_char_index_at(frame, layer, x, y, 252)
-#    fg = self.get_fg_color_index_at(frame, layer, x, y)
-#    self.set_color_at(frame, layer, x, y, fg, fg=True)
