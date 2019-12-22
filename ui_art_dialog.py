@@ -373,11 +373,13 @@ class ResizeArtDialog(UIDialog):
     field1_label = 'New Height:'
     field2_label = 'Crop Start X:'
     field3_label = 'Crop Start Y:'
+    field4_label = 'Fill new tiles with BG color'
     fields = [
         Field(label=field0_label, type=int, width=field_width, oneline=True),
         Field(label=field1_label, type=int, width=field_width, oneline=True),
         Field(label=field2_label, type=int, width=field_width, oneline=True),
-        Field(label=field3_label, type=int, width=field_width, oneline=True)
+        Field(label=field3_label, type=int, width=field_width, oneline=True),
+        Field(label=field4_label, type=bool, width=0, oneline=True)
     ]
     confirm_caption = 'Resize'
     invalid_width_error = 'Invalid width.'
@@ -389,6 +391,8 @@ class ResizeArtDialog(UIDialog):
             return str(self.ui.active_art.width)
         elif field_number == 1:
             return str(self.ui.active_art.height)
+        elif field_number == 4:
+            return UIDialog.true_field_text
         else:
             return '0'
     
@@ -418,7 +422,8 @@ class ResizeArtDialog(UIDialog):
         if not valid: return
         w, h = int(self.field_texts[0]), int(self.field_texts[1])
         start_x, start_y = int(self.field_texts[2]), int(self.field_texts[3])
-        self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y)
+        bg_fill = bool(self.field_texts[4].strip())
+        self.ui.resize_art(self.ui.active_art, w, h, start_x, start_y, bg_fill)
         self.dismiss()
 
 
