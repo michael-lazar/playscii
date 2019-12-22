@@ -403,7 +403,7 @@ class Art:
                 if crop_y:
                     array[frame] = array[frame].take(range(y0, y1), axis=1)
     
-    def expand(self, new_width, new_height):
+    def expand(self, new_width, new_height, bg_fill):
         x_add = new_width - self.width
         y_add = new_height - self.height
         #print('%s expand: %sw + %s = %s, %sh + %s = %s' % (self.filename,
@@ -429,9 +429,10 @@ class Art:
             fg, bg = 0, 0
             if self.app.ui:
                 fg = self.app.ui.selected_fg_color
-                # blank background for all new tiles
-                # (this might be annoying, just trying it out for a while)
-                #bg = self.app.ui.selected_bg_color
+                # fill with BG color? ResizeArtDialog can specify this
+                # if not, blank bg for all new tiles (original default behavior)
+                if bg_fill:
+                    bg = self.app.ui.selected_bg_color
             self.fg_colors[frame] = expand_array(self.fg_colors[frame], fg, 4)
             self.bg_colors[frame] = expand_array(self.bg_colors[frame], bg, 4)
             self.uv_mods[frame] = expand_array(self.uv_mods[frame], uv_types[UV_NORMAL], UV_STRIDE)
@@ -449,7 +450,7 @@ class Art:
         for frame in range(self.frames):
             self.mark_frame_changed(frame)
     
-    def resize(self, new_width, new_height, origin_x=0, origin_y=0):
+    def resize(self, new_width, new_height, origin_x=0, origin_y=0, bg_fill=False):
         """
         Crop and/or expand Art to new given dimensions, with optional new
         top left tile if cropping. Calls crop() and expand(), so no need to
@@ -458,7 +459,7 @@ class Art:
         if new_width < self.width or new_height < self.height:
             self.crop(new_width, new_height, origin_x, origin_y)
         if new_width > self.width or new_height > self.height:
-            self.expand(new_width, new_height)
+            self.expand(new_width, new_height, bg_fill)
         self.width, self.height = new_width, new_height
         # tell all frames they've changed, rebind buffers
         self.geo_changed = True

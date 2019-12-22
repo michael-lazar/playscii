@@ -506,12 +506,12 @@ class UI:
             self.app.cursor.y = art.height
         self.app.cursor.moved = True
     
-    def resize_art(self, art, new_width, new_height, origin_x, origin_y):
+    def resize_art(self, art, new_width, new_height, origin_x, origin_y, bg_fill):
         # create command for undo/redo
         command = EntireArtCommand(art, origin_x, origin_y)
         command.save_tiles(before=True)
         # resize
-        art.resize(new_width, new_height, origin_x, origin_y)
+        art.resize(new_width, new_height, origin_x, origin_y, bg_fill)
         self.adjust_for_art_resize(art)
         # commit command
         command.save_tiles(before=False)
