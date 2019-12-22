@@ -1044,7 +1044,7 @@ class Logger:
     
     def log(self, new_line):
         self.log_file.write('%s\n' % new_line)
-        self.lines.append(new_line)
+        self.lines.append(str(new_line))
         print(new_line)
     
     def close(self):

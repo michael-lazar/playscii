@@ -336,7 +336,7 @@ class MessageLineUI(UIElement):
         color = self.ui.error_color_index if error else self.ui.colors.white
         start_x = 1
         # trim to screen width
-        self.line = new_line[:self.tile_width-start_x-1]
+        self.line = str(new_line)[:self.tile_width-start_x-1]
         self.art.clear_frame_layer(0, 0, 0, color)
         self.art.write_string(0, 0, start_x, 0, self.line)
         self.alpha = 1
