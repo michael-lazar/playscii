@@ -163,15 +163,15 @@ for frond in range(frond_count):
     else:
         char = random.randint(0, 255)
     while frond_life > 0 and fg != ramp_end:
-        # top left
+        # draw in top left
         self.set_tile_at(0, 0, x, y, char, fg)
-        # top right
-        self.set_tile_at(0, 0, WIDTH-1 - x, y, char, fg, transform=UV_FLIPX)
-        # bottom left
-        self.set_tile_at(0, 0, x, HEIGHT-1 - y, char, fg, transform=UV_FLIPY)
-        # bottom right
-        self.set_tile_at(0, 0, WIDTH-1 - x, HEIGHT-1 - y, char, fg,
-                         transform=UV_ROTATE180)
+        # mirror in other three quadrants
+        top_right = (WIDTH - 1 - x, y)
+        bottom_left = (x, HEIGHT - 1 - y)
+        bottom_right = (WIDTH - 1 - x, HEIGHT - 1 - y)
+        self.set_tile_at(0, 0, *top_right, char, fg, transform=UV_FLIPX)
+        self.set_tile_at(0, 0, *bottom_left, char, fg, transform=UV_FLIPY)
+        self.set_tile_at(0, 0, *bottom_right, char, fg, transform=UV_ROTATE180)
         # tick frond
         frond_life -= 1
         # shift color
