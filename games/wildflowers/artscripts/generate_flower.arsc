@@ -7,6 +7,16 @@ WIDTH, HEIGHT = 16, 16
 # grow multiple  "fronds" from center of top left quadrant,
 # mirror these in the other three quadrants
 
+"""
+ideas for future development:
+- a frond draws each growth dir from a deck, reshuffling when empty to avoid repetition?
+- a frond weights growth dirs differently depending on its remaining life?
+- character ramps based on direction changes, visual density, something else?
+- growth dirs that are more algorithms than simple vectors, producing things like spirals, sawtooths, etc?
+- strategies for sometimes filling in tile BG colors? quarter circles or other patterns that mesh interestingly with char/fg details?
+-- use ramps, fade over distance from center in a circle, diamond, square etc pattern
+"""
+
 frond_chars = [
     # thick and skinny \
     151, 166,
@@ -25,10 +35,10 @@ grow_dirs = [
     (0, -1)
 ]
 
-# palette ramps:
-palette_ramps = {
+PALETTE_RAMPS = {
+    # palette name : list of its ramps
     'dpaint': [
-        # (start index, length, stride)
+        # ramp tuple: (start index, length, stride)
         # generally, lighter / more vivid to darker
         (17, 16, 1),  # white to black
         (33, 16, 1),  # red to black
@@ -118,9 +128,6 @@ palette_ramps = {
     ]
 }
 
-
-# TODO: heretic palette
-
 # set random seed based on date, a different flower each day
 t = time.localtime()
 year, month, day = t.tm_year, t.tm_mon, t.tm_mday
@@ -130,8 +137,8 @@ date = year * 10000 + month * 100 + day
 
 self.set_charset_by_name('jpetscii')
 
-palette = random.choice(list(palette_ramps.keys()))
-#palette = 'heretic' # DEBUG for testing specific palettes
+palette = random.choice(list(PALETTE_RAMPS.keys()))
+#palette = 'atari' # DEBUG for testing specific palettes
 self.set_palette_by_name(palette)
 
 self.resize(WIDTH, HEIGHT)
@@ -145,13 +152,16 @@ for frond in range(frond_count):
     # start at center
     x, y = int(WIDTH / 2) - 1, int(HEIGHT / 2) - 1
     # color ramp from palette this frond will use
-    ramp_start, ramp_length, ramp_stride = random.choice(palette_ramps[palette])
+    ramp_start, ramp_length, ramp_stride = random.choice(PALETTE_RAMPS[palette])
     ramp_end = ramp_start + (ramp_length * ramp_stride)
     # determine starting color, somewhere along ramp
     start_step = random.randint(0, ramp_length - 1)
     fg = ramp_start + (start_step * ramp_stride)
-    #char = random.choice(frond_chars)
-    char = random.randint(0, 255)
+    # 50% chance to try a truly random character
+    if random.random() < 0.5:
+        char = random.choice(frond_chars)
+    else:
+        char = random.randint(0, 255)
     while frond_life > 0 and fg != ramp_end:
         # top left
         self.set_tile_at(0, 0, x, y, char, fg)
