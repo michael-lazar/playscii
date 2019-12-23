@@ -137,7 +137,9 @@ for frond in range(frond_count):
         frond_life -= 1
         # shift color
         fg += ramp_stride
-        # TODO: mutate char occasionally?
+        # mutate char occasionally
+        if random.random() < 0.2:
+            char = random.choice(frond_chars)
         # grow frond
         grow_dir = random.choice(grow_dirs)
         x += grow_dir[0]
