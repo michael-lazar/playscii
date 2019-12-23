@@ -248,6 +248,9 @@ class PaletteSwatch(UISwatch):
         colors = len(self.popup.charset_swatch.art.palette.colors)
         rows = math.ceil(colors / charmap_width)
         columns = math.ceil(colors / rows)
+        # !special case hack! for atari palette
+        if colors == 129 and columns == 15:
+            columns = 16
         return columns, rows
     
     def reset_art(self):
