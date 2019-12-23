@@ -1,13 +1,13 @@
 {
  "objects": [
   {
-   "bg_color_a": 0,
-   "bg_color_b": 0,
-   "bg_color_g": 0,
-   "bg_color_r": 0,
-   "camera_x": 0,
-   "camera_y": 0,
-   "camera_z": 2.5,
+   "bg_color_a": 0.0,
+   "bg_color_b": 0.0,
+   "bg_color_g": 0.0,
+   "bg_color_r": 0.0,
+   "camera_x": 30,
+   "camera_y": 20,
+   "camera_z": 35,
    "class_name": "WorldPropertiesObject",
    "collision_enabled": true,
    "draw_debug_objects": true,
