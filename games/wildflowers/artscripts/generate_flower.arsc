@@ -26,10 +26,10 @@ grow_dirs = [
 ]
 
 # palette ramps:
-# (-1 = one to left a la dpaint2, +16 = 1 down a la atari)
 palette_ramps = {
     'dpaint': [
         # (start index, length, stride)
+        # generally, lighter / more vivid to darker
         (17, 16, 1),  # white to black
         (33, 16, 1),  # red to black
         (49, 8, 1),   # white to red
@@ -80,17 +80,44 @@ palette_ramps = {
         (236, 3, -1),  # light blue to blue
         (240, 4, -1),  # red to dark red
         (243, 3, -1)   # white to yellow
+    ],
+    'heretic': [
+        (35, 35, -1),  # white to black
+        (51, 16, -1),  # light grey to dark grey
+        (65, 14, -1),  # white to dark violent-grey
+        (94, 29, -1),  # white to dark brown
+        (110, 16, -1), # light tan to brown
+        (136, 26, -1), # light yellow to dark golden brown
+        (144, 8, -1),  # yellow to orange
+        (160, 16, -1), # red to dark red
+        (168, 8, -1),  # white to pink
+        (176, 8, -1),  # light magenta to dark magenta
+        (184, 8, -1),  # white to purple
+        (208, 24, -1), # white to cyan to dark blue
+        (224, 16, -1), # light green to dark green
+        (240, 16, -1), # olive to dark olive
+        (247, 7, -1)   # red to yellow
+    ],
+    'atari': [
+        (113, 8, -16), # white to black
+        (114, 8, -16), # yellow to muddy brown
+        (115, 8, -16), # dull gold to brown
+        (116, 8, -16), # peach to burnt orange
+        (117, 8, -16), # pink to red
+        (118, 8, -16), # magenta to dark magenta
+        (119, 8, -16), # purple to dark purple
+        (120, 8, -16), # violet to dark violet
+        (121, 8, -16), # light blue to dark blue
+        (122, 8, -16), # light cobalt to dark cobalt
+        (123, 8, -16), # light teal to dark teal
+        (124, 8, -16), # light sea green to dark sea green
+        (125, 8, -16), # light green to dark green
+        (126, 8, -16), # yellow green to dark yellow green
+        (127, 8, -16), # pale yellow to dark olive
+        (128, 8, -16)  # gold to golden brown
     ]
 }
 
-"""
-    # TODO work this out
-    'atari': [
-        (113, 8, -16), # white to black
-        (114, 8, -16), # yellow to dark brown
-        (115, 8, -16), # peach to dark
-    ]
-"""
 
 # TODO: heretic palette
 
@@ -104,6 +131,7 @@ date = year * 10000 + month * 100 + day
 self.set_charset_by_name('jpetscii')
 
 palette = random.choice(list(palette_ramps.keys()))
+#palette = 'heretic' # DEBUG for testing specific palettes
 self.set_palette_by_name(palette)
 
 self.resize(WIDTH, HEIGHT)
@@ -122,7 +150,8 @@ for frond in range(frond_count):
     # determine starting color, somewhere along ramp
     start_step = random.randint(0, ramp_length - 1)
     fg = ramp_start + (start_step * ramp_stride)
-    char = random.choice(frond_chars)
+    #char = random.choice(frond_chars)
+    char = random.randint(0, 255)
     while frond_life > 0 and fg != ramp_end:
         # top left
         self.set_tile_at(0, 0, x, y, char, fg)

@@ -5,6 +5,7 @@ from game_util_objects import WorldGlobalsObject
 
 class FlowerGlobals(WorldGlobalsObject):
     
+    # if True, generate a 4x4 grid instead of just one
     test_gen = False
     
     def __init__(self, world, obj_data=None):
