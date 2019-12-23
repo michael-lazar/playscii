@@ -5,7 +5,7 @@ from game_util_objects import WorldGlobalsObject
 
 class FlowerGlobals(WorldGlobalsObject):
     
-    test_gen = True
+    test_gen = False
     
     def __init__(self, world, obj_data=None):
         WorldGlobalsObject.__init__(self, world, obj_data)
