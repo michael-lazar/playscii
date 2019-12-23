@@ -182,7 +182,8 @@ class WorldPropertiesObject(GameObject):
             elif hasattr(world_class, v):
                 setattr(self, v, getattr(world_class, v))
             else:
-                setattr(self, v, 0)
+                # set explicitly as float, for camera & bg color
+                setattr(self, v, 0.0)
         # special handling of bg color (a list)
         self.world.bg_color = [self.bg_color_r, self.bg_color_g, self.bg_color_b, self.bg_color_a]
         self.world.camera.set_loc(self.camera_x, self.camera_y, self.camera_z)
