@@ -4,6 +4,9 @@ from random import choice
 from art import TileIter
 from game_object import GameObject
 
+# TODO:
+# solver? https://stackoverflow.com/questions/1430962/how-to-optimally-solve-the-flood-fill-puzzle
+
 
 TILE_COLORS = [3, 4, 5, 6, 7]
 STARTING_TURNS = 15
