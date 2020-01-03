@@ -19,6 +19,8 @@ from edit_command import EditCommand, EditCommandTile, EntireArtCommand
 
 UI_ASSET_DIR = 'ui/'
 SCALE_INCREMENT = 0.25
+# spacing factor of each non-active document's scale from active document
+MDI_MARGIN = 1.1
 
 
 class UI:
@@ -488,7 +490,7 @@ class UI:
                     # shift arts progressively further back
                     r.snap_to(x, y, -i)
                 else:
-                    r.move_to(x, y, -i, 0.2)
+                    r.move_to(x * MDI_MARGIN, 0, -i, 0.2)
             x += r.art.width * r.art.quad_width
             y -= r.art.height * r.art.quad_height
     
