@@ -15,6 +15,11 @@ ideas for future development:
 - growth dirs that are more algorithms than simple vectors, producing things like spirals, sawtooths, etc?
 - strategies for sometimes filling in tile BG colors? quarter circles or other patterns that mesh interestingly with char/fg details?
 -- use ramps, fade over distance from center in a circle, diamond, square etc pattern
+
+
+alt generation methods:
+https://terbium.io/2018/11/wave-function-collapse
+https://www.conwaylife.com/wiki/Conway%27s_Game_of_Life
 """
 
 frond_chars = [
