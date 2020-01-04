@@ -34,8 +34,8 @@ Camera.start_zoom = 15
 # use this if playscii starts up really slowly on your video card
 #Framebuffer.disable_crt = True
 
-# press space to show/hide main popup rather than holding space
-#UI.popup_hold_to_show = False
+# hold space to show/hide main popup rather than pressing space
+#UI.popup_hold_to_show = True
 
 #Application.show_dev_log = True
 
