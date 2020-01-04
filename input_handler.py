@@ -21,6 +21,8 @@ BINDS_TEMPLATE_FILENAME = 'binds.cfg.default'
 class InputLord:
     
     "sets up key binds and handles input"
+    wheel_zoom_amount = 3.0
+    keyboard_zoom_amount = 1.0
     
     def __init__(self, app):
         self.app = app
@@ -266,9 +268,11 @@ class InputLord:
                 if not ui_wheeled:
                     if self.app.can_edit:
                         if event.wheel.y > 0:
-                            app.camera.zoom(-3)
+                            # only zoom in should track towards cursor
+                            app.camera.zoom(-self.wheel_zoom_amount,
+                                            towards_cursor=True)
                         elif event.wheel.y < 0:
-                            app.camera.zoom(3)
+                            app.camera.zoom(self.wheel_zoom_amount)
                     else:
                         self.app.gw.mouse_wheeled(event.wheel.y)
             elif event.type == sdl2.SDL_MOUSEBUTTONUP:
@@ -345,9 +349,10 @@ class InputLord:
             if pressing_right(ks):
                 app.camera.pan(1, 0, True)
             if ks[sdl2.SDL_SCANCODE_X]:
-                app.camera.zoom(-1, True)
+                app.camera.zoom(-self.keyboard_zoom_amount, keyboard=True,
+                                towards_cursor=True)
             if ks[sdl2.SDL_SCANCODE_Z]:
-                app.camera.zoom(1, True)
+                app.camera.zoom(self.keyboard_zoom_amount, keyboard=True)
         if self.app.can_edit and app.middle_mouse and (app.mouse_dx != 0 or app.mouse_dy != 0):
             app.camera.mouse_pan(app.mouse_dx, app.mouse_dy)
         # game mode: arrow keys and left gamepad stick move player

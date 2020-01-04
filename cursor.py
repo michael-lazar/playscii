@@ -123,9 +123,16 @@ class Cursor:
         # init tool sprite, tool will provide texture when rendered
         self.tool_sprite = UISpriteRenderable(self.app)
     
+    def clamp_to_active_art(self):
+        self.x = max(0, min(self.x, self.app.ui.active_art.width - 1))
+        self.y = min(0, max(self.y, -self.app.ui.active_art.height + 1))
+    
     def keyboard_move(self, delta_x, delta_y):
+        if not self.app.ui.active_art:
+            return
         self.x += delta_x
         self.y += delta_y
+        self.clamp_to_active_art()
         self.moved = True
         self.app.keyboard_editing = True
         if self.logg:

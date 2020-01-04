@@ -22,7 +22,7 @@ class Camera:
     # factor by which zoom level modifies pan speed
     pan_zoom_increase_factor = 16
     zoom_accel = 0.1
-    max_zoom_speed = 0.5
+    max_zoom_speed = 2.5
     zoom_friction = 0.1
     # kill velocity if below this
     min_velocity = 0.05
@@ -110,8 +110,13 @@ class Camera:
         if keyboard:
             self.app.keyboard_editing = True
     
-    def zoom(self, dz, keyboard=False):
+    def zoom(self, dz, keyboard=False, towards_cursor=False):
         self.vel_z += dz * self.zoom_accel
+        # pan towards cursor while zooming?
+        if towards_cursor:
+            dx = self.app.cursor.x - self.x
+            dy = self.app.cursor.y - self.y
+            self.pan(dx, dy, keyboard)
         if keyboard:
             self.app.keyboard_editing = True
     
