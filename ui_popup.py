@@ -598,6 +598,9 @@ class ToolPopup(UIElement):
         # if cursor is over a char or color, make it the ui's selected one
         if self.cursor_char != -1:
             self.ui.selected_char = self.cursor_char
+            # update cursor, eg keyboard select when cursor isn't beneath popup
+            self.ui.app.cursor.undo_preview_edits()
+            self.ui.app.cursor.update_cursor_preview()
         elif self.cursor_color != -1:
             if mouse_button == 1:
                 self.ui.selected_fg_color = self.cursor_color
