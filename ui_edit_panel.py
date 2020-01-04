@@ -413,7 +413,9 @@ class EditListPanel(GamePanel):
         # get list of both app dir games and user dir games
         docs_game_dir = self.ui.app.documents_dir + TOP_GAME_DIR
         items = []
-        for game in get_dirs(TOP_GAME_DIR) + get_dirs(docs_game_dir):
+        game_dirs = get_dirs(TOP_GAME_DIR) + get_dirs(docs_game_dir)
+        game_dirs.sort()
+        for game in game_dirs:
             li = self.ListItem(game, None)
             items.append(li)
         return items
