@@ -38,7 +38,7 @@ class UI:
     asset_dir = UI_ASSET_DIR
     visible = True
     logg = False
-    popup_hold_to_show = True
+    popup_hold_to_show = False
     flip_affects_xforms = True
     tool_classes = [ PencilTool, EraseTool, GrabTool, RotateTool, TextTool, SelectTool, PasteTool ]
     tool_selected_log = 'tool selected'
