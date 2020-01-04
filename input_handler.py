@@ -86,6 +86,19 @@ class InputLord:
             pad_buttons = sdl2.SDL_JoystickNumButtons(pad)
             self.app.log('Gamepad found: %s with %s axes, %s buttons' % (pad_name, pad_axes, pad_buttons))
             self.gamepad = pad
+        # before main loop begins, set initial mouse position -
+        # SDL_GetMouseState returns 0,0 if the mouse hasn't yet moved
+        # in the new window!
+        wx, wy = ctypes.c_int(0), ctypes.c_int(0)
+        sdl2.SDL_GetWindowPosition(self.app.window, wx, wy)
+        wx, wy = int(wx.value), int(wy.value)
+        mx, my = ctypes.c_int(0), ctypes.c_int(0)
+        sdl2.mouse.SDL_GetGlobalMouseState(mx, my)
+        mx, my = int(mx.value), int(my.value)
+        self.app.mouse_x, self.app.mouse_y = mx - wx, my - wy
+        # set flag so we know whether handle_input's SDL_GetMouseState result
+        # is accurate :/
+        self.mouse_has_moved = False
     
     def parse_key_bind(self, in_string):
         "returns a tuple of (key, mod1, mod2) key bind data from given string"
@@ -164,14 +177,20 @@ class InputLord:
         app.left_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_LEFT))
         app.middle_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_MIDDLE))
         app.right_mouse = bool(mouse & sdl2.SDL_BUTTON(sdl2.SDL_BUTTON_RIGHT))
-        app.mouse_x, app.mouse_y = int(mx.value), int(my.value)
+        mx, my = int(mx.value), int(my.value)
+        # if mouse hasn't moved since init, disregard SDL_GetMouseState
+        if self.mouse_has_moved:
+            app.mouse_x, app.mouse_y = mx, my
+        elif mx != 0 or my != 0:
+            self.mouse_has_moved = True
         # if mouse is outside window, don't count any UI elements as hovered
         if not app.has_mouse_focus:
             self.ui.hovered_elements = []
         # relative mouse move state
         mdx, mdy = ctypes.c_int(0), ctypes.c_int(0)
         sdl2.mouse.SDL_GetRelativeMouseState(mdx, mdy)
-        app.mouse_dx, app.mouse_dy = int(mdx.value), int(mdy.value)
+        if self.mouse_has_moved:
+            app.mouse_dx, app.mouse_dy = int(mdx.value), int(mdy.value)
         if app.mouse_dx != 0 or app.mouse_dy != 0:
             app.keyboard_editing = False
             # dragging a dialog?
