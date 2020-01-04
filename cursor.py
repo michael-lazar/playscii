@@ -241,6 +241,27 @@ class Cursor:
             int(self.last_x) != int(self.x) or \
             int(self.last_y) != int(self.y)
     
+    def reposition_from_mouse(self):
+        self.x, self.y, _ = vector.screen_to_world(self.app,
+                                                   self.app.mouse_x,
+                                                   self.app.mouse_y)
+    
+    def snap_to_tile(self):
+        w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
+        char_aspect = w / h
+        # round result for oddly proportioned charsets
+        self.x = round(math.floor(self.x / w) * w)
+        self.y = round(math.ceil(self.y / h) * h * char_aspect)
+    
+    def pre_first_update(self):
+        # vector.screen_to_world result will be off because camera hasn't
+        # moved yet, recalc view matrix
+        self.app.camera.calc_view_matrix()
+        self.reposition_from_mouse()
+        self.snap_to_tile()
+        self.update_cursor_preview()
+        self.entered_new_tile()
+    
     def update(self):
         # save old positions before update
         self.last_x, self.last_y = self.x, self.y
@@ -252,22 +273,15 @@ class Cursor:
         if mouse_moved or (not self.app.keyboard_editing and self.app.camera.moved_this_frame):
             # don't let mouse move cursor if text tool input is happening
             if not self.app.ui.text_tool.input_active:
-                self.x, self.y, _ = vector.screen_to_world(self.app,
-                                                           self.app.mouse_x,
-                                                           self.app.mouse_y)
+                self.reposition_from_mouse()
                 # cursor always at depth of active layer
                 art = self.app.ui.active_art
                 self.z = art.layers_z[art.active_layer] if art else 0
                 self.moved = True
         if not self.moved and not self.app.ui.tool_settings_changed:
             return
-        # snap to tile
         if not self.app.keyboard_editing and not self.app.ui.tool_settings_changed:
-            w, h = self.app.ui.active_art.quad_width, self.app.ui.active_art.quad_height
-            char_aspect = w / h
-            # round result for oddly proportioned charsets
-            self.x = round(math.floor(self.x / w) * w)
-            self.y = round(math.ceil(self.y / h) * h * char_aspect)
+            self.snap_to_tile()
         # adjust for brush size
         if self.app.ui.selected_tool.brush_size:
             size = self.app.ui.selected_tool.brush_size

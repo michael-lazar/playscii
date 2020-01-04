@@ -355,8 +355,11 @@ class Application:
         self.ui.set_active_layer(self.ui.active_art.active_layer)
         # INPUTLORD rules input handling and keybinds
         self.il = InputLord(self)
+        # update UI (hovered elements) and cursor now that we have input
+        self.ui.update()
+        self.cursor.pre_first_update()
         self.init_success = True
-        self.log('init done.')
+        self.log('Init done.')
         if self.can_edit:
             self.restore_session()
         # if art file was given in arguments, set it active
@@ -823,7 +826,11 @@ class Application:
         else:
             for art in self.art_loaded_for_edit:
                 art.update()
-        if self.ui.active_art and not self.ui.console.visible and not self.game_mode and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
+        if self.ui.active_art and \
+           not self.ui.console.visible and not self.game_mode and \
+           not self.ui.menu_bar in self.ui.hovered_elements and \
+           not self.ui.status_bar in self.ui.hovered_elements and \
+           not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
             self.cursor.update()
         self.camera.update()
         if not self.game_mode:
@@ -880,7 +887,11 @@ class Application:
             if self.ui.active_art:
                 self.grid.render()
             self.ui.select_tool.render_selections()
-            if self.ui.active_art and not self.ui.console.visible and not self.ui.menu_bar in self.ui.hovered_elements and not self.ui.menu_bar.active_menu_name and not self.ui.active_dialog:
+            if self.ui.active_art and not self.ui.console.visible and \
+               not self.ui.menu_bar in self.ui.hovered_elements and \
+               not self.ui.status_bar in self.ui.hovered_elements and \
+               not self.ui.menu_bar.active_menu_name and \
+               not self.ui.active_dialog:
                 self.cursor.render()
         self.debug_line_renderable.render()
         for r in self.img_renderables:
