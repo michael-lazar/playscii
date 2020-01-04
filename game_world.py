@@ -71,6 +71,9 @@ class GameWorld:
     "If True, camera will be locked to player's location."
     object_grid_snap = True
     # editable properties
+    # TODO:
+    #update_when_unfocused = False
+    #"If True, game sim will update even when window doesn't have input focus"
     draw_hud = True
     allow_pause = True
     "If False, user cannot pause game sim"

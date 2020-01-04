@@ -400,6 +400,18 @@ class Application:
         sdl2.SDL_DestroyWindow(test_window)
         return screen_width, screen_height
     
+    def is_mouse_inside_window(self):
+        "returns True if mouse is inside application window"
+        wx, wy = ctypes.c_int(0), ctypes.c_int(0)
+        sdl2.SDL_GetWindowPosition(self.window, wx, wy)
+        wx, wy = int(wx.value), int(wy.value)
+        mx, my = ctypes.c_int(0), ctypes.c_int(0)
+        # "global" mouse state = whole-desktop mouse coordinates
+        sdl2.mouse.SDL_GetGlobalMouseState(mx, my)
+        mx, my = int(mx.value), int(my.value)
+        return wx <= mx <= wx + self.window_width and \
+           wy <= my <= wy + self.window_height
+    
     def set_icon(self):
         # TODO: this doesn't seem to work in Ubuntu, what am i missing?
         img = Image.open(LOGO_FILENAME).convert('RGBA')
@@ -773,6 +785,11 @@ class Application:
         return 1
     
     def update(self):
+        # update whether app has mouse + input (keybaord) focus
+        flags = ctypes.c_uint(0)
+        flags = sdl2.SDL_GetWindowFlags(self.window)
+        self.has_input_focus = flags & sdl2.SDL_WINDOW_INPUT_FOCUS
+        self.has_mouse_focus = flags & sdl2.SDL_WINDOW_MOUSE_FOCUS
         # start-of-frame stuff
         if self.game_mode:
             self.gw.frame_begin()
@@ -797,7 +814,7 @@ class Application:
         self.frame_update()
     
     def frame_update(self):
-        "non-game updates that should happen once per frame"
+        "updates that should happen once per frame"
         if self.converter:
             self.converter.update()
         # game world has its own once-a-frame updates, eg art/renderables
