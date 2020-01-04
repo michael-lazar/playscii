@@ -18,6 +18,11 @@ Art.DEFAULT_PALETTE = 'c64_original'
 Camera.start_x, Camera.start_y = 20, -12
 Camera.start_zoom = 15
 
+# amount of camera zoom each mouse wheel event produces
+#InputLord.wheel_zoom_amount = 3.0
+# same but for keyboard zooming (shift-X/Z)
+#InputLord.keyboard_zoom_amount = 1.0
+
 #CharacterSetSwatch.char_scale = 3
 
 #UIRenderable.grain_strength = 0

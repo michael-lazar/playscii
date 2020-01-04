@@ -179,6 +179,8 @@ class UI:
             x, y = tile[0], tile[1]
             if x >= new_art.width or y >= new_art.height:
                 self.select_tool.selected_tiles.pop(tile, None)
+        # keep cursor in bounds
+        self.app.cursor.clamp_to_active_art()
         # set camera bounds based on art size
         self.app.camera.set_for_art(new_art)
         # set for popup
