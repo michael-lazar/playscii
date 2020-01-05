@@ -159,6 +159,7 @@ class Application:
         self.should_quit = False
         self.mouse_x, self.mouse_y = 0, 0
         self.mouse_dx, self.mouse_dy = 0, 0
+        self.has_input_focus = self.has_mouse_focus = False
         self.inactive_layer_visibility = 1
         self.version = get_version()
         # last edit came from keyboard or mouse, used by cursor control logic
