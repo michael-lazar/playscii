@@ -93,7 +93,7 @@ class Art:
     - char/color tile values are expressed as indices into charset / palette
     - all layers in an Art are the same dimensions
     """
-    quad_width,quad_height = 1, 1
+    quad_width,quad_height = 1.0, 1.0
     "size of each tile in world space"
     log_size_changes = False
     recalc_quad_height = True
@@ -347,8 +347,8 @@ class Art:
             return
         self.charset = new_charset
         if self.recalc_quad_height:
-            self.quad_width = 1
-            self.quad_height = 1 * (self.charset.char_height / self.charset.char_width)
+            self.quad_width = 1.0
+            self.quad_height = 1.0 * (self.charset.char_height / self.charset.char_width)
         self.set_unsaved_changes(True)
         self.geo_changed = True
         if log:
