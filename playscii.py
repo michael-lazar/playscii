@@ -972,6 +972,21 @@ class Application:
         cfg_file.close()
         self.log('Thank you for using Playscii!  <3')
     
+    def edit_cfg(self):
+        cfg_path = self.config_dir + CONFIG_FILENAME
+        if platform.system() == 'Windows':
+            editor_bin = 'notepad'
+        elif platform.system() == 'Darwin':
+            editor_bin = 'open -a TextEdit'
+        else:
+            editor_bin = os.environ['EDITOR']
+        cmd = '%s "%s"' % (editor_bin, cfg_path)
+        os.system(cmd)
+        # execute newly edited cfg! (but only if changes were made?)
+        #for line in open(cfg_path).readlines():
+        #    print(line)
+        #    exec(line)
+    
     def open_local_url(self, url):
         "opens given local (this file system) URL in a cross-platform way"
         webbrowser.open('file://%s/%s' % (os.getcwd(), url))

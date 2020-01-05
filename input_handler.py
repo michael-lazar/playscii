@@ -579,6 +579,10 @@ class InputLord:
     def BIND_select_invert(self):
         self.ui.invert_selection()
     
+    def BIND_edit_cfg(self):
+        self.ui.menu_bar.close_active_menu()
+        self.app.edit_cfg()
+    
     def BIND_erase_selection_or_art(self):
         # if in game mode, delete selected objects
         if self.app.game_mode:
