@@ -553,13 +553,14 @@ class UI:
         self.hovered_elements = []
         for e in self.elements:
             # only check visible elements
-            if e.is_visible() and e.can_hover and e.is_inside(mx, my):
+            if self.app.has_mouse_focus and e.is_visible() and e.can_hover and e.is_inside(mx, my):
                 self.hovered_elements.append(e)
                 # only hover if we weren't last update
                 if not e in was_hovering:
                     e.hovered()
         for e in was_hovering:
-            if not e in self.hovered_elements:
+            # unhover if app window loses mouse focus
+            if not self.app.has_mouse_focus or not e in self.hovered_elements:
                 e.unhovered()
         # update all elements, regardless of whether they're being hovered etc
         for e in self.elements:

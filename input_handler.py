@@ -183,9 +183,6 @@ class InputLord:
             app.mouse_x, app.mouse_y = mx, my
         elif mx != 0 or my != 0:
             self.mouse_has_moved = True
-        # if mouse is outside window, don't count any UI elements as hovered
-        if not app.has_mouse_focus:
-            self.ui.hovered_elements = []
         # relative mouse move state
         mdx, mdy = ctypes.c_int(0), ctypes.c_int(0)
         sdl2.mouse.SDL_GetRelativeMouseState(mdx, mdy)
