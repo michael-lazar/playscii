@@ -155,6 +155,10 @@ class EditSelectInvertItem(ArtModePulldownMenuItem):
     label = 'Invert Selection'
     command = 'select_invert'
 
+class EditPreferences(ArtModePulldownMenuItem):
+    label = 'Preferences…'
+    command = 'edit_cfg'
+
 #
 # tool menu
 #
@@ -577,7 +581,8 @@ class EditMenuData(PulldownMenuData):
     items = [EditUndoItem, EditRedoItem, SeparatorItem,
              EditCutItem, EditCopyItem, EditPasteItem, EditDeleteItem,
              SeparatorItem, EditSelectAllItem,
-             EditSelectNoneItem, EditSelectInvertItem]
+             EditSelectNoneItem, EditSelectInvertItem, SeparatorItem,
+             EditPreferences]
 
 class ToolMenuData(PulldownMenuData):
     items = [ToolTogglePickerItem, ToolTogglePickerHoldItem, SeparatorItem,

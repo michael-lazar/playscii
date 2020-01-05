@@ -5,6 +5,8 @@
 # everything in this file must be a valid Python expression.
 # many lines are here for reference but commented out, uncomment to activate.
 
+# most of these settings require restarting Playscii to take effect.
+
 Application.fullscreen = False
 Application.window_width, Application.window_height = 1280, 720
 

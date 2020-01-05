@@ -165,5 +165,6 @@ self.edit_bind_src = {
     '_run_art_script': 'run_art_script',
     '_art_flip_horizontal': 'art_flip_horizontal',
     '_art_flip_vertical': 'art_flip_vertical',
-    '_art_toggle_flip_affects_xforms': 'art_toggle_flip_affects_xforms'
+    '_art_toggle_flip_affects_xforms': 'art_toggle_flip_affects_xforms',
+    '_edit_cfg': 'edit_cfg'
 }
