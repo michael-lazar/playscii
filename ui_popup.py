@@ -558,9 +558,11 @@ class ToolPopup(UIElement):
         if not self.ui.active_art:
             return
         if self.active_tab == TAB_CHAR_COLOR:
-            # bail if mouse didn't move
+            # bail if mouse didn't move, but also respect keyboard editing
             mouse_moved = self.ui.app.mouse_dx != 0 or self.ui.app.mouse_dy != 0
-            if mouse_moved and self in self.ui.hovered_elements:
+            if self.ui.app.keyboard_editing:
+                self.cursor_box.visible = True
+            elif mouse_moved and self in self.ui.hovered_elements:
                 self.cursor_box.visible = False
                 x, y = self.ui.get_screen_coords(self.ui.app.mouse_x, self.ui.app.mouse_y)
                 for e in [self.charset_swatch, self.palette_swatch]:
