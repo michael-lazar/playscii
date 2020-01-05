@@ -142,8 +142,8 @@ class UI:
         # update UI renderable geo sizes for new scale
         # determine width and height of current window in chars
         # use floats, window might be a fractional # of chars wide/tall
-        aspect = self.app.window_width / self.app.window_height
-        inv_aspect = self.app.window_height / self.app.window_width
+        aspect = float(self.app.window_width) / self.app.window_height
+        inv_aspect = float(self.app.window_height) / self.app.window_width
         # MAYBE-TODO: this math is correct but hard to follow, rewrite for clarity
         width = self.app.window_width / (self.charset.char_width * self.scale * inv_aspect)
         height = self.app.window_height / (self.charset.char_height * self.scale * inv_aspect)
