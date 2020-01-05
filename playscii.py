@@ -979,13 +979,16 @@ class Application:
         elif platform.system() == 'Darwin':
             editor_bin = 'open -a TextEdit'
         else:
-            editor_bin = os.environ['EDITOR']
+            editor_bin = os.environ.get('EDITOR', None)
+            if not editor_bin:
+                return
         cmd = '%s "%s"' % (editor_bin, cfg_path)
         os.system(cmd)
+        # update resident cfg file lines, which will be saved out on exit
+        self.config_lines = open(cfg_path).readlines()
         # execute newly edited cfg! (but only if changes were made?)
-        #for line in open(cfg_path).readlines():
-        #    print(line)
-        #    exec(line)
+        for line in self.config_lines:
+            exec(line)
     
     def open_local_url(self, url):
         "opens given local (this file system) URL in a cross-platform way"
