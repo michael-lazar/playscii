@@ -552,6 +552,9 @@ class UI:
         was_hovering = self.hovered_elements[:]
         self.hovered_elements = []
         for e in self.elements:
+            # don't hover anything while console is up
+            if self.console.visible:
+                continue
             # only check visible elements
             if self.app.has_mouse_focus and e.is_visible() and e.can_hover and e.is_inside(mx, my):
                 self.hovered_elements.append(e)
