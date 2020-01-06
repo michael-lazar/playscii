@@ -447,7 +447,7 @@ class ConsoleUI(UIElement):
             line = '%s %s' % (self.prompt, self.current_line)
             self.ui.app.log(line)
             # if command is same as last, don't repeat it
-            if len(self.command_history) > 0 and self.current_line != self.command_history[-1]:
+            if len(self.command_history) == 0 or (len(self.command_history) > 0 and self.current_line != self.command_history[-1]):
                 self.command_history.append(self.current_line)
                 self.history_file.write(self.current_line + '\n')
             self.parse(self.current_line)
