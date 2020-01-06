@@ -888,6 +888,9 @@ class InputLord:
             self.ui.open_dialog(CloseUnsavedChangesDialog)
             return
         self.app.close_art(self.ui.active_art)
+        # dismiss popup if no more arts are open
+        if self.ui.popup.visible and len(self.app.art_loaded_for_edit) == 0:
+            self.ui.popup.hide()
     
     def BIND_open_help_docs(self):
         self.app.open_help_docs()
