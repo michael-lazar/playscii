@@ -51,14 +51,10 @@ class UISwatch(UIElement):
         common, generalized code for both character and palette swatches:
         set cursor's screen location, tile location, and quad size.
         """
-        
-        # FIXME: following math (for tile_x,tile_y) only works for 16:9 windows!
-        # (ie self.art.quad_width/height are different)
-        
         w, h = self.art.quad_width, self.art.quad_height
-        # snap to tile
-        tile_x = int(math.floor(tile_x / w) * w)
-        tile_y = int(math.ceil(tile_y / h) * h)
+        # snap to tile (tile_x/y already set in move_cursor)
+        tile_x = int(tile_x)
+        tile_y = int(tile_y)
         # back to screen coords
         x = tile_x * w + self.x
         y = tile_y * h + self.y
