@@ -891,6 +891,7 @@ class Application:
             if self.ui.active_art and not self.ui.console.visible and \
                not self.ui.menu_bar in self.ui.hovered_elements and \
                not self.ui.status_bar in self.ui.hovered_elements and \
+               not self.ui.popup in self.ui.hovered_elements and \
                not self.ui.menu_bar.active_menu_name and \
                not self.ui.active_dialog:
                 self.cursor.render()
