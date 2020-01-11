@@ -1,0 +1,9 @@
+art\*.*
+charsets\*.*
+palettes\*.*
+games\*.*
+artscripts\*.arsc
+formats\*.*
+shaders\*.glsl
+ui\*.png
+docs\html\*.*

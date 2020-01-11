@@ -1,0 +1,6 @@
+version
+*.default
+README.md
+license.txt
+code_of_conduct.txt
+*.dll
