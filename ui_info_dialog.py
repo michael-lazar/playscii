@@ -112,7 +112,7 @@ Bill Atkinson (HyperCard)
       Love, Encouragement, Moral Support:
 
 L Stiger
-Gail, Gil, and Elise LeBreton
+Gail, Gil, and Lee LeBreton
 Brendan Sinclair
 Liz Ryerson
 Johnnemann Nordhagen
