@@ -6,12 +6,8 @@ from art import UV_FLIPX, UV_FLIPY, UV_ROTATE180
 
 from games.wildflowers.scripts.ramps import PALETTE_RAMPS
 
-# overall approach:
-# grow multiple  "fronds" from center of top left quadrant,
-# mirror these in the other three quadrants
 
-
-frond_chars = [
+FROND_CHARS = [
     # thick and skinny \
     151, 166,
     # thick and skinny /
@@ -23,11 +19,12 @@ frond_chars = [
 ]
 
 # draw in top left quadrant; grow up and to left
-grow_dirs = [
+GROW_DIRS = [
     (-1, -1),
     (-1, 0),
     (0, -1)
 ]
+
 
 class FlowerObject(GameObject):
     
@@ -83,7 +80,7 @@ class FlowerObject(GameObject):
             fg = ramp_start + (start_step * ramp_stride)
             # 50% chance to try a truly random character
             if random.random() < 0.5:
-                char = random.choice(frond_chars)
+                char = random.choice(FROND_CHARS)
             else:
                 char = random.randint(0, 255)
             while frond_life > 0 and fg != ramp_end:
@@ -94,8 +91,8 @@ class FlowerObject(GameObject):
                 fg += ramp_stride
                 # mutate char occasionally
                 if random.random() < 0.2:
-                    char = random.choice(frond_chars)
+                    char = random.choice(FROND_CHARS)
                 # grow frond
-                grow_dir = random.choice(grow_dirs)
+                grow_dir = random.choice(GROW_DIRS)
                 x += grow_dir[0]
                 y += grow_dir[1]
