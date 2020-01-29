@@ -4,6 +4,11 @@ from game_util_objects import WorldGlobalsObject
 from games.wildflowers.scripts.flower import FlowerObject
 
 """
+overall approach:
+grow multiple  "fronds" from center of top left quadrant,
+mirror these in the other three quadrants
+
+
 2020-01-28 notes:
 
 "frond style" - different evolution step functions that produce different shapes, eg curls/spirals, right angles, sawtooths, diagonal or straight lines, etc.
