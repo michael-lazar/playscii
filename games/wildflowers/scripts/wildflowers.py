@@ -43,6 +43,7 @@ class FlowerGlobals(WorldGlobalsObject):
         WorldGlobalsObject.__init__(self, world, obj_data)
     
     def pre_first_update(self):
+        #self.world.bg_color[0] = 0.1 # DEBUG: dim red background for visibility
         if self.test_gen:
             for x in range(4):
                 for y in range(4):
