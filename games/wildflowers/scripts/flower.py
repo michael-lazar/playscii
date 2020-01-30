@@ -7,6 +7,9 @@ from art import UV_FLIPX, UV_FLIPY, UV_ROTATE180
 from games.wildflowers.scripts.ramps import PALETTE_RAMPS
 
 
+#PETAL_CHARS = [255, 148, 149, 164, 165]
+PETAL_CHARS = FROND_CHARS
+
 FROND_CHARS = [
     # thick and skinny \
     151, 166,
@@ -35,25 +38,23 @@ class FlowerObject(GameObject):
     
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
-        #self.art.run_script('generate_flower')
         # set random seed based on date, a different flower each day
         t = time.localtime()
         year, month, day = t.tm_year, t.tm_mon, t.tm_mday
         weekday = t.tm_wday # 0 = monday
         date = year * 10000 + month * 100 + day
         #random.seed(date)
+        # set up art with character set, size, and a randomly supported palette
         self.art.set_charset_by_name('jpetscii')
         palette = random.choice(list(PALETTE_RAMPS.keys()))
-        #palette = 'atari' # DEBUG for testing specific palettes
         self.art.set_palette_by_name(palette)
         self.art.resize(self.art_width, self.art_height)
         self.app.ui.adjust_for_art_resize(self) # grid etc
         self.art.clear_frame_layer(0, 0)
-        # TODO: petals on a layer underneath fronds
+        # petals on a layer underneath fronds
         self.art.add_layer(z=-0.01, name='petals')
-        for i in range(3):
-            pass#self.set_tile_at(0, 1, x, y, char, fg)
-        self.generate()
+        self.generate_petals()
+        self.generate_fronds()
     
     def paint_mirrored(self, layer, x, y, char, fg, bg=0):
         # draw in top left
@@ -66,7 +67,20 @@ class FlowerObject(GameObject):
         self.art.set_tile_at(0, layer, *bottom_left, char, fg, bg, transform=UV_FLIPY)
         self.art.set_tile_at(0, layer, *bottom_right, char, fg, bg, transform=UV_ROTATE180)
     
-    def generate(self):
+    def generate_petals(self):
+        petal_count = random.randint(0, 3)
+        #self.app.log('%s petals' % petal_count)
+        for i in range(petal_count):
+            size = random.randint(2, int(self.art_width / 3))
+            start_x = random.randint(0, int(self.art_width / 3))
+            start_y = random.randint(0, int(self.art_height / 3))
+            char = random.choice(PETAL_CHARS)
+            fg = self.art.palette.get_random_color_index()
+            for y in range(start_y, start_y + size):
+                for x in range(start_x, start_x + size):
+                    self.paint_mirrored(1, x, y, char, fg)
+    
+    def generate_fronds(self):
         frond_count = random.randint(2, 8)
         for frond in range(frond_count):
             frond_life = random.randint(2, 8)
