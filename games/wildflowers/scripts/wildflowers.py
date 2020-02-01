@@ -9,6 +9,39 @@ grow multiple  "fronds" from center of top left quadrant,
 mirror these in the other three quadrants
 
 
+2020-01-30:
+
+last commit of first gen approach (before petals): commit a476248
+
+growth_functions = [grow_vertical, grow_horizontal, grow_diagonal, grow_curl, grow_wander_outward]
+
+self.get_growth_dir = random.choice(self.growth_functions)
+self.growth_history = []
+# how chaotic this frond will be
+self.chaos = random.random()
+update:
+if len(growth_history) == 0:
+    new_x, new_y = pick starting point
+else:
+    last_growth = self.growth_history[-1]
+    penultimate_growth = self.growth_history[-2]
+    last_dir = last_growth - penultimate_growth
+    new_x, new_y = self.get_growth_dir(last_dir)
+if random.random() < self.chaos:
+    char = new random char
+if random.random() < self.chaos:
+    self.get_growth_dir = randomly choose a new growth function
+paint at char, new_x, new_y, next ramp color
+add to growth_history
+
+def grow_diagonal(self, last_dir):
+    return (-1, 1)
+def grow_curl(self, last_dir):
+    if last_dir == UP:
+        return random.choice((0, 1), (1, 1))
+    elif etc
+
+
 2020-01-28 notes:
 
 "frond style" - different evolution step functions that produce different shapes, eg curls/spirals, right angles, sawtooths, diagonal or straight lines, etc.
