@@ -1,6 +1,6 @@
 
 from game_util_objects import WorldGlobalsObject, GameObject
-from image_export import export_animation
+from image_export import export_animation, export_still_image
 
 from games.wildflowers.scripts.flower import FlowerObject
 
@@ -10,9 +10,6 @@ grow multiple "petals" (shapes) and "fronds" (lines) from ~center of top left
 quadrant, mirror these in the other three quadrants.
 
 last commit of first gen approach (before rewrite & petals): commit a476248
-
-display today's random seed in corner?
-animated GIF output? paint each grow update to a new art frame, export that
 
 frond style ideas:
 - frond draws each growth dir from a deck, reshuffling when empty to avoid repetition?
@@ -51,12 +48,19 @@ class FlowerGlobals(WorldGlobalsObject):
             return
         if not self.flower:
             return
+        # save to .psci
         #self.flower.exportable_art.save_to_file()
         #self.app.load_art_for_edit(self.flower.exportable_art.filename)
+        # save to .gif - TODO investigate problem with frame deltas not clearing
         #export_animation(self.app, self.flower.exportable_art,
         #                 self.flower.export_filename + '.gif',
         #                 bg_color=self.world.bg_color, loop=False)
-        #self.app.log('Exported %s.gif' % self.flower.export_filename)
+        # export to .png - works
+        export_still_image(self.app, self.flower.exportable_art,
+                           self.flower.export_filename + '.png',
+                           crt=self.app.fb.crt, scale=4,
+                           bg_color=self.world.bg_color)
+        self.app.log('Exported %s.png' % self.flower.export_filename)
 
 
 class SeedDisplay(GameObject):

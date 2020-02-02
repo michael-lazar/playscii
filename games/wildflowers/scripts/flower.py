@@ -53,6 +53,7 @@ class FlowerObject(GameObject):
         self.world.bg_color[0] = random.random() / 10
         self.world.bg_color[1] = random.random() / 10
         self.world.bg_color[2] = random.random() / 10
+        self.world.bg_color[3] = 1.0 # set here or alpha is zero?
         # set up art with character set, size, and a random (supported) palette
         self.art.set_charset_by_name('jpetscii')
         palette = random.choice(list(PALETTE_RAMPS.keys()))
@@ -84,7 +85,7 @@ class FlowerObject(GameObject):
         # track # of growth updates we've had
         self.grows = 0
         # create an art document we can add frames to and later export
-        self.export_filename = self.app.documents_dir + ART_DIR + str(self.seed)
+        self.export_filename = '%s%swildflower_%s' % (self.app.documents_dir, ART_DIR, self.seed)
         self.exportable_art = self.app.new_art(self.export_filename,
                                                self.art_width, self.art_height,
                                                self.art.charset.name,
@@ -127,6 +128,7 @@ class FlowerObject(GameObject):
         self.grows += 1
         if not grew:
             self.finished_growing = True
+            self.exportable_art.set_active_frame(self.exportable_art.frames - 1)
             if self.debug_log:
                 print('flower finished')
     
