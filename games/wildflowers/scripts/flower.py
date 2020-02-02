@@ -10,6 +10,7 @@ from games.wildflowers.scripts.frond import Frond
 
 
 # TODO: random size range?
+# (should also change camera zoom, probably frond/petal counts)
 FLOWER_WIDTH, FLOWER_HEIGHT = 16, 16
 
 
@@ -20,8 +21,10 @@ class FlowerObject(GameObject):
     physics_move = False
     art_width, art_height = FLOWER_WIDTH, FLOWER_HEIGHT
     
-    min_petals, max_petals = 0, 3
-    min_fronds, max_fronds = 3, 8
+    min_petals, max_petals = 0, 4
+    min_fronds, max_fronds = 0, 8
+    # every flower must have at least this many petals + fronds
+    minimum_complexity = 4
     debug = False
     
     def __init__(self, world, obj_data=None):
@@ -45,15 +48,23 @@ class FlowerObject(GameObject):
         self.art.resize(self.art_width, self.art_height)
         self.app.ui.adjust_for_art_resize(self) # grid etc
         self.art.clear_frame_layer(0, 0)
-        # petals on a layer underneath fronds
-        self.art.add_layer(z=-0.001, name='petals')
-        #self.world.bg_color = self.art.palette.colors[random.choice(PALETTE_RAMPS[self.art.palette.name])[-1]] # DEBUG: BG is random color from end of a ramp
+        # petals on a layer underneath fronds?
+        #self.art.add_layer(z=-0.001, name='petals')
         self.finished_growing = False
+        # some flowers can be more petal-centric or frond-centric,
+        # but keep a certain minimum complexity
+        petal_count = random.randint(self.min_petals, self.max_petals)
+        frond_count = random.randint(self.min_fronds, self.max_fronds)
+        while petal_count + frond_count < self.minimum_complexity:
+            petal_count = random.randint(self.min_petals, self.max_petals)
+            frond_count = random.randint(self.min_fronds, self.max_fronds)
         self.petals = []
-        for i in range(random.randint(self.min_petals, self.max_petals)):
+        #petal_count = 1 # DEBUG
+        for i in range(petal_count):
             self.petals.append(Petal(self, i))
         self.fronds = []
-        for i in range(random.randint(self.min_fronds, self.max_fronds)):
+        #frond_count = 0 # DEBUG
+        for i in range(frond_count):
             self.fronds.append(Frond(self, i))
     
     def update(self):
@@ -71,10 +82,17 @@ class FlowerObject(GameObject):
             if not p.finished_growing:
                 grew = True
                 p.grow()
+                # break so that each petal grows one at a time
+                break
         for f in self.fronds:
+            # break if still growing petals
+            if grew:
+                break
             if not f.finished_growing:
                 grew = True
-                f.grow()
+                painted = f.grow()
+                while not painted and not f.finished_growing:
+                    painted = f.grow()
                 # break so that each frond grows one at a time
                 break
         if not grew:
@@ -94,23 +112,3 @@ class FlowerObject(GameObject):
                              char, fg, bg, transform=UV_FLIPY)
         self.art.set_tile_at(0, layer, *bottom_right,
                              char, fg, bg, transform=UV_ROTATE180)
-    
-    def generate_petals(self):
-        petal_count = random.randint(0, 3)
-        self.app.log('%s petal%s' % (petal_count, 's' if petal_count != 1 else ''))
-        for i in range(petal_count):
-            #
-            # TODO: move this to Petal.init
-            #
-            size = random.randint(2, int(self.art_width / 3))
-            start_x = random.randint(0, int(self.art_width / 3))
-            start_y = random.randint(0, int(self.art_height / 3))
-            char = random.choice(PETAL_CHARS)
-            fg = self.art.palette.get_random_color_index()
-            #fg = random.choice(PALETTE_RAMPS[self.art.palette.name])[-1]
-            #
-            # TODO: move this to Petal.grow
-            #
-            for y in range(start_y, start_y + size):
-                for x in range(start_x, start_x + size):
-                    self.paint_mirrored(1, x, y, char, fg)
