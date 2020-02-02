@@ -113,14 +113,14 @@ def export_animation(app, art, out_filename, bg_color=None, loop=True):
     #app.log('%s exported (%s)' % (out_filename, output_format))
 
 
-def export_still_image(app, art, out_filename, crt=True, scale=1):
+def export_still_image(app, art, out_filename, crt=True, scale=1, bg_color=None):
     # respect "disable CRT entirely" setting for slow GPUs
     crt = False if app.fb.disable_crt else crt
     # just write RGBA if palette has more than one color with <1 alpha
     # TODO: add PNG/PNGset export option for palettized;
     # for now always export 32bit
-    if crt or not art.palette.all_colors_opaque() or True:
-        src_img = get_frame_image(app, art, art.active_frame, crt, scale)
+    if crt or not art.palette.all_colors_opaque() or bg_color or True:
+        src_img = get_frame_image(app, art, art.active_frame, crt, scale, bg_color)
         if not src_img:
             return False
         src_img.save(out_filename, 'PNG')
