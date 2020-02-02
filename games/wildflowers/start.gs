@@ -12,7 +12,7 @@
    "collision_enabled": true,
    "draw_debug_objects": true,
    "draw_hud": true,
-   "game_title": "flowers",
+   "game_title": "wildflowers",
    "globals_object_class_name": "FlowerGlobals",
    "gravity_x": 0.0,
    "gravity_y": 0.0,
