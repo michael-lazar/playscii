@@ -7,21 +7,18 @@ from games.wildflowers.scripts.flower import FlowerObject
 
 """
 overall approach:
-grow multiple  "fronds" from center of top left quadrant,
-mirror these in the other three quadrants
+grow multiple "petals" (shapes) and "fronds" (lines) from ~center of top left
+quadrant, mirror these in the other three quadrants.
 
 last commit of first gen approach (before rewrite & petals): commit a476248
 
-frond style idea: frond draws each growth dir from a deck, reshuffling when empty to avoid repetition?
-a frond style that weights growth dirs differently depending on its remaining life?
+frond style ideas:
+- frond draws each growth dir from a deck, reshuffling when empty to avoid repetition?
+- frond weights growth dirs differently depending on its remaining life?
 
 maybe weight frond start locations in a radius, ie likely to start from center, but rarely can start further and further away.
 
-approaches to generate solid color shapes beneath (before) the linework? blocks, diamonds. these need a whole separate generation function(s).
-- do diamonds imply a particular character used?
-
 character ramps based on direction changes, visual density, something else?
-
 """
 
 

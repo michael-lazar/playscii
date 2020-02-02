@@ -1,7 +1,7 @@
 
 import random
 
-from games.wildflowers.scripts.ramps import PALETTE_RAMPS
+from games.wildflowers.scripts.ramps import RampIterator
 
 
 # growth direction consts
@@ -56,15 +56,9 @@ class Frond:
         w, h = self.flower.art_width, self.flower.art_height
         self.x = random.randint(int(w / 4), int(w / 2))
         self.y = random.randint(int(h / 4), int(h / 2))
-        # pick a random color ramp from flower's palette this frond will use
-        self.ramp = random.choice(PALETTE_RAMPS[self.flower.art.palette.name])
-        # we only need to remember the stride
-        ramp_start, ramp_length, self.ramp_stride = self.ramp
-        # calc ramp end index
-        self.ramp_end = ramp_start + (ramp_length * self.ramp_stride)
-        # determine starting color, somewhere along ramp
-        start_step = random.randint(0, ramp_length - 1)
-        self.color = ramp_start + (start_step * self.ramp_stride)
+        # get a random color ramp from flower's palette
+        self.ramp = RampIterator(self.flower)
+        self.color = self.ramp.color
         # chance to use a fully random character
         if random.random() < self.chaos * self.random_char_chance:
             self.char = random.choice(FROND_CHARS)
@@ -80,7 +74,7 @@ class Frond:
         return True if we painted, so flower can skip frame wait
         """
         painted = False
-        if self.life <= 0 or self.color == self.ramp_end:
+        if self.life <= 0 or self.color == self.ramp.end:
             self.finished_growing = True
             if self.debug:
                 print(' frond %i finished.' % self.index)
@@ -96,7 +90,7 @@ class Frond:
             painted = True
         self.growth_history.append((self.x, self.y))
         self.life -= 1
-        self.color += self.ramp_stride
+        self.color = self.ramp.go_to_next_color()
         # roll against chaos to mutate character
         if random.random() < self.chaos * self.mutate_char_chance:
             self.char = random.choice(FROND_CHARS)
