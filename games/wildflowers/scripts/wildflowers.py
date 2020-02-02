@@ -31,6 +31,9 @@ class FlowerGlobals(WorldGlobalsObject):
         WorldGlobalsObject.__init__(self, world, obj_data)
     
     def pre_first_update(self):
+        #self.app.can_edit = False
+        self.app.ui.set_game_edit_ui_visibility(False)
+        self.app.ui.message_line.post_line('')
         if self.test_gen:
             for x in range(4):
                 for y in range(4):
