@@ -64,8 +64,6 @@ class Frond:
             self.char = random.choice(FROND_CHARS)
         else:
             self.char = random.randint(0, 255)
-        #if self.debug:
-        #    print(' frond %i at (%i, %i) using %s' % (self.index, self.x, self.y, self.get_grow_dir.__name__))
         # first grow() will paint first character
     
     def grow(self):

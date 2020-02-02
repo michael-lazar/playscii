@@ -25,7 +25,14 @@ class FlowerObject(GameObject):
     min_fronds, max_fronds = 0, 8
     # every flower must have at least this many petals + fronds
     minimum_complexity = 4
-    debug = False
+    
+    # DEBUG: if True, add current time to date seed as a decimal,
+    # to test with highly specific values
+    # (note: this turns the seed from an int into a float)
+    seed_includes_time = False
+    # DEBUG: if nonzero, use this seed for testing
+    debug_seed = 0
+    debug_log = False
     
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
@@ -34,12 +41,13 @@ class FlowerObject(GameObject):
         year, month, day = t.tm_year, t.tm_mon, t.tm_mday
         weekday = t.tm_wday # 0 = monday
         date = year * 10000 + month * 100 + day
-        # DEBUG: make date seed a highly specific decimal with seconds
-        # (note: this turns the seed from an int into a float)
-        date += t.tm_hour * 0.01 + t.tm_min * 0.0001 + t.tm_sec * 0.000001
-        self.seed = date
+        if self.seed_includes_time:
+            date += t.tm_hour * 0.01 + t.tm_min * 0.0001 + t.tm_sec * 0.000001
+        if self.debug_seed != 0:
+            self.seed = self.debug_seed
+        else:
+            self.seed = date
         random.seed(self.seed)
-        #random.seed(20200129.214757) # DEBUG: manually set seed for testing
         self.app.log('seed: %s' % self.seed)
         # set up art with character set, size, and a random (supported) palette
         self.art.set_charset_by_name('jpetscii')
@@ -79,7 +87,8 @@ class FlowerObject(GameObject):
             self.update_growth()
     
     def update_growth(self):
-        if self.debug: print('update growth:')
+        if self.debug_log:
+            print('update growth:')
         grew = False
         for p in self.petals:
             if not p.finished_growing:
@@ -100,7 +109,8 @@ class FlowerObject(GameObject):
                 break
         if not grew:
             self.finished_growing = True
-            if self.debug: print('flower finished')
+            if self.debug_log:
+                print('flower finished')
     
     def paint_mirrored(self, layer, x, y, char, fg, bg=0):
         # draw in top left
