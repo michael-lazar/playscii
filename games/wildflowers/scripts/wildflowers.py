@@ -1,4 +1,6 @@
 
+import random
+
 from game_util_objects import WorldGlobalsObject
 
 from games.wildflowers.scripts.flower import FlowerObject
@@ -76,13 +78,16 @@ class FlowerGlobals(WorldGlobalsObject):
         WorldGlobalsObject.__init__(self, world, obj_data)
     
     def pre_first_update(self):
-        #self.world.bg_color[0] = 0.1 # DEBUG: dim red background for visibility
+        # random dark BG color
+        self.world.bg_color[0] = random.random() / 10
+        self.world.bg_color[1] = random.random() / 10
+        self.world.bg_color[2] = random.random() / 10
         if self.test_gen:
             for x in range(4):
                 for y in range(4):
                     flower = self.world.spawn_object_of_class('FlowerObject')
                     flower.set_loc(x * flower.art.width, y * flower.art.height)
-            self.world.camera.set_loc(30, 20, 35)
+            self.world.camera.set_loc(25, 25, 35)
         else:
             flower = self.world.spawn_object_of_class('FlowerObject')
             self.world.camera.set_loc(0, 0, 10)
