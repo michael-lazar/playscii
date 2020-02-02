@@ -1,7 +1,6 @@
 
-import random
-
-from game_util_objects import WorldGlobalsObject
+from game_util_objects import WorldGlobalsObject, GameObject
+from image_export import export_animation
 
 from games.wildflowers.scripts.flower import FlowerObject
 
@@ -29,15 +28,12 @@ class FlowerGlobals(WorldGlobalsObject):
     
     # if True, generate a 4x4 grid instead of just one
     test_gen = False
+    handle_key_events = True
     
     def __init__(self, world, obj_data=None):
         WorldGlobalsObject.__init__(self, world, obj_data)
     
     def pre_first_update(self):
-        # random dark BG color
-        self.world.bg_color[0] = random.random() / 10
-        self.world.bg_color[1] = random.random() / 10
-        self.world.bg_color[2] = random.random() / 10
         if self.test_gen:
             for x in range(4):
                 for y in range(4):
@@ -48,3 +44,32 @@ class FlowerGlobals(WorldGlobalsObject):
             flower = self.world.spawn_object_of_class('FlowerObject')
             self.world.camera.set_loc(0, 0, 10)
             self.flower = flower
+            self.world.spawn_object_of_class('SeedDisplay')
+    
+    def handle_key_down(self, key, shift_pressed, alt_pressed, ctrl_pressed):
+        if key != 'e':
+            return
+        if not self.flower:
+            return
+        #self.flower.exportable_art.save_to_file()
+        #self.app.load_art_for_edit(self.flower.exportable_art.filename)
+        #export_animation(self.app, self.flower.exportable_art,
+        #                 self.flower.export_filename + '.gif',
+        #                 bg_color=self.world.bg_color, loop=False)
+        #self.app.log('Exported %s.gif' % self.flower.export_filename)
+
+
+class SeedDisplay(GameObject):
+    
+    generate_art = True
+    art_width, art_height = 30, 1
+    art_charset = 'ui'
+    art_palette = 'c64_original'
+    
+    def __init__(self, world, obj_data=None):
+        GameObject.__init__(self, world, obj_data)
+        self.art.clear_frame_layer(0, 0)
+        f = world.globals.flower
+        self.art.write_string(0, 0, 0, 0, str(f.seed), 12, 0)
+        self.set_scale(0.275, 0.275, 1)
+        self.set_loc(f.art_width, f.art_height / -2)
