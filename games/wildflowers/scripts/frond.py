@@ -35,7 +35,7 @@ class Frond:
     mutate_char_chance = 0.2
     # layer all fronds should paint on
     layer = 0
-    debug = True
+    debug = False
     
     def __init__(self, flower, index):
         self.flower = flower
@@ -70,31 +70,37 @@ class Frond:
             self.char = random.choice(FROND_CHARS)
         else:
             self.char = random.randint(0, 255)
-        if self.debug:
-            print(' frond %i at (%i, %i) using %s' % (self.index, self.x, self.y, self.get_grow_dir.__name__))
+        #if self.debug:
+        #    print(' frond %i at (%i, %i) using %s' % (self.index, self.x, self.y, self.get_grow_dir.__name__))
         # first grow() will paint first character
     
     def grow(self):
+        """
+        grows this frond by another tile
+        return True if we painted, so flower can skip frame wait
+        """
+        painted = False
         if self.life <= 0 or self.color == self.ramp_end:
             self.finished_growing = True
             if self.debug:
                 print(' frond %i finished.' % self.index)
-            return
+            return painted
         if self.debug:
             print(' frond %i at (%i, %i) using %s' % (self.index, self.x, self.y, self.get_grow_dir.__name__))
         # if we're out of bounds, simply don't paint;
         # we might go back in bounds next grow
-        # TODO: return True/False if we painted, so flower can skip frame wait
         if 0 <= self.x < self.flower.art_width and \
            0 <= self.y < self.flower.art_height:
             self.flower.paint_mirrored(self.layer, self.x, self.y,
                                        self.char, self.color)
+            painted = True
         self.growth_history.append((self.x, self.y))
         self.life -= 1
         self.color += self.ramp_stride
         # roll against chaos to mutate character
         if random.random() < self.chaos * self.mutate_char_chance:
             self.char = random.choice(FROND_CHARS)
+        # TODO: roll against chaos to change grow function?
         # determine last grow direction and base next grow on it
         last_growth = self.growth_history[-1]
         if len(self.growth_history) > 1:
@@ -105,6 +111,7 @@ class Frond:
             last_x, last_y = 0, 0
         grow_x, grow_y = self.get_grow_dir((last_x, last_y))
         self.x, self.y = self.x + grow_x, self.y + grow_y
+        return painted
     
     # paint and growth functions work in top left quadrant, then mirrored
     
