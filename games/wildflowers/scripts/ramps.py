@@ -1,15 +1,4 @@
 
-FROND_CHARS = [
-    # thick and skinny \
-    151, 166,
-    # thick and skinny /
-    150, 167,
-    # thick and skinny X
-    183, 182,
-    # solid inward wedges, NW NE SE SW
-    148, 149, 164, 165
-]
-
 # wildflowers palette ramp definitions
 
 PALETTE_RAMPS = {

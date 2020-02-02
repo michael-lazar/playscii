@@ -9,14 +9,6 @@ from games.wildflowers.scripts.petal import Petal
 from games.wildflowers.scripts.frond import Frond
 
 
-# draw in top left quadrant; grow up and to left
-GROW_DIRS = [
-    (-1, -1),
-    (-1, 0),
-    (0, -1)
-]
-
-
 # TODO: random size range?
 FLOWER_WIDTH, FLOWER_HEIGHT = 16, 16
 
@@ -29,7 +21,8 @@ class FlowerObject(GameObject):
     art_width, art_height = FLOWER_WIDTH, FLOWER_HEIGHT
     
     min_petals, max_petals = 0, 3
-    min_fronds, max_fronds = 2, 8
+    min_fronds, max_fronds = 3, 8
+    debug = False
     
     def __init__(self, world, obj_data=None):
         GameObject.__init__(self, world, obj_data)
@@ -65,13 +58,14 @@ class FlowerObject(GameObject):
     
     def update(self):
         GameObject.update(self)
-        if self.app.get_elapsed_time() % 2 != 0:
-            return
+        # only grow every other frame?
+        #if self.app.get_elapsed_time() % 2 != 0:
+        #    return
         if not self.finished_growing:
             self.update_growth()
     
     def update_growth(self):
-        print('update growth:')
+        if self.debug: print('update growth:')
         grew = False
         for p in self.petals:
             if not p.finished_growing:
@@ -85,7 +79,7 @@ class FlowerObject(GameObject):
                 break
         if not grew:
             self.finished_growing = True
-            print('flower finished')
+            if self.debug: print('flower finished')
     
     def paint_mirrored(self, layer, x, y, char, fg, bg=0):
         # draw in top left
@@ -120,41 +114,3 @@ class FlowerObject(GameObject):
             for y in range(start_y, start_y + size):
                 for x in range(start_x, start_x + size):
                     self.paint_mirrored(1, x, y, char, fg)
-    
-    def generate_fronds(self):
-        frond_count = random.randint(2, 8)
-        self.app.log('%s fronds' % frond_count)
-        for frond in range(frond_count):
-            #
-            # TODO: move all of this to Frond.init!
-            #
-            frond_life = random.randint(2, 8)
-            # start at center
-            x, y = int(self.art_width / 2) - 1, int(self.art_height / 2) - 1
-            # color ramp from palette this frond will use
-            ramp_start, ramp_length, ramp_stride = random.choice(PALETTE_RAMPS[self.art.palette.name])
-            ramp_end = ramp_start + (ramp_length * ramp_stride)
-            # determine starting color, somewhere along ramp
-            start_step = random.randint(0, ramp_length - 1)
-            fg = ramp_start + (start_step * ramp_stride)
-            # 50% chance to try a truly random character
-            if random.random() < 0.5:
-                char = random.choice(FROND_CHARS)
-            else:
-                char = random.randint(0, 255)
-            #
-            # TODO: move all of this to Frond.grow!
-            #
-            while frond_life > 0 and fg != ramp_end:
-                self.paint_mirrored(0, x, y, char, fg)
-                # tick frond
-                frond_life -= 1
-                # shift color
-                fg += ramp_stride
-                # mutate char occasionally
-                if random.random() < 0.2:
-                    char = random.choice(FROND_CHARS)
-                # grow frond
-                grow_dir = random.choice(GROW_DIRS)
-                x += grow_dir[0]
-                y += grow_dir[1]
