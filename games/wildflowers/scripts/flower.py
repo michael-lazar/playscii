@@ -2,7 +2,8 @@
 import time, random
 
 from game_object import GameObject
-from art import UV_FLIPX, UV_FLIPY, UV_ROTATE180
+from art import UV_FLIPX, UV_FLIPY, UV_ROTATE180, ART_DIR
+from renderable import TileRenderable
 
 from games.wildflowers.scripts.ramps import PALETTE_RAMPS
 from games.wildflowers.scripts.petal import Petal
@@ -48,7 +49,10 @@ class FlowerObject(GameObject):
         else:
             self.seed = date
         random.seed(self.seed)
-        self.app.log('seed: %s' % self.seed)
+        # set screen to random dark BG color
+        self.world.bg_color[0] = random.random() / 10
+        self.world.bg_color[1] = random.random() / 10
+        self.world.bg_color[2] = random.random() / 10
         # set up art with character set, size, and a random (supported) palette
         self.art.set_charset_by_name('jpetscii')
         palette = random.choice(list(PALETTE_RAMPS.keys()))
@@ -77,6 +81,18 @@ class FlowerObject(GameObject):
         #frond_count = 0 # DEBUG
         for i in range(frond_count):
             self.fronds.append(Frond(self, i))
+        # track # of growth updates we've had
+        self.grows = 0
+        # create an art document we can add frames to and later export
+        self.export_filename = self.app.documents_dir + ART_DIR + str(self.seed)
+        self.exportable_art = self.app.new_art(self.export_filename,
+                                               self.art_width, self.art_height,
+                                               self.art.charset.name,
+                                               self.art.palette.name)
+        # re-set art's filename to be in documents dir rather than game dir :/
+        self.exportable_art.set_filename(self.export_filename)
+        # image export process needs a renderable
+        r = TileRenderable(self.app, self.exportable_art)
     
     def update(self):
         GameObject.update(self)
@@ -107,6 +123,8 @@ class FlowerObject(GameObject):
                     painted = f.grow()
                 # break so that each frond grows one at a time
                 break
+        self.copy_new_frame()
+        self.grows += 1
         if not grew:
             self.finished_growing = True
             if self.debug_log:
@@ -125,3 +143,14 @@ class FlowerObject(GameObject):
                              char, fg, bg, transform=UV_FLIPY)
         self.art.set_tile_at(0, layer, *bottom_right,
                              char, fg, bg, transform=UV_ROTATE180)
+    
+    def copy_new_frame(self):
+        # add new frame to art for export
+        # (art starts with 1 frame, only do this after first frame written)
+        if self.grows > 0:
+            self.exportable_art.add_frame_to_end(delay=0.01, log=False)
+        self.exportable_art.chars[-1] = self.art.chars[0].copy()
+        self.exportable_art.fg_colors[-1] = self.art.fg_colors[0].copy()
+        self.exportable_art.bg_colors[-1] = self.art.bg_colors[0].copy()
+        self.exportable_art.uv_mods[-1] = self.art.uv_mods[0].copy()
+        self.exportable_art.uv_maps[-1] = self.art.uv_maps[0].copy()
