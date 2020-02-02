@@ -144,7 +144,8 @@ class Palette:
             r, g, b = rand_byte(), rand_byte(), rand_byte()
         return r, g, b, a
     
-    def get_palettized_image(self, src_img, transparent_color=(0, 0, 0)):
+    def get_palettized_image(self, src_img, transparent_color=(0, 0, 0),
+                             force_no_transparency=False):
         "returns a copy of source image quantized to this palette"
         pal_img = Image.new('P', (1, 1))
         # source must be in RGB (no alpha) format
@@ -156,7 +157,8 @@ class Palette:
             for channel in color[:-1]:
                 colors.append(channel)
         # user-defined color 0 in case we want to do 8-bit transparency
-        colors[0:3] = transparent_color
+        if not force_no_transparency:
+            colors[0:3] = transparent_color
         # PIL will fill out <256 color palettes with bogus values :/
         while len(colors) < MAX_COLORS * 3:
             for i in range(3):

@@ -51,17 +51,29 @@ def get_frame_image(app, art, frame, allow_crt=True, scale=1, bg_color=(0, 0, 0,
     src_img = src_img.transpose(Image.FLIP_TOP_BOTTOM)
     return src_img
 
-def export_animation(app, art, out_filename):
+def export_animation(app, art, out_filename, bg_color=None, loop=True):
     # get list of rendered frame images
     frames = []
     # use arbitrary color for transparency
     i_transp = art.palette.get_random_non_palette_color()
-    # GL wants floats
-    f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
+    # if bg color is specified, this isn't art mode; play along
+    if bg_color is not None:
+        f_transp = bg_color
+        art.palette.colors[0] = (round(bg_color[0] * 255),
+                                 round(bg_color[1] * 255),
+                                 round(bg_color[2] * 255),
+                                 255)
+    else:
+        # GL wants floats
+        f_transp = (i_transp[0]/255, i_transp[1]/255, i_transp[2]/255, 1.)
     for frame in range(art.frames):
         frame_img = get_frame_image(app, art, frame, allow_crt=False,
                                     scale=1, bg_color=f_transp)
-        frame_img = art.palette.get_palettized_image(frame_img, i_transp[:3])
+        if bg_color is not None:
+            # if bg color is specified, assume no transparency
+            frame_img = art.palette.get_palettized_image(frame_img, force_no_transparency=True)
+        else:
+            frame_img = art.palette.get_palettized_image(frame_img, i_transp[:3])
         frames.append(frame_img)
     # compile frames into animated GIF with proper frame delays
     # technique thanks to:
@@ -74,9 +86,16 @@ def export_animation(app, art, out_filename):
             # PIL only wants to write GIF87a for some reason...
             # welcome to 1989 B]
             data[0] = data[0].replace(b'7', b'9')
-            # TODO: loop doesn't work
-            data += GifImagePlugin.getdata(img, duration=delay, transparency=0,
-                                           loop=0)
+            # TODO: loop doesn't work?
+            if bg_color is not None:
+                # if bg color is specified, assume no transparency
+                if loop:
+                    data += GifImagePlugin.getdata(img, duration=delay, loop=0)
+                else:
+                    data += GifImagePlugin.getdata(img, duration=delay)
+            else:
+                data += GifImagePlugin.getdata(img, duration=delay,
+                                               transparency=0, loop=0)
             for b in data:
                 output_img.write(b)
             continue
@@ -124,6 +143,9 @@ def export_still_image(app, art, out_filename, crt=True, scale=1):
 def write_thumbnail(app, art_filename, thumb_filename):
     "write thumbnail. assume art is not loaded, tear down everything when done."
     art = app.load_art(art_filename, False)
+    # don't bother if art is None, must be created at runtime eg via Game Mode
+    if not art:
+        return
     renderable = None
     if len(art.renderables) == 0:
         renderable = app.thumbnail_renderable_class(app, art)

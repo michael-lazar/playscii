@@ -747,6 +747,13 @@ class Art:
         Write this Art to disk.
         Build a dict serializing all this art's data and write it to a file.
         """
+        # if trying to save to a dir that doesn't exist, switch file to the
+        # Art Mode documents dir, which we should assume does exist
+        filedir = os.path.dirname(self.filename)
+        if not os.path.exists(filedir):
+            #self.app.log('Tried to save to directory %s which does not exist!' % filedir, error=True)
+            new_path = self.app.documents_dir + ART_DIR + os.path.basename(self.filename)
+            self.set_filename(new_path)
         start_time = time.time()
         # cursor might be hovering, undo any preview changes
         for edit in self.app.cursor.preview_edits:

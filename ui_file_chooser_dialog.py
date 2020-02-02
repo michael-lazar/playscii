@@ -81,6 +81,8 @@ class BaseFileChooserDialog(ChooserDialog):
         "common code for getting sorted directory + file lists"
         # list parent, then dirs, then filenames with extension(s)
         parent = [] if self.current_dir == '/' else ['..']
+        if not os.path.exists(self.current_dir):
+            return parent
         dirs, files = [], []
         for filename in os.listdir(self.current_dir):
             # skip unix-hidden files
