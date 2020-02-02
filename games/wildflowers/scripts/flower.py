@@ -59,9 +59,12 @@ class FlowerObject(GameObject):
             petal_count = random.randint(self.min_petals, self.max_petals)
             frond_count = random.randint(self.min_fronds, self.max_fronds)
         self.petals = []
-        #petal_count = 1 # DEBUG
+        #petal_count = 5 # DEBUG
         for i in range(petal_count):
             self.petals.append(Petal(self, i))
+        # sort petals by radius largest to smallest,
+        # so big ones don't totally stomp smaller ones
+        self.petals.sort(key=lambda item: item.goal_radius, reverse=True)
         self.fronds = []
         #frond_count = 0 # DEBUG
         for i in range(frond_count):

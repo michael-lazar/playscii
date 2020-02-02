@@ -1,4 +1,6 @@
 
+import random
+
 # wildflowers palette ramp definitions
 
 PALETTE_RAMPS = {
@@ -93,3 +95,18 @@ PALETTE_RAMPS = {
         (128, 8, -16)  # gold to golden brown
     ]
 }
+
+
+class RampIterator:
+    
+    def __init__(self, flower):
+        ramp_def = random.choice(PALETTE_RAMPS[flower.art.palette.name])
+        self.start, self.length, self.stride = ramp_def
+        self.end = self.start + (self.length * self.stride)
+        # determine starting color, somewhere along ramp
+        self.start_step = random.randint(0, self.length - 1)
+        self.color = self.start + (self.start_step * self.stride)
+    
+    def go_to_next_color(self):
+        self.color += self.stride
+        return self.color

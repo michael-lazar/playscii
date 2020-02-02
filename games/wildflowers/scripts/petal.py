@@ -1,7 +1,7 @@
 
 import random, math
 
-from games.wildflowers.scripts.ramps import PALETTE_RAMPS
+from games.wildflowers.scripts.ramps import RampIterator
 
 
 PETAL_CHARS = [
@@ -21,7 +21,7 @@ PETAL_CHARS = [
 
 
 class Petal:
-
+    
     min_radius = 3
     mutate_char_chance = 0.2
     # layer all petals should paint on
@@ -43,16 +43,9 @@ class Petal:
         w, h = self.flower.art_width, self.flower.art_height
         self.x = random.randint(int(w / 4), int(w / 2))
         self.y = random.randint(int(h / 4), int(h / 2))
-        # pick a random color ramp from flower's palette this frond will use
-        # TODO: refactor this (RampIterator?) so fronds and petals can share it
-        self.ramp = random.choice(PALETTE_RAMPS[self.flower.art.palette.name])
-        # we only need to remember the stride
-        ramp_start, ramp_length, self.ramp_stride = self.ramp
-        # calc ramp end index
-        self.ramp_end = ramp_start + (ramp_length * self.ramp_stride)
-        # determine starting color, somewhere along ramp
-        start_step = random.randint(0, ramp_length - 1)
-        self.color = ramp_start + (start_step * self.ramp_stride)
+        # get a random color ramp from flower's palette
+        self.ramp = RampIterator(self.flower)
+        self.color = self.ramp.color
         # random char from predefined list
         self.char = random.choice(PETAL_CHARS)
     
@@ -66,7 +59,7 @@ class Petal:
         self.paint_ring()
         # grow and change
         self.radius += 1
-        self.color += self.ramp_stride
+        self.color = self.ramp.go_to_next_color()
         # roll against chaos to mutate character
         if random.random() < self.chaos * self.mutate_char_chance:
             self.char = random.choice(PETAL_CHARS)
