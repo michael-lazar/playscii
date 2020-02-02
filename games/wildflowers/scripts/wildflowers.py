@@ -12,6 +12,9 @@ quadrant, mirror these in the other three quadrants.
 
 last commit of first gen approach (before rewrite & petals): commit a476248
 
+display today's random seed in corner?
+animated GIF output? paint each grow update to a new art frame, export that
+
 frond style ideas:
 - frond draws each growth dir from a deck, reshuffling when empty to avoid repetition?
 - frond weights growth dirs differently depending on its remaining life?
