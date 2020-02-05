@@ -26,6 +26,8 @@ class FlowerObject(GameObject):
     min_fronds, max_fronds = 0, 8
     # every flower must have at least this many petals + fronds
     minimum_complexity = 4
+    # app updates per grow update; 1 = grow every frame
+    ticks_per_grow = 4
     
     # DEBUG: if True, add current time to date seed as a decimal,
     # to test with highly specific values
@@ -97,9 +99,9 @@ class FlowerObject(GameObject):
     
     def update(self):
         GameObject.update(self)
-        # only grow every other frame?
-        #if self.app.get_elapsed_time() % 2 != 0:
-        #    return
+        # grow only every few ticks, so you can watch the design grow
+        if self.app.updates % self.ticks_per_grow != 0:
+            return
         if not self.finished_growing:
             self.update_growth()
     
@@ -133,6 +135,9 @@ class FlowerObject(GameObject):
                 print('flower finished')
     
     def paint_mirrored(self, layer, x, y, char, fg, bg=0):
+        # only paint if in top left quadrant
+        if x > (self.art_width / 2) - 1 or y > (self.art_height / 2) - 1:
+            return
         # draw in top left
         self.art.set_tile_at(0, layer, x, y, char, fg, bg)
         # mirror in other three quadrants
