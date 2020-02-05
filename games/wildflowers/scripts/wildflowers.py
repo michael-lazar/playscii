@@ -51,13 +51,17 @@ class FlowerGlobals(WorldGlobalsObject):
             return
         if not self.flower:
             return
+        
         # save to .psci
-        #self.flower.exportable_art.save_to_file()
+        self.flower.exportable_art.save_to_file()
+        # TODO: investigate why opening for edit puts art mode in a bad state
         #self.app.load_art_for_edit(self.flower.exportable_art.filename)
+        
         # save to .gif - TODO investigate problem with frame deltas not clearing
         #export_animation(self.app, self.flower.exportable_art,
         #                 self.flower.export_filename + '.gif',
         #                 bg_color=self.world.bg_color, loop=False)
+        
         # export to .png - works
         export_still_image(self.app, self.flower.exportable_art,
                            self.flower.export_filename + '.png',

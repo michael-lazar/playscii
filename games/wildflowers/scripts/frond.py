@@ -54,16 +54,16 @@ class Frond:
         self.life = random.randint(self.min_life, self.max_life)
         # pick a starting point near center
         w, h = self.flower.art_width, self.flower.art_height
-        self.x = random.randint(int(w / 4), int(w / 2))
-        self.y = random.randint(int(h / 4), int(h / 2))
+        self.x = random.randint(int(w / 4), int(w / 2) - 1)
+        self.y = random.randint(int(h / 4), int(h / 2) - 1)
         # get a random color ramp from flower's palette
         self.ramp = RampIterator(self.flower)
         self.color = self.ramp.color
-        # chance to use a fully random character
+        # chance to use a fully random (non-blank) character
         if random.random() < self.chaos * self.random_char_chance:
             self.char = random.choice(FROND_CHARS)
         else:
-            self.char = random.randint(0, 255)
+            self.char = random.randint(1, 255)
         # first grow() will paint first character
     
     def grow(self):
@@ -81,8 +81,8 @@ class Frond:
             print(' frond %i at (%i, %i) using %s' % (self.index, self.x, self.y, self.get_grow_dir.__name__))
         # if we're out of bounds, simply don't paint;
         # we might go back in bounds next grow
-        if 0 <= self.x < self.flower.art_width and \
-           0 <= self.y < self.flower.art_height:
+        if 0 <= self.x < self.flower.art_width - 1 and \
+           0 <= self.y < self.flower.art_height - 1:
             self.flower.paint_mirrored(self.layer, self.x, self.y,
                                        self.char, self.color)
             painted = True

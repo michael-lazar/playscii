@@ -41,8 +41,8 @@ class Petal:
         self.get_ring_tiles = random.choice(ring_styles)
         # pick a starting point near center
         w, h = self.flower.art_width, self.flower.art_height
-        self.x = random.randint(int(w / 4), int(w / 2))
-        self.y = random.randint(int(h / 4), int(h / 2))
+        self.x = random.randint(int(w / 4), int(w / 2) - 1)
+        self.y = random.randint(int(h / 4), int(h / 2) - 1)
         # get a random color ramp from flower's palette
         self.ramp = RampIterator(self.flower)
         self.color = self.ramp.color
@@ -70,8 +70,8 @@ class Petal:
             x = self.x - t[0]
             y = self.y - t[1]
             # don't paint out of bounds
-            if 0 <= x < self.flower.art_width and \
-               0 <= y < self.flower.art_height:
+            if 0 <= x < self.flower.art_width - 1 and \
+               0 <= y < self.flower.art_height - 1:
                 self.flower.paint_mirrored(self.layer, x, y,
                                            self.char, self.color)
                 #print('%s, %s' % (x, y))
