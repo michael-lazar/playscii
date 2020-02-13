@@ -29,7 +29,8 @@ def get_frame_image(app, art, frame, allow_crt=True, scale=1, bg_color=(0, 0, 0,
     GL.glViewport(0, 0, w, h)
     # do render
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, post_fb.framebuffer)
-    GL.glClearColor(*bg_color)
+    # bg_color might be None
+    GL.glClearColor(*bg_color or (0, 0, 0, 0))
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
     # render to it
     art.renderables[0].render_frame_for_export(frame)
