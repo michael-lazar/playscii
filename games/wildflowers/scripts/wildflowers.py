@@ -53,6 +53,8 @@ class FlowerGlobals(WorldGlobalsObject):
             return
         
         # save to .psci
+        # hold on last frame
+        self.flower.exportable_art.frame_delays[-1] = 6.0
         self.flower.exportable_art.save_to_file()
         # TODO: investigate why opening for edit puts art mode in a bad state
         #self.app.load_art_for_edit(self.flower.exportable_art.filename)

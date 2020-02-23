@@ -51,18 +51,22 @@ class FlowerObject(GameObject):
         else:
             self.seed = date
         random.seed(self.seed)
-        # set screen to random dark BG color
-        self.world.bg_color[0] = random.random() / 10
-        self.world.bg_color[1] = random.random() / 10
-        self.world.bg_color[2] = random.random() / 10
-        self.world.bg_color[3] = 1.0 # set here or alpha is zero?
+        # pick a random dark BG color (will be quantized to palette)
+        r, g, b = random.random() / 10, random.random() / 10, random.random() / 10
         # set up art with character set, size, and a random (supported) palette
         self.art.set_charset_by_name('jpetscii')
         palette = random.choice(list(PALETTE_RAMPS.keys()))
         self.art.set_palette_by_name(palette)
+        # quantize bg color and set it for art and world
+        self.bg_index = self.art.palette.get_closest_color_index(int(r * 255), int(g * 255), int(b * 255))
+        bg_color = self.art.palette.colors[self.bg_index]
+        self.world.bg_color[0] = bg_color[0] / 255.0
+        self.world.bg_color[1] = bg_color[1] / 255.0
+        self.world.bg_color[2] = bg_color[2] / 255.0
+        self.world.bg_color[3] = 1.0 # set here or alpha is zero?
         self.art.resize(self.art_width, self.art_height)
         self.app.ui.adjust_for_art_resize(self) # grid etc
-        self.art.clear_frame_layer(0, 0)
+        self.art.clear_frame_layer(0, 0, bg_color=self.bg_index)
         # petals on a layer underneath fronds?
         #self.art.add_layer(z=-0.001, name='petals')
         self.finished_growing = False
@@ -134,7 +138,7 @@ class FlowerObject(GameObject):
             if self.debug_log:
                 print('flower finished')
     
-    def paint_mirrored(self, layer, x, y, char, fg, bg=0):
+    def paint_mirrored(self, layer, x, y, char, fg, bg=None):
         # only paint if in top left quadrant
         if x > (self.art_width / 2) - 1 or y > (self.art_height / 2) - 1:
             return
@@ -154,8 +158,10 @@ class FlowerObject(GameObject):
     def copy_new_frame(self):
         # add new frame to art for export
         # (art starts with 1 frame, only do this after first frame written)
+        # base exported frame delay on what you see in live app
+        delay = (1 / self.app.update_rate) * self.ticks_per_grow
         if self.grows > 0:
-            self.exportable_art.add_frame_to_end(delay=0.01, log=False)
+            self.exportable_art.add_frame_to_end(delay, log=False)
         self.exportable_art.chars[-1] = self.art.chars[0].copy()
         self.exportable_art.fg_colors[-1] = self.art.fg_colors[0].copy()
         self.exportable_art.bg_colors[-1] = self.art.bg_colors[0].copy()
