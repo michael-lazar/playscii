@@ -3,6 +3,7 @@ from random import randint
 from PIL import Image
 
 from texture import Texture
+from lab_color import rgb_to_lab, lab_color_diff
 
 PALETTE_DIR = 'palettes/'
 PALETTE_EXTENSIONS = ['png', 'gif', 'bmp']
@@ -180,6 +181,20 @@ class Palette:
         g_diff = abs(color_a[1] - color_b[1])
         b_diff = abs(color_a[2] - color_b[2])
         return (r_diff + g_diff + b_diff) <= tolerance
+    
+    def get_closest_color_index(self, r, g, b):
+        "returns index of closest color in this palette to given color (kinda slow?)"
+        closest_diff = 99999999999
+        closest_diff_index = -1
+        for i,color in enumerate(self.colors):
+            l1, a1, b1 = rgb_to_lab(r, g, b)
+            l2, a2, b2 = rgb_to_lab(*color[:3])
+            diff = lab_color_diff(l1, a1, b1, l2, a2, b2)
+            if diff < closest_diff:
+                closest_diff = diff
+                closest_diff_index = i
+        #print('%s is closest to input color %s' % (self.colors[closest_diff_index], (r, g, b)))
+        return closest_diff_index
     
     def get_random_color_index(self):
         # exclude transparent first index
