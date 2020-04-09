@@ -6,7 +6,7 @@
   -15,
   16
  ],
- "charset": "c64_petscii",
+ "charset": "dos",
  "frames": [
   {
    "delay": 0.1,
@@ -9622,6 +9622,6 @@
   }
  ],
  "height": 40,
- "palette": "c64_original",
+ "palette": "ansi-240",
  "width": 40
 }
