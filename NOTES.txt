@@ -1,4 +1,6 @@
-## Install notes for macOS
+# MacOS local development notes
+
+## Installation
 
 ```
 brew install sdl2 sdl2_mixer numpy
