@@ -1,0 +1,5 @@
+venv/
+.idea/
+__pycache__/
+libSDL2.dylib
+libSDL_mixer.dylib

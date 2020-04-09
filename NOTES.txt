@@ -1,0 +1,17 @@
+## Install notes for macOS
+
+```
+brew install sdl2 sdl2_mixer numpy
+ln -s /usr/local/Cellar/sdl2/2.0.10/lib/libSDL2-2.0.0.dylib libSDL2.dylib
+ln -s /usr/local/Cellar/sdl2_mixer/2.0.4/lib/libSDL2_mixer-2.0.0.dylib libSDL_mixer.dylib
+```
+
+```
+python3 -m pip virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+```
+python playscii.py
+```
