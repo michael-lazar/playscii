@@ -29,7 +29,7 @@ class CharCycleButton(StatusBarCycleButton):
 class FGToggleButton(StatusBarToggleButton):
     x = CharCycleButton.x + CharCycleButton.width
     caption = 'fg:'
-    width = len(caption) + 2
+    width = len(caption) + 3
     caption_justify = TEXT_LEFT
 
 class FGCycleButton(StatusBarCycleButton):
@@ -38,7 +38,7 @@ class FGCycleButton(StatusBarCycleButton):
 class BGToggleButton(StatusBarToggleButton):
     x = FGCycleButton.x + FGCycleButton.width
     caption = 'bg:'
-    width = len(caption) + 2
+    width = len(caption) + 3
     caption_justify = TEXT_LEFT
 
 class BGCycleButton(StatusBarCycleButton):
