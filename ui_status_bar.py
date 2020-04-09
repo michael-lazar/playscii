@@ -29,7 +29,8 @@ class CharCycleButton(StatusBarCycleButton):
 class FGToggleButton(StatusBarToggleButton):
     x = CharCycleButton.x + CharCycleButton.width
     caption = 'fg:'
-    width = len(caption) + 1
+    width = len(caption) + 2
+    caption_justify = TEXT_LEFT
 
 class FGCycleButton(StatusBarCycleButton):
     x = FGToggleButton.x + FGToggleButton.width
@@ -37,7 +38,8 @@ class FGCycleButton(StatusBarCycleButton):
 class BGToggleButton(StatusBarToggleButton):
     x = FGCycleButton.x + FGCycleButton.width
     caption = 'bg:'
-    width = len(caption) + 1
+    width = len(caption) + 2
+    caption_justify = TEXT_LEFT
 
 class BGCycleButton(StatusBarCycleButton):
     x = BGToggleButton.x + BGToggleButton.width
@@ -303,6 +305,8 @@ class StatusBarUI(UIElement):
     def update_button_captions(self):
         "set captions for buttons that change from selections"
         art = self.ui.active_art
+        self.fg_toggle_button.caption = "fg:" + str(self.ui.selected_fg_color)
+        self.bg_toggle_button.caption = "bg:" + str(self.ui.selected_bg_color)
         self.xform_cycle_button.caption = uv_names[self.ui.selected_xform]
         self.tool_cycle_button.caption = self.ui.selected_tool.button_caption
         self.tool_cycle_button.width = len(self.tool_cycle_button.caption) + 2
