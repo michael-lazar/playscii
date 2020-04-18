@@ -28,8 +28,8 @@ class Camera:
     min_velocity = 0.05
     # map extents
     # starting values only, bounds are generated according to art size
-    min_x,max_x = 0, 50
-    min_y,max_y = -50, 0
+    min_x,max_x = -500, 500
+    min_y,max_y = -500, 500
     use_bounds = True
     min_zoom,max_zoom = 1, 1000
     # matrices -> worldspace renderable vertex shader uniforms
@@ -225,8 +225,8 @@ class Camera:
     
     def set_for_art(self, art):
         # set limits
-        self.max_x = art.width * art.quad_width
-        self.min_y = -art.height * art.quad_height
+        self.max_x = art.width * art.quad_width * 4
+        self.min_y = -art.height * art.quad_height * 4
         # use saved pan/zoom
         self.set_loc(art.camera_x, art.camera_y, art.camera_z)
     
