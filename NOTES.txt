@@ -3,17 +3,22 @@
 ## Installation
 
 ```
-brew install sdl2 sdl2_mixer numpy
-ln -s /usr/local/Cellar/sdl2/2.0.10/lib/libSDL2-2.0.0.dylib libSDL2.dylib
-ln -s /usr/local/Cellar/sdl2_mixer/2.0.4/lib/libSDL2_mixer-2.0.0.dylib libSDL_mixer.dylib
+/opt/homebrew/bin/brew install sdl2 sdl2_mixer numpy libjpeg libtiff
+ln -s /opt/homebrew/Cellar/sdl2/2.0.14_1/lib/libSDL2-2.0.0.dylib libSDL2.dylib
+ln -s /opt/homebrew/Cellar/sdl2_mixer/2.0.4/lib/libSDL2_mixer-2.0.0.dylib libSDL2_mixer.dylib
 ```
 
 ```
 python3 -m pip virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+/opt/homebrew/bin/brew install libjpeg libtiff libxcb
+export LDFLAGS="-L/opt/homebrew/lib"
+export CPPFLAGS="-I/opt/homebrew/include"
+pip install Pillow --no-binary :all: --force-reinstall
 ```
 
 ```
-python playscii.py
+PYSDL2_DLL_PATH=. python playscii.py
 ```
