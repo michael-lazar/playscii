@@ -1,3 +1,9 @@
+# NOTE!!!
+
+**This repo is a fork intended for my own personal use, and is not kept up-to-date with the official project from JP LeBrenton.**
+
+**If you came here looking for instructions for installing playscii on MacOS, see https://github.com/michael-lazar/playscii/issues/3#issuecomment-1146280788**
+
 # PLAYSCII - an ASCII art and game creation tool
 
 Playscii (pronounced play-skee) is an art, animation, and game creation tool.
